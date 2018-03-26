@@ -1,14 +1,15 @@
 <?php
 /**
  * Plugin Name: Flashmob Organizer Profile (with login/registration page)
- * Description: Creates a shortcode with login / registration / profile editing possibility and maps
+ * Description: Creates shortcodes for flashmob organizer login / registration / profile editing form and for maps showing cities with videos of flashmobs for each year
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 2.1.0
+ * Version: 2.2.0
  */
 
 class FLORP{
 
+  private $strVersion = '2.2.0';
   private $iFlashmobBlogID = 6;
   private $strOptionsPageSlug = 'florp_options';
   private $strOptionKey = 'florp-options';
@@ -775,8 +776,8 @@ class FLORP{
   
   public function action__wp_enqueue_scripts() {
     $iUserID = get_current_user_id();
-    wp_enqueue_script('florp_nf_action_controller', plugins_url('js/florp_nf_action_controller.js', __FILE__), array('jquery'), '1.1', true);
-    wp_enqueue_script('florp_form_js', plugins_url('js/florp-form.js', __FILE__), array('jquery'), '2.1', true);
+    wp_enqueue_script('florp_nf_action_controller', plugins_url('js/florp_nf_action_controller.js', __FILE__), array('jquery'), $this->strVersion, true);
+    wp_enqueue_script('florp_form_js', plugins_url('js/florp-form.js', __FILE__), array('jquery'), $this->strVersion, true);
     
     wp_enqueue_script('us-google-maps-with-key', '//maps.googleapis.com/maps/api/js?key=AIzaSyBaPowbVdIBpJqo_yhEfLn1v60EWbow6ZY', array(), '', FALSE );
     $bDoTriggerPopupClick = false;
@@ -808,7 +809,7 @@ class FLORP{
     }
     wp_localize_script( 'florp_form_js', 'florp', $aJS );
     
-    wp_enqueue_style( 'florp_form_css', plugins_url('css/florp-form.css', __FILE__), false, '1.6', 'all');
+    wp_enqueue_style( 'florp_form_css', plugins_url('css/florp-form.css', __FILE__), false, $this->strVersion, 'all');
   }
   
   public function action__add_options_page() {

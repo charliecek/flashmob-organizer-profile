@@ -102,6 +102,74 @@ function florpGenerateYearlyMaps() {
 
 }
 
+function florpReloadVisibleMaps() {
+  if ("undefined" === typeof florp.maps) {
+    florpGenerateYearlyMaps();
+  }
+
+  if ("undefined" === typeof florp.maps) {
+    console.warn("florp.maps object does not exist!");
+    return;
+  }
+  var divID;
+  for (divID in florp_map_options_object) {
+    if (florp_map_options_object.hasOwnProperty(divID)) {
+      var oElement = jQuery("#"+divID);
+      if (oElement.length > 0) {
+        if ("undefined" === typeof florp.maps.positionFixed[divID]) {
+          florp.maps.positionFixed[divID] = false;
+        }
+        if ("undefined" === typeof florp.maps.visibility[divID]) {
+          florp.maps.visibility[divID] = false;
+        }
+        var isVisibleOld = florp.maps.visibility[divID];
+        var isVisible = oElement.is(":not(:hidden)");
+        florp.maps.visibility[divID] = isVisible;
+        
+        if ("undefined" === typeof florp.maps.objects || "undefined" === typeof florp.maps.objects[divID]) {
+          console.warn("florp.maps.objects or florp.maps.objects["+divID+"] is undefined!");
+          continue;
+        }
+        if (isVisible && isVisibleOld !== isVisible ) {
+          if (florp.maps.positionFixed[divID]) {
+            // console.info("Position was already fixed for div "+divID);
+            continue;
+          }
+          
+          var gmap = florp.maps.objects[divID];
+          google.maps.event.trigger(gmap, "resize");
+          var mapCenterArr = florp.general_map_options.map_init_aux.center;
+          gmap.setCenter(mapCenterArr);
+
+          if ("undefined" === typeof florp.maps.open_marker || "undefined" === typeof florp.maps.open_marker[divID] || "undefined" === typeof florp.maps.open_infowindow || "undefined" === typeof florp.maps.open_infowindow[divID]) {
+            // console.info("No open marker or infoWindow for div "+divID);
+            continue;
+          }
+          var marker = florp.maps.open_marker[divID];
+          var infowindow = florp.maps.open_infowindow[divID];
+          florpOpenInfoWindow(gmap, marker, infowindow, divID);
+          florp.maps.positionFixed[divID] = true;
+          console.info("Position of map in div "+divID+" was reloaded");
+        } else {
+          // console.info("Div "+divID+" is not visible or its visibility didn't change");
+        }
+      } else {
+        console.warn("There is no div with id=" + divID + "!");
+      }
+    }
+  }
+}
+
+function initFlorpMapsObject() {
+  florp.maps = {
+    objects: {},
+    markers: {},
+    markerShownOnLoad: {},
+    visibility: {},
+    positionFixed: {},
+  };
+}
+
 function florpGenerateYearlyMap( oDivDOMElement, divID, oMapOptions ) {
   /*
    * we get the year from the element: data-year=201*, data-is-current-year="0|1"
@@ -116,12 +184,9 @@ function florpGenerateYearlyMap( oDivDOMElement, divID, oMapOptions ) {
   // initialize map //
   
   if ("undefined" === typeof florp.maps) {
-    florp.maps = {
-      objects: {},
-      markers: {},
-      markerShownOnLoad: {},
-    };
+    initFlorpMapsObject();
   }
+  florp.maps.visibility[divID] = oDivDOMElement.is(":not(:hidden)");
   if ("undefined" === typeof florp.maps.markers[divID]) {
     florp.maps.markers[divID] = {};
   }
@@ -146,7 +211,7 @@ function florpGenerateYearlyMap( oDivDOMElement, divID, oMapOptions ) {
   for (iUserID in oMapOptions) {
     if (oMapOptions.hasOwnProperty(iUserID)) {
       var oUserOptions = oMapOptions[iUserID];
-      if ("undefined" !== oUserOptions["showOnLoad"] && oUserOptions["showOnLoad"] === true) {
+      if ("undefined" !== typeof oUserOptions["showOnLoad"] && oUserOptions["showOnLoad"] === true) {
         florp.maps.markerShownOnLoad[divID] = iUserID;
         break;
       }
@@ -328,10 +393,14 @@ function florpOpenInfoWindow(map, marker, infowindow, divID) {
   if ("undefined" === typeof florp.maps.open_infowindow) {
     florp.maps.open_infowindow = {};
   }
+  if ("undefined" === typeof florp.maps.open_marker) {
+    florp.maps.open_marker = {};
+  }
   if ("undefined" !== typeof florp.maps.open_infowindow[divID]) {
     florp.maps.open_infowindow[divID].close();
   }
   infowindow.open(map, marker);
+  florp.maps.open_marker[divID] = marker;
   florp.maps.open_infowindow[divID] = infowindow;
 }
 
@@ -746,6 +815,68 @@ jQuery( document ).ready(function() {
 
 jQuery(window).on('hashchange', function(e){
   florpFlashAnchors();
+});
+
+// Bind click event on all tab title elements //
+jQuery(document).on('click', ".w-tabs-item", function (event) {
+  var strTabClass = "w-tabs-item-h";
+  var strTabItemClass = "w-tabs-item";
+  var objTarget = jQuery(event.target);
+  if (objTarget.hasClass(strTabItemClass)) {
+    var objTab = objTarget.find("."+strTabClass);
+    var objTabItem = objTarget;
+  } else if (objTarget.hasClass(strTabClass)) {
+    var objTab = objTarget;
+    var objTabItem = objTarget.parents("."+strTabItemClass);
+  } else {
+    var objTab = objTarget.find("."+strTabClass);
+    var objTabItem = objTarget.parents("."+strTabItemClass);
+    if (objTab.length === 0) {
+      objTab = objTarget.parents("."+strTabClass);
+    }
+  }
+  if (objTab.length === 0) {
+    console.warn("Couldn't find '."+strTabClass+"' above/under clicked element:")
+    console.log(objTarget);
+    return;
+  }
+  if (objTabItem.length === 0) {
+    console.warn("Couldn't find '."+strTabItemClass+"' above/under clicked element:")
+    console.log(objTarget);
+    return;
+  }
+  var divID = objTab.attr("href");
+  if ("undefined" === typeof divID) {
+    console.warn("Couldn't find div ID for clicked tab:")
+    console.log(objTarget, objTab);
+    return;
+  }
+  var objContent = jQuery( divID )
+  
+  if (objContent.length === 0) {
+    console.warn("Couldn't find content associated with clicked tab:")
+    console.log(objTarget, objTab, divID);
+    return;
+  }
+  if (objContent.find(".florp-map").length === 0) {
+    // console.info("There is no florp map under content for tab "+divID);
+    return;
+  }
+  
+  setTimeout(function () {
+    if (objTarget.is(':animated') || objTab.is(':animated') || objContent.is(':animated')) {
+      var interval = setInterval(function () {
+        if (objTarget.is(':animated') || objTab.is(':animated') || objContent.is(':animated')) {
+          // continue
+        } else {
+          clearInterval(interval)
+          florpReloadVisibleMaps();
+        }
+      }, 100);
+    } else {
+      florpReloadVisibleMaps();
+    }
+  }, 500);
 });
 
 // Login with Ajax events //
