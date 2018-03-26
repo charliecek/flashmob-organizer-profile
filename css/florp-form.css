@@ -1,0 +1,99 @@
+body.state_default nf-field.florp-left{
+  float: left;
+  width: 49%;  
+}
+body.state_default nf-field.florp-right{
+  float: right;
+  width: 49%;  
+}
+nf-field.florp-right-button{
+  float: right;
+  width: 14%;
+}
+nf-field.florp-left-with-button{
+  float: left;
+  width: 85%;    
+}
+nf-field.florp-hidden-if-map-correct{
+  display: none;
+}
+.florp-button{
+  background-color: #277cea;
+  color: #fff;
+}
+.florp-button[disabled]{
+  cursor: default;
+  opacity: .3;
+}
+.florp-video,
+.florp-map-preview-wrapper{
+  display: none;
+}
+.florp-clear{
+  clear:both;
+}
+.florp_success_message{
+  top: 20px;
+  left: 0;
+  width: 100%;
+  position: fixed;
+  color: green;
+  z-index: 200;
+  text-align: center;
+  font-weight: bold;
+  font-size: x-large;
+}
+.florp-user-info-box{
+  position: absolute;
+  top: 0;
+  right: 0;
+  border: 1px dotted gray;
+  padding: 5px;
+}
+
+.lwa-links-register-inline.button,
+.lwa-links-remember.button{
+  background-color: gray;
+  color: white;
+}
+.lwa-links-register-inline-cancel.button:hover,
+.lwa-links-remember-cancel:hover,
+.lwa-links-register-inline.button:hover,
+.lwa-links-remember.button:hover{
+  color: white !important;
+}
+.pum-container.popmake .lwa-username,
+.pum-container.popmake .lwa-password,
+.pum-container.popmake .button,
+.pum-container.popmake .lwa-links,
+.pum-container.popmake input[type=submit]{
+  margin: 0.5em 0 !important;
+}
+.pum-container.popmake .florp-button{
+  margin-top: 0 !important;
+}
+
+.pum-container.popmake input[type=text],
+.pum-container.popmake input[type=password],
+.pum-container.popmake input[type=email],
+.pum-container.popmake input[type=number],
+.pum-container.popmake textarea,
+.pum-container.popmake select{
+  background-color: white !important;
+}
+
+.nf-field-description,
+.nf-form-fields-required,
+.florp-flashmob-info-p{
+  font-size: 0.75em;
+}
+
+.nf-form-fields-required{
+  margin-top: 1em;
+}
+.florp-flashmob-info-h5{
+  margin-bottom: 0.5em;
+}
+.florp-flashmob-info-p{
+  margin-bottom: 21px;
+}
