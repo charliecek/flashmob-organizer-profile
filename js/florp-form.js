@@ -58,7 +58,7 @@ function florpRescrapeFbOgMapImage() {
   );
 }
 function florp_reload_on_successful_submission() {
-  if (!florp.reload_ok_submission) {
+  if (florp.reload_ok_submission != 1) {
     florpReloadYearlyMap();
     return;
   }
@@ -415,7 +415,7 @@ function florpReloadYearlyMap( iYear = 0 ) {
   }
   
   var currentYearMaps = jQuery(".florp-map[data-is-current-year='1']");
-  currentYearMaps.each(function (){
+  currentYearMaps.each(function () {
     var thisObj = jQuery(this);
     var id = thisObj.attr('id');
     var old_map_options = florp_map_options_object[id][florp.user_id];
@@ -552,14 +552,30 @@ function florpFixFormClasses() {
     select.val(florp.school_city);
   }
   
-  // Add location find button class //
-  var findLocationbutton = jQuery(".florp-button");
-  if (!findLocationbutton.hasClass("button")) {
-    findLocationbutton.addClass("button");
-  }
-  if (florp.hide_flashmob_fields) {
+  // Add correct classes to buttons //
+  var buttons = jQuery(".florp-button,florp-profile-form-wrapper-div input[type=button]");
+  buttons.each(function () {
+    var thisButtonObj = jQuery(this);
+    if (!thisButtonObj.hasClass("button")) {
+      thisButtonObj.addClass("button");
+    }
+    if (!thisButtonObj.hasClass("florp-button")) {
+      thisButtonObj.addClass("florp-button");
+    }
+  });
+  var findLocationbutton = jQuery("span.florp-button");
+  findLocationbutton.each(function () {
+    var thisButtonObj = jQuery(this);
+    if (thisButtonObj.text() === "Nájdi" && !thisButtonObj.hasClass("florp-button-find-location")) {
+      thisButtonObj.addClass("florp-button-find-location");
+    }
+  });
+  findLocationbutton = jQuery("florp-button-find-location");
+
+  // Hide after-flashmob fields //
+  if (florp.hide_flashmob_fields == 1) {
     // jQuery(".florp-flashmob").hide();
-    jQuery(".florp-flashmob input, .florp-flashmob select, .florp-flashmob text, .florp-flashmob .florp-button").attr("disabled", "disabled");
+    jQuery(".florp-flashmob input, .florp-flashmob select, .florp-flashmob text, .florp-flashmob .florp-button-find-location").attr("disabled", "disabled");
     florpVideoTypeSelect();
   } else {
     jQuery(".florp-before-flashmob").hide();

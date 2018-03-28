@@ -1,10 +1,14 @@
+select[disabled] {
+  cursor: default;
+  opacity: 0.5;
+}
 body.state_default nf-field.florp-left{
   float: left;
-  width: 49%;  
+  width: 49%;
 }
 body.state_default nf-field.florp-right{
   float: right;
-  width: 49%;  
+  width: 49%;
 }
 nf-field.florp-right-button{
   float: right;
@@ -12,7 +16,7 @@ nf-field.florp-right-button{
 }
 nf-field.florp-left-with-button{
   float: left;
-  width: 85%;    
+  width: 85%;
 }
 nf-field.florp-hidden-if-map-correct{
   display: none;

@@ -4,15 +4,18 @@
  * Description: Creates shortcodes for flashmob organizer login / registration / profile editing form and for maps showing cities with videos of flashmobs for each year
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 2.2.0
+ * Version: 2.3.0
  */
 
 class FLORP{
 
-  private $strVersion = '2.2.0';
+  private $strVersion = '2.3.0';
   private $iFlashmobBlogID = 6;
-  private $strOptionsPageSlug = 'florp_options';
+  private $strOptionsPageSlug = 'florp-options';
   private $strOptionKey = 'florp-options';
+  private $aOptionDefaults = array();
+  private $aOptionFormKeys = array();
+  private $aBooleanOptions = array();
   private $strProfileFormWrapperID = 'florp-profile-form-wrapper-div';
   private $strClickTriggerClass = 'florp-click-register-trigger';
   private $strClickTriggerGetParam = 'popup-florp';
@@ -23,19 +26,59 @@ class FLORP{
   private $aFlashmobSubscribers;
   
   public function __construct() {
-    $aOptionDefaults = array(
-      'bHideFlashmobFields' => false,
-      'bReloadAfterSuccessfulSubmission' => true,
-      'iCurrentFlashmobYear' => intval(date( 'Y' )),
-      'aYearlyMapOptions' => array()
+    $this->aOptions = get_site_option( $this->strOptionKey, array() );
+    $this->aOptionDefaults = array(
+      'bReloadAfterSuccessfulSubmission'  => false,
+      'aYearlyMapOptions'                 => array(),
+      'iFlashmobYear'                     => isset($this->aOptions['iCurrentFlashmobYear']) ? $this->aOptions['iCurrentFlashmobYear'] : intval(date( 'Y' )),
+      'iFlashmobMonth'                    => 1,
+      'iFlashmobDay'                      => 1,
+      'iFlashmobHour'                     => 0,
+      'iFlashmobMinute'                   => 0,
     );
-    $this->aOptions = get_site_option( $this->strOptionKey, $aOptionDefaults );
-    foreach ($aOptionDefaults as $key => $val) {
-      if (!isset($this->aOptions[$key])) {
-        $this->aOptions[$key] = $val;
+    $this->aOptionFormKeys = array(
+      'florp_reload_after_ok_submission'  => 'bReloadAfterSuccessfulSubmission',
+      'florp_flashmob_year'               => 'iFlashmobYear',
+      'florp_flashmob_month'              => 'iFlashmobMonth',
+      'florp_flashmob_day'                => 'iFlashmobDay',
+      'florp_flashmob_hour'               => 'iFlashmobHour',
+      'florp_flashmob_minute'             => 'iFlashmobMinute',
+    );
+    $aDeprecatedKeys = array( 'iCurrentFlashmobYear', 'bHideFlashmobFields' );
+    $this->aBooleanOptions = array( 'bReloadAfterSuccessfulSubmission' );
+    
+    // Get options and set defaults //
+    if (empty($this->aOptions)) {
+      $this->aOptions = $this->aOptionDefaults;
+      update_site_option( $this->strOptionKey, $this->aOptions, true );
+    } else {
+      $bUpdate = false;
+      foreach ($this->aOptionDefaults as $key => $val) {
+        if (!isset($this->aOptions[$key])) {
+          $this->aOptions[$key] = $val;
+          $bUpdate = true;
+        }
+      }
+      foreach ($aDeprecatedKeys as $strKey) {
+        if (isset($this->aOptions[$strKey])) {
+          unset($this->aOptions[$strKey]);
+          $bUpdate = true;
+        }
+      }
+      if ($bUpdate) {
         update_site_option( $this->strOptionKey, $this->aOptions, true );
       }
     }
+    
+    $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
+    $iFlashmobTime = intval(mktime( $this->aOptions['iFlashmobHour'] - $iTimeZoneOffset, $this->aOptions['iFlashmobMinute'], 0, $this->aOptions['iFlashmobMonth'], $this->aOptions['iFlashmobDay'], $this->aOptions['iFlashmobYear'] ));
+    $iNow = time();
+    if ($iFlashmobTime < $iNow) {
+      $this->aOptions['bHideFlashmobFields'] = false;
+    } else {
+      $this->aOptions['bHideFlashmobFields'] = true;
+    }
+    
     $this->aRegisteredUserCount = array(
       'on-map-only' => -1,
       'all'         => -1
@@ -43,218 +86,218 @@ class FLORP{
     $this->aFlashmobSubscribers = array();
     krsort($this->aOptions["aYearlyMapOptions"]);
 
-    /* * /
-    $this->aOptions['aYearlyMapOptions'] = array(
-      2016 =>
-      array(
-        22 => 
-        array (
-          'first_name' => 'Jaroslav',
-          'last_name' => 'Hluch',
-          'webpage' => 'https://www.facebook.com/jaroslav.hluch',
-          'school_city' => 'Bratislava',
-          'video_link_type' => 'vimeo',
-          'vimeo_link' => 'http://vimeo.com/191247547',
-          // 'embed_code' => '<iframe src="https://player.vimeo.com/video/191247547" width="340" height="200" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>',
-          'flashmob_address' => 'Nákupné centrum Centrál, Bratislava',
-          'longitude' => '17.129393',
-          'latitude' => '48.157427',
+    if (empty($this->aOptions['aYearlyMapOptions'])) {
+      $this->aOptions['aYearlyMapOptions'] = array(
+        2016 =>
+        array(
+          22 => 
+          array (
+            'first_name' => 'Jaroslav',
+            'last_name' => 'Hluch',
+            'webpage' => 'https://www.facebook.com/jaroslav.hluch',
+            'school_city' => 'Bratislava',
+            'video_link_type' => 'vimeo',
+            'vimeo_link' => 'http://vimeo.com/191247547',
+            // 'embed_code' => '<iframe src="https://player.vimeo.com/video/191247547" width="340" height="200" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>',
+            'flashmob_address' => 'Nákupné centrum Centrál, Bratislava',
+            'longitude' => '17.129393',
+            'latitude' => '48.157427',
+          ),
+          1000 => 
+          array (
+            'first_name' => 'Jana',
+            'last_name' => 'Kvantová',
+            'webpage' => 'https://www.facebook.com/jana.kvantova',
+            'school_city' => 'Piešťany',
+            'video_link_type' => 'facebook',
+            'facebook_link' => 'https://www.facebook.com/tvkarpaty/videos/1275355985822296/',
+            'flashmob_address' => 'Winterova ulica, Piešťany',
+            'longitude' => '17.835444',
+            'latitude' => '48.590201',
+            'note' => 'pôvodné video <a href="https://www.facebook.com/tvkarpaty/videos/1275355985822296/" target="_blank">tu</a>.',
+          ),
+          1001 => 
+          array (
+            'first_name' => 'Rišo (Iko)',
+            'last_name' => 'Križan',
+            'webpage' => 'https://www.facebook.com/riso.krizaniko',
+            'school_city' => 'Bojnice',
+            'video_link_type' => 'youtube',
+            'youtube_link' => 'https://www.youtube.com/watch?v=CCCMo8Jdf9c',
+            'flashmob_address' => 'Bojnice',
+            'longitude' => '18.582687',
+            'latitude' => '48.778839',
+            'note' => 'pôvodné video <a href="http://www.rtvprievidza.sk/home/region/3953-tanec-spaja-kultury" target="_blank">tu</a>.',
+          ),
         ),
-        1000 => 
-        array (
-          'first_name' => 'Jana',
-          'last_name' => 'Kvantová',
-          'webpage' => 'https://www.facebook.com/jana.kvantova',
-          'school_city' => 'Piešťany',
-          'video_link_type' => 'facebook',
-          'facebook_link' => 'https://www.facebook.com/tvkarpaty/videos/1275355985822296/',
-          'flashmob_address' => 'Winterova ulica, Piešťany',
-          'longitude' => '17.835444',
-          'latitude' => '48.590201',
-          'note' => 'pôvodné video <a href="https://www.facebook.com/tvkarpaty/videos/1275355985822296/" target="_blank">tu</a>.',
+        2015 =>
+        array(
+          32 => 
+          array (
+            'first_name' => 'Barbora',
+            'last_name' => 'Boboková',
+            'school_city' => 'Prievidza',
+            'video_link_type' => 'youtube',
+            'youtube_link' => 'https://www.youtube.com/watch?v=8LHBuWI5Hc4',
+            'flashmob_address' => 'Prievidza',
+            'longitude' => '18.624538',
+            'latitude' => '48.774521',
+          ),
+          1002 => 
+          array (
+            'first_name' => 'Zuzana',
+            'last_name' => 'Žilinská',
+            'webpage' => 'https://www.facebook.com/zzilinska',
+            'school_city' => 'Levice',
+            'video_link_type' => 'youtube',
+            'youtube_link' => 'https://www.youtube.com/watch?v=_uVA-dEF8BM',
+            'flashmob_address' => 'Levice',
+            'longitude' => '18.598438',
+            'latitude' => '48.217424',
+          ),
+          1003 => 
+          array (
+            'first_name' => 'Michal',
+            'last_name' => 'Mravec',
+            'webpage' => 'https://www.facebook.com/michal.mravec.7',
+            'school_city' => 'Žilina',
+            'video_link_type' => 'youtube',
+            'youtube_link' => 'https://www.youtube.com/watch?v=5gvAasxL8mQ',
+            'flashmob_address' => 'OC Mirage, Žilina',
+            'longitude' => '18.7408',
+            'latitude' => '49.21945',
+          ),
+          1004 => 
+          array (
+            'first_name' => 'Vladimír',
+            'last_name' => 'Svorad',
+            'webpage' => 'https://www.facebook.com/vladimir.svorad.9',
+            'school_city' => 'Topolčany',
+            'video_link_type' => 'youtube',
+            'flashmob_address' => 'Topolčany',
+            'longitude' => '18.170007',
+            'latitude' => '48.558945',
+            'note' => 'video z tohoto mesta nie je k dispozícii',
+          ),
+          22 => 
+          array (
+            'first_name' => 'Jaroslav',
+            'last_name' => 'Hluch',
+            'webpage' => 'https://www.facebook.com/jaroslav.hluch',
+            'school_city' => 'Bratislava',
+            'video_link_type' => 'youtube',
+            'youtube_link' => 'https://www.youtube.com/watch?v=Xqo7MhkatQU',
+            'flashmob_address' => 'Avion Shopping Park, Bratislava',
+            'longitude' => '17.18008',
+            'latitude' => '48.166776',
+          ),
         ),
-        1001 => 
-        array (
-          'first_name' => 'Rišo (Iko)',
-          'last_name' => 'Križan',
-          'webpage' => 'https://www.facebook.com/riso.krizaniko',
-          'school_city' => 'Bojnice',
-          'video_link_type' => 'youtube',
-          'youtube_link' => 'https://www.youtube.com/watch?v=CCCMo8Jdf9c',
-          'flashmob_address' => 'Bojnice',
-          'longitude' => '18.582687',
-          'latitude' => '48.778839',
-          'note' => 'pôvodné video <a href="http://www.rtvprievidza.sk/home/region/3953-tanec-spaja-kultury" target="_blank">tu</a>.',
+        2014 =>
+        array(
+          22 => 
+          array (
+            'first_name' => 'Jaroslav',
+            'last_name' => 'Hluch',
+            'webpage' => 'https://www.facebook.com/jaroslav.hluch',
+            'school_city' => 'Bratislava',
+            'video_link_type' => 'youtube',
+            'youtube_link' => 'https://www.youtube.com/watch?v=lIcB_YlAMqU',
+            'flashmob_address' => 'Eurovea, Bratislava',
+            'longitude' => '17.121326',
+            'latitude' => '48.140501',
+          ),
+          1005 => 
+          array (
+            'first_name' => 'Ivana',
+            'last_name' => 'Kubišová',
+            'webpage' => 'https://www.facebook.com/ivana.kubisova',
+            'school_city' => 'Banská Bystrica',
+            'video_link_type' => 'youtube',
+            'youtube_link' => 'https://www.youtube.com/watch?v=omPI_p1mBJE',
+            'flashmob_address' => 'Banská Bystrica',
+            'longitude' => '19.146192',
+            'latitude' => '48.736277',
+            'note' => 'zapojili sa tanečníci z Banskej Bystrice, Zvolena a Žiliny.',
+          ),
+          1000 => 
+          array (
+            'first_name' => 'Jana',
+            'last_name' => 'Kvantová',
+            'webpage' => 'https://www.facebook.com/jana.kvantova',
+            'school_city' => 'Hlohovec',
+            'video_link_type' => 'youtube',
+            'youtube_link' => 'https://www.youtube.com/watch?v=Dmgn-MEODgI',
+            'flashmob_address' => 'Hlohovec',
+            'longitude' => '17.803329',
+            'latitude' => '48.425158',
+          ),
+          1006 => 
+          array (
+            'first_name' => 'José',
+            'last_name' => 'Garcia',
+            'webpage' => 'https://www.facebook.com/josegarciask',
+            'school_city' => 'Košice',
+            'video_link_type' => 'youtube',
+            'youtube_link' => 'https://www.youtube.com/watch?v=Ub0vgUypxGs',
+            'flashmob_address' => 'Košice',
+            'longitude' => '21.261075',
+            'latitude' => '48.716386',
+          ),
+          1007 => 
+          array (
+            'first_name' => 'Eva',
+            'last_name' => 'Macháčková',
+            'webpage' => 'https://www.facebook.com/evinamachackova',
+            'school_city' => 'Piešťany',
+            'video_link_type' => 'youtube',
+            'youtube_link' => 'https://www.youtube.com/watch?v=rJSCefB6qJw',
+            'flashmob_address' => 'Piešťany',
+            'longitude' => '17.827155',
+            'latitude' => '48.591797',
+          ),
+          32 => 
+          array (
+            'first_name' => 'Barbora',
+            'last_name' => 'Boboková',
+            'school_city' => 'Prievidza',
+            'video_link_type' => 'youtube',
+            'youtube_link' => 'https://www.youtube.com/watch?v=Bz7-QD8TO9Y',
+            'flashmob_address' => 'Prievidza',
+            'longitude' => '18.624538',
+            'latitude' => '48.774521',
+          ),
+          1004 => 
+          array (
+            'first_name' => 'Vladimír',
+            'last_name' => 'Svorad',
+            'webpage' => 'https://www.facebook.com/vladimir.svorad.9',
+            'school_city' => 'Topolčany',
+            'video_link_type' => 'youtube',
+            'youtube_link' => 'https://www.youtube.com/watch?v=wAX6EjZOJH4',
+            'flashmob_address' => 'Topolčany',
+            'longitude' => '18.170007',
+            'latitude' => '48.558945',
+          ),
         ),
-      ),
-      2015 =>
-      array(
-        32 => 
-        array (
-          'first_name' => 'Barbora',
-          'last_name' => 'Boboková',
-          'school_city' => 'Prievidza',
-          'video_link_type' => 'youtube',
-          'youtube_link' => 'https://www.youtube.com/watch?v=8LHBuWI5Hc4',
-          'flashmob_address' => 'Prievidza',
-          'longitude' => '18.624538',
-          'latitude' => '48.774521',
+        2013 =>
+        array(
+          22 => 
+          array (
+            'first_name' => 'Jaroslav',
+            'last_name' => 'Hluch a team',
+            'school_city' => 'Bratislava',
+            'flashmob_number_of_dancers' => '16',
+            'video_link_type' => 'youtube',
+            'youtube_link' => 'https://www.youtube.com/watch?v=y_aSUdDk3Cw',
+            'flashmob_address' => 'Nákupné centrum Polus, Bratislava',
+            'longitude' => '17.138409',
+            'latitude' => '48.168235',
+            'note' => 'za video ďakujeme Michalovi Hrabovcovi (a teamu).',
+          ),
         ),
-        1002 => 
-        array (
-          'first_name' => 'Zuzana',
-          'last_name' => 'Žilinská',
-          'webpage' => 'https://www.facebook.com/zzilinska',
-          'school_city' => 'Levice',
-          'video_link_type' => 'youtube',
-          'youtube_link' => 'https://www.youtube.com/watch?v=_uVA-dEF8BM',
-          'flashmob_address' => 'Levice',
-          'longitude' => '18.598438',
-          'latitude' => '48.217424',
-        ),
-        1003 => 
-        array (
-          'first_name' => 'Michal',
-          'last_name' => 'Mravec',
-          'webpage' => 'https://www.facebook.com/michal.mravec.7',
-          'school_city' => 'Žilina',
-          'video_link_type' => 'youtube',
-          'youtube_link' => 'https://www.youtube.com/watch?v=5gvAasxL8mQ',
-          'flashmob_address' => 'OC Mirage, Žilina',
-          'longitude' => '18.7408',
-          'latitude' => '49.21945',
-        ),
-        1004 => 
-        array (
-          'first_name' => 'Vladimír',
-          'last_name' => 'Svorad',
-          'webpage' => 'https://www.facebook.com/vladimir.svorad.9',
-          'school_city' => 'Topolčany',
-          'video_link_type' => 'youtube',
-          'flashmob_address' => 'Topolčany',
-          'longitude' => '18.170007',
-          'latitude' => '48.558945',
-          'note' => 'video z tohoto mesta nie je k dispozícii',
-        ),
-        22 => 
-        array (
-          'first_name' => 'Jaroslav',
-          'last_name' => 'Hluch',
-          'webpage' => 'https://www.facebook.com/jaroslav.hluch',
-          'school_city' => 'Bratislava',
-          'video_link_type' => 'youtube',
-          'youtube_link' => 'https://www.youtube.com/watch?v=Xqo7MhkatQU',
-          'flashmob_address' => 'Avion Shopping Park, Bratislava',
-          'longitude' => '17.18008',
-          'latitude' => '48.166776',
-        ),
-      ),
-      2014 =>
-      array(
-        22 => 
-        array (
-          'first_name' => 'Jaroslav',
-          'last_name' => 'Hluch',
-          'webpage' => 'https://www.facebook.com/jaroslav.hluch',
-          'school_city' => 'Bratislava',
-          'video_link_type' => 'youtube',
-          'youtube_link' => 'https://www.youtube.com/watch?v=lIcB_YlAMqU',
-          'flashmob_address' => 'Eurovea, Bratislava',
-          'longitude' => '17.121326',
-          'latitude' => '48.140501',
-        ),
-        1005 => 
-        array (
-          'first_name' => 'Ivana',
-          'last_name' => 'Kubišová',
-          'webpage' => 'https://www.facebook.com/ivana.kubisova',
-          'school_city' => 'Banská Bystrica',
-          'video_link_type' => 'youtube',
-          'youtube_link' => 'https://www.youtube.com/watch?v=omPI_p1mBJE',
-          'flashmob_address' => 'Banská Bystrica',
-          'longitude' => '19.146192',
-          'latitude' => '48.736277',
-          'note' => 'zapojili sa tanečníci z Banskej Bystrice, Zvolena a Žiliny.',
-        ),
-        1000 => 
-        array (
-          'first_name' => 'Jana',
-          'last_name' => 'Kvantová',
-          'webpage' => 'https://www.facebook.com/jana.kvantova',
-          'school_city' => 'Hlohovec',
-          'video_link_type' => 'youtube',
-          'youtube_link' => 'https://www.youtube.com/watch?v=Dmgn-MEODgI',
-          'flashmob_address' => 'Hlohovec',
-          'longitude' => '17.803329',
-          'latitude' => '48.425158',
-        ),
-        1006 => 
-        array (
-          'first_name' => 'José',
-          'last_name' => 'Garcia',
-          'webpage' => 'https://www.facebook.com/josegarciask',
-          'school_city' => 'Košice',
-          'video_link_type' => 'youtube',
-          'youtube_link' => 'https://www.youtube.com/watch?v=Ub0vgUypxGs',
-          'flashmob_address' => 'Košice',
-          'longitude' => '21.261075',
-          'latitude' => '48.716386',
-        ),
-        1007 => 
-        array (
-          'first_name' => 'Eva',
-          'last_name' => 'Macháčková',
-          'webpage' => 'https://www.facebook.com/evinamachackova',
-          'school_city' => 'Piešťany',
-          'video_link_type' => 'youtube',
-          'youtube_link' => 'https://www.youtube.com/watch?v=rJSCefB6qJw',
-          'flashmob_address' => 'Piešťany',
-          'longitude' => '17.827155',
-          'latitude' => '48.591797',
-        ),
-        32 => 
-        array (
-          'first_name' => 'Barbora',
-          'last_name' => 'Boboková',
-          'school_city' => 'Prievidza',
-          'video_link_type' => 'youtube',
-          'youtube_link' => 'https://www.youtube.com/watch?v=Bz7-QD8TO9Y',
-          'flashmob_address' => 'Prievidza',
-          'longitude' => '18.624538',
-          'latitude' => '48.774521',
-        ),
-        1004 => 
-        array (
-          'first_name' => 'Vladimír',
-          'last_name' => 'Svorad',
-          'webpage' => 'https://www.facebook.com/vladimir.svorad.9',
-          'school_city' => 'Topolčany',
-          'video_link_type' => 'youtube',
-          'youtube_link' => 'https://www.youtube.com/watch?v=wAX6EjZOJH4',
-          'flashmob_address' => 'Topolčany',
-          'longitude' => '18.170007',
-          'latitude' => '48.558945',
-        ),
-      ),
-      2013 =>
-      array(
-        22 => 
-        array (
-          'first_name' => 'Jaroslav',
-          'last_name' => 'Hluch a team',
-          'school_city' => 'Bratislava',
-          'flashmob_number_of_dancers' => '16',
-          'video_link_type' => 'youtube',
-          'youtube_link' => 'https://www.youtube.com/watch?v=y_aSUdDk3Cw',
-          'flashmob_address' => 'Nákupné centrum Polus, Bratislava',
-          'longitude' => '17.138409',
-          'latitude' => '48.168235',
-          'note' => 'za video ďakujeme Michalovi Hrabovcovi (a teamu).',
-        ),
-      ),
-    );
-    update_site_option( $this->strOptionKey, $this->aOptions, true );
-    // */
+      );
+      update_site_option( $this->strOptionKey, $this->aOptions, true );
+    }
     
     add_shortcode( 'florp-form', array( $this, 'profile_form' ));
     // add_shortcode( 'florp-form-loader', array( $this, 'profile_form_loader' ));
@@ -312,7 +355,7 @@ class FLORP{
     $this->aUserFieldsMap = array( 'first_name', 'last_name' );
     $this->aMetaFields = array( 'webpage', 'school_name', 'school_webpage', 'school_city',
                           'flashmob_number_of_dancers', 'video_link_type', 'youtube_link', 'facebook_link', 'vimeo_link', 'embed_code', 'flashmob_address', 'longitude', 'latitude' );
-    $this->aMetaFieldsToClean = array( 'school_city',
+    $this->aMetaFieldsToClean = array( 'school_city', // TODO: really?
                           'flashmob_number_of_dancers', 'video_link_type', 'youtube_link', 'facebook_link', 'vimeo_link', 'embed_code', 'flashmob_address', 'longitude', 'latitude' );
     $this->aGeneralMapOptions = array(
       'map_init_raw'  => array(
@@ -340,12 +383,6 @@ class FLORP{
       'og_map_image_alt'  => "Mapka registrovaných organizátorov rueda flashmobu na Slovensku",
       'fb_app_id'         => '768253436664320',
     );
-
-//     // TODO: TEMP
-//     $iCurrentFlashmobYear = $this->aOptions['iCurrentFlashmobYear'];
-//     $aMapOptions = $this->get_map_options_array(true, $iCurrentFlashmobYear);
-//     file_put_contents( __DIR__ . "/map-options.kk", var_export( $this->aOptions, true ) );
-//     file_put_contents( __DIR__ . "/map-options-".$iCurrentFlashmobYear.".kk", var_export( $aMapOptions, true ) );
   }
 
   public function profile_form( $aAttributes ) {
@@ -510,26 +547,28 @@ class FLORP{
   }
   
   public function map( $aAttributes ) {
-    $iCurrentFlashmobYear = $this->aOptions['iCurrentFlashmobYear'];
+    $iFlashmobYear = intval($this->aOptions['iFlashmobYear']);
     $iIsCurrentYear = 0;
     $bAllYears = false;
     if (isset($aAttributes['year'])) {
       $mixYear = $aAttributes['year'];
+      if ($aAttributes['year'] === 'all') {
+        $bAllYears = true;
+      } else {
+        $mixYear = intval($mixYear);
+      }
     } elseif (isset($aAttributes['all-years'])) {
       $bAllYears = true;
     } else {
-      $mixYear = $iCurrentFlashmobYear;
+      $mixYear = $iFlashmobYear;
     }
     if ($bAllYears) {
       $mixYear = 'all';
+    } elseif (empty($mixYear)) {
+      return '<span class="warning">'.__('Map shortcode called with empty year!','florp').'</span>';
     } else {
-      if (empty($mixYear)) {
-        return '<span class="warning">'.__('Map shortcode called with empty year!','florp').'</span>';
-      } else {
-        $mixYear = intval($mixYear);
-        if ($iCurrentFlashmobYear === $mixYear) {
-          $iIsCurrentYear = 1;
-        }
+      if ($iFlashmobYear === $mixYear) {
+        $iIsCurrentYear = 1;
       }
     }
     $iTimestamp = date('U');
@@ -559,11 +598,11 @@ class FLORP{
           if ($bVideo) {
             $aSchoolCities[] = $strCity;
             $aMapOptionsArray[$iUserID] = $aOptions;
-            $aMapOptionsArray[$iUserID]['year'] = $this->aOptions['iCurrentFlashmobYear'];
+            $aMapOptionsArray[$iUserID]['year'] = $this->aOptions['iFlashmobYear'];
           } else {
             $aSchoolCitiesNoVideo[$strCity] = $iUserID;
             $aMapOptionsNoVideo[$iUserID] = $aOptions;
-            $aMapOptionsNoVideo[$iUserID]['year'] = $this->aOptions['iCurrentFlashmobYear'];
+            $aMapOptionsNoVideo[$iUserID]['year'] = $this->aOptions['iFlashmobYear'];
           }
 
         }
@@ -636,6 +675,7 @@ class FLORP{
       }
       florp_map_options_object["'.$strID.'"] = '.$strMapOptionsArrayJson.';
     </script>';
+      /* '.var_export(array($mixYear, $iFlashmobYear, $aAttributes), true).' */
     $strMapDivHtml = '<div id="'.$strID.'" class="florp-map" data-year="'.$mixYear.'" data-is-current-year="'.$iIsCurrentYear.'"></div>';
     return $strMapJson.PHP_EOL.$strMapDivHtml; //."<!-- ".var_export($aAttributes, true)." ".var_export($this->aOptions["aYearlyMapOptions"], true)." -->";
   }
@@ -685,16 +725,9 @@ class FLORP{
   }
 
   private function archive_current_year_map_options() {
-    $iCurrentFlashmobYear = $this->aOptions['iCurrentFlashmobYear'];
-    $aMapOptions = $this->get_map_options_array(true, $iCurrentFlashmobYear);
-    $this->aOptions['aYearlyMapOptions'][$iCurrentFlashmobYear] = $aMapOptions;
-    $iCurrentYear = intval(date( 'Y' ));
-    if ($iCurrentFlashmobYear >= $iCurrentYear) {
-      $iCurrentFlashmobYear++;
-    } else {
-      $iCurrentFlashmobYear = $iCurrentYear;
-    }
-    $this->aOptions['iCurrentFlashmobYear'] = $iCurrentFlashmobYear;
+    $iFlashmobYear = $this->aOptions['iFlashmobYear'];
+    $aMapOptions = $this->get_map_options_array(true, $iFlashmobYear);
+    $this->aOptions['aYearlyMapOptions'][$iFlashmobYear] = $aMapOptions;
     update_site_option( $this->strOptionKey, $this->aOptions, true );
     
     // clean user meta //
@@ -788,8 +821,8 @@ class FLORP{
     }
     setcookie($this->strClickTriggerCookieKey, "0", time() + (1 * 24 * 60 * 60), '/');
     $aJS = array(
-      'hide_flashmob_fields'      => $this->aOptions['bHideFlashmobFields'],
-      'reload_ok_submission'      => $this->aOptions['bReloadAfterSuccessfulSubmission'],
+      'hide_flashmob_fields'      => $this->aOptions['bHideFlashmobFields'] ? 1 : 0,
+      'reload_ok_submission'      => $this->aOptions['bReloadAfterSuccessfulSubmission'] ? 1 : 0,
       'reload_ok_cookie'          => 'florp-form-saved',
       'florp_trigger_anchor'      => $this->strClickTriggerAnchor,
       'map_ajax_action'           => 'florp_map_ajax',
@@ -814,8 +847,8 @@ class FLORP{
   
   public function action__add_options_page() {
     add_options_page(
-      "Profil organizátora flashmobu",
-      "Profil organizátora flashmobu",
+      "Profil organizátora SVK flashmobu",
+      "Profil organizátora SVK flashmobu",
       "manage_options",
       $this->strOptionsPageSlug,
       array( $this, "options_page" )
@@ -824,48 +857,139 @@ class FLORP{
 
   public function options_page() {
     // echo "<h1>" . __("Flashmob Organizer Profile Options", "florp" ) . "</h1>";
-    echo "<h1>" . "Nastavenia profilu organizátora flashmobu" . "</h1>";
+    echo "<h1>" . "Nastavenia profilu organizátora slovenského flashmobu" . "</h1>";
 
     if (isset($_POST['save-florp-options'])) {
       $this->save_option_page_options($_POST);
     }
     
-    if ($this->aOptions['bHideFlashmobFields'] === true) {
-      $strHideFieldsChecked = 'checked="checked"';
-    } else {
-      $strHideFieldsChecked = '';
-    }
+    // echo "<pre>" .var_export($this->aOptions, true). "</pre>";
+    // $aMapOptions = $this->get_map_options_array(false, 0);
+    // echo "<pre>" .var_export($aMapOptions, true). "</pre>";
+
     if ($this->aOptions['bReloadAfterSuccessfulSubmission'] === true) {
       $strReloadChecked = 'checked="checked"';
     } else {
       $strReloadChecked = '';
     }
     
+    $iFlashmobMonth = $this->aOptions["iFlashmobMonth"];
+    $optionsMonths = "";
+    for ($i = 1; $i <= 12; $i++) {
+      if ($iFlashmobMonth == $i) {
+        $strSelected = 'selected="selected"';
+      } else {
+        $strSelected = '';
+      }
+      $strMonthName = __( date('F', mktime(0, 0, 0, $i, 1, date('Y'))), 'florp' );
+      $optionsMonths .= '<option value="'.$i.'" '.$strSelected.'>'.$strMonthName.'</option>';
+    }
+    
+    $iYearNow = intval(date('Y'));
+    $aNumOptionSettings = array(
+      'optionsYears'    => array( 'start' => $iYearNow - 5, 'end' => $iYearNow + 5, 'leadingZero' => false, 'optionKey' => 'iFlashmobYear' ),
+      'optionsDays'     => array( 'start' => 1, 'end' => 31, 'leadingZero' => false, 'optionKey' => 'iFlashmobDay' ),
+      'optionsHours'    => array( 'start' => 0, 'end' => 23, 'leadingZero' => true, 'optionKey' => 'iFlashmobHour' ),
+      'optionsMinutes'  => array( 'start' => 0, 'end' => 59, 'leadingZero' => true, 'optionKey' => 'iFlashmobMinute' ),
+    );
+    $aNumOptions = array();
+    foreach ($aNumOptionSettings as $strOptionKey => $aSettings) {
+      $aNumOptions[$strOptionKey] = '';
+      $iOptionValue = isset($this->aOptions[$aSettings['optionKey']]) ? intval($this->aOptions[$aSettings['optionKey']]) : -1;
+      for ($i = $aSettings['start']; $i <= $aSettings['end']; $i++) {
+        if ($strOptionKey === "optionsYears" && isset($this->aOptions['aYearlyMapOptions'][$i])) {
+          continue;
+        }
+        if ($iOptionValue == $i) {
+          $strSelected = 'selected="selected"';
+        } else {
+          $strSelected = '';
+        }
+        if ($aSettings['leadingZero'] && $i < 10) {
+          $strLabel = "0".$i;
+        } else {
+          $strLabel = $i;
+        }
+        $aNumOptions[$strOptionKey] .= '<option value="'.$i.'" '.$strSelected.'>'.$strLabel.'</option>';
+      }
+    }
+    $strOptionsDaysStart = "";
+    $strOptionsDaysEnd = "";
+    $iSeasonStartDay = $this->aOptions["iSeasonStartDay"];
+    $iSeasonEndDay = $this->aOptions["iSeasonEndDay"];
+    
     echo str_replace(
-      array( '%%hideFieldsChecked%%', '%%reloadChecked%%' ),
-      array( $strHideFieldsChecked, $strReloadChecked ),
+      array( '%%reloadChecked%%', '%%optionsYears%%', '%%optionsMonths%%', '%%optionsDays%%', '%%optionsHours%%', '%%optionsMinutes%%' ),
+      array( $strReloadChecked, $aNumOptions['optionsYears'], $optionsMonths, $aNumOptions['optionsDays'], $aNumOptions['optionsHours'], $aNumOptions['optionsMinutes'] ),
       '
         <form action="" method="post">
-          <input id="florp_hide_flashmob_form_fields" name="florp_hide_flashmob_form_fields" type="checkbox" %%hideFieldsChecked%% value="1"/>
-          <label for="florp_hide_flashmob_form_fields">Vypnúť položky vo formulári, týkajúce sa flashmobu (tj. flashmob sa v tomto roku ešte nestal)?</label><br/>
-          <input id="save-florp-options-bottom" class="button button-primary right button-large" name="save-florp-options" type="submit" value="Ulož" />
+          <table style="width: 100%">
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                <label for="florp_reload_after_ok_submission">Znovu načítať celú stránku po vypnutí popup-u po úspešnom uložení formulára?</label>
+              </th>
+              <td>
+                <input id="florp_reload_after_ok_submission" name="florp_reload_after_ok_submission" type="checkbox" %%reloadChecked%% value="1"/>
+              </td>
+            </tr>
+              <th colspan="2">
+                <span style="font-size: smaller;">Znovunačítanie je odporúčané zapnúť iba ak je problém s obnovením mapky / mapiek po uložení formuláru.</span>
+              </th>
+            <tr>
+              <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_flashmob_year">Dátum a čas slovenského flashmobu</label></th>
+              <td>
+                <select id="florp_flashmob_year" name="florp_flashmob_year">%%optionsYears%%</select>
+                / <select id="florp_flashmob_month" name="florp_flashmob_month">%%optionsMonths%%</select>
+                / <select id="florp_flashmob_day" name="florp_flashmob_day">%%optionsDays%%</select>
+                <select id="florp_flashmob_hour" name="florp_flashmob_hour">%%optionsHours%%</select>
+                : <select id="florp_flashmob_minute" name="florp_flashmob_minute">%%optionsMinutes%%</select>
+              </td>
+            </tr>
+            <tr>
+              <th colspan="2">
+                <span style="font-size: smaller;">Pozor: Ak zmeníte rok flashmobu, aktuálny rok sa archivuje a položky týkajúce sa presného miesta a videa sa u každého registrovaného účastníka vymažú.</span>
+              </th>
+            </tr>
+          </table>
+          
+          <span style="">
+            <input id="save-florp-options-bottom" class="button button-primary button-large" name="save-florp-options" type="submit" value="Ulož" />
+          </span>
         </form>
       '
     );
-    // TODO button to archive current year's flashmob mapOptions ($this->archive_current_year_map_options) //
-    /*
-          <input id="florp_reload_after_ok_submission" name="florp_reload_after_ok_submission" type="checkbox" %%reloadChecked%% value="1"/>
-          <label for="florp_reload_after_ok_submission">Znovu načítať stránku po vypnutí popup-u po úspešnom uložení formulára?</label>
-    */
   }
   
   private function save_option_page_options( $aPostedOptions ) {
-    $aOptionsToSave = array(
-      'bHideFlashmobFields'               => ($aPostedOptions['florp_hide_flashmob_form_fields'] === '1'),
-      'bReloadAfterSuccessfulSubmission'  => ($aPostedOptions['florp_reload_after_ok_submission'] === '1')
-    );
-    update_site_option( $this->strOptionKey, $aOptionsToSave, true );
-    $this->aOptions = $aOptionsToSave;
+    $iFlashmobYearCurrent = intval($this->aOptions['iFlashmobYear']);
+    $iFlashmobYearNew = isset($aPostedOptions['florp_flashmob_year']) ? intval($aPostedOptions['florp_flashmob_year']) : $iFlashmobYearCurrent;
+    if (isset($this->aOptions['aYearlyMapOptions'][$iFlashmobYearNew])) {
+      echo '<span class="warning">Rok flashmobu možno nastaviť len na taký, pre ktorý ešte nie sú archívne dáta v DB!</span>';
+      return false;
+    } elseif ($iFlashmobYearNew != $iFlashmobYearCurrent) {
+      $this->archive_current_year_map_options();
+      echo '<span class="info">Dáta flashmobu z roku '.$iFlashmobYearCurrent.' boli archivované.</span>';
+    }
+  
+    foreach ($this->aBooleanOptions as $strOptionKey) {
+      $this->aOptions[$strOptionKey] = false;
+    }
+    foreach ($aPostedOptions as $key => $val) {
+      if (isset($this->aOptionFormKeys[$key])) {
+        $strOptionKey = $this->aOptionFormKeys[$key];
+      } else {
+        continue;
+      }
+      if (in_array( $strOptionKey, $this->aBooleanOptions )) {
+        // Boolean //
+        $this->aOptions[$strOptionKey] = ($val == '1');
+      } else {
+        $this->aOptions[$strOptionKey] = $val;
+      }
+    }
+    update_site_option( $this->strOptionKey, $this->aOptions, true );
+    
+    return true;
   }
   
   public function action__remove_admin_bar() {
