@@ -570,7 +570,7 @@ function florpFixFormClasses() {
       thisButtonObj.addClass("florp-button-find-location");
     }
   });
-  findLocationbutton = jQuery("florp-button-find-location");
+  findLocationbutton = jQuery(".florp-button-find-location");
 
   // Hide after-flashmob fields //
   if (florp.hide_flashmob_fields == 1) {
