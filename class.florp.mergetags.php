@@ -76,7 +76,16 @@ class FlorpMergeTags extends NF_Abstracts_MergeTags
     $iUserID = get_current_user_id();
     foreach ($matches[0] as $i => $search) {
       $meta_key = $matches[1][$i];
-      $meta_val = get_user_meta( $iUserID, $meta_key, true );
+      if ($meta_key === 'user_login') {
+        if (is_user_logged_in()) {
+          $objUser = wp_get_current_user();
+          $meta_val = $objUser->user_login;
+        } else {
+          $meta_val = "";
+        }
+      } else {
+        $meta_val = get_user_meta( $iUserID, $meta_key, true );
+      }
       $subject = str_replace( $search, $meta_val, $subject );
     }
 

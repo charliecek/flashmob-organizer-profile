@@ -39,7 +39,7 @@ nf-field.florp-hidden-if-map-correct{
 }
 .nf-response-msg{
   position: fixed;
-  top: 20px;
+  top: 5em;
   left: 0;
   width: 100%;
   text-align: center;
@@ -47,7 +47,7 @@ nf-field.florp-hidden-if-map-correct{
 }
 .nf-form-errors{
   position: fixed;
-  bottom: 5em;
+  top: 5em;
   left: 0;
   width: 100%;
   text-align: center;

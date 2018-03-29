@@ -4,12 +4,12 @@
  * Description: Creates shortcodes for flashmob organizer login / registration / profile editing form and for maps showing cities with videos of flashmobs for each year
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 2.3.2
+ * Version: 2.4.0
  */
 
 class FLORP{
 
-  private $strVersion = '2.3.2';
+  private $strVersion = '2.4.0';
   private $iFlashmobBlogID = 6;
   private $strOptionsPageSlug = 'florp-options';
   private $strOptionKey = 'florp-options';
@@ -310,6 +310,7 @@ class FLORP{
     // add_filter( 'ninja_forms_render_default_value', array( $this, 'filter__set_nf_default_values'), 10, 3 );
     add_filter( 'us_meta_tags', array( $this, 'filter__us_meta_tags' ));
     // add_filter( 'us_meta_tags', array( $this, 'filter__us_meta_tags_before_echo' ));
+    add_filter( 'ninja_forms_display_fields', array($this, 'filter__ninja_forms_display_fields' ));
     
     add_action( 'ninja_forms_register_actions', array( $this, 'action__register_nf_florp_action' ));
     add_action( 'ninja_forms_after_submission', array( $this, 'action__update_user_profile' ));
@@ -385,6 +386,39 @@ class FLORP{
     );
   }
 
+  public function filter__ninja_forms_display_fields( $aFields ) {
+    if(is_user_logged_in()){
+      foreach ($aFields as $key => $aField) {
+        if (isset($aField['element_class']) && stripos($aField['element_class'], 'divider_som_organizator_rueda_flashmobu') !== false) {
+          $aFields[$key]['container_class'] .= " hidden";
+        } elseif (isset($aField['key']) && ($aField['key'] === 'som_organizator_rueda_flashmobu')) {
+          $aFields[$key]['container_class'] .= " hidden";
+          $aFields[$key]['required'] = false;
+        } elseif (isset($aField['key']) && ($aField['key'] === 'user_login')) {
+          $aFields[$key]['container_class'] .= " hidden";
+          $aFields[$key]['required'] = false;
+        }
+      }
+    } else {
+//       var_dump($aFields);
+      foreach ($aFields as $key => $aField) {
+        if (isset($aField['key']) && ($aField['key'] === 'user_pass' || $aField['key'] === 'passwordconfirm')) {
+          $aFields[$key]['required'] = true;
+          $aFields[$key]['desc_text'] = '';
+        } elseif (isset($aField['key']) && ($aField['key'] === 'user_login')) {
+          $aFields[$key]['disable_input'] = '';
+        } elseif (isset($aField['type']) && ($aField['type'] === 'submit')) {
+          $aFields[$key]['label'] = 'Zaregistruj ma';
+          $aFields[$key]['processing_label'] = 'Registrujem';
+        } elseif (isset($aField['key']) && ($aField['key'] === 'som_organizator_rueda_flashmobu')) {
+          $aFields[$key]['disable_input'] = '';
+          $aFields[$key]['default_value'] = 'unchecked';
+        }
+      }
+    }
+    return $aFields;
+  }
+  
   public function profile_form( $aAttributes ) {
     $strShortcodeOutput = do_shortcode( '[ninja_form id=2]' );
     return '<div id="'.$this->strProfileFormWrapperID.'">' . $strShortcodeOutput.'</div>';
@@ -967,8 +1001,9 @@ class FLORP{
       echo '<span class="warning">Rok flashmobu možno nastaviť len na taký, pre ktorý ešte nie sú archívne dáta v DB!</span>';
       return false;
     } elseif ($iFlashmobYearNew != $iFlashmobYearCurrent) {
-      $this->archive_current_year_map_options();
-      echo '<span class="info">Dáta flashmobu z roku '.$iFlashmobYearCurrent.' boli archivované.</span>';
+//       TODO DEVEL
+//       $this->archive_current_year_map_options();
+//       echo '<span class="info">Dáta flashmobu z roku '.$iFlashmobYearCurrent.' boli archivované.</span>';
     }
   
     foreach ($this->aBooleanOptions as $strOptionKey) {
@@ -1193,7 +1228,47 @@ class FLORP{
     // Update the user's profile //
     // file_put_contents( __DIR__ . "/kk-debug-after-submission.log", var_export( $aFormData, true ) );
     
-    $iUserID = get_current_user_id();
+    if (is_user_logged_in()) {
+      $iUserID = get_current_user_id();
+    } else {
+      // Get field values by keys //
+      $aFieldData = array();
+      foreach ($aFormData["fields"] as $strKey => $aData) {
+        $aFieldData[$aData["key"]] = $aData['value'];
+      }
+      // Create new user //
+      $mixResult = wp_create_user( $aFieldData['user_login'], $aFieldData['user_pass'], $aFieldData['user_email'] );
+      if ( is_wp_error($mixResult) ) {
+        file_put_contents( __DIR__ . "/kk-debug-after-submission-create-error.log", var_export( array( $aFieldData, $aFormData ), true ) );
+        return;
+      } else {
+        // Success
+        $iUserID = $mixResult;
+        if (is_multisite()) {
+          add_user_to_blog( $this->iFlashmobBlogID, $iUserID, 'subscriber' );
+        }
+        $strBlogname = wp_specialchars_decode(get_option('blogname'), ENT_QUOTES);
+        LoginWithAjax::new_user_notification( $aFieldData['user_login'], $aFieldData['user_pass'], $aFieldData['user_email'], $strBlogname ); // TODO maybe move the text and sending to this plugin
+
+        // New user notification to admins //
+        $message  = sprintf(__('New user registration on your site %s:'), $strBlogname) . "\n\n";
+        $message .= sprintf(__('Username: %s'), $aFieldData['user_login'] ) . "\n\n";
+        $message .= sprintf(__('E-mail: %s'), $aFieldData['user_email'] ) . "\n";
+        $aAdminArgs = array(
+          'blog_id' => get_current_blog_id(),
+          'role'    => 'administrator'
+        );
+        $aAdmins = array(); // TODO DEVEL
+//             $aAdmins = get_users( $aAdminArgs ); // TODO DEVEL
+        if (empty($aAdmins)) {
+          @wp_mail(get_option('admin_email'), sprintf(__('[%s] New User Registration'), $strBlogname), $message);
+        } else {
+          foreach ($aAdmins as $iKey => $oAdmin) {
+            @wp_mail($oAdmin->user_email, sprintf(__('[%s] New User Registration'), $strBlogname), $message);
+          }
+        }
+      }
+    }
     $aUserData = array();
     foreach ($aFormData["fields"] as $strKey => $aData) {
       $strFieldKey = $aData['key'];

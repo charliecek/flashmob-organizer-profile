@@ -69,14 +69,34 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
         'facebook_link' => array( 'name' => 'Facebook', 'regex' => '~^https?://(www.)?facebook.com/[a-zA-Z0-9]+/videos/[a-zA-Z0-9]+/?$~i'),
         'vimeo_link'    => array( 'name' => 'Vimeo', 'regex' => '~^https?://(www.)?vimeo.com/([0-9]+)/?$~i'),
       );
+      $bUserIsLoggedIn = is_user_logged_in();
+      if ($bUserIsLoggedIn) {
+        $aCurUserInfo = get_currentuserinfo();
+      }
       foreach ($data['fields'] as $field_id => $field_value ) {
         $strKey = $field_value['key'];
         $strValue = $field_value['value'];
         switch( $strKey ) {
+          case "som_organizator_rueda_flashmobu":
+            if ($strValue != 1) {
+              $data[ 'errors' ][ 'form' ][$strKey] = "Táto registrácia je pre organizátorov rueda flashmob-u. Ak nie ste organizátor, prosíme, neregistrujte sa, kontaktujte svojho Rueda inštruktora vo Vašom meste alebo najbližšom meste, aby sa zaregistroval a zorganizoval Flashmob. Ďakujeme za porozumenie.";
+            }
+            break;
+          case "user_login":
+            $strValue = trim( $strValue );
+            if ($bUserIsLoggedIn && $strValue != $aCurUserInfo->user_login) {
+              $data[ 'errors' ][ 'form' ][$strKey] = 'Meniť používateľské meno je zakázané';
+            } elseif (!$bUserIsLoggedIn && username_exists($strValue)) {
+              $data[ 'errors' ][ 'form' ][$strKey] = 'Zadané používateľské meno už je zaregistrované';
+            } elseif ( !$bUserIsLoggedIn && (strlen($strValue) < 3 || preg_match("/[^a-zA-Z0-9_-]/", $strValue) || !preg_match("/^[a-zA-Z]/", $strValue))) {
+              $data[ 'errors' ][ 'form' ][$strKey] = 'Zadané používateľské meno je neplatné';
+            }
+            break;
           case "user_email":
             $strValue = trim( $strValue );
-            $aCurUserInfo = get_currentuserinfo();
-            if( email_exists( $strValue ) && $aCurUserInfo->user_email != $strValue ) {
+            if ($bUserIsLoggedIn && email_exists( $strValue ) && $aCurUserInfo->user_email != $strValue) {
+              $data[ 'errors' ][ 'form' ][$strKey] = 'Zadaný e-mail už je zaregistrovaný'; //__( 'The submitted email is in use already', 'florp' ); // Zadaný e-mail už je zaregistrovaný
+            } elseif (!$bUserIsLoggedIn && email_exists( $strValue )) {
               $data[ 'errors' ][ 'form' ][$strKey] = 'Zadaný e-mail už je zaregistrovaný'; //__( 'The submitted email is in use already', 'florp' ); // Zadaný e-mail už je zaregistrovaný
             }
             break;
@@ -129,8 +149,14 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
           $data[ 'errors' ][ 'form' ]['user_pass'] = 'Nezadali ste heslo na potvrdenie';
         } elseif ($aPwdCheck['user_pass'] !== $aPwdCheck['passwordconfirm']) {
           $data[ 'errors' ][ 'form' ]['user_pass'] = 'Heslá sa nezhodujú';
+        } elseif (strlen($aPwdCheck['user_pass']) < 7) {
+          $data[ 'errors' ][ 'form' ]['user_pass'] = 'Heslo je príliš krátke (aspoň 7 znakov)';
         }
       }
+//       if (!$bUserIsLoggedIn) {
+//         $data[ 'errors' ][ 'form' ][] = 'DEVEL STOP';
+//         $data[ 'errors' ][ 'form' ][] = '<pre>'.var_export($data['fields'], true).'</pre>';
+//       }
 //       $data[ 'errors' ][ 'form' ][] = 'DEVEL STOP';
       return $data;
       //$data[ 'errors' ][ 'form' ] = $errors;
