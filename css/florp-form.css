@@ -5,6 +5,7 @@ select[disabled] {
 body.state_default nf-field.florp-left{
   float: left;
   width: 49%;
+  clear: both;
 }
 body.state_default nf-field.florp-right{
   float: right;
@@ -36,16 +37,34 @@ nf-field.florp-hidden-if-map-correct{
 .florp-clear{
   clear:both;
 }
-.florp_success_message{
+.nf-response-msg{
+  position: fixed;
   top: 20px;
   left: 0;
   width: 100%;
-  position: fixed;
-  color: green;
-  z-index: 200;
   text-align: center;
+  z-index: 200;
+}
+.nf-form-errors{
+  position: fixed;
+  bottom: 5em;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  z-index: 200;
+}
+.florp_success_message{
+  color: green;
   font-weight: bold;
   font-size: x-large;
+  background-color: rgba( 238, 238, 238, 1.00 );
+  position: relative;
+}
+nf-errors{
+  font-weight: bold;
+  font-size: x-large;
+/*   background-color: rgba( 238, 238, 238, 1.00 ); */
+  position: relative;
 }
 .florp-user-info-box{
   position: absolute;

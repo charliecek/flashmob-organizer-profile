@@ -452,6 +452,30 @@ function florpReloadYearlyMap( iYear = 0 ) {
   });
 }
 
+jQuery(document).on( 'pumAfterOpen', '#pum-5347', function () {
+  var $popup = PUM.getPopup(this);
+  if (!$popup.length || !$popup.hasClass('pum')) { $popup = jQuery(this); console.warn("Trying to get the popup object by jQuery from 'this'"); }
+  if (!$popup.length || !$popup.hasClass('pum')) { $popup = jQuery('#pum-5347'); console.warn("Trying to get the popup object by jQuery from ID"); }
+  if (!$popup.length || !$popup.hasClass('pum')) { console.warn("Couldn't get the popup object!"); return; }
+  var settings = $popup.popmake('getSettings');
+  if (settings.close_on_overlay_click) {
+    setTimeout(function () {
+      // Remove the original close overlay event //
+      jQuery(document).off('click.pumCloseOverlay');
+
+      // Add the overlay event with a check whether the click was on the submit button //
+      jQuery(document).on('click.pumCloseOverlay', function (e) {
+        var $target = jQuery(e.target);
+        if(!$target.closest('.pum-container').length && !$target.hasClass("florp_uloz_profil")) {
+          var $popup = PUM.getPopup(e.target);
+          if (!$popup.length || !$popup.hasClass('pum')) { console.warn("Couldn't get the popup object!"); return; }
+          jQuery.fn.popmake.last_close_trigger = 'Overlay Click';
+          $popup.popmake('close');
+        }
+      });
+    }, 500);
+  }
+});
 jQuery(document).on( 'pumBeforeClose', '#pum-5347', florpScrollToAnchor );
 // jQuery(document).on( 'pumAfterClose', '#pum-5347', florpScrollToAnchor );
 jQuery(document).on( 'pumAfterClose', '#pum-5347', florp_reload_on_successful_submission );
