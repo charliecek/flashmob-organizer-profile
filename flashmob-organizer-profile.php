@@ -11,6 +11,8 @@ class FLORP{
 
   private $strVersion = '2.4.0';
   private $iFlashmobBlogID = 6;
+  private $iProfileFormNinjaFormID = 2;
+  private $iProfileFormPopupID = 5347;
   private $strOptionsPageSlug = 'florp-options';
   private $strOptionKey = 'florp-options';
   private $aOptionDefaults = array();
@@ -35,6 +37,8 @@ class FLORP{
       'iFlashmobDay'                      => 1,
       'iFlashmobHour'                     => 0,
       'iFlashmobMinute'                   => 0,
+      'iProfileFormNinjaFormID'           => 2,
+      'iProfileFormPopupID'               => 5347,
     );
     $this->aOptionFormKeys = array(
       'florp_reload_after_ok_submission'  => 'bReloadAfterSuccessfulSubmission',
@@ -43,6 +47,8 @@ class FLORP{
       'florp_flashmob_day'                => 'iFlashmobDay',
       'florp_flashmob_hour'               => 'iFlashmobHour',
       'florp_flashmob_minute'             => 'iFlashmobMinute',
+      'florp_profile_form_ninja_form_id'  => 'iProfileFormNinjaFormID',
+      'florp_profile_form_popup_id'       => 'iProfileFormPopupID',
     );
     $aDeprecatedKeys = array( 'iCurrentFlashmobYear', 'bHideFlashmobFields' );
     $this->aBooleanOptions = array( 'bReloadAfterSuccessfulSubmission' );
@@ -70,6 +76,8 @@ class FLORP{
       }
     }
     
+    $this->iProfileFormNinjaFormID = intval($this->aOptions['iProfileFormNinjaFormID']);
+    $this->iProfileFormPopupID = intval($this->aOptions['iProfileFormPopupID']);
     $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
     $iFlashmobTime = intval(mktime( $this->aOptions['iFlashmobHour'] - $iTimeZoneOffset, $this->aOptions['iFlashmobMinute'], 0, $this->aOptions['iFlashmobMonth'], $this->aOptions['iFlashmobDay'], $this->aOptions['iFlashmobYear'] ));
     $iNow = time();
@@ -387,6 +395,20 @@ class FLORP{
   }
 
   public function filter__ninja_forms_display_fields( $aFields ) {
+    $bIsProfileForm = false;
+    foreach ($aFields as $aField) {
+      if (isset($aField['key']) && ($aField['key'] === 'is_profile_form')) {
+        $bIsProfileForm = true;
+        break;
+      } elseif (isset($aField['key']) && ($aField['key'] === 'flashmob_address')) {
+        $bIsProfileForm = true;
+        break;
+      }
+    }
+    if (!$bIsProfileForm) {
+      return $aFields;
+    }
+
     if(is_user_logged_in()){
       foreach ($aFields as $key => $aField) {
         if (isset($aField['element_class']) && stripos($aField['element_class'], 'divider_som_organizator_rueda_flashmobu') !== false) {
@@ -400,7 +422,7 @@ class FLORP{
         }
       }
     } else {
-//       var_dump($aFields);
+      // var_dump($aFields);
       foreach ($aFields as $key => $aField) {
         if (isset($aField['key']) && ($aField['key'] === 'user_pass' || $aField['key'] === 'passwordconfirm')) {
           $aFields[$key]['required'] = true;
@@ -420,7 +442,7 @@ class FLORP{
   }
   
   public function profile_form( $aAttributes ) {
-    $strShortcodeOutput = do_shortcode( '[ninja_form id=2]' );
+    $strShortcodeOutput = do_shortcode( '[ninja_form id='.$this->iProfileFormNinjaFormID.']' );
     return '<div id="'.$this->strProfileFormWrapperID.'">' . $strShortcodeOutput.'</div>';
   }
   
@@ -869,6 +891,9 @@ class FLORP{
       'click_trigger_class'       => $this->strClickTriggerClass,
       'do_trigger_popup_click'    => $bDoTriggerPopupClick,
       'general_map_options'       => $this->aGeneralMapOptions,
+      'form_id'                   => $this->iProfileFormNinjaFormID,
+      'logging_in_msg'            => "Prihlasujeme Vás... Prosíme, počkajte, kým sa stránka znovu načíta.",
+      'popup_id'                  => $this->iProfileFormPopupID,
     );
     if (is_user_logged_in()) {
       $oCurrentUser = wp_get_current_user();
@@ -880,13 +905,16 @@ class FLORP{
   }
   
   public function action__add_options_page() {
-    add_options_page(
-      "Profil organizátora SVK flashmobu",
-      "Profil organizátora SVK flashmobu",
-      "manage_options",
-      $this->strOptionsPageSlug,
-      array( $this, "options_page" )
-    );
+    $iBlogID = get_current_blog_id();
+    if ($iBlogID == $this->iFlashmobBlogID) {
+      add_options_page(
+        "Profil organizátora SVK flashmobu",
+        "Profil organizátora SVK flashmobu",
+        "manage_options",
+        $this->strOptionsPageSlug,
+        array( $this, "options_page" )
+      );
+    }
   }
 
   public function options_page() {
@@ -907,6 +935,41 @@ class FLORP{
       $strReloadChecked = '';
     }
     
+    $optionsNinjaForms = '';
+    if (function_exists('Ninja_Forms')) {
+      $aForms = Ninja_Forms()->form()->get_forms();
+      foreach( $aForms as $objForm ){
+        $iID = $objForm->get_id();
+        $strTitle = $objForm->get_setting( 'title' );
+        if ($this->iProfileFormNinjaFormID == $iID) {
+          $strSelected = 'selected="selected"';
+        } else {
+          $strSelected = '';
+        }
+        $optionsNinjaForms .= '<option value="'.$iID.'" '.$strSelected.'>'.$strTitle.'</option>';
+      }
+    }
+
+    $optionsPopups = '';
+    if (function_exists('get_all_popups')) {
+      $aPopupsWPQuery = get_all_popups();
+//       var_dump($aPopupsWPQuery);
+
+      if ( $aPopupsWPQuery->have_posts() ) {
+        while ( $aPopupsWPQuery->have_posts() ) :
+          $aPopupsWPQuery->next_post();
+          $iID = $aPopupsWPQuery->post->ID;
+          $strTitle = $aPopupsWPQuery->post->post_title;
+          if ($this->iProfileFormPopupID == $iID) {
+            $strSelected = 'selected="selected"';
+          } else {
+            $strSelected = '';
+          }
+          $optionsPopups .= '<option value="'.$iID.'" '.$strSelected.'>'.$strTitle.'</option>';
+        endwhile;
+      }
+    }
+
     $iFlashmobMonth = $this->aOptions["iFlashmobMonth"];
     $optionsMonths = "";
     for ($i = 1; $i <= 12; $i++) {
@@ -953,11 +1016,23 @@ class FLORP{
     $iSeasonEndDay = $this->aOptions["iSeasonEndDay"];
     
     echo str_replace(
-      array( '%%reloadChecked%%', '%%optionsYears%%', '%%optionsMonths%%', '%%optionsDays%%', '%%optionsHours%%', '%%optionsMinutes%%' ),
-      array( $strReloadChecked, $aNumOptions['optionsYears'], $optionsMonths, $aNumOptions['optionsDays'], $aNumOptions['optionsHours'], $aNumOptions['optionsMinutes'] ),
+      array( '%%reloadChecked%%', '%%optionsYears%%', '%%optionsMonths%%', '%%optionsDays%%', '%%optionsHours%%', '%%optionsMinutes%%', '%%optionsNinjaForms%%', '%%optionsPopups%%' ),
+      array( $strReloadChecked, $aNumOptions['optionsYears'], $optionsMonths, $aNumOptions['optionsDays'], $aNumOptions['optionsHours'], $aNumOptions['optionsMinutes'], $optionsNinjaForms, $optionsPopups ),
       '
         <form action="" method="post">
           <table style="width: 100%">
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_profile_form_ninja_form_id">Registračný / profilový formulár (spomedzi Ninja Form formulárov)</label></th>
+              <td>
+                <select id="florp_profile_form_ninja_form_id" name="florp_profile_form_ninja_form_id">%%optionsNinjaForms%%</select>
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_profile_form_popup_id">PUM Popup, v ktorom je registračný / profilový formulár</label></th>
+              <td>
+                <select id="florp_profile_form_popup_id" name="florp_profile_form_popup_id">%%optionsPopups%%</select>
+              </td>
+            </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;">
                 <label for="florp_reload_after_ok_submission">Znovu načítať celú stránku po vypnutí popup-u po úspešnom uložení formulára?</label>
@@ -966,10 +1041,12 @@ class FLORP{
                 <input id="florp_reload_after_ok_submission" name="florp_reload_after_ok_submission" type="checkbox" %%reloadChecked%% value="1"/>
               </td>
             </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
               <th colspan="2">
                 <span style="font-size: smaller;">Znovunačítanie je odporúčané zapnúť iba ak je problém s obnovením mapky / mapiek po uložení formuláru.</span>
               </th>
-            <tr>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_flashmob_year">Dátum a čas slovenského flashmobu</label></th>
               <td>
                 <select id="florp_flashmob_year" name="florp_flashmob_year">%%optionsYears%%</select>
@@ -979,13 +1056,13 @@ class FLORP{
                 : <select id="florp_flashmob_minute" name="florp_flashmob_minute">%%optionsMinutes%%</select>
               </td>
             </tr>
-            <tr>
+            <tr style="width: 98%; padding:  5px 1%;">
               <th colspan="2">
                 <span style="font-size: smaller;">Pozor: Ak zmeníte rok flashmobu, aktuálny rok sa archivuje a položky týkajúce sa presného miesta a videa sa u každého registrovaného účastníka vymažú.</span>
               </th>
             </tr>
           </table>
-          
+
           <span style="">
             <input id="save-florp-options-bottom" class="button button-primary button-large" name="save-florp-options" type="submit" value="Ulož" />
           </span>
@@ -1023,7 +1100,10 @@ class FLORP{
       }
     }
     update_site_option( $this->strOptionKey, $this->aOptions, true );
-    
+
+    $this->iProfileFormNinjaFormID = intval($this->aOptions['iProfileFormNinjaFormID']);
+    $this->iProfileFormPopupID = intval($this->aOptions['iProfileFormPopupID']);
+
     return true;
   }
   
@@ -1221,13 +1301,22 @@ class FLORP{
   public function action__register_nf_florp_action( $actions ) {
     require_once __DIR__ . "/class.florp.actions.php";
     $actions['florp'] = new NF_Actions_Florp();
+    require_once __DIR__ . "/class.success-message-logged-in.php";
+    $actions['success-message-logged-in'] = new NF_Actions_SuccessMessageLoggedIn();
+    require_once __DIR__ . "/class.success-message-logged-out.php";
+    $actions['success-message-logged-out'] = new NF_Actions_SuccessMessageLoggedOut();
     return $actions;
   }
   
   public function action__update_user_profile( $aFormData ) {
     // Update the user's profile //
     // file_put_contents( __DIR__ . "/kk-debug-after-submission.log", var_export( $aFormData, true ) );
-    
+
+    if (intval($aFormData['form_id']) !== $this->iProfileFormNinjaFormID) {
+      // Not the profile form //
+      return;
+    }
+
     if (is_user_logged_in()) {
       $iUserID = get_current_user_id();
     } else {
@@ -1269,6 +1358,7 @@ class FLORP{
         }
       }
     }
+
     $aUserData = array();
     foreach ($aFormData["fields"] as $strKey => $aData) {
       $strFieldKey = $aData['key'];
@@ -1279,7 +1369,7 @@ class FLORP{
         $aMetaData[$strFieldKey] = $mixValue;
       }
     }
-    
+
     if (!empty($aUserData)) {
       $aUserData['ID'] = $iUserID;
       $mixRes = wp_update_user( $aUserData );
@@ -1298,7 +1388,11 @@ class FLORP{
     }
     setcookie('florp-form-saved', "1", time() + (1 * 24 * 60 * 60), '/');
   }
-  
+
+  public function get_profile_form_id() {
+    return $this->iProfileFormNinjaFormID;
+  }
+
   public static function activate() {
 //     if ( !wp_next_scheduled( 'ai1ecf_add_missing_featured_images' ) ) {
 //       wp_schedule_event( time(), 'hourly', 'ai1ecf_add_missing_featured_images');
@@ -1308,7 +1402,6 @@ class FLORP{
   public static function deactivate() {
 //     wp_clear_scheduled_hook('ai1ecf_add_missing_featured_images');
   }
-
 }
 
 $FLORP = new FLORP();
@@ -1318,6 +1411,10 @@ register_deactivation_hook(__FILE__, array('FLORP', 'deactivate'));
 function florp_profile_form( $aAttributes = array() ) {
   global $FLORP;
   echo $FLORP->profile_form( $aAttributes );
+}
+function florp_get_profile_form_id() {
+  global $FLORP;
+  return $FLORP->get_profile_form_id();
 }
 function florp_profile_form_loader( $aAttributes = array() ) {
   return;

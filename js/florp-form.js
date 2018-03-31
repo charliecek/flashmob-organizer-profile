@@ -29,8 +29,12 @@ function florpGetCookie(key) {
 }
 
 jQuery(document).on('lwa_login', function(event, data, form) {
-  florpSetCookie("florp-popup", "1");
-  console.log("cookie was set");
+  if ("undefined" === typeof florp.doNotSetCookie || florp.doNotSetCookie !== true) {
+    florpSetCookie("florp-popup", "1");
+    console.info("cookie was set");
+  } else {
+    console.info("cookie was NOT set");
+  }
 });
 
 function florpScrollToAnchor() {
@@ -452,10 +456,10 @@ function florpReloadYearlyMap( iYear = 0 ) {
   });
 }
 
-jQuery(document).on( 'pumAfterOpen', '#pum-5347', function () {
+jQuery(document).on( 'pumAfterOpen', '#pum-'+florp.popup_id, function () {
   var $popup = PUM.getPopup(this);
   if (!$popup.length || !$popup.hasClass('pum')) { $popup = jQuery(this); console.warn("Trying to get the popup object by jQuery from 'this'"); }
-  if (!$popup.length || !$popup.hasClass('pum')) { $popup = jQuery('#pum-5347'); console.warn("Trying to get the popup object by jQuery from ID"); }
+  if (!$popup.length || !$popup.hasClass('pum')) { $popup = jQuery('#pum-'+florp.popup_id); console.warn("Trying to get the popup object by jQuery from ID"); }
   if (!$popup.length || !$popup.hasClass('pum')) { console.warn("Couldn't get the popup object!"); return; }
   var settings = $popup.popmake('getSettings');
   if (settings.close_on_overlay_click) {
@@ -476,9 +480,9 @@ jQuery(document).on( 'pumAfterOpen', '#pum-5347', function () {
     }, 500);
   }
 });
-jQuery(document).on( 'pumBeforeClose', '#pum-5347', florpScrollToAnchor );
-// jQuery(document).on( 'pumAfterClose', '#pum-5347', florpScrollToAnchor );
-jQuery(document).on( 'pumAfterClose', '#pum-5347', florp_reload_on_successful_submission );
+jQuery(document).on( 'pumBeforeClose', '#pum-'+florp.popup_id, florpScrollToAnchor );
+// jQuery(document).on( 'pumAfterClose', '#pum-'+florp.popup_id, florpScrollToAnchor );
+jQuery(document).on( 'pumAfterClose', '#pum-'+florp.popup_id, florp_reload_on_successful_submission );
 
 jQuery( document ).on( 'nfFormReady', function() {
   florpFixFormClasses();
@@ -844,8 +848,8 @@ function florpFlashAnchors() {
 
 jQuery( document ).ready(function() {
   if ("undefined" === typeof florp.user_id ) {
-    jQuery("#pum_popup_title_5347").html("Registrácia organizátora flashmobu");
-    console.log(jQuery("#pum_popup_title_5347"))
+    jQuery("#pum_popup_title_"+florp.popup_id).html("Registrácia organizátora flashmobu");
+    // console.log(jQuery("#pum_popup_title_"+florp.popup_id))
   }
 
   florpGenerateYearlyMaps();

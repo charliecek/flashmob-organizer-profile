@@ -40,16 +40,16 @@ nf-field.florp-hidden-if-map-correct{
 .nf-response-msg{
   position: fixed;
   top: 5em;
-  left: 0;
-  width: 100%;
+  left: 35%;
+  width: 30%;
   text-align: center;
   z-index: 200;
 }
 .nf-form-errors{
   position: fixed;
   top: 5em;
-  left: 0;
-  width: 100%;
+  left: 35%;
+  width: 30%;
   text-align: center;
   z-index: 200;
 }
@@ -57,14 +57,16 @@ nf-field.florp-hidden-if-map-correct{
   color: green;
   font-weight: bold;
   font-size: x-large;
-  background-color: rgba( 238, 238, 238, 1.00 );
   position: relative;
+  background-color: rgba( 238, 238, 238, 1.00 );
+  border: 1px dotted green;
 }
-nf-errors{
+.nf-form-errors .nf-error-msg{
   font-weight: bold;
   font-size: x-large;
-/*   background-color: rgba( 238, 238, 238, 1.00 ); */
   position: relative;
+  background-color: rgba( 238, 238, 238, 1.00 );
+  border: 1px dotted red;
 }
 .florp-user-info-box{
   position: absolute;

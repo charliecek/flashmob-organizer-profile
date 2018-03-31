@@ -59,7 +59,7 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
 //           .'==== $data ===='.PHP_EOL.var_export( $data, true ).PHP_EOL
 //         //, FILE_APPEND | LOCK_EX
 //       );
-      if ($form_id != 2) {
+      if ($form_id != florp_get_profile_form_id()) {
         return $data;
       }
       setcookie('florp-form-saved', "0", time() + (1 * 24 * 60 * 60), '/');
