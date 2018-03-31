@@ -1070,7 +1070,7 @@ class FLORP{
       '
     );
   }
-  
+
   private function save_option_page_options( $aPostedOptions ) {
     $iFlashmobYearCurrent = intval($this->aOptions['iFlashmobYear']);
     $iFlashmobYearNew = isset($aPostedOptions['florp_flashmob_year']) ? intval($aPostedOptions['florp_flashmob_year']) : $iFlashmobYearCurrent;
@@ -1078,11 +1078,10 @@ class FLORP{
       echo '<span class="warning">Rok flashmobu možno nastaviť len na taký, pre ktorý ešte nie sú archívne dáta v DB!</span>';
       return false;
     } elseif ($iFlashmobYearNew != $iFlashmobYearCurrent) {
-//       TODO DEVEL
-//       $this->archive_current_year_map_options();
-//       echo '<span class="info">Dáta flashmobu z roku '.$iFlashmobYearCurrent.' boli archivované.</span>';
+      $this->archive_current_year_map_options();
+      echo '<span class="info">Dáta flashmobu z roku '.$iFlashmobYearCurrent.' boli archivované.</span>';
     }
-  
+
     foreach ($this->aBooleanOptions as $strOptionKey) {
       $this->aOptions[$strOptionKey] = false;
     }
@@ -1347,8 +1346,7 @@ class FLORP{
           'blog_id' => get_current_blog_id(),
           'role'    => 'administrator'
         );
-        $aAdmins = array(); // TODO DEVEL
-//             $aAdmins = get_users( $aAdminArgs ); // TODO DEVEL
+        $aAdmins = get_users( $aAdminArgs );
         if (empty($aAdmins)) {
           @wp_mail(get_option('admin_email'), sprintf(__('[%s] New User Registration'), $strBlogname), $message);
         } else {
