@@ -4,12 +4,12 @@
  * Description: Creates shortcodes for flashmob organizer login / registration / profile editing form and for maps showing cities with videos of flashmobs for each year
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 2.4.1
+ * Version: 2.5.0
  */
 
 class FLORP{
 
-  private $strVersion = '2.4.1';
+  private $strVersion = '2.5.0';
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormID = 2;
   private $iProfileFormPopupID = 5347;
@@ -39,6 +39,9 @@ class FLORP{
       'iFlashmobMinute'                   => 0,
       'iProfileFormNinjaFormID'           => 2,
       'iProfileFormPopupID'               => 5347,
+      'bLoadMapsLazy'                     => true,
+      'bLoadMapsAsync'                    => true,
+      'bLoadVideosLazy'                   => true,
     );
     $this->aOptionFormKeys = array(
       'florp_reload_after_ok_submission'  => 'bReloadAfterSuccessfulSubmission',
@@ -49,9 +52,14 @@ class FLORP{
       'florp_flashmob_minute'             => 'iFlashmobMinute',
       'florp_profile_form_ninja_form_id'  => 'iProfileFormNinjaFormID',
       'florp_profile_form_popup_id'       => 'iProfileFormPopupID',
+      'florp_load_maps_lazy'              => 'bLoadMapsLazy',
+      'florp_load_maps_async'             => 'bLoadMapsAsync',
+      'florp_load_videos_lazy'            => 'bLoadVideosLazy',
     );
     $aDeprecatedKeys = array( 'iCurrentFlashmobYear', 'bHideFlashmobFields' );
-    $this->aBooleanOptions = array( 'bReloadAfterSuccessfulSubmission' );
+    $this->aBooleanOptions = array(
+      'bReloadAfterSuccessfulSubmission', 'bLoadMapsAsync', 'bLoadMapsLazy', 'bLoadVideosLazy'
+    );
     
     // Get options and set defaults //
     if (empty($this->aOptions)) {
@@ -894,7 +902,9 @@ class FLORP{
       'form_id'                   => $this->iProfileFormNinjaFormID,
       'logging_in_msg'            => "Prihlasujeme Vás... Prosíme, počkajte, kým sa stránka znovu načíta.",
       'popup_id'                  => $this->iProfileFormPopupID,
-      'load_maps'                 => 'lazy', // eager, lazy, async
+      'load_maps_lazy'            => $this->aOptions['bLoadMapsLazy'] ? 1 : 0,
+      'load_maps_async'           => $this->aOptions['bLoadMapsAsync'] ? 1 : 0,
+      'load_videos_lazy'          => $this->aOptions['bLoadVideosLazy'] ? 1 : 0,
     );
     if (is_user_logged_in()) {
       $oCurrentUser = wp_get_current_user();
@@ -930,10 +940,13 @@ class FLORP{
     // $aMapOptions = $this->get_map_options_array(false, 0);
     // echo "<pre>" .var_export($aMapOptions, true). "</pre>";
 
-    if ($this->aOptions['bReloadAfterSuccessfulSubmission'] === true) {
-      $strReloadChecked = 'checked="checked"';
-    } else {
-      $strReloadChecked = '';
+    $aBooleanOptionsChecked = array();
+    foreach ($this->aBooleanOptions as $strOptionKey) {
+      if ($this->aOptions[$strOptionKey] === true) {
+        $aBooleanOptionsChecked[$strOptionKey] = 'checked="checked"';
+      } else {
+        $aBooleanOptionsChecked[$strOptionKey] = '';
+      }
     }
     
     $optionsNinjaForms = '';
@@ -1017,8 +1030,16 @@ class FLORP{
     $iSeasonEndDay = $this->aOptions["iSeasonEndDay"];
     
     echo str_replace(
-      array( '%%reloadChecked%%', '%%optionsYears%%', '%%optionsMonths%%', '%%optionsDays%%', '%%optionsHours%%', '%%optionsMinutes%%', '%%optionsNinjaForms%%', '%%optionsPopups%%' ),
-      array( $strReloadChecked, $aNumOptions['optionsYears'], $optionsMonths, $aNumOptions['optionsDays'], $aNumOptions['optionsHours'], $aNumOptions['optionsMinutes'], $optionsNinjaForms, $optionsPopups ),
+      array( '%%reloadChecked%%',
+        '%%loadMapsAsyncChecked%%',
+        '%%loadMapsLazyChecked%%',
+        '%%loadVideosLazyChecked%%',
+        '%%optionsYears%%', '%%optionsMonths%%', '%%optionsDays%%', '%%optionsHours%%', '%%optionsMinutes%%', '%%optionsNinjaForms%%', '%%optionsPopups%%' ),
+      array( $aBooleanOptionsChecked['bReloadAfterSuccessfulSubmission'],
+        $aBooleanOptionsChecked['bLoadMapsAsync'],
+        $aBooleanOptionsChecked['bLoadMapsLazy'],
+        $aBooleanOptionsChecked['bLoadVideosLazy'],
+        $aNumOptions['optionsYears'], $optionsMonths, $aNumOptions['optionsDays'], $aNumOptions['optionsHours'], $aNumOptions['optionsMinutes'], $optionsNinjaForms, $optionsPopups ),
       '
         <form action="" method="post">
           <table style="width: 100%">
@@ -1061,6 +1082,30 @@ class FLORP{
               <th colspan="2">
                 <span style="font-size: smaller;">Pozor: Ak zmeníte rok flashmobu, aktuálny rok sa archivuje a položky týkajúce sa presného miesta a videa sa u každého registrovaného účastníka vymažú.</span>
               </th>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                <label for="florp_load_maps_lazy">Načítavať skryté mapy až po kliknutí na príslušnú záložku?</label>
+              </th>
+              <td>
+                <input id="florp_load_maps_lazy" name="florp_load_maps_lazy" type="checkbox" %%loadMapsLazyChecked%% value="1"/>
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                <label for="florp_load_maps_async">Načítavať mapy asynchrónne?</label>
+              </th>
+              <td>
+                <input id="florp_load_maps_async" name="florp_load_maps_async" type="checkbox" %%loadMapsAsyncChecked%% value="1"/>
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                <label for="florp_load_videos_lazy">Načítavať skryté videá až po kliknutí na príslušnú záložku?</label>
+              </th>
+              <td>
+                <input id="florp_load_videos_lazy" name="florp_load_videos_lazy" type="checkbox" %%loadVideosLazyChecked%% value="1"/>
+              </td>
             </tr>
           </table>
 

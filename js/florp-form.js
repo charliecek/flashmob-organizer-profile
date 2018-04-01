@@ -97,17 +97,16 @@ function florpGenerateYearlyMaps() {
     if (florp_map_options_object.hasOwnProperty(divID)) {
       var oElement = jQuery("#"+divID);
       if (oElement.length > 0) {
-        if (florp.load_maps === 'lazy') {
+        if (florp.load_maps_lazy === '1') {
           var isVisible = oElement.is(":not(:hidden)");
           if (isVisible) {
             console.info("Loading map in div id=" + divID + ".");
-            florpGenerateYearlyMap(oElement, divID, florp_map_options_object[divID]);
+            florpGenerateYearlyMapSyncOrAsync(oElement, divID, florp_map_options_object[divID]);
           } else {
             console.info("Not loading map in div with id=" + divID + " - it is not visible");
           }
         } else {
-          // TODO what if async?
-          florpGenerateYearlyMap(oElement, divID, florp_map_options_object[divID]);
+          florpGenerateYearlyMapSyncOrAsync(oElement, divID, florp_map_options_object[divID]);
         }
       } else {
         console.warn("There is no div with id=" + divID + "!");
@@ -115,6 +114,16 @@ function florpGenerateYearlyMaps() {
     }
   }
 
+}
+
+function florpGenerateYearlyMapSyncOrAsync(oDivDOMElement, divID, oMapOptions) {
+  if (florp.load_maps_async === '1') {
+    setTimeout(function() {
+      florpGenerateYearlyMap(oDivDOMElement, divID, oMapOptions);
+    }, 0);
+  } else {
+    florpGenerateYearlyMap(oDivDOMElement, divID, oMapOptions);
+  }
 }
 
 function florpReloadVisibleMaps() {
@@ -141,8 +150,7 @@ function florpReloadVisibleMaps() {
         var isVisible = oElement.is(":not(:hidden)");
         florp.maps.visibility[divID] = isVisible;
         
-        if (florp.load_maps !== 'lazy') {
-          // TODO what if async?
+        if (florp.load_maps_lazy !== '1') {
           if ("undefined" === typeof florp.maps.objects || "undefined" === typeof florp.maps.objects[divID]) {
             console.warn("florp.maps.objects or florp.maps.objects["+divID+"] is undefined!");
             continue;
@@ -154,10 +162,10 @@ function florpReloadVisibleMaps() {
             continue;
           }
           
-          if (florp.load_maps === 'lazy') {
+          if (florp.load_maps_lazy === '1') {
             if ("undefined" === typeof florp.maps.objects || "undefined" === typeof florp.maps.objects[divID]) {
               console.info("Lazy loading map in div id=" + divID + ".");
-              florpGenerateYearlyMap(oElement, divID, florp_map_options_object[divID]);
+              florpGenerateYearlyMapSyncOrAsync(oElement, divID, florp_map_options_object[divID]);
               return;
             } else {
               // console.info("Fixing position for map in div id=" + divID + ".");
@@ -165,7 +173,6 @@ function florpReloadVisibleMaps() {
               return;
             }
           }
-          // TODO what if async?
 
           var gmap = florp.maps.objects[divID];
           google.maps.event.trigger(gmap, "resize");
@@ -873,20 +880,49 @@ function florpFlashAnchors() {
   }
 }
 
+function florpLoadVisibleVideos() {
+  if (florp.load_videos_lazy !== '1') {
+    return;
+  }
+  jQuery('.w-video.removedEmbed').each(function() {
+    $div = jQuery(this);
+    if ($div.is(":not(:hidden)")) {
+      var iEmbedID = $div.data("embedId");
+      if ("undefined" === typeof iEmbedID || "undefined" === typeof florp.embeds[iEmbedID]) {
+        console.warn("Couldn't find embed to replace back");
+      } else {
+        $div.removeClass("removedEmbed").append(florp.embeds[iEmbedID].children());
+        console.info("Lazy loaded video ("+iEmbedID+")");
+      }
+    }
+  });
+}
+
 jQuery( document ).ready(function() {
+  if (florp.load_videos_lazy === '1') {
+    var iEmbedID = 0;
+    florp.embeds = {};
+    jQuery('.w-video').each(function() {
+      $div = jQuery(this);
+      if ($div.is(":hidden") && $div.find("script").length === 0) {
+        florp.embeds[iEmbedID] = $div.clone();
+        $div.addClass("removedEmbed").data("embedId", iEmbedID).children().remove();
+        console.info("Removed video ("+iEmbedID+") and saved it for lazy loading");
+        iEmbedID++;
+      }
+    });
+  }
+
   if ("undefined" === typeof florp.user_id ) {
     jQuery("#pum_popup_title_"+florp.popup_id).html("Registrácia organizátora flashmobu");
     // console.log(jQuery("#pum_popup_title_"+florp.popup_id))
   }
 
-  if (florp.load_maps === 'async') {
-    // TODO
-  } else {
-    florpGenerateYearlyMaps();
-  }
+  florpGenerateYearlyMaps();
 
   florpFlashAnchors();
 });
+
 
 jQuery(window).on('hashchange', function(e){
   florpFlashAnchors();
@@ -933,10 +969,10 @@ jQuery(document).on('click', ".w-tabs-item", function (event) {
     console.log(objTarget, objTab, divID);
     return;
   }
-  if (objContent.find(".florp-map").length === 0) {
-    // console.info("There is no florp map under content for tab "+divID);
-    return;
-  }
+//   if (objContent.find(".florp-map").length === 0) {
+//     // console.info("There is no florp map under content for tab "+divID);
+//     return;
+//   }
   
   setTimeout(function () {
     if (objTarget.is(':animated') || objTab.is(':animated') || objContent.is(':animated')) {
@@ -945,11 +981,21 @@ jQuery(document).on('click', ".w-tabs-item", function (event) {
           // continue
         } else {
           clearInterval(interval)
-          florpReloadVisibleMaps();
+          if (objContent.find(".florp-map").length > 0) {
+            florpReloadVisibleMaps();
+          }
+          if (objContent.find(".w-video").length > 0) {
+            florpLoadVisibleVideos();
+          }
         }
       }, 100);
     } else {
-      florpReloadVisibleMaps();
+      if (objContent.find(".florp-map").length > 0) {
+        florpReloadVisibleMaps();
+      }
+      if (objContent.find(".w-video").length > 0) {
+        florpLoadVisibleVideos();
+      }
     }
   }, 500);
 });
