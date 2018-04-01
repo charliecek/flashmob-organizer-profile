@@ -97,7 +97,18 @@ function florpGenerateYearlyMaps() {
     if (florp_map_options_object.hasOwnProperty(divID)) {
       var oElement = jQuery("#"+divID);
       if (oElement.length > 0) {
-        florpGenerateYearlyMap(oElement, divID, florp_map_options_object[divID]);
+        if (florp.load_maps === 'lazy') {
+          var isVisible = oElement.is(":not(:hidden)");
+          if (isVisible) {
+            console.info("Loading map in div id=" + divID + ".");
+            florpGenerateYearlyMap(oElement, divID, florp_map_options_object[divID]);
+          } else {
+            console.info("Not loading map in div with id=" + divID + " - it is not visible");
+          }
+        } else {
+          // TODO what if async?
+          florpGenerateYearlyMap(oElement, divID, florp_map_options_object[divID]);
+        }
       } else {
         console.warn("There is no div with id=" + divID + "!");
       }
@@ -130,9 +141,12 @@ function florpReloadVisibleMaps() {
         var isVisible = oElement.is(":not(:hidden)");
         florp.maps.visibility[divID] = isVisible;
         
-        if ("undefined" === typeof florp.maps.objects || "undefined" === typeof florp.maps.objects[divID]) {
-          console.warn("florp.maps.objects or florp.maps.objects["+divID+"] is undefined!");
-          continue;
+        if (florp.load_maps !== 'lazy') {
+          // TODO what if async?
+          if ("undefined" === typeof florp.maps.objects || "undefined" === typeof florp.maps.objects[divID]) {
+            console.warn("florp.maps.objects or florp.maps.objects["+divID+"] is undefined!");
+            continue;
+          }
         }
         if (isVisible && isVisibleOld !== isVisible ) {
           if (florp.maps.positionFixed[divID]) {
@@ -140,6 +154,19 @@ function florpReloadVisibleMaps() {
             continue;
           }
           
+          if (florp.load_maps === 'lazy') {
+            if ("undefined" === typeof florp.maps.objects || "undefined" === typeof florp.maps.objects[divID]) {
+              console.info("Lazy loading map in div id=" + divID + ".");
+              florpGenerateYearlyMap(oElement, divID, florp_map_options_object[divID]);
+              return;
+            } else {
+              // console.info("Fixing position for map in div id=" + divID + ".");
+              console.info("NOT fixing position for map in div id=" + divID + ".");
+              return;
+            }
+          }
+          // TODO what if async?
+
           var gmap = florp.maps.objects[divID];
           google.maps.event.trigger(gmap, "resize");
           var mapCenterArr = florp.general_map_options.map_init_aux.center;
@@ -852,7 +879,11 @@ jQuery( document ).ready(function() {
     // console.log(jQuery("#pum_popup_title_"+florp.popup_id))
   }
 
-  florpGenerateYearlyMaps();
+  if (florp.load_maps === 'async') {
+    // TODO
+  } else {
+    florpGenerateYearlyMaps();
+  }
 
   florpFlashAnchors();
 });
