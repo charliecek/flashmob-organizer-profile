@@ -4,12 +4,12 @@
  * Description: Creates shortcodes for flashmob organizer login / registration / profile editing form and for maps showing cities with videos of flashmobs for each year
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 2.5.0
+ * Version: 2.5.1
  */
 
 class FLORP{
 
-  private $strVersion = '2.5.0';
+  private $strVersion = '2.5.1';
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormID = 2;
   private $iProfileFormPopupID = 5347;
@@ -42,6 +42,7 @@ class FLORP{
       'bLoadMapsLazy'                     => true,
       'bLoadMapsAsync'                    => true,
       'bLoadVideosLazy'                   => true,
+      'bUseMapImage'                      => true,
     );
     $this->aOptionFormKeys = array(
       'florp_reload_after_ok_submission'  => 'bReloadAfterSuccessfulSubmission',
@@ -55,10 +56,11 @@ class FLORP{
       'florp_load_maps_lazy'              => 'bLoadMapsLazy',
       'florp_load_maps_async'             => 'bLoadMapsAsync',
       'florp_load_videos_lazy'            => 'bLoadVideosLazy',
+      'florp_use_map_image'               => 'bUseMapImage',
     );
     $aDeprecatedKeys = array( 'iCurrentFlashmobYear', 'bHideFlashmobFields' );
     $this->aBooleanOptions = array(
-      'bReloadAfterSuccessfulSubmission', 'bLoadMapsAsync', 'bLoadMapsLazy', 'bLoadVideosLazy'
+      'bReloadAfterSuccessfulSubmission', 'bLoadMapsAsync', 'bLoadMapsLazy', 'bLoadVideosLazy', 'bUseMapImage',
     );
     
     // Get options and set defaults //
@@ -850,6 +852,9 @@ class FLORP{
   }
   
   public function filter__us_meta_tags( $aMetaTags ) {
+    if (!$this->aOptions['bUseMapImage']) {
+      return $aMetaTags;
+    }
     $iBlogID = get_current_blog_id();
     $sLangSlug = 'sk';
     if (function_exists('pll_current_language')) {
@@ -1034,11 +1039,13 @@ class FLORP{
         '%%loadMapsAsyncChecked%%',
         '%%loadMapsLazyChecked%%',
         '%%loadVideosLazyChecked%%',
+        '%%useMapImageChecked%%',
         '%%optionsYears%%', '%%optionsMonths%%', '%%optionsDays%%', '%%optionsHours%%', '%%optionsMinutes%%', '%%optionsNinjaForms%%', '%%optionsPopups%%' ),
       array( $aBooleanOptionsChecked['bReloadAfterSuccessfulSubmission'],
         $aBooleanOptionsChecked['bLoadMapsAsync'],
         $aBooleanOptionsChecked['bLoadMapsLazy'],
         $aBooleanOptionsChecked['bLoadVideosLazy'],
+        $aBooleanOptionsChecked['bUseMapImage'],
         $aNumOptions['optionsYears'], $optionsMonths, $aNumOptions['optionsDays'], $aNumOptions['optionsHours'], $aNumOptions['optionsMinutes'], $optionsNinjaForms, $optionsPopups ),
       '
         <form action="" method="post">
@@ -1105,6 +1112,14 @@ class FLORP{
               </th>
               <td>
                 <input id="florp_load_videos_lazy" name="florp_load_videos_lazy" type="checkbox" %%loadVideosLazyChecked%% value="1"/>
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                <label for="florp_use_map_image">Použiť obrázok mapy slovenských flashmobov pri náhľade stránky pri zdieľaní (FB)?</label>
+              </th>
+              <td>
+                <input id="florp_use_map_image" name="florp_use_map_image" type="checkbox" %%useMapImageChecked%% value="1"/>
               </td>
             </tr>
           </table>
