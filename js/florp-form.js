@@ -929,37 +929,64 @@ jQuery(window).on('hashchange', function(e){
 });
 
 // Bind click event on all tab title elements //
-jQuery(document).on('click', ".w-tabs-item", function (event) {
+jQuery(document).on('click', ".w-tabs-item, .w-tabs-section-header", function (event) {
+  var objTarget = jQuery(event.target);
+  // The selectors of tab and tab title shown before all the contents - in non-mobile view //
   var strTabClass = "w-tabs-item-h";
   var strTabItemClass = "w-tabs-item";
-  var objTarget = jQuery(event.target);
+  // The selector of tab title shown right before the content - in mobile view //
+  var strTabItemClassMobile = "w-tabs-section-header";
   if (objTarget.hasClass(strTabItemClass)) {
+    // Clicked on the tab (non-mobile) item => find the ANCHOR item //
     var objTab = objTarget.find("."+strTabClass);
     var objTabItem = objTarget;
+  } else if (objTarget.hasClass(strTabItemClassMobile)) {
+    // Clicked on the tab title (mobile) ANCHOR itself - the one we want //
+    var objTab = objTarget;
+    var objTabItem = objTarget;
   } else if (objTarget.hasClass(strTabClass)) {
+    // Clicked on the tab title (non-mobile) ANCHOR itself => find the tab item parent //
     var objTab = objTarget;
     var objTabItem = objTarget.parents("."+strTabItemClass);
   } else {
+    // Didn't click on either tab item or tab anchor //
+    //   => try to find the tab anchor downwards (non-mobile) and tab item upwards //
     var objTab = objTarget.find("."+strTabClass);
     var objTabItem = objTarget.parents("."+strTabItemClass);
     if (objTab.length === 0) {
+      // Try to find the tab anchor upwards (non-mobile) //
       objTab = objTarget.parents("."+strTabClass);
+    }
+    if (objTab.length === 0) {
+      // Try to find the tab anchor upwards (mobile) //
+      //   - no searching downwards as the tab title is the item //
+      objTab = objTarget.parents("."+strTabItemClassMobile);
+      objTabItem = objTab;
     }
   }
   if (objTab.length === 0) {
     console.warn("Couldn't find '."+strTabClass+"' above/under clicked element:")
     console.log(objTarget);
+    console.info("Loading EVERY non-hidden map and video");
+    florpReloadVisibleMaps();
+    florpLoadVisibleVideos();
     return;
   }
   if (objTabItem.length === 0) {
     console.warn("Couldn't find '."+strTabItemClass+"' above/under clicked element:")
     console.log(objTarget);
+    console.info("Loading EVERY non-hidden map and video");
+    florpReloadVisibleMaps();
+    florpLoadVisibleVideos();
     return;
   }
   var divID = objTab.attr("href");
   if ("undefined" === typeof divID) {
     console.warn("Couldn't find div ID for clicked tab:")
     console.log(objTarget, objTab);
+    console.info("Loading EVERY non-hidden map and video");
+    florpReloadVisibleMaps();
+    florpLoadVisibleVideos();
     return;
   }
   var objContent = jQuery( divID )
