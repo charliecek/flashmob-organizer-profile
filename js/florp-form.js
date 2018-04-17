@@ -914,7 +914,7 @@ jQuery( document ).ready(function() {
   }
 
   if ("undefined" === typeof florp.user_id ) {
-    jQuery("#pum_popup_title_"+florp.popup_id).html("Registrácia organizátora flashmobu");
+    jQuery("#pum_popup_title_"+florp.popup_id).html("Registrácia");
     // console.log(jQuery("#pum_popup_title_"+florp.popup_id))
   }
 

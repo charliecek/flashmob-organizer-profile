@@ -77,21 +77,6 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
         $strKey = $field_value['key'];
         $strValue = $field_value['value'];
         switch( $strKey ) {
-          case "som_organizator_rueda_flashmobu":
-            if ($strValue != 1) {
-              $data[ 'errors' ][ 'form' ][$strKey] = "Táto registrácia je pre organizátorov rueda flashmob-u. Ak nie ste organizátor, prosíme, neregistrujte sa, kontaktujte svojho Rueda inštruktora vo Vašom meste alebo najbližšom meste, aby sa zaregistroval a zorganizoval Flashmob. Ďakujeme za porozumenie.";
-            }
-            break;
-          case "user_login":
-            $strValue = trim( $strValue );
-            if ($bUserIsLoggedIn && $strValue != $aCurUserInfo->user_login) {
-              $data[ 'errors' ][ 'form' ][$strKey] = 'Meniť používateľské meno je zakázané';
-            } elseif (!$bUserIsLoggedIn && username_exists($strValue)) {
-              $data[ 'errors' ][ 'form' ][$strKey] = 'Zadané používateľské meno už je zaregistrované';
-            } elseif ( !$bUserIsLoggedIn && (strlen($strValue) < 3 || preg_match("/[^a-zA-Z0-9_-]/", $strValue) || !preg_match("/^[a-zA-Z]/", $strValue))) {
-              $data[ 'errors' ][ 'form' ][$strKey] = 'Zadané používateľské meno je neplatné';
-            }
-            break;
           case "user_email":
             $strValue = trim( $strValue );
             if ($bUserIsLoggedIn && email_exists( $strValue ) && $aCurUserInfo->user_email != $strValue) {
@@ -152,6 +137,9 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
         } elseif (strlen($aPwdCheck['user_pass']) < 7) {
           $data[ 'errors' ][ 'form' ]['user_pass'] = 'Heslo je príliš krátke (aspoň 7 znakov)';
         }
+      }
+      if ($bUserIsLoggedIn) {
+        $data[ 'errors' ][ 'form' ][] = 'DEVEL STOP'; // TODO
       }
 //       if (!$bUserIsLoggedIn) {
 //         $data[ 'errors' ][ 'form' ][] = 'DEVEL STOP';

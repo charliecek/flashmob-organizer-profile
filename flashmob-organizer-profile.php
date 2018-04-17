@@ -329,6 +329,7 @@ class FLORP{
     add_filter( 'us_meta_tags', array( $this, 'filter__us_meta_tags' ));
     // add_filter( 'us_meta_tags', array( $this, 'filter__us_meta_tags_before_echo' ));
     add_filter( 'ninja_forms_display_fields', array($this, 'filter__ninja_forms_display_fields' ));
+    add_filter( 'ninja_forms_register_fields', array($this, 'filter__ninja_forms_register_fields' ));
     
     add_action( 'ninja_forms_register_actions', array( $this, 'action__register_nf_florp_action' ));
     add_action( 'ninja_forms_after_submission', array( $this, 'action__update_user_profile' ));
@@ -420,31 +421,37 @@ class FLORP{
     }
 
     if(is_user_logged_in()){
-      foreach ($aFields as $key => $aField) {
-        if (isset($aField['element_class']) && stripos($aField['element_class'], 'divider_som_organizator_rueda_flashmobu') !== false) {
-          $aFields[$key]['container_class'] .= " hidden";
-        } elseif (isset($aField['key']) && ($aField['key'] === 'som_organizator_rueda_flashmobu')) {
-          $aFields[$key]['container_class'] .= " hidden";
-          $aFields[$key]['required'] = false;
-        } elseif (isset($aField['key']) && ($aField['key'] === 'user_login')) {
-          $aFields[$key]['container_class'] .= " hidden";
-          $aFields[$key]['required'] = false;
-        }
-      }
+      // Full profile form (without antispam) //
+      // var_dump($aFields);
+//       $aDividerField = array();
+//       foreach ($aFields as $key => $aField) {
+//         if (empty($aDividerField) && $aField["type"] == 'hr') {
+//           // echo "<pre>" . var_export($aField, true) . "</pre>";
+//           $aDividerField = $aField;
+//         }
+//         if (isset($aField['container_class']) && stripos($aField['container_class'], 'florp-antispam') !== false) {
+//           // echo "<pre>" . var_export($aField, true) . "</pre>";
+//           $aFields[$key] = $aDividerField;
+//           $aPreserveKeys = array( 'key', 'id', 'order' );
+//           foreach ($aPreserveKeys as $strPreserveKey) {
+//             $aFields[$key][$strPreserveKey] = $aField[$strPreserveKey];
+//           }
+//           $aFields[$key]["container_class"] .= " hidden";
+//           break;
+//         }
+//       }
     } else {
+      // Registration form //
       // var_dump($aFields);
       foreach ($aFields as $key => $aField) {
-        if (isset($aField['key']) && ($aField['key'] === 'user_pass' || $aField['key'] === 'passwordconfirm')) {
+        if (isset($aField['container_class']) && stripos($aField['container_class'], 'florp-registration-field') === false) {
+          $aFields[$key]['container_class'] .= " hidden";
+        } elseif (isset($aField['key']) && ($aField['key'] === 'user_pass' || $aField['key'] === 'passwordconfirm')) {
           $aFields[$key]['required'] = true;
           $aFields[$key]['desc_text'] = '';
-        } elseif (isset($aField['key']) && ($aField['key'] === 'user_login')) {
-          $aFields[$key]['disable_input'] = '';
         } elseif (isset($aField['type']) && ($aField['type'] === 'submit')) {
           $aFields[$key]['label'] = 'Zaregistruj ma';
           $aFields[$key]['processing_label'] = 'Registrujem';
-        } elseif (isset($aField['key']) && ($aField['key'] === 'som_organizator_rueda_flashmobu')) {
-          $aFields[$key]['disable_input'] = '';
-          $aFields[$key]['default_value'] = 'unchecked';
         }
       }
     }
@@ -1185,6 +1192,13 @@ class FLORP{
     }
   }
   
+  public function filter__ninja_forms_register_fields( $aFields ) {
+    require_once __DIR__ . "/nf-custom-fields/Recaptcha_logged-out-only.php";
+    $aFields['recaptcha_logged-out-only'] = new NF_Fields_RecaptchaLoggedOutOnly();
+    // TODO load recaptcha JS, CSS
+    return $aFields;
+  }
+  
   public function action__register_merge_tags() {
     require_once __DIR__ . "/class.florp.mergetags.php";
     Ninja_Forms()->merge_tags[ 'florp_merge_tags' ] = new FlorpMergeTags();
@@ -1368,6 +1382,31 @@ class FLORP{
     return $actions;
   }
   
+  private function generate_username( $strFirstName, $strLastName ) {
+    $strUserNameBase = $strFirstName.".".$strLastName;
+    
+    $strOriginalLocale = setlocale(LC_CTYPE, 0);
+
+    // set locale to UK //
+    setlocale(LC_CTYPE, 'en_GB');
+    // transliterate //
+    $strUserNameBase = iconv('UTF-8', 'ASCII//TRANSLIT', $strUserNameBase);
+    // reset locale //
+    setlocale(LC_CTYPE, $strOriginalLocale);
+    // convert to lower case and remove invalid characters //
+    $strUserNameBase = strtolower($strUserNameBase);
+    $strUserNameBase = preg_replace( '~[^a-z0-9.]~', '', $strUserNameBase );
+
+    $strUserName = $strUserNameBase;
+
+    $iSuffix = 0;
+    while (username_exists($strUserName)) {
+      $iSuffix++;
+      $strUserName = $strUserNameBase . "." . $mixSuffix;
+    }
+    return $strUserName;
+  }
+  
   public function action__update_user_profile( $aFormData ) {
     // Update the user's profile //
     // file_put_contents( __DIR__ . "/kk-debug-after-submission.log", var_export( $aFormData, true ) );
@@ -1385,8 +1424,10 @@ class FLORP{
       foreach ($aFormData["fields"] as $strKey => $aData) {
         $aFieldData[$aData["key"]] = $aData['value'];
       }
+      // generate username //
+      $strUsername = $this->generate_username( $aFieldData['first_name'], $aFieldData['last_name'] );
       // Create new user //
-      $mixResult = wp_create_user( $aFieldData['user_login'], $aFieldData['user_pass'], $aFieldData['user_email'] );
+      $mixResult = wp_create_user( $strUsername, $aFieldData['user_pass'], $aFieldData['user_email'] );
       if ( is_wp_error($mixResult) ) {
         file_put_contents( __DIR__ . "/kk-debug-after-submission-create-error.log", var_export( array( $aFieldData, $aFormData ), true ) );
         return;
@@ -1397,11 +1438,11 @@ class FLORP{
           add_user_to_blog( $this->iFlashmobBlogID, $iUserID, 'subscriber' );
         }
         $strBlogname = wp_specialchars_decode(get_option('blogname'), ENT_QUOTES);
-        LoginWithAjax::new_user_notification( $aFieldData['user_login'], $aFieldData['user_pass'], $aFieldData['user_email'], $strBlogname ); // TODO maybe move the text and sending to this plugin
+        LoginWithAjax::new_user_notification( $strUsername, $aFieldData['user_pass'], $aFieldData['user_email'], $strBlogname ); // TODO maybe move the text and sending to this plugin
 
         // New user notification to admins //
         $message  = sprintf(__('New user registration on your site %s:'), $strBlogname) . "\n\n";
-        $message .= sprintf(__('Username: %s'), $aFieldData['user_login'] ) . "\n\n";
+        $message .= sprintf(__('Username: %s'), $strUsername ) . "\n\n";
         $message .= sprintf(__('E-mail: %s'), $aFieldData['user_email'] ) . "\n";
         $aAdminArgs = array(
           'blog_id' => get_current_blog_id(),

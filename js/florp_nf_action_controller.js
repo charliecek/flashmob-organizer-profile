@@ -9,7 +9,7 @@ function add_florp_submit_controller() {
     initialize: function() {
       // On the Form Submission's field validaiton...
       var submitChannel = Backbone.Radio.channel( 'submit' );
-      this.listenTo( submitChannel, 'validate:field', this.validateSubmit);
+      this.listenTo( submitChannel, 'validate:field', this.validateSubmit );
       this.listenTo( Backbone.Radio.channel( 'forms' ), 'submit:response', this.actionSubmit );
 
       // other validation types: http://developer.ninjaforms.com/codex/client-side-field-validation/
@@ -37,7 +37,7 @@ function add_florp_submit_controller() {
       }
     },
 
-     actionSubmit: function( response ) {
+    actionSubmit: function( response ) {
       if (response.data.form_id != this.formID) {
         console.info("This is not form with ID="+this.formID);
         return;
@@ -79,7 +79,7 @@ function add_florp_submit_controller() {
             var loginForm = jQuery("#pum-"+florp.popup_id+" form.lwa-form");
             var loginUsernameInput = jQuery("#pum-"+florp.popup_id+" #"+idPrefix+"lwa_user_login");
             var loginPasswordInput = jQuery("#pum-"+florp.popup_id+" #"+idPrefix+"lwa_user_pass");
-            var loginUsername = response.data.fields_by_key.user_login.value;
+            var loginUsername = response.data.fields_by_key.user_email.value;
             var loginPassword = response.data.fields_by_key.user_pass.value;
 
             loginUsernameInput.val(loginUsername);
