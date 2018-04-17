@@ -422,6 +422,7 @@ class FLORP{
 
     if(is_user_logged_in()){
       // Full profile form (without antispam) //
+      // TODO hide type recaptcha_logged-out-only
       // var_dump($aFields);
 //       $aDividerField = array();
 //       foreach ($aFields as $key => $aField) {
