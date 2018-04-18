@@ -28,6 +28,27 @@ function florpGetCookie(key) {
   return keyValue ? keyValue[2] : null;
 }
 
+function florpAnimateHide($elements) {
+  $elements.each(function () {
+    $this = jQuery(this)
+    $this.show().hide(500)
+    setTimeout(function () {
+      // Clean up //
+      $this.addClass('hidden').removeAttr("style")
+    }, 500)
+  });
+}
+function florpAnimateShow($elements) {
+  $elements.each(function () {
+    $this = jQuery(this)
+    $this.hide().removeClass('hidden').show(500)
+    setTimeout(function () {
+      // Clean up //
+      $this.removeAttr("style")
+    }, 500)
+  });
+}
+
 jQuery(document).on('lwa_login', function(event, data, form) {
   if ("undefined" === typeof florp.doNotSetCookie || florp.doNotSetCookie !== true) {
     florpSetCookie("florp-popup", "1");
@@ -606,14 +627,60 @@ function florpFixFormClasses() {
   });
   
   jQuery(".nf-help").removeClass("nf-help");
-  
+
+  // When logged in, hide/unhide parts of the profile form based on which subscriber types the user has //
+  if ("undefined" === typeof florp.user_id ) {
+    // Not logged in => registration form - do nothing //
+  } else {
+    // Logged in => profile form - do the magic //
+
+    // Get the checkboxes //
+    var $aSubscriberTypes = jQuery(".florp_subscriber_type_container input[type=checkbox]");
+    // Get create and populate the subscriber types into an array //
+    var aSubscriberTypes = [];
+    $aSubscriberTypes.each(function () {
+      aSubscriberTypes.push(jQuery(this).val())
+    });
+    // Onchange event for the checkboxes //
+    $aSubscriberTypes.change(function () {
+      var $this = jQuery(this);
+      var strSubscriberType = $this.val()
+      var bChecked = $this.is(':checked')
+      var $aFieldsToToggle = jQuery(".florp-subscriber-type-field_"+strSubscriberType+":not(.florp-subscriber-type-field_all,.florp-registration-field) .nf-field-container")
+      console.log($aFieldsToToggle)
+      if (bChecked) {
+        florpAnimateShow($aFieldsToToggle)
+//         $aFieldsToToggle.removeClass('hidden')
+      } else {
+        florpAnimateHide($aFieldsToToggle)
+//         $aFieldsToToggle.addClass('hidden')
+      }
+
+      // Get the number of unhidden fields - if there are any, fields with class 'florp-subscriber-type-field_any' are unhidden as well //
+      var iCheckedCount = jQuery(".florp_subscriber_type_container input[type=checkbox]").filter(function (index) {
+        return jQuery(this).is(':checked');
+      }).length;
+      var iUnhiddenCount = 0
+      aSubscriberTypes.forEach(function (strType) {
+        iUnhiddenCount += jQuery(".florp-subscriber-type-field_"+strType+":not(.florp-subscriber-type-field_all,.florp-registration-field) .nf-field-container:not(.hidden)").length
+      })
+      $aFieldsAnyToToggle = jQuery('.florp-subscriber-type-field_any .nf-field-container')
+      if ( (iCheckedCount * iUnhiddenCount) > 0) {
+        florpAnimateShow($aFieldsAnyToToggle)
+      } else {
+//         $aFieldsAnyToToggle.addClass('hidden')
+        florpAnimateHide($aFieldsAnyToToggle)
+      }
+    });
+  }
+
   var select = jQuery(".florp_school_city");
   if (typeof florp.school_city !== "undefined" && florp.school_city.length > 0) {
     jQuery(".florp_school_city option").removeAttr("selected");
 //     jQuery(".florp_school_city option[value="+florp.school_city+"]").attr("selected", "selected");
     select.val(florp.school_city);
   }
-  
+
   // Add correct classes to buttons //
   var buttons = jQuery(".florp-button,florp-profile-form-wrapper-div input[type=button]");
   buttons.each(function () {
@@ -634,12 +701,12 @@ function florpFixFormClasses() {
   });
   findLocationbutton = jQuery(".florp-button-find-location");
 
-  // Hide after-flashmob fields //
   if (florp.hide_flashmob_fields == 1) {
-    // jQuery(".florp-flashmob").hide();
+    // Disable after-flashmob fields //
     jQuery(".florp-flashmob input, .florp-flashmob select, .florp-flashmob text, .florp-flashmob .florp-button-find-location").attr("disabled", "disabled");
     florpVideoTypeSelect();
   } else {
+    // Hide before-flashmob fields //
     jQuery(".florp-before-flashmob").hide();
     jQuery(".school_city_warning").hide();
     
@@ -697,7 +764,7 @@ function florpFixFormClasses() {
           value: jQuery(inputSelector).first().val()
         };
       }
-      
+
       var data = {
         action: florp.map_ajax_action,
         security : florp.security,

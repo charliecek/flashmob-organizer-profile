@@ -138,65 +138,14 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
           $data[ 'errors' ][ 'form' ]['user_pass'] = 'Heslo je príliš krátke (aspoň 7 znakov)';
         }
       }
-      if ($bUserIsLoggedIn) {
-        $data[ 'errors' ][ 'form' ][] = 'DEVEL STOP'; // TODO
-      }
+//       if ($bUserIsLoggedIn) {
+//         $data[ 'errors' ][ 'form' ][] = 'DEVEL STOP';
+//       }
 //       if (!$bUserIsLoggedIn) {
 //         $data[ 'errors' ][ 'form' ][] = 'DEVEL STOP';
 //         $data[ 'errors' ][ 'form' ][] = '<pre>'.var_export($data['fields'], true).'</pre>';
 //       }
 //       $data[ 'errors' ][ 'form' ][] = 'DEVEL STOP';
       return $data;
-      //$data[ 'errors' ][ 'form' ] = $errors;
-        
-        /*
-    $aFields = array();
-    $bError = false;
-    $all_fields = $ninja_forms_processing->get_all_fields();
-    foreach( $all_fields as $field_id => $user_value ) {
-        //var_dump( $field_id, $ninja_forms_processing->get_field_settings( $field_id ) );
-        $aData = $ninja_forms_processing->get_field_settings( $field_id )['data'];
-        if( isset( $aData['admin_label'] ) ) {
-          $strKey = $aData['admin_label'];
-          //email,uname,pwd,titul,fname,lname,rok-ukoncenia,status,mesto,okres,
-          //pracujem,telefon,pracovisko,preferovani-klienti,preferovani-klienti-ine,
-          //dalsie-vzdelavanie,preposielanie,spolupraca,
-          //podmienky-pouzivania
-          switch( $strKey ) {
-              case "email":
-                $aFields['email'] = $user_value;
-                if( email_exists( $user_value )) {
-                    $ninja_forms_processing->add_error( 'error_email', 'Zadaný e-mail už je zaregistrovaný.' );
-                    $bError = true;
-                }
-                break;
-              case "uname":
-                $aFields['uname'] = $user_value;
-                if( username_exists( $user_value )) {
-                    $ninja_forms_processing->add_error( 'error_username', 'Zadané používateľské meno už je zaregistrované.' );
-                    $bError = true;
-                }
-                break;
-              case "podmienky-pouzivania":
-                $aFields['podmienky-pouzivania'] = $user_value;
-                if( 'checked' !== $user_value ) {
-                    $ninja_forms_processing->add_error( 'error_username', 'K registrácii je nutné súhlasiť s podmienkami používania.' );
-                    $bError = true;
-                }
-              default:
-          }
-        }
-    }
-    $objWPError = wpmu_validate_user_signup( $aFields['uname'], $aFields['email'] );
-    if( is_wp_error( $objWPError ) ) {
-      $aCodes = $objWPError->get_error_codes();
-      foreach( $aCodes as $code ) {
-        $ninja_forms_processing->add_error( $code, $objWPError->get_error_messages($code) );
-      }
-    } elseif( !$bError ) {
-      //echo "no error";
-    }
-        */
-        return $data;
     }
 }

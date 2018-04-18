@@ -1,15 +1,16 @@
 <?php
 /**
  * Plugin Name: Flashmob Organizer Profile (with login/registration page)
+ * Plugin URI: https://github.com/charliecek/flashmob-organizer-profile
  * Description: Creates shortcodes for flashmob organizer login / registration / profile editing form and for maps showing cities with videos of flashmobs for each year
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 2.5.2
+ * Version: 2.6.0
  */
 
 class FLORP{
 
-  private $strVersion = '2.5.2';
+  private $strVersion = '2.6.0';
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormID = 2;
   private $iProfileFormPopupID = 5347;
@@ -26,6 +27,7 @@ class FLORP{
   private $aOptions;
   private $aRegisteredUserCount;
   private $aFlashmobSubscribers;
+  private $bDisplayingProfileFormNinjaForm = false;
   
   public function __construct() {
     $this->aOptions = get_site_option( $this->strOptionKey, array() );
@@ -43,6 +45,7 @@ class FLORP{
       'bLoadMapsAsync'                    => true,
       'bLoadVideosLazy'                   => true,
       'bUseMapImage'                      => true,
+      'strVersion'                        => '0',
     );
     $this->aOptionFormKeys = array(
       'florp_reload_after_ok_submission'  => 'bReloadAfterSuccessfulSubmission',
@@ -65,9 +68,11 @@ class FLORP{
     
     // Get options and set defaults //
     if (empty($this->aOptions)) {
+      // no options, set to defaults //
       $this->aOptions = $this->aOptionDefaults;
       update_site_option( $this->strOptionKey, $this->aOptions, true );
     } else {
+      // add missing options //
       $bUpdate = false;
       foreach ($this->aOptionDefaults as $key => $val) {
         if (!isset($this->aOptions[$key])) {
@@ -75,17 +80,19 @@ class FLORP{
           $bUpdate = true;
         }
       }
+      // remove old options //
       foreach ($aDeprecatedKeys as $strKey) {
         if (isset($this->aOptions[$strKey])) {
           unset($this->aOptions[$strKey]);
           $bUpdate = true;
         }
       }
+      // update if necessary //
       if ($bUpdate) {
         update_site_option( $this->strOptionKey, $this->aOptions, true );
       }
     }
-    
+
     $this->iProfileFormNinjaFormID = intval($this->aOptions['iProfileFormNinjaFormID']);
     $this->iProfileFormPopupID = intval($this->aOptions['iProfileFormPopupID']);
     $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
@@ -101,7 +108,12 @@ class FLORP{
       'on-map-only' => -1,
       'all'         => -1
     );
-    $this->aFlashmobSubscribers = array();
+    $this->aFlashmobSubscribers = array(
+      'flashmob_organizer' => array(),
+      'teacher' => array(),
+      'subscriber_only' => array(),
+      'all' => array(),
+    );
     krsort($this->aOptions["aYearlyMapOptions"]);
 
     if (empty($this->aOptions['aYearlyMapOptions'])) {
@@ -316,7 +328,10 @@ class FLORP{
       );
       update_site_option( $this->strOptionKey, $this->aOptions, true );
     }
-    
+
+    $this->run_upgrades();
+
+    // SHORTCODES //
     add_shortcode( 'florp-form', array( $this, 'profile_form' ));
     // add_shortcode( 'florp-form-loader', array( $this, 'profile_form_loader' ));
     add_shortcode( 'florp-popup-anchor', array( $this, 'popup_anchor' ));
@@ -324,26 +339,35 @@ class FLORP{
     add_shortcode( 'florp-registered-count', array( $this, 'getRegisteredUserCount' ));
     add_shortcode( 'florp-registered-counter-impreza', array( $this, 'registeredUserImprezaCounter' ));
     add_shortcode( 'florp-popup-links', array( $this, 'popupLinks' ));
-    
+
+    // FILTERS //
     // add_filter( 'ninja_forms_render_default_value', array( $this, 'filter__set_nf_default_values'), 10, 3 );
     add_filter( 'us_meta_tags', array( $this, 'filter__us_meta_tags' ));
     // add_filter( 'us_meta_tags', array( $this, 'filter__us_meta_tags_before_echo' ));
-    add_filter( 'ninja_forms_display_fields', array($this, 'filter__ninja_forms_display_fields' ));
-    add_filter( 'ninja_forms_register_fields', array($this, 'filter__ninja_forms_register_fields' ));
-    
+    // add_filter( 'ninja_forms_preview_display_field', array( $this, 'filter__ninja_forms_preview_display_field' ));
+    // add_filter( 'ninja_forms_display_fields', array( $this, 'filter__ninja_forms_display_fields' ));
+    add_filter( 'ninja_forms_localize_fields', array( $this, 'filter__ninja_forms_localize_fields' ));
+    add_filter( 'ninja_forms_localize_fields_preview', array( $this, 'filter__ninja_forms_localize_fields' ));
+    add_filter( 'ninja_forms_register_fields', array( $this, 'filter__ninja_forms_register_fields' ));
+    add_action( 'ninja_forms_display_form_settings', array( $this, 'filter__displaying_profile_form_nf_start' ), 10, 2 );
+
+    // ACTIONS //
     add_action( 'ninja_forms_register_actions', array( $this, 'action__register_nf_florp_action' ));
     add_action( 'ninja_forms_after_submission', array( $this, 'action__update_user_profile' ));
     add_action( 'after_setup_theme', array( $this, 'action__remove_admin_bar' ));
     add_action( 'wp_ajax_florp_map_ajax', array( $this, 'action__map_ajax_callback' ));
     add_action( 'wp_ajax_nopriv_florp_map_ajax', array( $this, 'action__map_ajax_callback' ) );
     add_action( 'wp_ajax_get_markerInfoHTML', array( $this, 'action__get_markerInfoHTML_callback' ));
-    add_action( 'wp_ajax_nopriv_get_markerInfoHTML', array( $this, 'action__get_markerInfoHTML_callback' ) );
+    add_action( 'wp_ajax_nopriv_get_markerInfoHTML', array( $this, 'action__get_markerInfoHTML_callback' ));
     add_action( 'wp_ajax_get_mapUserInfo', array( $this, 'action__get_mapUserInfo_callback' ));
-    add_action( 'wp_ajax_nopriv_get_mapUserInfo', array( $this, 'action__get_mapUserInfo_callback' ) );
-    add_action( 'admin_menu', array( $this, "action__add_options_page" ) );
+    add_action( 'wp_ajax_nopriv_get_mapUserInfo', array( $this, 'action__get_mapUserInfo_callback' ));
+    add_action( 'admin_menu', array( $this, "action__add_options_page" ));
     add_action( 'wp_enqueue_scripts', array( $this, 'action__wp_enqueue_scripts' ), 9999 );
+    add_action( 'ninja_forms_enqueue_scripts', array( $this, 'action__ninja_forms_enqueue_scripts' ));
     add_action( 'ninja_forms_loaded', array( $this, 'action__register_merge_tags' ));
     add_action( 'login_head', array( $this, 'action__reset_password_redirect' ));
+    add_action( 'ninja_forms_before_container', array( $this, 'action__displaying_profile_form_nf_end' ), 10, 3 );
+    add_action( 'ninja_forms_before_container_preview', array( $this, 'action__displaying_profile_form_nf_end' ), 10, 3 );
 
     $this->map_shortcode_template = '
       [us_gmaps
@@ -373,9 +397,9 @@ class FLORP{
     ';
     $this->aUserFields = array( 'user_email', 'first_name', 'last_name', 'user_pass' );
     $this->aUserFieldsMap = array( 'first_name', 'last_name' );
-    $this->aMetaFields = array( 'webpage', 'school_name', 'school_webpage', 'school_city',
+    $this->aMetaFields = array( 'webpage', 'school_name', 'school_webpage', 'school_city', 'subscriber_type',
                           'flashmob_number_of_dancers', 'video_link_type', 'youtube_link', 'facebook_link', 'vimeo_link', 'embed_code', 'flashmob_address', 'longitude', 'latitude' );
-    $this->aMetaFieldsToClean = array( 'school_city', // TODO: really?
+    $this->aMetaFieldsToClean = array(
                           'flashmob_number_of_dancers', 'video_link_type', 'youtube_link', 'facebook_link', 'vimeo_link', 'embed_code', 'flashmob_address', 'longitude', 'latitude' );
     $this->aGeneralMapOptions = array(
       'map_init_raw'  => array(
@@ -405,7 +429,142 @@ class FLORP{
     );
   }
 
+  public function run_upgrades() {
+//     $this->aOptions['strVersion'] = '0'; // NOTE DEVEL TEMP
+//     update_site_option( $this->strOptionKey, $this->aOptions, true ); // NOTE DEVEL TEMP
+    $aArgs = array(
+      'blog_id' => $this->iFlashmobBlogID,
+    );
+    $aUsers = get_users( $aArgs );
+    foreach ($aUsers as $key => $oUser) {
+      delete_user_meta( $oUser->ID, 'som_organizator_rueda_flashmobu' );
+    }
+
+    $strVersionInOptions = $this->aOptions['strVersion'];
+    $strCurrentVersion = $this->strVersion;
+
+    $strUpgradeFlashmobSubscribersToOrganizers = '2.6.0';
+    if (version_compare( $strVersionInOptions, $strUpgradeFlashmobSubscribersToOrganizers, '<' )) {
+      // Before 2.6.0, there were ONLY subscribers who were the organizers //
+      // From 2.6.0 on, we have also subscribers who are not organizers (subscribers, teachers) //
+      $aOrganizers = $this->getFlashmobSubscribers('all');
+      foreach ($aOrganizers as $key => $oUser) {
+        update_user_meta( $oUser->ID, 'subscriber_type', array( 'flashmob_organizer' ) );
+      }
+    }
+
+    if (version_compare( $strVersionInOptions, $strCurrentVersion, '<' )) {
+      $this->aOptions['strVersion'] = $strCurrentVersion;
+      update_site_option( $this->strOptionKey, $this->aOptions, true );
+    }
+  }
+
+  public function filter__ninja_forms_preview_display_field( $aField ) {
+    // NOTE: OFF //
+    $aFieldSettings = $aField['settings'];
+    if ('recaptcha_logged-out-only' === $aFieldSettings['type']) {
+      return false;
+    }
+    return true;
+  }
+
+  public function filter__displaying_profile_form_nf_start( $aFormSettings, $iFormID ) {
+    if ($iFormID == $this->iProfileFormNinjaFormID) {
+      $this->bDisplayingProfileFormNinjaForm = true;
+    }
+    return $aFormSettings;
+  }
+
+  public function action__displaying_profile_form_nf_end( $iFormID, $aFormSettings, $aFormFields ) {
+    $this->bDisplayingProfileFormNinjaForm = false;
+  }
+
+  public function filter__ninja_forms_localize_fields( $aField ) {
+    $bLoggedIn = is_user_logged_in();
+    if ($bLoggedIn) {
+      // Hide our recaptcha field //
+      if ('recaptcha_logged-out-only' === $aField['settings']['type']) {
+        $aField['settings']["container_class"] .= " hidden";
+      }
+    }
+
+    if (!$this->bDisplayingProfileFormNinjaForm) {
+      return $aField;
+    }
+
+    if ($bLoggedIn) {
+      $iUserID = get_current_user_id();
+      $aSubscriberTypesOfUser = get_user_meta( $iUserID, 'subscriber_type', true );
+      // echo "<pre>" .var_export($aSubscriberTypesOfUser, true). "</pre>";
+      if ('listcheckbox' === $aField['settings']['type'] && 'subscriber_type' === $aField['settings']['key']) {
+        foreach ($aField['settings']['options'] as $iOptionKey => $aOption) {
+          $strValue = $aOption['value'];
+          if (is_array($aSubscriberTypesOfUser) && in_array($strValue, $aSubscriberTypesOfUser)) {
+            $aField['settings']['options'][$iOptionKey]['selected'] = 1;
+          }
+        }
+      }
+
+      if (isset($aField['settings']['container_class'])) {
+        $bHide = true;
+        if (stripos($aField['settings']['container_class'], 'florp-subscriber-type-field_all') !== false
+                || stripos($aField['settings']['container_class'], 'florp-registration-field') !== false) {
+          $bHide = false;
+        } else {
+          // Go through subscriber types of user and leave field unhidden if matched //
+          foreach ($aSubscriberTypesOfUser as $strSubscriberType) {
+            if (stripos($aField['settings']['container_class'], 'florp-subscriber-type-field_'.$strSubscriberType) !== false
+                || stripos($aField['settings']['container_class'], 'florp-subscriber-type-field_any') !== false) {
+              $bHide = false;
+            }
+          }
+        }
+        if ($bHide) {
+          $aField['settings']['container_class'] .= " hidden";
+        }
+      }
+//       if ('checkbox' === $aField['settings']['type'] && 'som_organizator_rueda_flashmobu' === $aField['settings']['key']) {
+//         $iUserID = get_current_user_id();
+//         $strIsRuedaFlashmobOrganizer = get_user_meta( $iUserID, $aField['settings']['key'], true );
+//         $strCheckboxValue = ($strIsRuedaFlashmobOrganizer == '1') ? 'checked' : 'unchecked';
+//         $aField['settings']['default_value'] = $strCheckboxValue;
+//       }
+    }
+
+    // echo "<pre>" .var_export($aField, tDrue). "</pre>";
+    if(!$bLoggedIn){
+      // Registration form //
+      if (isset($aField['settings']['container_class']) && stripos($aField['settings']['container_class'], 'florp-registration-field') === false) {
+        $aField['settings']['container_class'] .= " hidden";
+      } elseif (isset($aField['settings']['key']) && ($aField['settings']['key'] === 'user_pass' || $aField['settings']['key'] === 'passwordconfirm')) {
+        $aField['settings']['required'] = true;
+        $aField['settings']['desc_text'] = '';
+      } elseif (isset($aField['settings']['type']) && ($aField['settings']['type'] === 'submit')) {
+        $aField['settings']['label'] = 'Zaregistruj ma';
+        $aField['settings']['processing_label'] = 'Registrujem';
+      }
+  }
+    return $aField;
+  }
+
+  public function filter__set_nf_default_values( $strDefaultValue, $strFieldType, $aFieldSettings ) {
+    // NOTE: OFF //
+    return $strDefaultValue;
+  }
+
   public function filter__ninja_forms_display_fields( $aFields ) {
+    // NOTE: OFF //
+    $bLoggedIn = is_user_logged_in();
+    if($bLoggedIn){
+      // Full profile form (with our recaptcha hidden) //
+      foreach ($aFields as $key => $aField) {
+        if ('recaptcha_logged-out-only' === $aField['type']) {
+          $aFields[$key]["container_class"] .= " hidden";
+          break;
+        }
+      }
+    }
+
     $bIsProfileForm = false;
     foreach ($aFields as $aField) {
       if (isset($aField['key']) && ($aField['key'] === 'is_profile_form')) {
@@ -417,31 +576,11 @@ class FLORP{
       }
     }
     if (!$bIsProfileForm) {
+      // If this is not our flashmob form, we are not changing it //
       return $aFields;
     }
 
-    if(is_user_logged_in()){
-      // Full profile form (without antispam) //
-      // TODO hide type recaptcha_logged-out-only
-      // var_dump($aFields);
-//       $aDividerField = array();
-//       foreach ($aFields as $key => $aField) {
-//         if (empty($aDividerField) && $aField["type"] == 'hr') {
-//           // echo "<pre>" . var_export($aField, true) . "</pre>";
-//           $aDividerField = $aField;
-//         }
-//         if (isset($aField['container_class']) && stripos($aField['container_class'], 'florp-antispam') !== false) {
-//           // echo "<pre>" . var_export($aField, true) . "</pre>";
-//           $aFields[$key] = $aDividerField;
-//           $aPreserveKeys = array( 'key', 'id', 'order' );
-//           foreach ($aPreserveKeys as $strPreserveKey) {
-//             $aFields[$key][$strPreserveKey] = $aField[$strPreserveKey];
-//           }
-//           $aFields[$key]["container_class"] .= " hidden";
-//           break;
-//         }
-//       }
-    } else {
+    if(!$bLoggedIn){
       // Registration form //
       // var_dump($aFields);
       foreach ($aFields as $key => $aField) {
@@ -465,6 +604,7 @@ class FLORP{
   }
   
   public function profile_form_loader( $aAttributes ) {
+    // NOTE: OFF //
     $strDivID = 'florp-profile-form-placeholder-div';
     return '
       <div id="'.$strDivID.'"></div>
@@ -486,20 +626,84 @@ class FLORP{
     return '<a name="'.$this->strClickTriggerAnchor.'"></a>';
   }
   
-  private function getFlashmobSubscribers() {
-    if (empty($this->aFlashmobSubscribers)) {
+  private function getFlashmobSubscribers( $strType ) {
+    if (empty($this->aFlashmobSubscribers[$strType])) {
       $aArgs = array(
         'blog_id' => $this->iFlashmobBlogID,
-        'role'    => 'subscriber'
+        'role'          => 'subscriber'
       );
+      $aArgsTypeSpecific = array();
+      switch ($strType) {
+        case 'flashmob_organizer':
+        case 'teacher':
+          $aArgsTypeSpecific = array(
+            'meta_query' => array(
+              array(
+                'key'     => 'subscriber_type',
+                'value'   => $strType,
+                'compare' => 'LIKE'
+              )
+            )
+          );
+          break;
+        case 'subscriber_only':
+        case 'all':
+        default:
+          // Getting all users //
+          break;
+      }
+      $aArgs = array_merge( $aArgs, $aArgsTypeSpecific );
       $aUsers = get_users( $aArgs );
-      $this->aFlashmobSubscribers = $aUsers;
-      return $aUsers;
-    } else {
-      return $this->aFlashmobSubscribers;
+      switch ($strType) {
+        case 'flashmob_organizer':
+        case 'teacher':
+          // Check if 'LIKE' operator didn't match anything unwanted //
+          $aRemoveKeys = array();
+          foreach ($aUsers as $key => $oUser) {
+            $aSubscriberTypesOfUser = get_user_meta( $oUser->ID, 'subscriber_type', true );
+            if (empty($aSubscriberTypesOfUser) || !in_array( $strType, $aSubscriberTypesOfUser )) {
+              $aRemoveKeys[] = $iKey;
+            }
+          }
+          if (!empty($aRemoveKeys)) {
+            foreach ($aRemoveKeys as $iKey) {
+              unset($aUsers[$iKey]);
+            }
+          }
+          $this->aFlashmobSubscribers[$strType] = $aUsers;
+          break;
+        case 'subscriber_only':
+        case 'all':
+        default:
+          $this->aFlashmobSubscribers = array(
+            'flashmob_organizer' => array(),
+            'teacher' => array(),
+            'subscriber_only' => array(),
+            'all' => array(),
+          );
+          $aSubscriberTypes = array_keys( $this->aFlashmobSubscribers );
+          $this->aFlashmobSubscribers['all'] = $aUsers;
+          foreach ($aUsers as $oUser) {
+            $aSubscriberTypesOfUser = get_user_meta( $oUser->ID, 'subscriber_type', true );
+            if (empty($aSubscriberTypesOfUser)) {
+              $this->aFlashmobSubscribers['subscriber_only'][] = $oUser;
+            } else {
+              foreach ($aSubscriberTypes as $strSubscriberType) {
+                if ($strSubscriberType === 'all' || $strSubscriberType === 'subscriber_only') {
+                  continue;
+                }
+                if (in_array( $strSubscriberType, $aSubscriberTypesOfUser )) {
+                  $this->aFlashmobSubscribers[$strSubscriberType][] = $oUser;
+                }
+              }
+            }
+          }
+          break;
+      }
     }
+    return $this->aFlashmobSubscribers[$strType];
   }
-  
+
   public function getRegisteredUserCount( $aAttributes ) {
     $bOnMapOnly = isset($aAttributes['on-map-only']) || (is_array($aAttributes) && in_array('on-map-only', $aAttributes));
     if ($bOnMapOnly && -1 != $this->aRegisteredUserCount['on-map-only']) {
@@ -507,7 +711,7 @@ class FLORP{
     } elseif (!$bOnMapOnly && -1 != $this->aRegisteredUserCount['all']) {
       return $this->aRegisteredUserCount['all'];
     }
-    $aUsers = $this->getFlashmobSubscribers();
+    $aUsers = $this->getFlashmobSubscribers('flashmob_organizer');
     if ($bOnMapOnly) {
       $iCnt = 0;
       foreach ($aUsers as $key => $oUser) {
@@ -757,7 +961,7 @@ class FLORP{
   private function get_map_options_array( $bIsCurrentYear = true, $iYear = 0 ) {
     if ($bIsCurrentYear || $iYear == 0) {
       // Construct the current year's user array //
-      $aUsers = $this->getFlashmobSubscribers();
+      $aUsers = $this->getFlashmobSubscribers('flashmob_organizer');
       foreach ($aUsers as $key => $oUser) {
         $aMapOptionsArray[$oUser->ID] = $this->getOneUserMapInfo($oUser);
       }
@@ -805,22 +1009,14 @@ class FLORP{
     update_site_option( $this->strOptionKey, $this->aOptions, true );
     
     // clean user meta //
-    $aUsers = $this->getFlashmobSubscribers();
+    $aUsers = $this->getFlashmobSubscribers('flashmob_organizer');
     foreach ($aUsers as $key => $oUser) {
       foreach ($this->aMetaFieldsToClean as $keyVal) {
         delete_user_meta( $oUser->ID, $keyVal );
       }
     }
   }
-  
-  public function filter__set_nf_default_values( $default_value, $field_type, $field_settings ) {
-    if (empty($field_settings['default'])) {
-      $iUserID = get_current_user_id();
-      $default_value = get_user_meta( $iUserID, $field_settings['key'], true );
-    }
-    return $default_value;
-  }
-  
+
   public function getMapImage() {
     $aMapOptions = $this->aGeneralMapOptions;
     $aSizeArr = explode( "x", $aMapOptions['og_map']['size']);
@@ -881,6 +1077,7 @@ class FLORP{
   }
   
   public function filter__us_meta_tags_before_echo( $aMetaTags ) {
+    // NOTE: OFF //
     return $aMetaTags;
   }
   
@@ -927,7 +1124,28 @@ class FLORP{
     
     wp_enqueue_style( 'florp_form_css', plugins_url('css/florp-form.css', __FILE__), false, $this->strVersion, 'all');
   }
-  
+
+  public function action__ninja_forms_enqueue_scripts( $aFormData ) {
+    // Add recaptcha JS if form contains our recaptcha field //
+    // do_action( 'ninja_forms_enqueue_scripts', array( 'form_id' => $form_id ) ); //
+    $iFormID = $aFormData['form_id'];
+    $aFormFields = Ninja_Forms()->form( $iFormID )->get_fields();
+
+    $bFormHasRecaptchaLoggedOutOnly = false;
+    foreach ($aFormFields as $oFormFieldModel) {
+      $strType = $oFormFieldModel->get_setting( 'type' );
+      if ('recaptcha_logged-out-only' === $strType) {
+        $bFormHasRecaptchaLoggedOutOnly = true;
+        break;
+      }
+    }
+    if ($bFormHasRecaptchaLoggedOutOnly) {
+      $ver = Ninja_Forms::VERSION;
+      $recaptcha_lang = Ninja_Forms()->get_setting('recaptcha_lang');
+      wp_enqueue_script('nf-google-recaptcha', 'https://www.google.com/recaptcha/api.js?hl=' . $recaptcha_lang . '&onload=nfRenderRecaptcha&render=explicit', array( 'jquery', 'nf-front-end-deps' ), $ver, TRUE );
+    }
+  }
+
   public function action__add_options_page() {
     $iBlogID = get_current_blog_id();
     if ($iBlogID == $this->iFlashmobBlogID) {
@@ -948,10 +1166,16 @@ class FLORP{
     if (isset($_POST['save-florp-options'])) {
       $this->save_option_page_options($_POST);
     }
-    
+
     // echo "<pre>" .var_export($this->aOptions, true). "</pre>";
     // $aMapOptions = $this->get_map_options_array(false, 0);
     // echo "<pre>" .var_export($aMapOptions, true). "</pre>";
+    // echo "<pre>" .var_export($this->getFlashmobSubscribers('subscriber_only'), true). "</pre>";
+    // echo "<pre>" .var_export($this->getFlashmobSubscribers('flashmob_organizer'), true). "</pre>";
+    // echo "<pre>" .var_export($this->getFlashmobSubscribers('teacher'), true). "</pre>";
+    // echo "<pre>" .var_export($this->getFlashmobSubscribers('all'), true). "</pre>";
+    // echo "<pre>" .var_export(get_user_meta( $this->getFlashmobSubscribers('all')[0]->ID ), true). "</pre>";
+    // echo "<pre>" .var_export(get_user_meta( get_current_user_id() ), true). "</pre>";
 
     $aBooleanOptionsChecked = array();
     foreach ($this->aBooleanOptions as $strOptionKey) {
@@ -1196,7 +1420,6 @@ class FLORP{
   public function filter__ninja_forms_register_fields( $aFields ) {
     require_once __DIR__ . "/nf-custom-fields/Recaptcha_logged-out-only.php";
     $aFields['recaptcha_logged-out-only'] = new NF_Fields_RecaptchaLoggedOutOnly();
-    // TODO load recaptcha JS, CSS
     return $aFields;
   }
   
