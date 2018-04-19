@@ -28,6 +28,9 @@ class FLORP{
   private $aRegisteredUserCount;
   private $aFlashmobSubscribers;
   private $bDisplayingProfileFormNinjaForm = false;
+  private $strNinjaFormExportPath = __DIR__ . '/nf-export/export.php';
+  private $strExportVarName = 'aFlorpNinjaFormExportData';
+  private $bImportNinjaForm = true;
   
   public function __construct() {
     $this->aOptions = get_site_option( $this->strOptionKey, array() );
@@ -365,9 +368,11 @@ class FLORP{
     add_action( 'wp_enqueue_scripts', array( $this, 'action__wp_enqueue_scripts' ), 9999 );
     add_action( 'ninja_forms_enqueue_scripts', array( $this, 'action__ninja_forms_enqueue_scripts' ));
     add_action( 'ninja_forms_loaded', array( $this, 'action__register_merge_tags' ));
+    add_action( 'ninja_forms_loaded', array( $this, 'action__import_profile_form' ));
     add_action( 'login_head', array( $this, 'action__reset_password_redirect' ));
     add_action( 'ninja_forms_before_container', array( $this, 'action__displaying_profile_form_nf_end' ), 10, 3 );
     add_action( 'ninja_forms_before_container_preview', array( $this, 'action__displaying_profile_form_nf_end' ), 10, 3 );
+    add_action( 'plugins_loaded', array( $this, 'action__plugins_loaded' ));
 
     $this->map_shortcode_template = '
       [us_gmaps
@@ -457,6 +462,24 @@ class FLORP{
       $this->aOptions['strVersion'] = $strCurrentVersion;
       update_site_option( $this->strOptionKey, $this->aOptions, true );
     }
+  }
+
+  public function action__plugins_loaded() {
+    $strLwaBasename = 'login-with-ajax/login-with-ajax.php';
+    if (is_plugin_active( $strLwaBasename )) {
+      deactivate_plugins( $strLwaBasename, true );
+    }
+    if (is_plugin_active( $strLwaBasename ) || defined('LOGIN_WITH_AJAX_VERSION')) {
+      if (is_admin() && current_user_can( 'activate_plugins' )) {
+        add_action( 'admin_notices', array( $this, 'action__admin_notices__lwa_is_active' ));
+      }
+    } else {
+      require_once __DIR__ . '/lwa/login-with-ajax.php';
+    }
+  }
+
+  public function action__admin_notices__lwa_is_active() {
+    echo '<div class="error"><p>Nepodarilo sa automaticky deaktivovať plugin "Login With Ajax". Prosíme, spravte tak pre najlepšie fungovanie pluginu "Profil organizátora SVK flashmobu".</p></div>';
   }
 
   public function filter__ninja_forms_preview_display_field( $aField ) {
@@ -1149,12 +1172,14 @@ class FLORP{
   public function action__add_options_page() {
     $iBlogID = get_current_blog_id();
     if ($iBlogID == $this->iFlashmobBlogID) {
-      add_options_page(
-        "Profil organizátora SVK flashmobu",
-        "Profil organizátora SVK flashmobu",
-        "manage_options",
-        $this->strOptionsPageSlug,
-        array( $this, "options_page" )
+      add_menu_page(
+        "Profil organizátora slovenského flashmobu",
+        'Profil organizátora SVK flashmobu',
+        'manage_options',
+        'florp-main',
+        array( $this, "options_page" ),
+        plugins_url( 'flashmob-organizer-profile/img/florp-icon-30.png' ),
+        58
       );
     }
   }
@@ -1167,15 +1192,12 @@ class FLORP{
       $this->save_option_page_options($_POST);
     }
 
-    // echo "<pre>" .var_export($this->aOptions, true). "</pre>";
     // $aMapOptions = $this->get_map_options_array(false, 0);
     // echo "<pre>" .var_export($aMapOptions, true). "</pre>";
     // echo "<pre>" .var_export($this->getFlashmobSubscribers('subscriber_only'), true). "</pre>";
     // echo "<pre>" .var_export($this->getFlashmobSubscribers('flashmob_organizer'), true). "</pre>";
     // echo "<pre>" .var_export($this->getFlashmobSubscribers('teacher'), true). "</pre>";
     // echo "<pre>" .var_export($this->getFlashmobSubscribers('all'), true). "</pre>";
-    // echo "<pre>" .var_export(get_user_meta( $this->getFlashmobSubscribers('all')[0]->ID ), true). "</pre>";
-    // echo "<pre>" .var_export(get_user_meta( get_current_user_id() ), true). "</pre>";
 
     $aBooleanOptionsChecked = array();
     foreach ($this->aBooleanOptions as $strOptionKey) {
@@ -1185,7 +1207,7 @@ class FLORP{
         $aBooleanOptionsChecked[$strOptionKey] = '';
       }
     }
-    
+
     $optionsNinjaForms = '';
     if (function_exists('Ninja_Forms')) {
       $aForms = Ninja_Forms()->form()->get_forms();
@@ -1396,9 +1418,87 @@ class FLORP{
     $this->iProfileFormNinjaFormID = intval($this->aOptions['iProfileFormNinjaFormID']);
     $this->iProfileFormPopupID = intval($this->aOptions['iProfileFormPopupID']);
 
+    $this->export_ninja_forms();
+
     return true;
   }
-  
+
+  private function export_ninja_forms( $iFormID = false, $strExportPath = false ) {
+    if (false === $iFormID) {
+      $iFormID = $this->iProfileFormNinjaFormID;
+    }
+    if (false === $strExportPath) {
+      $strExportPath = $this->strNinjaFormExportPath;
+    }
+    if (!defined('FLORP_DEVEL') || FLORP_DEVEL !== true ) {
+      return;
+    }
+    if (!function_exists('Ninja_Forms')) {
+      return;
+    }
+    $aExport = array();
+    $oFormModel = Ninja_Forms()->form( $iFormID )->get();
+    $aFormSettings = $oFormModel->get_settings();
+    if (!empty($aFormSettings)) {
+      $aExport['form_settings'] = $aFormSettings;
+      $aExport['field_settings'] = array();
+      $aFormFieldModels = Ninja_Forms()->form( $iFormID )->get_fields();
+      foreach ($aFormFieldModels as $oFormFieldModel) {
+        $aFieldSettings = $oFormFieldModel->get_settings();
+        if (!empty($aFieldSettings)) {
+          $iID = $oFormFieldModel->get_id();
+          $aExport['field_settings'][$iID] = $aFieldSettings;
+        }
+      }
+      $aExport['action_settings'] = array();
+      $aFormActionModels = Ninja_Forms()->form( $iFormID )->get_actions();
+      foreach ($aFormActionModels as $oFormActionModel) {
+        $aActionSettings = $oFormActionModel->get_settings();
+        if (!empty($aActionSettings)) {
+          $iID = $oFormActionModel->get_id();
+          $aExport['action_settings'][$iID] = $aActionSettings;
+        }
+      }
+    }
+    $strExportContent = '<?php if ( ! defined( \'ABSPATH\' ) ) exit;'.PHP_EOL.'$'.$this->strExportVarName.' = '.var_export($aExport, true).'; ?>';
+    file_put_contents( $strExportPath, $strExportContent );
+  }
+
+  public function action__import_profile_form() {
+    if (defined('FLORP_DEVEL') && FLORP_DEVEL === true ) { return; }
+    if (file_exists($this->strNinjaFormExportPath) && $this->bImportNinjaForm) {
+      include_once $this->strNinjaFormExportPath;
+      $aImportedFormData = ${$this->strExportVarName};
+
+      foreach (Ninja_Forms()->form()->get_forms() as $oFormModel) {
+        $iID = $oFormModel->get_id();
+        $aFormSettings = $oFormModel->get_settings();
+        if ($aFormSettings['title'] == $aImportedFormData['form_settings']['title']) {
+          $oFormModel->update_setting( 'title', $aFormSettings['title'] . " OLD: " . date('Y-m-d H:i:s') )->save();
+        }
+      }
+
+      // Create new form //
+      $oFormModel = Ninja_Forms()->form()->get();
+      $oFormModel->update_settings( $aImportedFormData['form_settings'] )->save();
+      $iNewFormID = $oFormModel->get_id();
+      foreach ($aImportedFormData['field_settings'] as $aFieldSettings) {
+        $oNewField = Ninja_Forms()->form( $iNewFormID )->field()->get();
+        $oNewField->update_settings( $aFieldSettings )->save();
+      }
+      foreach ($aImportedFormData['action_settings'] as $ActionSettings) {
+        $oNewAction = Ninja_Forms()->form( $iNewFormID )->action()->get();
+        $oNewAction->update_settings( $ActionSettings )->save();
+      }
+      $oFormModel->save();
+      rename( $this->strNinjaFormExportPath, $this->strNinjaFormExportPath.'.imported-'.date('Ymd-His'));
+
+      $this->iProfileFormNinjaFormID = $iNewFormID;
+      $this->aOptions['iProfileFormNinjaFormID'] = $this->iProfileFormNinjaFormID;
+      update_site_option( $this->strOptionKey, $this->aOptions, true );
+    }
+  }
+
   public function action__remove_admin_bar() {
     if (!current_user_can('administrator') && !is_admin()) {
       show_admin_bar( false );

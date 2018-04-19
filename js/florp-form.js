@@ -28,24 +28,38 @@ function florpGetCookie(key) {
   return keyValue ? keyValue[2] : null;
 }
 
-function florpAnimateHide($elements) {
+function florpAnimateHide($elements, callback) {
   $elements.each(function () {
-    $this = jQuery(this)
-    $this.show().hide(500)
-    setTimeout(function () {
-      // Clean up //
-      $this.addClass('hidden').removeAttr("style")
-    }, 500)
+    var $this = jQuery(this)
+    if ($this.is(':hidden')) {
+      // don't re-hide //
+      return
+    }
+    $this.show().hide(500,
+      function () {
+        // Clean up //
+        $this.addClass('hidden').removeAttr("style")
+        if ("undefined" !== typeof callback) {
+          callback()
+        }
+    })
   });
 }
-function florpAnimateShow($elements) {
+function florpAnimateShow($elements, callback) {
   $elements.each(function () {
-    $this = jQuery(this)
-    $this.hide().removeClass('hidden').show(500)
-    setTimeout(function () {
-      // Clean up //
-      $this.removeAttr("style")
-    }, 500)
+    var $this = jQuery(this)
+    if (!$this.is(':hidden')) {
+      // don't re-show //
+      return
+    }
+    $this.hide().removeClass('hidden').show(500,
+      function () {
+        // Clean up //
+        $this.removeAttr("style")
+        if ("undefined" !== typeof callback) {
+          callback()
+        }
+    })
   });
 }
 
@@ -612,6 +626,7 @@ jQuery( document ).on( 'nfFormReady', function() {
   });
 });
 
+var aFlorpSubscriberTypes = [];
 function florpFixFormClasses() {
   // Fix classes //
   jQuery( ".florp-class" ).each(function (){
@@ -637,9 +652,8 @@ function florpFixFormClasses() {
     // Get the checkboxes //
     var $aSubscriberTypes = jQuery(".florp_subscriber_type_container input[type=checkbox]");
     // Get create and populate the subscriber types into an array //
-    var aSubscriberTypes = [];
     $aSubscriberTypes.each(function () {
-      aSubscriberTypes.push(jQuery(this).val())
+      aFlorpSubscriberTypes.push(jQuery(this).val())
     });
     // Onchange event for the checkboxes //
     $aSubscriberTypes.change(function () {
@@ -647,30 +661,47 @@ function florpFixFormClasses() {
       var strSubscriberType = $this.val()
       var bChecked = $this.is(':checked')
       var $aFieldsToToggle = jQuery(".florp-subscriber-type-field_"+strSubscriberType+":not(.florp-subscriber-type-field_all,.florp-registration-field) .nf-field-container")
-      console.log($aFieldsToToggle)
-      if (bChecked) {
-        florpAnimateShow($aFieldsToToggle)
-//         $aFieldsToToggle.removeClass('hidden')
-      } else {
-        florpAnimateHide($aFieldsToToggle)
-//         $aFieldsToToggle.addClass('hidden')
+      // console.log($aFieldsToToggle)
+
+      var fnGetFieldsAnyToToggle = function() {
+        // Get the number of unhidden fields - if there are any, fields with class 'florp-subscriber-type-field_any' are unhidden as well //
+        var iCheckedCount = jQuery(".florp_subscriber_type_container input[type=checkbox]").filter(function (index) {
+          return jQuery(this).is(':checked');
+        }).length;
+        var iUnhiddenCount = 0
+        aFlorpSubscriberTypes.forEach(function (strType) {
+          var $aUnhiddenThisType = jQuery(".florp-subscriber-type-field_"+strType+":not(.florp-subscriber-type-field_all,.florp-registration-field) .nf-field-container:not(.hidden)")
+          iUnhiddenCount += $aUnhiddenThisType.length
+          if ($aUnhiddenThisType.length > 0) {
+            // console.log($aUnhiddenThisType[0])
+          }
+        })
+        var $aFieldsAnyToToggle = jQuery('.florp-subscriber-type-field_any .nf-field-container')
+        return {
+          fields: $aFieldsAnyToToggle,
+          show: (iCheckedCount * iUnhiddenCount) > 0
+        }
+      }
+      var fnCheckFieldsAnyToToggle = function() {
+        var res = fnGetFieldsAnyToToggle()
+        if ( res.show ) {
+          florpAnimateShow(res.fields)
+//           res.fields.removeClass('hidden')
+        } else {
+          florpAnimateHide(res.fields)
+//           res.fields.addClass('hidden')
+        }
       }
 
-      // Get the number of unhidden fields - if there are any, fields with class 'florp-subscriber-type-field_any' are unhidden as well //
-      var iCheckedCount = jQuery(".florp_subscriber_type_container input[type=checkbox]").filter(function (index) {
-        return jQuery(this).is(':checked');
-      }).length;
-      var iUnhiddenCount = 0
-      aSubscriberTypes.forEach(function (strType) {
-        iUnhiddenCount += jQuery(".florp-subscriber-type-field_"+strType+":not(.florp-subscriber-type-field_all,.florp-registration-field) .nf-field-container:not(.hidden)").length
-      })
-      $aFieldsAnyToToggle = jQuery('.florp-subscriber-type-field_any .nf-field-container')
-      if ( (iCheckedCount * iUnhiddenCount) > 0) {
-        florpAnimateShow($aFieldsAnyToToggle)
+      if ($aFieldsToToggle.length === 0) {
+        // No fields to toggle, so nothing will change for fields shown when any subscriber type is matched //
+        // fnCheckFieldsAnyToToggle()
+      } else if (bChecked) {
+        florpAnimateShow($aFieldsToToggle, function() { fnCheckFieldsAnyToToggle(); })
       } else {
-//         $aFieldsAnyToToggle.addClass('hidden')
-        florpAnimateHide($aFieldsAnyToToggle)
+        florpAnimateHide($aFieldsToToggle, function() { fnCheckFieldsAnyToToggle(); })
       }
+
     });
   }
 
