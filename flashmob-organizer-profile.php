@@ -19,6 +19,11 @@ class FLORP{
   private $aOptionDefaults = array();
   private $aOptionFormKeys = array();
   private $aBooleanOptions = array();
+  private $aUserFields;
+  private $aUserFieldsMap;
+  private $aMetaFields;
+  private $aMetaFieldsToClean;
+  private $aLocationFields;
   private $strProfileFormWrapperID = 'florp-profile-form-wrapper-div';
   private $strClickTriggerClass = 'florp-click-register-trigger';
   private $strClickTriggerGetParam = 'popup-florp';
@@ -407,6 +412,7 @@ class FLORP{
                           'flashmob_number_of_dancers', 'video_link_type', 'youtube_link', 'facebook_link', 'vimeo_link', 'embed_code', 'flashmob_address', 'longitude', 'latitude' );
     $this->aMetaFieldsToClean = array(
                           'flashmob_number_of_dancers', 'video_link_type', 'youtube_link', 'facebook_link', 'vimeo_link', 'embed_code', 'flashmob_address', 'longitude', 'latitude' );
+    $this->aLocationFields = array( "school_city", "flashmob_address", "longitude", "latitude" );
     $this->aGeneralMapOptions = array(
       'map_init_raw'  => array(
         'zoom'        => 8,
@@ -491,6 +497,9 @@ class FLORP{
 
   public function action__admin_notices__florp_devel_is_on() {
     echo '<div class="notice notice-warning"><p>FLORP_DEVEL constant is on. Contact your site admin if you think this is not right!</p></div>';
+    if (defined('FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION') && FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION === true) {
+      echo '<div class="notice notice-warning"><p>Flashmob organizer archivation is off!</p></div>';
+    }
   }
 
   public function filter__ninja_forms_preview_display_field( $aField ) {
@@ -1406,8 +1415,12 @@ class FLORP{
       echo '<span class="warning">Rok flashmobu možno nastaviť len na taký, pre ktorý ešte nie sú archívne dáta v DB!</span>';
       return false;
     } elseif ($iFlashmobYearNew != $iFlashmobYearCurrent) {
-      $this->archive_current_year_map_options();
-      echo '<span class="info">Dáta flashmobu z roku '.$iFlashmobYearCurrent.' boli archivované.</span>';
+      if (defined('FLORP_DEVEL') && FLORP_DEVEL === true && defined('FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION') && FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION === true) {
+        // NOT ARCHIVING //
+      } else {
+        $this->archive_current_year_map_options();
+        echo '<span class="info">Dáta flashmobu z roku '.$iFlashmobYearCurrent.' boli archivované.</span>';
+      }
     }
 
     foreach ($this->aBooleanOptions as $strOptionKey) {
@@ -1578,8 +1591,13 @@ class FLORP{
       echo json_encode($aRes);
       wp_die();
     } else {
+      $aSubscriberTypesOfUser = get_user_meta( $oUser->ID, 'subscriber_type', true );
       $aMapOptionsArray = $this->getOneUserMapInfo($oUser);
-          
+      if (!is_array($aSubscriberTypesOfUser) || !in_array('flashmob_organizer', $aSubscriberTypesOfUser)) {
+        foreach ($this->aLocationFields as $strFieldKey) {
+          unset($aMapOptionsArray[$strFieldKey]);
+        }
+      }
       $aRes = array(
         'new_map_options' => $aMapOptionsArray,
         'data'        => $_POST,

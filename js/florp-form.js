@@ -278,18 +278,36 @@ function florpGenerateYearlyMap( oDivDOMElement, divID, oMapOptions ) {
   } else {
     map = florp.maps.objects[divID];
   }
-  
-  var iUserID;
+
+  // First select the marker shown on load randomly //
   florp.maps.markerShownOnLoad[divID] = florpRandomObjectKey(oMapOptions);
-  for (iUserID in oMapOptions) {
-    if (oMapOptions.hasOwnProperty(iUserID)) {
-      var oUserOptions = oMapOptions[iUserID];
-      if ("undefined" !== typeof oUserOptions["showOnLoad"] && oUserOptions["showOnLoad"] === true) {
-        florp.maps.markerShownOnLoad[divID] = iUserID;
-        break;
+  var bUserIdMatched = false
+  var iUserID;
+  if ("undefined" !== typeof florp.user_id) {
+    // User is logged in => try to find a marker that belongs to them //
+    for (iUserID in oMapOptions) {
+      if (oMapOptions.hasOwnProperty(iUserID)) {
+        if (iUserID == florp.user_id) {
+          florp.maps.markerShownOnLoad[divID] = florp.user_id;
+          bUserIdMatched = true;
+          break;
+        }
       }
     }
   }
+  if (!bUserIdMatched) {
+    // User is not logged in or has no marker => let's find the marker that was specified by shortcode //
+    for (iUserID in oMapOptions) {
+      if (oMapOptions.hasOwnProperty(iUserID)) {
+        var oUserOptions = oMapOptions[iUserID];
+        if ("undefined" !== typeof oUserOptions["showOnLoad"] && oUserOptions["showOnLoad"] === true) {
+          florp.maps.markerShownOnLoad[divID] = iUserID;
+          break;
+        }
+      }
+    }
+  }
+  // For each user show their markers //
   for (iUserID in oMapOptions) {
     if (oMapOptions.hasOwnProperty(iUserID)) {
       var oUserOptions = oMapOptions[iUserID];
@@ -343,90 +361,96 @@ function florpSetUserMarker(iUserID, oUserOptions, map, divID, show) {
       success: function(response) {
         // console.log(response);
         try {
-          var res = JSON.parse(response);
-//               console.log(res);
-          var markerContentHtml = res.contentHtml;
-          var map = florp.maps.objects[res.data.divID];
-          
-          if ("undefined" !== typeof res.data && "undefined" !== typeof florp.maps.markers && "undefined" !== typeof florp.maps.markers[res.data.divID]) {
-            if ("undefined" !== typeof res.data.oUserOptions.latitude && jQuery.isNumeric(res.data.oUserOptions.latitude)
-                && "undefined" !== typeof res.data.oUserOptions.longitude && jQuery.isNumeric(res.data.oUserOptions.longitude)) {
-              if ("undefined" === typeof florp.maps.markers[res.data.divID][res.data.iUserID]) {
-                // place the marker directly //
+          var getMarkerInfoHtmlRes = JSON.parse(response);
+//               console.log(getMarkerInfoHtmlRes);
+          var markerContentHtml = getMarkerInfoHtmlRes.contentHtml;
+          var map = florp.maps.objects[getMarkerInfoHtmlRes.data.divID];
+
+          if ("undefined" !== typeof getMarkerInfoHtmlRes.data && "undefined" !== typeof florp.maps.markers && "undefined" !== typeof florp.maps.markers[getMarkerInfoHtmlRes.data.divID]) {
+            if ("undefined" !== typeof getMarkerInfoHtmlRes.data.oUserOptions.latitude && jQuery.isNumeric(getMarkerInfoHtmlRes.data.oUserOptions.latitude)
+                && "undefined" !== typeof getMarkerInfoHtmlRes.data.oUserOptions.longitude && jQuery.isNumeric(getMarkerInfoHtmlRes.data.oUserOptions.longitude)) {
+              if ("undefined" === typeof florp.maps.markers[getMarkerInfoHtmlRes.data.divID][getMarkerInfoHtmlRes.data.iUserID]) {
+                // Creating new marker - by coordinates //
+                // console.log("Creating new marker - by coordinates", getMarkerInfoHtmlRes.data.divID, getMarkerInfoHtmlRes.data.iUserID)
                 var markerOptions = jQuery.extend({}, florp.general_map_options.markers, {
-                  position: new google.maps.LatLng(res.data.oUserOptions.latitude, res.data.oUserOptions.longitude),
+                  position: new google.maps.LatLng(getMarkerInfoHtmlRes.data.oUserOptions.latitude, getMarkerInfoHtmlRes.data.oUserOptions.longitude),
                   map: map,
-                  title: res.data.location
+                  title: getMarkerInfoHtmlRes.data.location
                 });
                 var marker = new google.maps.Marker(markerOptions);
                 var infowindow = new google.maps.InfoWindow({
                   content: markerContentHtml
                 });
                 marker.addListener('click', function() {
-                  florpOpenInfoWindow(map, marker, infowindow, res.data.divID);
+                  florpOpenInfoWindow(map, marker, infowindow, getMarkerInfoHtmlRes.data.divID);
                 });
-                florp.maps.markers[res.data.divID][res.data.iUserID] = {
+                florp.maps.markers[getMarkerInfoHtmlRes.data.divID][getMarkerInfoHtmlRes.data.iUserID] = {
                   object: marker,
-                  data: res.data,
+                  data: getMarkerInfoHtmlRes.data,
                   html: markerContentHtml,
                   info_window_object: infowindow
                 }
               } else {
-                var marker = florp.maps.markers[res.data.divID][res.data.iUserID].object;
-                var infowindow = florp.maps.markers[res.data.divID][res.data.iUserID].info_window_object;
-                marker.setPosition(new google.maps.LatLng(res.data.oUserOptions.latitude, res.data.oUserOptions.longitude));
-                marker.setTitle(res.data.location);
+                // Updating marker - by coordinates //
+                // console.log("Updating marker - by coordinates", getMarkerInfoHtmlRes.data.divID, getMarkerInfoHtmlRes.data.iUserID)
+                var marker = florp.maps.markers[getMarkerInfoHtmlRes.data.divID][getMarkerInfoHtmlRes.data.iUserID].object;
+                var infowindow = florp.maps.markers[getMarkerInfoHtmlRes.data.divID][getMarkerInfoHtmlRes.data.iUserID].info_window_object;
+                marker.setPosition(new google.maps.LatLng(getMarkerInfoHtmlRes.data.oUserOptions.latitude, getMarkerInfoHtmlRes.data.oUserOptions.longitude));
+                marker.setTitle(getMarkerInfoHtmlRes.data.location);
                 infowindow.setContent(markerContentHtml);
-                florp_map_options_object[res.data.divID][res.data.iUserID] = res.data.oUserOptions;
-                florp.maps.markers[res.data.divID][res.data.iUserID].data = res.data;
-                florp.maps.markers[res.data.divID][res.data.iUserID].html = markerContentHtml;
+                florp_map_options_object[getMarkerInfoHtmlRes.data.divID][getMarkerInfoHtmlRes.data.iUserID] = getMarkerInfoHtmlRes.data.oUserOptions;
+                florp.maps.markers[getMarkerInfoHtmlRes.data.divID][getMarkerInfoHtmlRes.data.iUserID].data = getMarkerInfoHtmlRes.data;
+                florp.maps.markers[getMarkerInfoHtmlRes.data.divID][getMarkerInfoHtmlRes.data.iUserID].html = markerContentHtml;
               }
               if (show) {
-                florpOpenInfoWindow(map, marker, infowindow, res.data.divID);
+                florpOpenInfoWindow(map, marker, infowindow, getMarkerInfoHtmlRes.data.divID);
               }
             } else {
-  //                 console.log(res.data.location);
-              
+              // console.log(getMarkerInfoHtmlRes.data.location);
               geocoder = new google.maps.Geocoder();
               geocoder.geocode({
-                'address': res.data.location
+                'address': getMarkerInfoHtmlRes.data.location
               }, function(results, status) {
                 if (status == google.maps.GeocoderStatus.OK) {
   //                     console.log(results);
   //                     console.log(status);
                   var addressLocation = results[0].geometry.location;
                   
-                  if ("undefined" === typeof florp.maps.markers[res.data.divID][res.data.iUserID]) {
+                  if ("undefined" === typeof florp.maps.markers[getMarkerInfoHtmlRes.data.divID][getMarkerInfoHtmlRes.data.iUserID]) {
+                    // Creating new marker - no coordinates //
+                    // console.log("Creating new marker - no coordinates", getMarkerInfoHtmlRes.data.divID, getMarkerInfoHtmlRes.data.iUserID)
                     var markerOptions = jQuery.extend({}, florp.general_map_options.markers, {
                       position: addressLocation,
                       map: map,
-                      title: res.data.location
+                      title: getMarkerInfoHtmlRes.data.location
                     });
                     var marker = new google.maps.Marker(markerOptions);
                     var infowindow = new google.maps.InfoWindow({
                       content: markerContentHtml
                     });
                     marker.addListener('click', function() {
-                      florpOpenInfoWindow(map, marker, infowindow, res.data.divID);
+                      florpOpenInfoWindow(map, marker, infowindow, getMarkerInfoHtmlRes.data.divID);
                     });
-                    florp.maps.markers[res.data.divID][res.data.iUserID] = {
+                    florp.maps.markers[getMarkerInfoHtmlRes.data.divID][getMarkerInfoHtmlRes.data.iUserID] = {
                       object: marker,
-                      data: res.data,
+                      data: getMarkerInfoHtmlRes.data,
                       html: markerContentHtml,
                       info_window_object: infowindow
                     }
                   } else {
-                    var marker = florp.maps.markers[res.data.divID][res.data.iUserID].object;
-                    var infowindow = florp.maps.markers[res.data.divID][res.data.iUserID].info_window_object;
-                    marker.setPosition(new google.maps.LatLng(res.data.oUserOptions.latitude, res.data.oUserOptions.longitude));
-                    marker.setTitle(res.data.location);
+                    // Updating marker - no coordinates //
+                    // console.log("Updating marker - no coordinates", getMarkerInfoHtmlRes.data.divID, getMarkerInfoHtmlRes.data.iUserID)
+                    var marker = florp.maps.markers[getMarkerInfoHtmlRes.data.divID][getMarkerInfoHtmlRes.data.iUserID].object;
+                    var infowindow = florp.maps.markers[getMarkerInfoHtmlRes.data.divID][getMarkerInfoHtmlRes.data.iUserID].info_window_object;
+                    marker.setPosition(addressLocation);
+                    marker.setTitle(getMarkerInfoHtmlRes.data.location);
                     infowindow.setContent(markerContentHtml);
-                    florp_map_options_object[res.data.divID][res.data.iUserID] = res.data.oUserOptions;
-                    florp.maps.markers[res.data.divID][res.data.iUserID].data = res.data;
-                    florp.maps.markers[res.data.divID][res.data.iUserID].html = markerContentHtml;
+                    florp_map_options_object[getMarkerInfoHtmlRes.data.divID][getMarkerInfoHtmlRes.data.iUserID] = getMarkerInfoHtmlRes.data.oUserOptions;
+                    florp.maps.markers[getMarkerInfoHtmlRes.data.divID][getMarkerInfoHtmlRes.data.iUserID].data = getMarkerInfoHtmlRes.data;
+                    florp.maps.markers[getMarkerInfoHtmlRes.data.divID][getMarkerInfoHtmlRes.data.iUserID].html = markerContentHtml;
                   }
                   if (show) {
-                    florpOpenInfoWindow(map, marker, infowindow, res.data.divID);
+                    florpOpenInfoWindow(map, marker, infowindow, getMarkerInfoHtmlRes.data.divID);
                   }
                 } else {
                   console.warn(status);
@@ -435,17 +459,17 @@ function florpSetUserMarker(iUserID, oUserOptions, map, divID, show) {
             }
           } else {
             // DEBUG INFO: //
-            if ("undefined" === typeof res.data) {
-              console.warn(res);
-            } else if ("undefined" === typeof res.data.divID) {
-              console.warn(res.data);
+            if ("undefined" === typeof getMarkerInfoHtmlRes.data) {
+              console.warn(getMarkerInfoHtmlRes);
+            } else if ("undefined" === typeof getMarkerInfoHtmlRes.data.divID) {
+              console.warn(getMarkerInfoHtmlRes.data);
             }
             if ("undefined" === typeof florp.maps.markers) {
               console.warn("flowp.maps.markers is undefined");
-            } else if ("undefined" !== typeof res.data.divID && "undefined" !== typeof florp.maps.markers[res.data.divID]) {
-              console.warn(florp.maps.markers[res.data.divID]);
-            } else if ("undefined" !== typeof res.data.divID) {
-              console.warn("no markers for div ID: " + res.data.divID);
+            } else if ("undefined" !== typeof getMarkerInfoHtmlRes.data.divID && "undefined" !== typeof florp.maps.markers[getMarkerInfoHtmlRes.data.divID]) {
+              console.warn(florp.maps.markers[getMarkerInfoHtmlRes.data.divID]);
+            } else if ("undefined" !== typeof getMarkerInfoHtmlRes.data.divID) {
+              console.warn("no markers for div ID: " + getMarkerInfoHtmlRes.data.divID);
             } else {
               console.log(florp.maps.markers);
             }
@@ -507,11 +531,11 @@ function florpReloadYearlyMap( iYear = 0 ) {
       success: function(response) {
         // console.log(response);
         try {
-          var res = JSON.parse(response);
-          console.log(res);
-          if (res.new_map_options !== false) {
-            var map = florp.maps.objects[res.data.divID];
-            florpSetUserMarker(florp.user_id, res.new_map_options, map, res.data.divID, true);
+          var getMarkerInfoHtmlRes = JSON.parse(response);
+          console.log(getMarkerInfoHtmlRes);
+          if (getMarkerInfoHtmlRes.new_map_options !== false) {
+            var map = florp.maps.objects[getMarkerInfoHtmlRes.data.divID];
+            florpSetUserMarker(florp.user_id, getMarkerInfoHtmlRes.new_map_options, map, getMarkerInfoHtmlRes.data.divID, true);
             florpRescrapeFbOgMapImage();
           }
         } catch(e) {
@@ -643,9 +667,54 @@ function florpFixFormClasses() {
   
   jQuery(".nf-help").removeClass("nf-help");
 
+  var fnToggleFlashmobOrganizerWarnings = function( strSubscriberType, bChecked, animate = true ) {
+    if (strSubscriberType === 'flashmob_organizer') {
+      var fnToggle = function(oThis, bChecked, animate) {
+        $this = jQuery(oThis)
+        if (bChecked && (!animate || $this.is(":hidden"))) {
+          if (animate) {
+            florpAnimateShow($this)
+          } else {
+            $this.show()
+          }
+        } else if (!bChecked && (!animate || !$this.is(":hidden"))) {
+          if (animate) {
+            florpAnimateHide($this)
+          } else {
+            $this.hide()
+          }
+        }
+      }
+
+      // Toggling independently from florp.hide_flashmob_fields //
+      var $flashmobOrganizerWarningsAlways = jQuery('.flashmob_organizer_warning')
+      $flashmobOrganizerWarningsAlways.each(function() {
+        fnToggle(this, bChecked, animate)
+      })
+      if (florp.hide_flashmob_fields == 1) {
+        // Toggling warnings before flashmob //
+        var $flashmobOrganizerWarningsBeforeFlashmob = jQuery('.school_city_warning')
+        $flashmobOrganizerWarningsBeforeFlashmob.each(function() {
+          fnToggle(this, bChecked, animate)
+        })
+      }
+    }
+  }
+
+  var $flashmobOrganizerCheckbox = jQuery(".florp_subscriber_type_container input[type=checkbox][value=flashmob_organizer]");
+  fnToggleFlashmobOrganizerWarnings( 'flashmob_organizer', $flashmobOrganizerCheckbox.is(':checked'), false )
+
   // When logged in, hide/unhide parts of the profile form based on which subscriber types the user has //
   if ("undefined" === typeof florp.user_id ) {
-    // Not logged in => registration form - do nothing //
+    // Not logged in => registration form - only toggle warnings //
+    var $aSubscriberTypes = jQuery(".florp_subscriber_type_container input[type=checkbox]");
+    $aSubscriberTypes.change(function () {
+      var $this = jQuery(this);
+      var strSubscriberType = $this.val()
+      var bChecked = $this.is(':checked')
+
+      fnToggleFlashmobOrganizerWarnings(strSubscriberType, bChecked)
+    })
   } else {
     // Logged in => profile form - do the magic //
 
@@ -662,6 +731,8 @@ function florpFixFormClasses() {
       var bChecked = $this.is(':checked')
       var $aFieldsToToggle = jQuery(".florp-subscriber-type-field_"+strSubscriberType+":not(.florp-subscriber-type-field_all,.florp-registration-field) .nf-field-container")
       // console.log($aFieldsToToggle)
+
+      fnToggleFlashmobOrganizerWarnings(strSubscriberType, bChecked)
 
       var fnGetFieldsAnyToToggle = function() {
         // Get the number of unhidden fields - if there are any, fields with class 'florp-subscriber-type-field_any' are unhidden as well //
@@ -683,13 +754,13 @@ function florpFixFormClasses() {
         }
       }
       var fnCheckFieldsAnyToToggle = function() {
-        var res = fnGetFieldsAnyToToggle()
-        if ( res.show ) {
-          florpAnimateShow(res.fields)
-//           res.fields.removeClass('hidden')
+        var checkFieldsAnyToToggleRes = fnGetFieldsAnyToToggle()
+        if ( checkFieldsAnyToToggleRes.show ) {
+          florpAnimateShow(checkFieldsAnyToToggleRes.fields)
+//           checkFieldsAnyToToggleRes.fields.removeClass('hidden')
         } else {
-          florpAnimateHide(res.fields)
-//           res.fields.addClass('hidden')
+          florpAnimateHide(checkFieldsAnyToToggleRes.fields)
+//           checkFieldsAnyToToggleRes.fields.addClass('hidden')
         }
       }
 
@@ -732,10 +803,120 @@ function florpFixFormClasses() {
   });
   findLocationButton = jQuery(".florp-button-find-location");
 
+  // Function to show map with location either based on city or flashmob location //
+  var fnFindLocation = function() {
+    var location, locationSelector = ".florp-flashmob-address", bUsingFlashmobAddress = true;
+    location = jQuery.trim(jQuery(locationSelector).first().val());
+    jQuery(".florp-map-preview-wrapper .nf-field-description").removeAttr("style")
+    if (location === "") {
+      locationSelector = ".florp_school_city";
+      bUsingFlashmobAddress = false
+      location = jQuery.trim(jQuery(locationSelector).first().val());
+      jQuery(".florp-map-preview-wrapper .nf-field-description").hide()
+      jQuery(".ninja-forms-field.nf-element.florp_longitude").val("");
+      jQuery(".ninja-forms-field.nf-element.florp_latitude").val("");
+    }
+    if (location === "" || location === "null") {
+      // issue an error about empty location //
+      console.warn("Location is empty!");
+      jQuery(".ninja-forms-field.nf-element.florp_longitude").val("");
+      jQuery(".ninja-forms-field.nf-element.florp_latitude").val("");
+      jQuery(".florp-map-preview-wrapper").hide();
+      return;
+    }
+
+    // generate the list by: var arr = []; for (var i in form.fields) {arr.push(form.fields[i].key)}; console.log(arr.join("',"+"\n"+"'")) //
+    var inputIDs = [
+//           'user_email',
+        'first_name',
+        'last_name',
+//           'user_pass',
+//           'passwordconfirm',
+      'webpage',
+      'school_name',
+      'school_webpage',
+      'school_city',
+      'flashmob_number_of_dancers',
+      'video_link_type',
+      'youtube_link',
+      'facebook_link',
+      'vimeo_link',
+      'embed_code',
+      'flashmob_address',
+      'longitude',
+      'latitude'
+    ];
+    var infoWindowData = {};
+    for (var i in inputIDs) {
+      var id = inputIDs[i].trim();
+      var inputSelector = ".ninja-forms-field.nf-element.florp_"+id;
+      infoWindowData[id] = {
+        selector: inputSelector,
+        value: jQuery(inputSelector).first().val()
+      };
+    }
+
+    var data = {
+      action: florp.map_ajax_action,
+      security : florp.security,
+      location: location,
+      infoWindowData: infoWindowData,
+    };
+    jQuery.ajax({
+      type: "POST",
+      url: florp.ajaxurl,
+      data: data,
+      success: function(response) {
+        // console.log(response);
+        try {
+          var mapHtml = JSON.parse(response);
+          // console.log(mapHtml);
+          generateMapHtml(mapHtml, ".florp-map-preview-wrapper", ".florp-map-preview", ".florp-flashmob-address", bUsingFlashmobAddress);
+        } catch(e) {
+          console.log(e);
+        }
+      },
+      error: function(errorThrown){
+        console.warn(errorThrown);
+      }
+    });
+  }
+
   if (florp.hide_flashmob_fields == 1) {
     // Disable after-flashmob fields //
     jQuery(".florp-flashmob input, .florp-flashmob select, .florp-flashmob text, .florp-flashmob .florp-button-find-location").attr("disabled", "disabled");
     fnFlorpVideoTypeSelect();
+
+    var $flashmobOrganizerCheckbox = jQuery(".florp_subscriber_type_container input[type=checkbox][value=flashmob_organizer]");
+    var fnToggleLocationFinding = function($checkbox, animate = true) {
+      $florpMapWrapperDiv = jQuery('.florp-map-wrapper-div')
+      if ($checkbox.is(":checked")) {
+        if (animate) {
+          florpAnimateShow($florpMapWrapperDiv)
+        } else {
+          $florpMapWrapperDiv.show()
+        }
+        // Show map with location on form load //
+        fnFindLocation()
+        // Onchange event when school_city is changed //
+        florpSchoolCitySelect.change(function() {
+          if (jQuery.trim(jQuery(".florp-flashmob-address").first().val()) === "") {
+            fnFindLocation()
+          }
+        })
+      } else {
+        if (animate) {
+          florpAnimateHide($florpMapWrapperDiv)
+        } else {
+          $florpMapWrapperDiv.hide()
+        }
+      }
+    }
+    fnToggleLocationFinding($flashmobOrganizerCheckbox, false)
+    $flashmobOrganizerCheckbox.change(function() {
+      $this = jQuery(this)
+      fnToggleLocationFinding($this, true)
+    })
   } else {
     // Hide before-flashmob fields //
     jQuery(".florp-before-flashmob").hide();
@@ -752,85 +933,8 @@ function florpFixFormClasses() {
     florpVideoTypeSelect.change(function() {
       fnFlorpVideoTypeSelect();
     });
-    
-    // Add location find button click event //
-    var fnFindLocation = function() {
-      var location, locationSelector = ".florp-flashmob-address", bUsingFlashmobAddress = true;
-      location = jQuery.trim(jQuery(locationSelector).first().val());
-      jQuery(".florp-map-preview-wrapper .nf-field-description").removeAttr("style")
-      if (location === "") {
-        locationSelector = ".florp_school_city";
-        bUsingFlashmobAddress = false
-        location = jQuery.trim(jQuery(locationSelector).first().val());
-        jQuery(".florp-map-preview-wrapper .nf-field-description").hide()
-        jQuery(".ninja-forms-field.nf-element.florp_longitude").val("");
-        jQuery(".ninja-forms-field.nf-element.florp_latitude").val("");
-      }
-      if (location === "" || location === "null") {
-        // issue an error about empty location //
-        console.warn("Location is empty!");
-        jQuery(".ninja-forms-field.nf-element.florp_longitude").val("");
-        jQuery(".ninja-forms-field.nf-element.florp_latitude").val("");
-        jQuery(".florp-map-preview-wrapper").hide();
-        return;
-      }
 
-      // generate the list by: var arr = []; for (var i in form.fields) {arr.push(form.fields[i].key)}; console.log(arr.join("',"+"\n"+"'")) //
-      var inputIDs = [
-//           'user_email',
-          'first_name',
-          'last_name',
-//           'user_pass',
-//           'passwordconfirm',
-        'webpage',
-        'school_name',
-        'school_webpage',
-        'school_city',
-        'flashmob_number_of_dancers',
-        'video_link_type',
-        'youtube_link',
-        'facebook_link',
-        'vimeo_link',
-        'embed_code',
-        'flashmob_address',
-        'longitude',
-        'latitude'
-      ];
-      var infoWindowData = {};
-      for (var i in inputIDs) {
-        var id = inputIDs[i].trim();
-        var inputSelector = ".ninja-forms-field.nf-element.florp_"+id;
-        infoWindowData[id] = {
-          selector: inputSelector,
-          value: jQuery(inputSelector).first().val()
-        };
-      }
-
-      var data = {
-        action: florp.map_ajax_action,
-        security : florp.security,
-        location: location,
-        infoWindowData: infoWindowData,
-      };
-      jQuery.ajax({
-        type: "POST",
-        url: florp.ajaxurl,
-        data: data,
-        success: function(response) {
-          // console.log(response);
-          try {
-            var mapHtml = JSON.parse(response);
-            // console.log(mapHtml);
-            generateMapHtml(mapHtml, ".florp-map-preview-wrapper", ".florp-map-preview", ".florp-flashmob-address", bUsingFlashmobAddress);
-          } catch(e) {
-            console.log(e);
-          }
-        },
-        error: function(errorThrown){
-          console.warn(errorThrown);
-        }
-      });
-    }
+    // Show map with location on form load //
     fnFindLocation()
     // Onchange event when school_city is changed //
     florpSchoolCitySelect.change(function() {

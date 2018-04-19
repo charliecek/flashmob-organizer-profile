@@ -1,8 +1,40 @@
 jQuery( document ).on( 'nfFormReady', function() {
-  add_florp_submit_controller();
+  add_florp_action_controllers();
 });
 
-function add_florp_submit_controller() {
+function add_florp_action_controllers() {
+  var florpRecaptchaOnlyLoggedOutController = Marionette.Object.extend({
+    initialize: function() {
+        var $elements = jQuery('.recaptcha_logged-out-only-container .g-recaptcha')
+        $elements.each(function() {
+          var $this = jQuery(this)
+          var fnCallback = $this.data("callback")
+          var fieldID = $this.data('fieldid')
+          window[fnCallback] = function( response ) {
+            var field = nfRadio.channel("fields").request("get:field", fieldID);
+            field.set("value", response),
+            nfRadio.channel("fields").request("remove:error", field.get("id"), "required-error")
+          }
+        })
+        this.listenTo(nfRadio.channel("forms"), "submit:response", this.resetRecaptchaOLO)
+    },
+    resetRecaptchaOLO: function() {
+        // console.info("Recaptcha reset")
+        var e = 0;
+        jQuery(".g-recaptcha").each(function() {
+            try {
+                grecaptcha.reset(e)
+            } catch (e) {
+                console.log("Notice: Error trying to reset grecaptcha.")
+            }
+            e++
+        })
+    },
+  });
+
+  // Instantiate //
+  new florpRecaptchaOnlyLoggedOutController();
+
   var florpSubmitController = Marionette.Object.extend( {
     formModel: null,
     formID: florp.form_id || 2,
@@ -102,6 +134,6 @@ function add_florp_submit_controller() {
     },
   });
 
-  // Instantiate our custom field's controller, defined above.
+  // Instantiate //
   new florpSubmitController();
 }

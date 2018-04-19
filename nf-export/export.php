@@ -207,7 +207,7 @@ $aFlorpNinjaFormExportData = array (
           'max_options' => 0,
           'label' => 'Organizátor rueda flashmobu',
           'value' => 'flashmob_organizer',
-          'calc' => '',
+          'calc' => '0',
           'selected' => 0,
           'order' => 0,
           'settingModel' => 
@@ -279,9 +279,9 @@ $aFlorpNinjaFormExportData = array (
           array (
           ),
           'max_options' => 0,
-          'label' => 'Organizátor tanečných kurzov',
+          'label' => 'Inštruktor tanečných kurzov',
           'value' => 'teacher',
-          'calc' => '',
+          'calc' => '0',
           'selected' => 0,
           'order' => 1,
           'settingModel' => 
@@ -353,10 +353,12 @@ $aFlorpNinjaFormExportData = array (
       'admin_label' => '',
       'help_text' => '',
       'manual_key' => '1',
-      'drawerDisabled' => '',
+      'drawerDisabled' => false,
       'label' => 'Som:',
       'key' => 'subscriber_type',
       'type' => 'listcheckbox',
+      'desc_text' => '<p class="flashmob_organizer_warning">Zaškrtávacie políčko "Organizátor rueda flashmobu" LEN je pre organizátorov rueda flashmob-u: ak ním nie ste, prosíme, nezaškrtávajte túto možnosť, ale kontaktujte svojho Rueda inštruktora vo Vašom alebo najbližšom meste, aby sa zaregistroval a zorganizoval Flashmob. Ďakujeme za porozumenie.</p>
+<p class="flashmob_organizer_warning">Pokojne sa však môžete zaregistrovať aj bez zaškrtnutia tohoto políčka.</p>',
     ),
     205 => 
     array (
@@ -11021,9 +11023,9 @@ $aFlorpNinjaFormExportData = array (
 
 
 </div>',
-      'container_class' => 'florp-class florp-flashmob florp-subscriber-type-field_flashmob_organizer',
+      'container_class' => 'florp-class florp-map-wrapper-div florp-subscriber-type-field_flashmob_organizer florp-registration-field-subscriber-type_flashmob_organizer',
       'element_class' => '',
-      'drawerDisabled' => '',
+      'drawerDisabled' => false,
       'label' => 'MAP wrapper div',
       'key' => 'map_wrapper_div_1499222834794',
       'type' => 'html',
