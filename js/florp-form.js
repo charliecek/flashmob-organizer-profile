@@ -705,11 +705,11 @@ function florpFixFormClasses() {
     });
   }
 
-  var select = jQuery(".florp_school_city");
+  var florpSchoolCitySelect = jQuery(".florp_school_city");
   if (typeof florp.school_city !== "undefined" && florp.school_city.length > 0) {
     jQuery(".florp_school_city option").removeAttr("selected");
 //     jQuery(".florp_school_city option[value="+florp.school_city+"]").attr("selected", "selected");
-    select.val(florp.school_city);
+    florpSchoolCitySelect.val(florp.school_city);
   }
 
   // Add correct classes to buttons //
@@ -723,40 +723,50 @@ function florpFixFormClasses() {
       thisButtonObj.addClass("florp-button");
     }
   });
-  var findLocationbutton = jQuery("span.florp-button");
-  findLocationbutton.each(function () {
+  var findLocationButton = jQuery("span.florp-button");
+  findLocationButton.each(function () {
     var thisButtonObj = jQuery(this);
     if (thisButtonObj.text() === "Nájdi" && !thisButtonObj.hasClass("florp-button-find-location")) {
       thisButtonObj.addClass("florp-button-find-location");
     }
   });
-  findLocationbutton = jQuery(".florp-button-find-location");
+  findLocationButton = jQuery(".florp-button-find-location");
 
   if (florp.hide_flashmob_fields == 1) {
     // Disable after-flashmob fields //
     jQuery(".florp-flashmob input, .florp-flashmob select, .florp-flashmob text, .florp-flashmob .florp-button-find-location").attr("disabled", "disabled");
-    florpVideoTypeSelect();
+    fnFlorpVideoTypeSelect();
   } else {
     // Hide before-flashmob fields //
     jQuery(".florp-before-flashmob").hide();
     jQuery(".school_city_warning").hide();
     
     // Add video link select events //
-    var select = jQuery(".florp-video-type-select");
+    var florpVideoTypeSelect = jQuery(".florp-video-type-select");
     if (florp.video_link_type.length > 0 && (florp.video_link_type === 'youtube' || florp.video_link_type === 'facebook' || florp.video_link_type === 'vimeo' || florp.video_link_type === 'other')) {
       jQuery(".florp-video-type-select option").removeAttr("selected");
       jQuery(".florp-video-type-select option[value="+florp.video_link_type+"]").attr("selected", "selected");
-//         select.val(florp.video_link_type);
+//         florpVideoTypeSelect.val(florp.video_link_type);
     }
-    florpVideoTypeSelect();
-    select.change(function() {
-      florpVideoTypeSelect();
+    fnFlorpVideoTypeSelect();
+    florpVideoTypeSelect.change(function() {
+      fnFlorpVideoTypeSelect();
     });
     
     // Add location find button click event //
-    findLocationbutton.on('click', function() {
-      var location = jQuery(".florp-flashmob-address").first().val();
+    var fnFindLocation = function() {
+      var location, locationSelector = ".florp-flashmob-address", bUsingFlashmobAddress = true;
+      location = jQuery.trim(jQuery(locationSelector).first().val());
+      jQuery(".florp-map-preview-wrapper .nf-field-description").removeAttr("style")
       if (location === "") {
+        locationSelector = ".florp_school_city";
+        bUsingFlashmobAddress = false
+        location = jQuery.trim(jQuery(locationSelector).first().val());
+        jQuery(".florp-map-preview-wrapper .nf-field-description").hide()
+        jQuery(".ninja-forms-field.nf-element.florp_longitude").val("");
+        jQuery(".ninja-forms-field.nf-element.florp_latitude").val("");
+      }
+      if (location === "" || location === "null") {
         // issue an error about empty location //
         console.warn("Location is empty!");
         jQuery(".ninja-forms-field.nf-element.florp_longitude").val("");
@@ -811,7 +821,7 @@ function florpFixFormClasses() {
           try {
             var mapHtml = JSON.parse(response);
             // console.log(mapHtml);
-            generateMapHtml(mapHtml, ".florp-map-preview-wrapper", ".florp-map-preview", ".florp-flashmob-address");
+            generateMapHtml(mapHtml, ".florp-map-preview-wrapper", ".florp-map-preview", ".florp-flashmob-address", bUsingFlashmobAddress);
           } catch(e) {
             console.log(e);
           }
@@ -820,17 +830,26 @@ function florpFixFormClasses() {
           console.warn(errorThrown);
         }
       });
-    });
+    }
+    fnFindLocation()
+    // Onchange event when school_city is changed //
+    florpSchoolCitySelect.change(function() {
+      if (jQuery.trim(jQuery(".florp-flashmob-address").first().val()) === "") {
+        fnFindLocation()
+      }
+    })
+    // Onclick event when location finder button is clicked //
+    findLocationButton.on('click', fnFindLocation);
   }
 }
-  
-function florpVideoTypeSelect() {
+
+function fnFlorpVideoTypeSelect() {
   var selected_option = jQuery(".florp-video-type-select option:selected").attr("value");
   jQuery(".florp-video").hide();
   jQuery(".florp-video-"+selected_option).show();
 }
 
-function generateMapHtml(mapHtml, wrapperSelector, mapContainerSelector, locationInputSelector) {
+function generateMapHtml(mapHtml, wrapperSelector, mapContainerSelector, locationInputSelector, bUsingFlashmobAddress = true) {
   var $container = jQuery(mapHtml);
   var $jsonContainer = $container.find('.w-map-json'),
       jsonOptions = $jsonContainer[0].onclick() || {},
@@ -858,8 +877,10 @@ function generateMapHtml(mapHtml, wrapperSelector, mapContainerSelector, locatio
     if (status == google.maps.GeocoderStatus.OK) {
       var addressLocation = results[0].geometry.location;
       florp.markerLocation = addressLocation;
-      jQuery(".florp_longitude").first().val(addressLocation.lng);
-      jQuery(".florp_latitude").first().val(addressLocation.lat);
+      if (bUsingFlashmobAddress) {
+        jQuery(".florp_longitude").first().val(addressLocation.lng);
+        jQuery(".florp_latitude").first().val(addressLocation.lat);
+      }
       var formattedAddress = results[0].formatted_address;
       var gMapOptions = {
           zoom: mapOptions.zoom,
@@ -888,44 +909,47 @@ function generateMapHtml(mapHtml, wrapperSelector, mapContainerSelector, locatio
             position: addressLocation,
             icon: mapOptions.icon.url,
             title: formattedAddress,
-            draggable: true
+            draggable: bUsingFlashmobAddress
         });
-        // Add drag event to marker - update the marker title, text and the location input; also save the position //
-        florp.marker.addListener('dragend', function(event) {
-          //console.log(event);
-          var newLocation = {
-            lat: event.latLng.lat(),
-            lng: event.latLng.lng()
-          };
-          geocoder.geocode({'location': newLocation}, function(results, status) {
-            if (status === 'OK') {
-              console.log(results);
-              if (results[1]) { // city
-                florp.markerLocation = newLocation;
-                jQuery(".florp_longitude").first().val(newLocation.lng);
-                jQuery(".florp_latitude").first().val(newLocation.lat);
-                var newAddress = results[1].formatted_address;
-                florp.marker.setTitle(newAddress);
-                jQuery(locationInputSelector).first().val(newAddress);
-                if (typeof florp.info_window === "object" && florp.info_window !== null) {
-                  var content = jQuery(florp.info_window.getContent());
-                  var locationElement = content.find(".flashmob-location");
-                  if (locationElement.length > 0) {
-                    locationElement.html(newAddress);
-                    florp.info_window.setContent(content[0].outerHTML);
+        if (bUsingFlashmobAddress) {
+          // Add drag event to marker - update the marker title, text and the location input; also save the position //
+          florp.marker.addListener('dragend', function(event) {
+            //console.log(event);
+            var newLocation = {
+              lat: event.latLng.lat(),
+              lng: event.latLng.lng()
+            };
+            geocoder.geocode({'location': newLocation}, function(results, status) {
+              if (status === 'OK') {
+                console.log(results);
+                if (results[1]) { // city
+                  florp.markerLocation = newLocation;
+                  jQuery(".florp_longitude").first().val(newLocation.lng);
+                  jQuery(".florp_latitude").first().val(newLocation.lat);
+                  var newAddress = results[1].formatted_address;
+                  florp.marker.setTitle(newAddress);
+                  jQuery(locationInputSelector).first().val(newAddress);
+                  if (typeof florp.info_window === "object" && florp.info_window !== null) {
+                    var content = jQuery(florp.info_window.getContent());
+                    var locationElement = content.find(".flashmob-location");
+                    if (locationElement.length > 0) {
+                      locationElement.html(newAddress);
+                      florp.info_window.setContent(content[0].outerHTML);
+                    }
                   }
+                } else {
+                  console.log('No results found');
                 }
               } else {
-                console.log('No results found');
+                console.log('Geocoder failed due to: ' + status);
               }
-            } else {
-              console.log('Geocoder failed due to: ' + status);
-            }
+            });
           });
-        });
+        }
       } else {
         florp.marker.setPosition(addressLocation);
         florp.marker.setTitle(formattedAddress);
+        florp.marker.setDraggable(bUsingFlashmobAddress)
       }
       if (typeof florp.info_window === "object" && florp.info_window !== null) {
         florp.marker.addListener('click', function() {

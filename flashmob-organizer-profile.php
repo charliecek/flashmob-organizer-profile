@@ -5,12 +5,12 @@
  * Description: Creates shortcodes for flashmob organizer login / registration / profile editing form and for maps showing cities with videos of flashmobs for each year
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 2.6.0
+ * Version: 3.0.0
  */
 
 class FLORP{
 
-  private $strVersion = '2.6.0';
+  private $strVersion = '3.0.0';
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormID = 2;
   private $iProfileFormPopupID = 5347;
@@ -373,6 +373,7 @@ class FLORP{
     add_action( 'ninja_forms_before_container', array( $this, 'action__displaying_profile_form_nf_end' ), 10, 3 );
     add_action( 'ninja_forms_before_container_preview', array( $this, 'action__displaying_profile_form_nf_end' ), 10, 3 );
     add_action( 'plugins_loaded', array( $this, 'action__plugins_loaded' ));
+    add_action( 'init', array( $this, 'action__init' ));
 
     $this->map_shortcode_template = '
       [us_gmaps
@@ -448,10 +449,10 @@ class FLORP{
     $strVersionInOptions = $this->aOptions['strVersion'];
     $strCurrentVersion = $this->strVersion;
 
-    $strUpgradeFlashmobSubscribersToOrganizers = '2.6.0';
+    $strUpgradeFlashmobSubscribersToOrganizers = '3.0.0';
     if (version_compare( $strVersionInOptions, $strUpgradeFlashmobSubscribersToOrganizers, '<' )) {
-      // Before 2.6.0, there were ONLY subscribers who were the organizers //
-      // From 2.6.0 on, we have also subscribers who are not organizers (subscribers, teachers) //
+      // Before 3.0.0, there were ONLY subscribers who were the organizers //
+      // From 3.0.0 on, we have also subscribers who are not organizers (subscribers, teachers) //
       $aOrganizers = $this->getFlashmobSubscribers('all');
       foreach ($aOrganizers as $key => $oUser) {
         update_user_meta( $oUser->ID, 'subscriber_type', array( 'flashmob_organizer' ) );
@@ -478,8 +479,18 @@ class FLORP{
     }
   }
 
+  public function action__init() {
+    if (is_admin() && current_user_can( 'activate_plugins' ) && defined('FLORP_DEVEL') && FLORP_DEVEL === true) {
+      add_action( 'admin_notices', array( $this, 'action__admin_notices__florp_devel_is_on' ));
+    }
+  }
+
   public function action__admin_notices__lwa_is_active() {
-    echo '<div class="error"><p>Nepodarilo sa automaticky deaktivovať plugin "Login With Ajax". Prosíme, spravte tak pre najlepšie fungovanie pluginu "Profil organizátora SVK flashmobu".</p></div>';
+    echo '<div class="notice notice-error"><p>Nepodarilo sa automaticky deaktivovať plugin "Login With Ajax". Prosíme, spravte tak pre najlepšie fungovanie pluginu "Profil organizátora SVK flashmobu".</p></div>';
+  }
+
+  public function action__admin_notices__florp_devel_is_on() {
+    echo '<div class="notice notice-warning"><p>FLORP_DEVEL constant is on. Contact your site admin if you think this is not right!</p></div>';
   }
 
   public function filter__ninja_forms_preview_display_field( $aField ) {
@@ -1186,12 +1197,13 @@ class FLORP{
 
   public function options_page() {
     // echo "<h1>" . __("Flashmob Organizer Profile Options", "florp" ) . "</h1>";
-    echo "<h1>" . "Nastavenia profilu organizátora slovenského flashmobu" . "</h1>";
+    echo "<div class=\"wrap\"><h1>" . "Nastavenia profilu organizátora slovenského flashmobu" . "</h1>";
 
     if (isset($_POST['save-florp-options'])) {
       $this->save_option_page_options($_POST);
     }
 
+    // echo "<pre>" .var_export($this->aOptions, true). "</pre>";
     // $aMapOptions = $this->get_map_options_array(false, 0);
     // echo "<pre>" .var_export($aMapOptions, true). "</pre>";
     // echo "<pre>" .var_export($this->getFlashmobSubscribers('subscriber_only'), true). "</pre>";
@@ -1382,6 +1394,7 @@ class FLORP{
             <input id="save-florp-options-bottom" class="button button-primary button-large" name="save-florp-options" type="submit" value="Ulož" />
           </span>
         </form>
+        </div><!-- .wrap -->
       '
     );
   }
@@ -1465,7 +1478,7 @@ class FLORP{
   }
 
   public function action__import_profile_form() {
-    if (defined('FLORP_DEVEL') && FLORP_DEVEL === true ) { return; }
+    if (defined('FLORP_DEVEL') && FLORP_DEVEL === true) { return; }
     if (file_exists($this->strNinjaFormExportPath) && $this->bImportNinjaForm) {
       include_once $this->strNinjaFormExportPath;
       $aImportedFormData = ${$this->strExportVarName};
@@ -1762,7 +1775,7 @@ class FLORP{
           add_user_to_blog( $this->iFlashmobBlogID, $iUserID, 'subscriber' );
         }
         $strBlogname = wp_specialchars_decode(get_option('blogname'), ENT_QUOTES);
-        LoginWithAjax::new_user_notification( $strUsername, $aFieldData['user_pass'], $aFieldData['user_email'], $strBlogname ); // TODO maybe move the text and sending to this plugin
+        LoginWithAjax::new_user_notification( $strUsername, $aFieldData['user_pass'], $aFieldData['user_email'], $strBlogname );
 
         // New user notification to admins //
         $message  = sprintf(__('New user registration on your site %s:'), $strBlogname) . "\n\n";
@@ -1773,7 +1786,7 @@ class FLORP{
           'role'    => 'administrator'
         );
         $aAdmins = get_users( $aAdminArgs );
-        if (empty($aAdmins)) {
+        if (empty($aAdmins) || (defined('FLORP_DEVEL') && FLORP_DEVEL === true)) {
           @wp_mail(get_option('admin_email'), sprintf(__('[%s] New User Registration'), $strBlogname), $message);
         } else {
           foreach ($aAdmins as $iKey => $oAdmin) {
