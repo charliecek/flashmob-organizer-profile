@@ -76,6 +76,14 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
       foreach ($data['fields'] as $field_id => $field_value ) {
         $strKey = $field_value['key'];
         $strValue = $field_value['value'];
+        if ($strKey == 'subscriber_type') {
+          $aSubscriberType = $strValue;
+          break;
+        }
+      }
+      foreach ($data['fields'] as $field_id => $field_value ) {
+        $strKey = $field_value['key'];
+        $strValue = $field_value['value'];
         switch( $strKey ) {
           case "user_email":
             $strValue = trim( $strValue );
@@ -110,6 +118,9 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
             if ($strValue === "null") {
               break;
             }
+            if (!in_array("flashmob_organizer", $aSubscriberType)) {
+              break;
+            }
             global $wpdb;
             $iUserID = get_current_user_id();
             $strQuery = 'SELECT *
@@ -123,7 +134,7 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
               ARRAY_N
             );
             if (!empty($results)) {
-              $data[ 'errors' ][ 'form' ][$strKey] = "V databáze už existuje používateľ s mestom pôsobenia nastaveným na '$strValue'!";
+              $data[ 'errors' ][ 'form' ][$strKey] = "V databáze už existuje organizátor rueda flashmobu s mestom pôsobenia nastaveným na '$strValue'!";
             }
             break;
           default:
