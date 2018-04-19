@@ -2,6 +2,8 @@
 $aFlorpNinjaFormExportData = array (
   'form_settings' => 
   array (
+    'objectType' => 'Form Setting',
+    'editActive' => '1',
     'title' => 'Rueda organizer profile',
     'key' => '',
     'created_at' => '2018-04-18 10:50:13',
@@ -62,8 +64,6 @@ $aFlorpNinjaFormExportData = array (
     'hide_complete' => '0',
     'show_title' => '0',
     'clear_complete' => '0',
-    'editActive' => '1',
-    'objectType' => 'Form Setting',
   ),
   'field_settings' => 
   array (
@@ -71,7 +71,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '1',
       'container_class' => 'florp-class florp-registration-field',
       'element_class' => '',
@@ -84,7 +84,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '2',
       'default' => '<h5>Základné informácie</h5>',
       'container_class' => 'florp-class florp-subscriber-type-field_any',
@@ -98,7 +98,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '3',
       'label_pos' => 'default',
       'required' => '1',
@@ -120,7 +120,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '4',
       'label_pos' => 'default',
       'required' => '1',
@@ -142,7 +142,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '5',
       'label_pos' => 'default',
       'required' => '1',
@@ -164,7 +164,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '6',
       'label_pos' => 'default',
       'required' => '0',
@@ -193,7 +193,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '8',
       'label_pos' => 'left',
       'required' => '',
@@ -362,7 +362,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '9',
       'label_pos' => 'default',
       'required' => '',
@@ -379,7 +379,7 @@ $aFlorpNinjaFormExportData = array (
           'options' => 
           array (
           ),
-          'label' => 'vyberte mesto flashmobu',
+          'label' => 'vyberte mesto',
           'value' => 'null',
           'calc' => '',
           'selected' => 0,
@@ -10317,7 +10317,7 @@ $aFlorpNinjaFormExportData = array (
       'help_text' => '',
       'desc_text' => '<p class="school_city_warning">Ak mesto pôsobenia nevyplníte, Váš flashmob sa na mape nezobrazí.</p>',
       'manual_key' => '1',
-      'drawerDisabled' => '',
+      'drawerDisabled' => false,
       'label' => 'Mesto',
       'key' => 'school_city',
       'type' => 'listselect',
@@ -10326,7 +10326,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '10',
       'label_pos' => 'default',
       'required' => '',
@@ -10351,7 +10351,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '11',
       'label_pos' => 'default',
       'required' => '',
@@ -10377,7 +10377,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '12',
       'container_class' => 'florp-class florp-subscriber-type-field_flashmob_organizer',
       'element_class' => '',
@@ -10390,7 +10390,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '13',
       'default' => '<h5>Ďalšie informácie</h5>',
       'container_class' => 'florp-class florp-subscriber-type-field_flashmob_organizer',
@@ -10404,7 +10404,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '14',
       'label_pos' => 'default',
       'required' => '0',
@@ -10433,7 +10433,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '15',
       'label_pos' => 'default',
       'required' => '0',
@@ -10462,7 +10462,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '16',
       'container_class' => 'florp-class florp-subscriber-type-field_flashmob_organizer',
       'element_class' => '',
@@ -10475,7 +10475,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '17',
       'default' => '<h5 class="florp-flashmob-info-h5">Info o flashmobe</h5>
 
@@ -10491,7 +10491,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '18',
       'label_pos' => 'default',
       'default' => '{usermeta:flashmob_number_of_dancers}',
@@ -10516,7 +10516,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '19',
       'label_pos' => 'default',
       'required' => '',
@@ -10846,7 +10846,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '20',
       'label_pos' => 'default',
       'required' => '',
@@ -10875,7 +10875,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '21',
       'label_pos' => 'default',
       'required' => '',
@@ -10904,7 +10904,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '22',
       'label_pos' => 'default',
       'required' => '',
@@ -10933,7 +10933,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '23',
       'label_pos' => 'default',
       'required' => '',
@@ -10962,7 +10962,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '24',
       'label_pos' => 'default',
       'required' => '0',
@@ -10993,7 +10993,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '25',
       'default' => '<span class="florp-button button florp-button-find-location">Nájdi</span>',
       'container_class' => 'florp-class florp-flashmob florp-right-button florp-subscriber-type-field_flashmob_organizer',
@@ -11007,7 +11007,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '26',
       'default' => '<div class="florp-map-preview-wrapper">
   <div class="nf-field-description">
@@ -11032,7 +11032,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '27',
       'label_pos' => 'default',
       'required' => '',
@@ -11061,7 +11061,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '28',
       'label_pos' => 'default',
       'required' => '',
@@ -11090,7 +11090,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '29',
       'container_class' => 'florp-class florp-antispam florp-registration-field',
       'element_class' => '',
@@ -11104,7 +11104,7 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
+      'editActive' => false,
       'order' => '30',
       'processing_label' => 'Processing',
       'container_class' => 'florp-class florp-registration-field',
