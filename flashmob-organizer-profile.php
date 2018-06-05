@@ -1361,7 +1361,7 @@ class FLORP{
     if (!$this->isFlashmobBlog && strlen($strFlashmobBlogDomain) > 0) {
       echo "<p>Nastavenia pre flashmobovú stránku sú <a href=\"http://{$strFlashmobBlogDomain}/wp-admin/admin.php?page=florp-main\">tu</a>.</p>";
     }
-    if (!$this->isMainBlog && !$this->isMainBlog) {
+    if (!$this->isMainBlog && !$this->isFlashmobBlog) {
       echo "</div><!-- .wrap -->";
       return;
     }
@@ -1572,7 +1572,7 @@ class FLORP{
         $optionsFlashmobSite ),
       '
             <tr style="width: 98%; padding:  5px 1%;">
-              <th colspan="2"><h3>Flashmobobá podstránka</h3></th>
+              <th colspan="2"><h3>Flashmobová podstránka</h3></th>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_flashmob_blog_id">Podstránka</label></th>
