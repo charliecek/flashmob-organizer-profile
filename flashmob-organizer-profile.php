@@ -11,11 +11,11 @@
 class FLORP{
 
   private $strVersion = '3.0.0';
-  private $iFlashmobBlogID = 6;
   private $iMainBlogID = 1;
+  private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
-  private $iProfileFormPopupIDMain;
   private $iProfileFormNinjaFormIDFlashmob;
+  private $iProfileFormPopupIDMain;
   private $iProfileFormPopupIDFlashmob;
   private $strOptionsPageSlug = 'florp-options';
   private $strOptionKey = 'florp-options';
@@ -159,10 +159,15 @@ class FLORP{
     foreach ($this->aOptions as $key => $val) {
       if (property_exists($this, $key)) {
         if (strpos($key, 'i') === 0) {
-          $this->$key = intval($val);
+          $iVal = intval($val);
+          $this->aOptions[$key] = $iVal;
+          $this->$key = $iVal;
         } else {
           $this->$key = $val;
         }
+      } elseif (strpos($key, 'i') === 0) {
+        $iVal = intval($val);
+        $this->aOptions[$key] = $iVal;
       }
     }
 
@@ -400,10 +405,6 @@ class FLORP{
       update_site_option( $this->strOptionKey, $this->aOptions, true );
     }
 
-    $this->run_upgrades();
-
-    $this->set_variables_per_subsite();
-
     // SHORTCODES //
     add_shortcode( 'florp-form', array( $this, 'profile_form' ));
     // add_shortcode( 'florp-form-loader', array( $this, 'profile_form_loader' ));
@@ -506,17 +507,35 @@ class FLORP{
     );
   }
 
+  private function migrate_subscribers( $iBlogFrom, $iBlogTo ) {
+    $aArgsFlashmobBlogSubscribers = array(
+      'blog_id' => $iBlogFrom,
+      'role'    => 'subscriber'
+    );
+    $aFlashmobBlogSubscribers = get_users( $aArgsFlashmobBlogSubscribers );
+    foreach ($aFlashmobBlogSubscribers as $oUser) {
+      add_user_to_blog( $iBlogTo, $oUser->ID, 'subscriber' );
+      remove_user_from_blog( $oUser->ID, $iBlogFrom );
+    }
+  }
+
   public function run_upgrades() {
 //     $this->aOptions['strVersion'] = '0'; // NOTE DEVEL TEMP
 //     update_site_option( $this->strOptionKey, $this->aOptions, true ); // NOTE DEVEL TEMP
-    $aArgs = array(
-      'blog_id' => $this->iFlashmobBlogID,
+
+    // Migrate users from Flashmob blog to main blog //
+    $this->migrate_subscribers( $this->iFlashmobBlogID, $this->iMainBlogID );
+
+    // Remvoe deprecated meta //
+    $aArgsMainBlogSubscribers = array(
+      'blog_id' => $this->iMainBlogID,
     );
-    $aUsers = get_users( $aArgs );
-    foreach ($aUsers as $key => $oUser) {
+    $aMainBlogSubscribersUsers = get_users( $aArgsMainBlogUsers );
+    foreach ($aMainBlogSubscribersUsers as $key => $oUser) {
       delete_user_meta( $oUser->ID, 'som_organizator_rueda_flashmobu' );
     }
 
+    // Version based upgrades //
     $strVersionInOptions = $this->aOptions['strVersion'];
     $strCurrentVersion = $this->strVersion;
 
@@ -540,7 +559,6 @@ class FLORP{
       rename($strOldExportPath, $this->strNinjaFormExportPathFlashmob);
     }
 
-    // TODO migrate users from Flashmob blog to main blog above version 4.0.0 //
   }
 
   private function set_variables_per_subsite() {
@@ -550,6 +568,9 @@ class FLORP{
   }
 
   public function action__plugins_loaded() {
+    $this->run_upgrades();
+    $this->set_variables_per_subsite();
+
     $strLwaBasename = 'login-with-ajax/login-with-ajax.php';
     if (is_plugin_active( $strLwaBasename )) {
       deactivate_plugins( $strLwaBasename, true );
@@ -757,7 +778,7 @@ class FLORP{
   private function getFlashmobSubscribers( $strType ) {
     if (empty($this->aFlashmobSubscribers[$strType])) {
       $aArgs = array(
-        'blog_id' => $this->iFlashmobBlogID,
+        'blog_id' => $this->iMainBlogID,
         'role'          => 'subscriber'
       );
       $aArgsTypeSpecific = array();
@@ -1187,12 +1208,11 @@ class FLORP{
     if (!$this->aOptions['bUseMapImage']) {
       return $aMetaTags;
     }
-    $iBlogID = get_current_blog_id();
     $sLangSlug = 'sk';
     if (function_exists('pll_current_language')) {
       $sLangSlug = pll_current_language('slug');
     }
-    if ($iBlogID == $this->iFlashmobBlogID && $sLangSlug == 'sk') {
+    if ($this->isFlashmobBlog && $sLangSlug == 'sk') {
       $aMapImage = $this->getMapImage();
       $aMetaTags['og:image'] = $aMapImage['url'];
       $aMetaTags['og:image:width'] = $aMapImage['width'];
@@ -1298,7 +1318,6 @@ class FLORP{
       $this->save_option_page_options($_POST);
     }
 
-    $iCurrentBlogID = get_current_blog_id();
     $optionsFlashmobSite = '';
     $optionsMainSite = '';
     $aSites = wp_get_sites();
@@ -1326,13 +1345,13 @@ class FLORP{
       $optionsMainSite .= '<option value="'.$iID.'" '.$strSelectedMainSite.'>'.$strTitle.'</option>';
     }
 
-    if ($iCurrentBlogID != $this->iMainBlogID && strlen($strMainBlogDomain) > 0) {
+    if (!$this->isMainBlog && strlen($strMainBlogDomain) > 0) {
       echo "<p>Spoločné nastavenia a nastavenia pre hlavnú stránku sú <a href=\"http://{$strMainBlogDomain}/wp-admin/admin.php?page=florp-main\">tu</a>.</p>";
     }
-    if ($iCurrentBlogID != $this->iFlashmobBlogID && strlen($strFlashmobBlogDomain) > 0) {
+    if (!$this->isFlashmobBlog && strlen($strFlashmobBlogDomain) > 0) {
       echo "<p>Nastavenia pre flashmobovú stránku sú <a href=\"http://{$strFlashmobBlogDomain}/wp-admin/admin.php?page=florp-main\">tu</a>.</p>";
     }
-    if ($iCurrentBlogID != $this->iMainBlogID && $iCurrentBlogID != $this->iFlashmobBlogID) {
+    if (!$this->isMainBlog && !$this->isMainBlog) {
       echo "</div><!-- .wrap -->";
       return;
     }
@@ -1358,19 +1377,16 @@ class FLORP{
     $optionNone = '<option value="0">Žiadny</option>';
 
     $aVariablesMain = array(
-      'iCurrentBlogID' => $iCurrentBlogID,
       'optionsMainSite' => $optionsMainSite,
       'optionNone' => $optionNone,
       'aBooleanOptionsChecked' => $aBooleanOptionsChecked,
     );
     $aVariablesFlashmob = array(
-      'iCurrentBlogID' => $iCurrentBlogID,
       'optionsFlashmobSite' => $optionsFlashmobSite,
       'optionNone' => $optionNone,
       'aBooleanOptionsChecked' => $aBooleanOptionsChecked,
     );
     $aVariablesCommon = array(
-      'iCurrentBlogID' => $iCurrentBlogID,
       'aBooleanOptionsChecked' => $aBooleanOptionsChecked,
     );
 
@@ -1401,7 +1417,7 @@ class FLORP{
       }
     }
 
-    if ($iCurrentBlogID !== $this->iMainBlogID) {
+    if (!$this->isMainBlog) {
       return '';
     }
 
@@ -1495,7 +1511,7 @@ class FLORP{
       }
     }
 
-    if ($iCurrentBlogID !== $this->iFlashmobBlogID) {
+    if (!$this->isFlashmobBlog) {
       return '';
     }
 
@@ -1598,7 +1614,7 @@ class FLORP{
       }
     }
 
-    if ($iCurrentBlogID !== $this->iMainBlogID) {
+    if (!$this->isMainBlog) {
       return '';
     }
 
@@ -1723,7 +1739,11 @@ class FLORP{
         }
       }
 
-      // TODO migrate users from Flashmob blog to main blog on change of Main blog //
+      // Migrate users from Flashmob blog to main blog on change of Main blog //
+      $iNewMainBlogID = intval($aPostedOptions['florp_main_blog_id']);
+      if ($iNewMainBlogID !== $this->iMainBlogID) {
+        $this->migrate_subscribers( $this->iMainBlogID, $iNewMainBlogID );
+      }
     } elseif ($this->isFlashmobBlog) {
       $aKeysToSave = $this->aOptionKeysByBlog['flashmob'];
     } else {
@@ -2140,7 +2160,7 @@ class FLORP{
         // Success
         $iUserID = $mixResult;
         if (is_multisite()) {
-          add_user_to_blog( $this->iFlashmobBlogID, $iUserID, 'subscriber' );
+          add_user_to_blog( $this->iMainBlogID, $iUserID, 'subscriber' );
         }
         $strBlogname = wp_specialchars_decode(get_option('blogname'), ENT_QUOTES);
         LoginWithAjax::new_user_notification( $strUsername, $aFieldData['user_pass'], $aFieldData['user_email'], $strBlogname );
