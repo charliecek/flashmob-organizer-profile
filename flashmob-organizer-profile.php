@@ -1242,10 +1242,22 @@ class FLORP{
       }
     }
     setcookie($this->strClickTriggerCookieKey, "0", time() + (1 * 24 * 60 * 60), '/');
+    if ($this->isMainBlog) {
+      $iPopupID = $this->iProfileFormPopupIDMain;
+      $iNFID = $this->iProfileFormNinjaFormIDMain;
+      $bReloadAfterSuccessfulSubmission = $this->bReloadAfterSuccessfulSubmissionMain;
+    } elseif ($this->isFlashmobBlog) {
+      $iPopupID = $this->iProfileFormPopupIDFlashmob;
+      $iNFID = $this->iProfileFormNinjaFormIDFlashmob;
+      $bReloadAfterSuccessfulSubmission = $this->bReloadAfterSuccessfulSubmissionFlashmob;
+    } else {
+      $iPopupID = 0;
+      $iNFID = 0;
+      $bReloadAfterSuccessfulSubmission = false;
+    }
     $aJS = array(
       'hide_flashmob_fields'          => $this->aOptions['bHideFlashmobFields'] ? 1 : 0,
-      'reload_ok_submission_main'     => $this->aOptions['bReloadAfterSuccessfulSubmissionMain'] ? 1 : 0,
-      'reload_ok_submission_flashmob' => $this->aOptions['bReloadAfterSuccessfulSubmissionFlashmob'] ? 1 : 0,
+      'reload_ok_submission'          => $bReloadAfterSuccessfulSubmission ? 1 : 0,
       'reload_ok_cookie'              => 'florp-form-saved',
       'florp_trigger_anchor'          => $this->strClickTriggerAnchor,
       'map_ajax_action'               => 'florp_map_ajax',
@@ -1258,11 +1270,9 @@ class FLORP{
       'click_trigger_class'           => $this->strClickTriggerClass,
       'do_trigger_popup_click'        => $bDoTriggerPopupClick,
       'general_map_options'           => $this->aGeneralMapOptions,
-      'form_id_main'                  => $this->iProfileFormNinjaFormIDMain,
-      'form_id_flashmob'              => $this->iProfileFormNinjaFormIDFlashmob,
+      'form_id'                       => $iNFID,
       'logging_in_msg'                => "Prihlasujeme Vás... Prosíme, počkajte, kým sa stránka znovu načíta.",
-      'popup_id_main'                 => $this->iProfileFormPopupIDMain,
-      'popup_id_flashmob'             => $this->iProfileFormPopupIDFlashmob,
+      'popup_id'                      => $iPopupID,
       'load_maps_lazy'                => $this->aOptions['bLoadMapsLazy'] ? 1 : 0,
       'load_maps_async'               => $this->aOptions['bLoadMapsAsync'] ? 1 : 0,
       'load_videos_lazy'              => $this->aOptions['bLoadVideosLazy'] ? 1 : 0,
