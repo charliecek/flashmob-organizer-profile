@@ -65,6 +65,8 @@ class FLORP{
       'bLoadVideosLazy'                           => true,
       'bUseMapImage'                              => true,
       'strVersion'                                => '0',
+      'iProfileFormPageIDMain'                    => 0,
+      'iProfileFormPageIDFlashmob'                => 0,
     );
     $this->aOptionFormKeys = array(
       'florp_reload_after_ok_submission_main'     => 'bReloadAfterSuccessfulSubmissionMain',
@@ -84,6 +86,8 @@ class FLORP{
       'florp_load_maps_async'                     => 'bLoadMapsAsync',
       'florp_load_videos_lazy'                    => 'bLoadVideosLazy',
       'florp_use_map_image'                       => 'bUseMapImage',
+      'florp_profile_form_page_id_main'           => 'iProfileFormPageIDMain',
+      'florp_profile_form_page_id_flashmob'       => 'iProfileFormPageIDFlashmob',
     );
     $aDeprecatedKeys = array(
       'iCurrentFlashmobYear',
@@ -111,6 +115,7 @@ class FLORP{
         'bLoadMapsAsync',
         'bLoadVideosLazy',
         'strVersion',
+        'iProfileFormPageIDMain',
       ),
       'flashmob'  => array(
         'iFlashmobBlogID',
@@ -118,6 +123,7 @@ class FLORP{
         'iProfileFormNinjaFormIDFlashmob',
         'iProfileFormPopupIDFlashmob',
         'bUseMapImage',
+        'iProfileFormPageIDFlashmob',
       ),
     );
 
@@ -409,10 +415,12 @@ class FLORP{
     add_shortcode( 'florp-form', array( $this, 'profile_form' ));
     // add_shortcode( 'florp-form-loader', array( $this, 'profile_form_loader' ));
     add_shortcode( 'florp-popup-anchor', array( $this, 'popup_anchor' ));
-    add_shortcode( 'florp-map', array( $this, 'map' ));
+    add_shortcode( 'florp-map', array( $this, 'map_flashmob' ));
+    add_shortcode( 'florp-map-teachers', array( $this, 'map_teachers' ));
     add_shortcode( 'florp-registered-count', array( $this, 'getRegisteredUserCount' ));
     add_shortcode( 'florp-registered-counter-impreza', array( $this, 'registeredUserImprezaCounter' ));
     add_shortcode( 'florp-popup-links', array( $this, 'popupLinks' ));
+    add_shortcode( 'florp-profile', array( $this, 'main_blog_profile' ));
 
     // FILTERS //
     // add_filter( 'ninja_forms_render_default_value', array( $this, 'filter__set_nf_default_values'), 10, 3 );
@@ -423,7 +431,8 @@ class FLORP{
     add_filter( 'ninja_forms_localize_fields', array( $this, 'filter__ninja_forms_localize_fields' ));
     add_filter( 'ninja_forms_localize_fields_preview', array( $this, 'filter__ninja_forms_localize_fields' ));
     add_filter( 'ninja_forms_register_fields', array( $this, 'filter__ninja_forms_register_fields' ));
-    add_action( 'ninja_forms_display_form_settings', array( $this, 'filter__displaying_profile_form_nf_start' ), 10, 2 );
+    add_filter( 'ninja_forms_display_form_settings', array( $this, 'filter__displaying_profile_form_nf_start' ), 10, 2 );
+    add_filter( 'the_content', array( $this, 'filter__the_content' ), 9999 );
 
     // ACTIONS //
     add_action( 'ninja_forms_register_actions', array( $this, 'action__register_nf_florp_action' ));
@@ -747,8 +756,25 @@ class FLORP{
     return $aFields;
   }
   
+  public function filter__the_content( $strTheContent ) {
+    if ((($this->isMainBlog && is_page($this->iProfileFormPageIDMain)) || ($this->isFlashmobBlog && is_page($this->iProfileFormPageIDFlashmob))) && !is_user_logged_in()) {
+      return $this->main_blog_profile();
+    }
+    return $strTheContent;
+  }
+
   public function profile_form( $aAttributes ) {
-    $strShortcodeOutput = do_shortcode( '[ninja_form id='.$this->iProfileFormNinjaFormIDMain.']' );
+    if ($this->isMainBlog) {
+      $iNFID = $this->iProfileFormNinjaFormIDMain;
+    } elseif ($this->isFlashmobBlog) {
+      $iNFID = $this->iProfileFormNinjaFormIDFlashmob;
+    } else {
+      return '';
+    }
+    if ($iNFID === 0) {
+      return '';
+    }
+    $strShortcodeOutput = do_shortcode( '[ninja_form id='.$iNFID.']' );
     return '<div id="'.$this->strProfileFormWrapperID.'">' . $strShortcodeOutput.'</div>';
   }
   
@@ -771,6 +797,28 @@ class FLORP{
     ';
   }
   
+  public function main_blog_profile( $aAttributes = array() ) {
+    if (!$this->isMainBlog) {
+      return '';
+    }
+
+    $aDefaults = array(
+      'hide_info_box' => '1',
+      'registration' => '1',
+    );
+    if (is_array($aAttributes)) {
+      $aAttributes = array_merge( $aDefaults, $aAttributes );
+    } else {
+      $aAttributes = $aDefaults;
+    }
+    $strAttributes = '';
+    foreach ($aAttributes as $key => $val) {
+      $strAttributes .= " {$key}='{$val}'";
+    }
+    $strShortcodeOutput = do_shortcode( '[login-with-ajax'.$strAttributes.']' );
+    return $strShortcodeOutput;
+  }
+
   public function popup_anchor( $aAttributes ) {
     return '<a name="'.$this->strClickTriggerAnchor.'"></a>';
   }
@@ -973,7 +1021,7 @@ class FLORP{
     return $strReturn;
   }
   
-  public function map( $aAttributes ) {
+  public function map_flashmob( $aAttributes ) {
     $iFlashmobYear = intval($this->aOptions['iFlashmobYear']);
     $iIsCurrentYear = 0;
     $bAllYears = false;
@@ -1106,7 +1154,11 @@ class FLORP{
     $strMapDivHtml = '<div id="'.$strID.'" class="florp-map" data-year="'.$mixYear.'" data-is-current-year="'.$iIsCurrentYear.'"></div>';
     return $strMapJson.PHP_EOL.$strMapDivHtml; //."<!-- ".var_export($aAttributes, true)." ".var_export($this->aOptions["aYearlyMapOptions"], true)." -->";
   }
-  
+
+  public function map_teachers( $aAttributes ) {
+    return '';
+  }
+
   private function get_map_options_array( $bIsCurrentYear = true, $iYear = 0 ) {
     if ($bIsCurrentYear || $iYear == 0) {
       // Construct the current year's user array //
@@ -1385,15 +1437,18 @@ class FLORP{
     }
 
     $optionNone = '<option value="0">Žiadny</option>';
+    $optionNoneF = '<option value="0">Žiadna</option>';
 
     $aVariablesMain = array(
       'optionsMainSite' => $optionsMainSite,
       'optionNone' => $optionNone,
+      'optionNoneF' => $optionNoneF,
       'aBooleanOptionsChecked' => $aBooleanOptionsChecked,
     );
     $aVariablesFlashmob = array(
       'optionsFlashmobSite' => $optionsFlashmobSite,
       'optionNone' => $optionNone,
+      'optionNoneF' => $optionNoneF,
       'aBooleanOptionsChecked' => $aBooleanOptionsChecked,
     );
     $aVariablesCommon = array(
@@ -1466,15 +1521,30 @@ class FLORP{
       }
     }
 
+    $optionsPagesMain = $optionNoneF;
+    $aPages = get_pages();
+    foreach ($aPages as $oPage) {
+      $iID = $oPage->ID;
+      $strTitle = $oPage->post_title;
+      if ($this->aOptions['iProfileFormPageIDMain'] == $iID) {
+        $strSelectedMain = 'selected="selected"';
+      } else {
+        $strSelectedMain = '';
+      }
+      $optionsPagesMain .= '<option value="'.$iID.'" '.$strSelectedMain.'>'.$strTitle.'</option>';
+    }
+
     return str_replace(
       array( '%%reloadCheckedMain%%',
         '%%optionsNinjaFormsMain%%',
         '%%optionsPopupsMain%%',
-        '%%optionsMainSite%%' ),
+        '%%optionsMainSite%%',
+        '%%optionsPagesMain%%' ),
       array( $aBooleanOptionsChecked['bReloadAfterSuccessfulSubmissionMain'],
         $optionsNinjaFormsMain,
         $optionsPopupsMain,
-        $optionsMainSite ),
+        $optionsMainSite,
+        $optionsPagesMain ),
       '
             <tr style="width: 98%; padding:  5px 1%;">
               <th colspan="2"><h3>Hlavná stránka</h3></th>
@@ -1489,6 +1559,12 @@ class FLORP{
               <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_profile_form_ninja_form_id_main">Registračný / profilový formulár (spomedzi Ninja Form formulárov)</label></th>
               <td>
                 <select id="florp_profile_form_ninja_form_id_main" name="florp_profile_form_ninja_form_id_main">%%optionsNinjaFormsMain%%</select>
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_profile_form_page_id_main">Dedikovaná profilová stránka (v ktorej je registračný / profilový formulár)</label></th>
+              <td>
+                <select id="florp_profile_form_page_id_main" name="florp_profile_form_page_id_main">%%optionsPagesMain%%</select>
               </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
@@ -1561,15 +1637,30 @@ class FLORP{
       }
     }
 
+    $optionsPagesFlashmob = $optionNoneF;
+    $aPages = get_pages();
+    foreach ($aPages as $oPage) {
+      $iID = $oPage->ID;
+      $strTitle = $oPage->post_title;
+      if ($this->aOptions['iProfileFormPageIDFlashmob'] == $iID) {
+        $strSelectedFlashmob = 'selected="selected"';
+      } else {
+        $strSelectedFlashmob = '';
+      }
+      $optionsPagesFlashmob .= '<option value="'.$iID.'" '.$strSelectedFlashmob.'>'.$strTitle.'</option>';
+    }
+
     return str_replace(
       array( '%%reloadCheckedFlashmob%%',
         '%%optionsNinjaFormsFlashmob%%',
         '%%optionsPopupsFlashmob%%',
-        '%%optionsFlashmobSite%%' ),
+        '%%optionsFlashmobSite%%',
+        '%%optionsPagesFlashmob%%' ),
       array( $aBooleanOptionsChecked['bReloadAfterSuccessfulSubmissionFlashmob'],
         $optionsNinjaFormsFlashmob,
         $optionsPopupsFlashmob,
-        $optionsFlashmobSite ),
+        $optionsFlashmobSite,
+        $optionsPagesFlashmob ),
       '
             <tr style="width: 98%; padding:  5px 1%;">
               <th colspan="2"><h3>Flashmobová podstránka</h3></th>
@@ -1584,6 +1675,12 @@ class FLORP{
               <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_profile_form_ninja_form_id_flashmob">Registračný / profilový formulár (spomedzi Ninja Form formulárov)</label></th>
               <td>
                 <select id="florp_profile_form_ninja_form_id_flashmob" name="florp_profile_form_ninja_form_id_flashmob">%%optionsNinjaFormsFlashmob%%</select>
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_profile_form_page_id_flashmob">Dedikovaná profilová stránka (v ktorej je registračný / profilový formulár)</label></th>
+              <td>
+                <select id="florp_profile_form_page_id_flashmob" name="florp_profile_form_page_id_flashmob">%%optionsPagesFlashmob%%</select>
               </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
@@ -1735,6 +1832,7 @@ class FLORP{
     if ($this->isMainBlog) {
       $aKeysToSave = $this->aOptionKeysByBlog['main'];
 
+      // Archive current flashmob year's data //
       $iFlashmobYearCurrent = intval($this->aOptions['iFlashmobYear']);
       $iFlashmobYearNew = isset($aPostedOptions['florp_flashmob_year']) ? intval($aPostedOptions['florp_flashmob_year']) : $iFlashmobYearCurrent;
       if (isset($this->aOptions['aYearlyMapOptions'][$iFlashmobYearNew])) {

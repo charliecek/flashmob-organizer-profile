@@ -483,6 +483,7 @@ class LoginWithAjax {
 		//Deal with specific variables
 		$is_widget = false; //backwards-comatibility for overriden themes, this is now done within the WP_Widget class
 		$lwa_data['profile_link'] = ( !empty($lwa_data['profile_link']) && $lwa_data['profile_link'] != "false" );
+		$lwa_data['hide_info_box'] = ( !empty($lwa_data['hide_info_box']) && $lwa_data['hide_info_box'] != "false" );
 		//Add template logic
 		self::$template = ( !empty($lwa_data['template']) && array_key_exists($lwa_data['template'], self::$templates) ) ? $lwa_data['template']:'default';
 		//Choose the widget content to display.
@@ -548,6 +549,7 @@ class LoginWithAjax {
 			'registration-form-only' => false,
       'login-form-only' => false,
       'logged-in-form-only' => false,
+      'hide_info_box' => false,
 		);
 		self::widget(shortcode_atts($defaults, $atts));
 		return ob_get_clean();
