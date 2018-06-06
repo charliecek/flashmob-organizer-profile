@@ -41,6 +41,8 @@ class FLORP{
   private $strExportVarName = 'aFlorpNinjaFormExportData';
   private $isMainBlog = false;
   private $isFlashmobBlog = false;
+  private $iProfileFormPageIDMain;
+  private $iProfileFormPageIDFlashmob;
 
   public function __construct() {
     // TODO: if not multisite, deactivate plugin with notice //
@@ -757,7 +759,14 @@ class FLORP{
   }
   
   public function filter__the_content( $strTheContent ) {
-    if ((($this->isMainBlog && is_page($this->iProfileFormPageIDMain)) || ($this->isFlashmobBlog && is_page($this->iProfileFormPageIDFlashmob))) && !is_user_logged_in()) {
+    global $post;
+    if ($post->post_type !== 'page') {
+      return $strTheContent;
+    }
+    if (
+          (($this->isMainBlog && $post->ID === $this->iProfileFormPageIDMain) || ($this->isFlashmobBlog && $post->ID === $this->iProfileFormPageIDFlashmob))
+        && (!is_user_logged_in() || !has_shortcode( $post->post_content, 'florp-profile' ))
+    ) {
       return $this->main_blog_profile();
     }
     return $strTheContent;
@@ -1526,7 +1535,11 @@ class FLORP{
     foreach ($aPages as $oPage) {
       $iID = $oPage->ID;
       $strTitle = $oPage->post_title;
-      if ($this->aOptions['iProfileFormPageIDMain'] == $iID) {
+      if (function_exists('pll_get_post_language')) {
+        $strLang = pll_get_post_language( $iID, 'name' );
+        $strTitle .= " ({$strLang})";
+      }
+      if ($this->iProfileFormPageIDMain == $iID) {
         $strSelectedMain = 'selected="selected"';
       } else {
         $strSelectedMain = '';
@@ -1642,7 +1655,11 @@ class FLORP{
     foreach ($aPages as $oPage) {
       $iID = $oPage->ID;
       $strTitle = $oPage->post_title;
-      if ($this->aOptions['iProfileFormPageIDFlashmob'] == $iID) {
+      if (function_exists('pll_get_post_language')) {
+        $strLang = pll_get_post_language( $iID, 'name' );
+        $strTitle .= " ({$strLang})";
+      }
+      if ($this->iProfileFormPageIDFlashmob == $iID) {
         $strSelectedFlashmob = 'selected="selected"';
       } else {
         $strSelectedFlashmob = '';
