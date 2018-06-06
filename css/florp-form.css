@@ -87,14 +87,16 @@ nf-field.florp-hidden-if-map-correct{
 .lwa-links-remember.button:hover{
   color: white !important;
 }
-.pum-container.popmake .lwa-username,
-.pum-container.popmake .lwa-password,
+.lwa-username,
+.lwa-password,
 .pum-container.popmake .button,
-.pum-container.popmake .lwa-links,
-.pum-container.popmake input[type=submit]{
+.florp-profile-wrapper .button,
+.lwa-links,
+.pum-container.popmake input[type=submit],
+.florp-profile-wrapper input[type=submit]{
   margin: 0.5em 0 !important;
 }
-.pum-container.popmake .florp-button{
+.florp-button{
   margin-top: 0 !important;
 }
 

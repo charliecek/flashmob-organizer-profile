@@ -421,7 +421,7 @@ class FLORP{
     add_shortcode( 'florp-map-teachers', array( $this, 'map_teachers' ));
     add_shortcode( 'florp-registered-count', array( $this, 'getRegisteredUserCount' ));
     add_shortcode( 'florp-registered-counter-impreza', array( $this, 'registeredUserImprezaCounter' ));
-    add_shortcode( 'florp-popup-links', array( $this, 'popupLinks' ));
+    add_shortcode( 'florp-popup-links', array( $this, 'popupLinks' )); // DEPRECATED //
     add_shortcode( 'florp-profile', array( $this, 'main_blog_profile' ));
 
     // FILTERS //
@@ -647,7 +647,7 @@ class FLORP{
       return $aField;
     }
 
-    if ($this->isMainBlog && $iFormID == $this->iProfileFormNinjaFormIDMain) {
+    if ($this->isMainBlog) {
       // Settings specific to the NF on the Flashmob Blog //
       if ($bLoggedIn) {
         $iUserID = get_current_user_id();
@@ -701,7 +701,7 @@ class FLORP{
           $aField['settings']['processing_label'] = 'Registrujem';
         }
       }
-    } elseif ($this->isFlashmobBlog && $iFormID == $this->iProfileFormNinjaFormIDFlashmob) {
+    } elseif ($this->isFlashmobBlog) {
       // Settings specific to the NF on the Flashmob Blog //
     }
     return $aField;
@@ -825,7 +825,7 @@ class FLORP{
       $strAttributes .= " {$key}='{$val}'";
     }
     $strShortcodeOutput = do_shortcode( '[login-with-ajax'.$strAttributes.']' );
-    return $strShortcodeOutput;
+    return '<div class="florp-profile-wrapper">'.$strShortcodeOutput.'</div>';
   }
 
   public function popup_anchor( $aAttributes ) {
@@ -999,6 +999,7 @@ class FLORP{
   }
   
   public function popupLinks( $aAttributes = array() ) {
+    // DEPRECATED //
     $aDefaults = array(
       'login' => 'Login',
       'login-trigger' => 'florp-click-login-trigger',
@@ -1587,6 +1588,11 @@ class FLORP{
               </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
+              <th colspan="2">
+                <span style="font-size: smaller;">Ak je na stránke s PUM Popup-om element <code>#florp-popup-scroll</code>, pri zatvorení PUM Popup-u sa stránka scrollne na tento element.</span>
+              </th>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;">
                 <label for="florp_reload_after_ok_submission_main">Znovu načítať celú stránku po vypnutí popup-u po úspešnom uložení formulára?</label>
               </th>
@@ -1705,6 +1711,11 @@ class FLORP{
               <td>
                 <select id="florp_profile_form_popup_id_flashmob" name="florp_profile_form_popup_id_flashmob">%%optionsPopupsFlashmob%%</select>
               </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th colspan="2">
+                <span style="font-size: smaller;">Ak je na stránke s PUM Popup-om element <code>#florp-popup-scroll</code>, pri zatvorení PUM Popup-u sa stránka scrollne na tento element.</span>
+              </th>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;">

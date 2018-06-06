@@ -1,3 +1,26 @@
+jQuery(function($) {
+
+  var _oldShow = $.fn.show;
+
+  $.fn.show = function(speed, oldCallback) {
+    return $(this).each(function() {
+      var obj         = $(this),
+          newCallback = function() {
+            if ($.isFunction(oldCallback)) {
+              oldCallback.apply(obj);
+            }
+            obj.trigger('afterShow');
+          };
+
+      // you can trigger a before show if you want
+      obj.trigger('beforeShow');
+
+      // now use the old function to show the element passing the new callback
+      _oldShow.apply(obj, [speed, newCallback]);
+    });
+  }
+});
+
 function florpObjectLength(a) {
   var count = 0;
   var i;
@@ -74,7 +97,7 @@ jQuery(document).on('lwa_login', function(event, data, form) {
 
 function florpScrollToAnchor() {
   console.log("firing event before close");
-  var el = jQuery("a[name=popup-florp]");
+  var el = jQuery("#florp-popup-scroll");
   if (el.length > 0) {
     jQuery('html, body').scrollTop(el.first().offset().top - 100);
   }
@@ -652,6 +675,8 @@ jQuery( document ).on( 'nfFormReady', function() {
 
 var aFlorpSubscriberTypes = [];
 function florpFixFormClasses() {
+  // console.info("Fixing FLORP classes")
+
   // Fix classes //
   jQuery( ".florp-class" ).each(function (){
     var thisObj = jQuery(this);
@@ -703,15 +728,21 @@ function florpFixFormClasses() {
 
   var $flashmobOrganizerCheckbox = jQuery(".florp_subscriber_type_container input[type=checkbox][value=flashmob_organizer]");
   fnToggleFlashmobOrganizerWarnings( 'flashmob_organizer', $flashmobOrganizerCheckbox.is(':checked'), false )
+//   jQuery(".lwa-register").bind('afterShow', function() {
+//     // console.log($flashmobOrganizerCheckbox, $flashmobOrganizerCheckbox.is(':checked'))
+//     fnToggleFlashmobOrganizerWarnings( 'flashmob_organizer', $flashmobOrganizerCheckbox.is(':checked'), false )
+//   })
 
   // When logged in, hide/unhide parts of the profile form based on which subscriber types the user has //
   if ("undefined" === typeof florp.user_id ) {
     // Not logged in => registration form - only toggle warnings //
     var $aSubscriberTypes = jQuery(".florp_subscriber_type_container input[type=checkbox]");
+    // console.log($aSubscriberTypes);
     $aSubscriberTypes.change(function () {
       var $this = jQuery(this);
       var strSubscriberType = $this.val()
       var bChecked = $this.is(':checked')
+      // console.log(strSubscriberType, bChecked)
 
       fnToggleFlashmobOrganizerWarnings(strSubscriberType, bChecked)
     })
@@ -1240,6 +1271,9 @@ jQuery(document).on('click', ".w-tabs-item, .w-tabs-section-header", function (e
           if (objContent.find(".w-video").length > 0) {
             florpLoadVisibleVideos();
           }
+          if (objContent.find(".florp-profile-wrapper").length > 0) {
+//             florpFormInit();
+          }
         }
       }, 100);
     } else {
@@ -1248,6 +1282,9 @@ jQuery(document).on('click', ".w-tabs-item, .w-tabs-section-header", function (e
       }
       if (objContent.find(".w-video").length > 0) {
         florpLoadVisibleVideos();
+      }
+      if (objContent.find(".florp-profile-wrapper").length > 0) {
+//         florpFormInit();
       }
     }
   }, 500);

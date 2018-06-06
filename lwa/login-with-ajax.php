@@ -522,7 +522,7 @@ class LoginWithAjax {
       //quick/easy WPML fix, should eventually go into a seperate file
       if(  defined('ICL_LANGUAGE_CODE') ){
           if( !function_exists('lwa_wpml_input_var') ){
-                  function lwa_wpml_input_var(){ echo '<input type="hidden" name="lang" id="lang" value="'.esc_attr(ICL_LANGUAGE_CODE).'" />'; }
+                  function lwa_wpml_input_var(){ echo '<input type="hidden" name="lang" value="'.esc_attr(ICL_LANGUAGE_CODE).'" />'; }
           }
           foreach( array('login_form','lwa_register_form', 'lostpassword_form') as $action ) add_action($action, 'lwa_wpml_input_var');
       }
