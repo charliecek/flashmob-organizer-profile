@@ -43,6 +43,10 @@ class FLORP{
   private $isFlashmobBlog = false;
   private $iProfileFormPageIDMain;
   private $iProfileFormPageIDFlashmob;
+  private $strUserRolePending = 'florp-pending';
+  private $strUserRoleApproved = 'subscriber';
+  private $strPendingUserPageContentHTML;
+  private $strUserApprovedMessage;
 
   public function __construct() {
     // TODO: if not multisite, deactivate plugin with notice //
@@ -69,6 +73,13 @@ class FLORP{
       'strVersion'                                => '0',
       'iProfileFormPageIDMain'                    => 0,
       'iProfileFormPageIDFlashmob'                => 0,
+      'bApproveUsersAutomatically'                => false,
+      'strPendingUserPageContentHTML'             => '<p>Ďakujeme, že ste sa registrovali.</p>
+<p>Vaša registrácia čaká na schválenie. Akonáhle Vás schválime, dostanete o tom notifikáciu na emailovú adresu, ktorú ste zadali pri registrácii.</p>
+<p>Váš SalsaRueda.Dance team</p>',
+      'strUserApprovedMessage'                    => '<p>Vaša registrácia bola schválená!</p>
+<p><a href="{profile_url}">Prihláste sa</a> emailovou adresou a heslom, ktoré ste zadali pri registrácii.</p>
+<p>Váš SalsaRueda.Dance team</p>',
     );
     $this->aOptionFormKeys = array(
       'florp_reload_after_ok_submission_main'     => 'bReloadAfterSuccessfulSubmissionMain',
@@ -90,6 +101,9 @@ class FLORP{
       'florp_use_map_image'                       => 'bUseMapImage',
       'florp_profile_form_page_id_main'           => 'iProfileFormPageIDMain',
       'florp_profile_form_page_id_flashmob'       => 'iProfileFormPageIDFlashmob',
+      'florp_pending_user_page_content_html'      => 'strPendingUserPageContentHTML',
+      'florp_user_approved_message'               => 'strUserApprovedMessage',
+      'florp_approve_users_automatically'         => 'bApproveUsersAutomatically',
     );
     $aDeprecatedKeys = array(
       'iCurrentFlashmobYear',
@@ -99,7 +113,9 @@ class FLORP{
       'iProfileFormPopupIDFlashmob' => 'iProfileFormPopupID',
     );
     $this->aBooleanOptions = array(
-      'bReloadAfterSuccessfulSubmissionMain', 'bReloadAfterSuccessfulSubmissionFlashmob', 'bLoadMapsAsync', 'bLoadMapsLazy', 'bLoadVideosLazy', 'bUseMapImage',
+      'bReloadAfterSuccessfulSubmissionMain', 'bReloadAfterSuccessfulSubmissionFlashmob',
+      'bLoadMapsAsync', 'bLoadMapsLazy', 'bLoadVideosLazy', 'bUseMapImage',
+      'bApproveUsersAutomatically',
     );
     $this->aOptionKeysByBlog = array(
       'main'      => array(
@@ -118,6 +134,9 @@ class FLORP{
         'bLoadVideosLazy',
         'strVersion',
         'iProfileFormPageIDMain',
+        'bApproveUsersAutomatically',
+        'strPendingUserPageContentHTML',
+        'strUserApprovedMessage',
       ),
       'flashmob'  => array(
         'iFlashmobBlogID',
@@ -164,20 +183,7 @@ class FLORP{
       }
     }
 
-    foreach ($this->aOptions as $key => $val) {
-      if (property_exists($this, $key)) {
-        if (strpos($key, 'i') === 0) {
-          $iVal = intval($val);
-          $this->aOptions[$key] = $iVal;
-          $this->$key = $iVal;
-        } else {
-          $this->$key = $val;
-        }
-      } elseif (strpos($key, 'i') === 0) {
-        $iVal = intval($val);
-        $this->aOptions[$key] = $iVal;
-      }
-    }
+    $this->set_variables();
 
     $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
     $iFlashmobTime = intval(mktime( $this->aOptions['iFlashmobHour'] - $iTimeZoneOffset, $this->aOptions['iFlashmobMinute'], 0, $this->aOptions['iFlashmobMonth'], $this->aOptions['iFlashmobDay'], $this->aOptions['iFlashmobYear'] ));
@@ -456,6 +462,7 @@ class FLORP{
     add_action( 'ninja_forms_before_container_preview', array( $this, 'action__displaying_profile_form_nf_end' ), 10, 3 );
     add_action( 'plugins_loaded', array( $this, 'action__plugins_loaded' ));
     add_action( 'init', array( $this, 'action__init' ));
+    add_action( 'set_user_role', array( $this, 'action__set_user_role' ), 10, 3 );
 
     $this->map_shortcode_template = '
       [us_gmaps
@@ -521,11 +528,11 @@ class FLORP{
   private function migrate_subscribers( $iBlogFrom, $iBlogTo ) {
     $aArgsFlashmobBlogSubscribers = array(
       'blog_id' => $iBlogFrom,
-      'role'    => 'subscriber'
+      'role'    => $this->strUserRoleApproved
     );
     $aFlashmobBlogSubscribers = get_users( $aArgsFlashmobBlogSubscribers );
     foreach ($aFlashmobBlogSubscribers as $oUser) {
-      add_user_to_blog( $iBlogTo, $oUser->ID, 'subscriber' );
+      add_user_to_blog( $iBlogTo, $oUser->ID, $this->strUserRoleApproved );
       remove_user_from_blog( $oUser->ID, $iBlogFrom );
     }
   }
@@ -569,7 +576,25 @@ class FLORP{
     if (file_exists($strOldExportPath)) {
       rename($strOldExportPath, $this->strNinjaFormExportPathFlashmob);
     }
+  }
 
+  private function set_variables() {
+    foreach ($this->aOptions as $key => $val) {
+      if (property_exists($this, $key)) {
+        if (strpos($key, 'i') === 0) {
+          $iVal = intval($val);
+          $this->aOptions[$key] = $iVal;
+          $this->$key = $iVal;
+        } else {
+          $this->$key = $val;
+        }
+      } elseif (strpos($key, 'i') === 0) {
+        $iVal = intval($val);
+        $this->aOptions[$key] = $iVal;
+      }
+    }
+
+    $this->set_variables_per_subsite();
   }
 
   private function set_variables_per_subsite() {
@@ -578,9 +603,23 @@ class FLORP{
     $this->isFlashmobBlog = ($iCurrentBlogID == $this->iFlashmobBlogID);
   }
 
+  private function get_registration_user_role() {
+    if ($this->aOptions['bApproveUsersAutomatically']) {
+      return $this->strUserRoleApproved;
+    } else {
+      return $this->strUserRolePending;
+    }
+  }
+
   public function action__plugins_loaded() {
     $this->run_upgrades();
     $this->set_variables_per_subsite();
+
+    if ($this->isMainBlog) {
+      if (!get_role($this->strUserRolePending)) {
+        add_role($this->strUserRolePending, "Čaká na schválenie", array());
+      }
+    }
 
     $strLwaBasename = 'login-with-ajax/login-with-ajax.php';
     if (is_plugin_active( $strLwaBasename )) {
@@ -765,9 +804,15 @@ class FLORP{
     }
     if (
           (($this->isMainBlog && $post->ID === $this->iProfileFormPageIDMain) || ($this->isFlashmobBlog && $post->ID === $this->iProfileFormPageIDFlashmob))
-        && (!is_user_logged_in() || !has_shortcode( $post->post_content, 'florp-profile' ))
     ) {
-      return $this->main_blog_profile();
+      if (is_user_logged_in()) {
+        $oUser = wp_get_current_user();
+        if ( in_array( $this->strUserRolePending, (array) $oUser->roles ) ) {
+          return $this->strPendingUserPageContentHTML;
+        }
+      } elseif (!is_user_logged_in() || !has_shortcode( $post->post_content, 'florp-profile' )) {
+        return $this->main_blog_profile();
+      }
     }
     return $strTheContent;
   }
@@ -836,7 +881,7 @@ class FLORP{
     if (empty($this->aFlashmobSubscribers[$strType])) {
       $aArgs = array(
         'blog_id' => $this->iMainBlogID,
-        'role'          => 'subscriber'
+        'role'    => $this->strUserRoleApproved
       );
       $aArgsTypeSpecific = array();
       switch ($strType) {
@@ -1798,17 +1843,22 @@ class FLORP{
     $iSeasonStartDay = $this->aOptions["iSeasonStartDay"];
     $iSeasonEndDay = $this->aOptions["iSeasonEndDay"];
 
+    $strWPEditorPendingUserPageContentHTML = $this->get_wp_editor( $this->strPendingUserPageContentHTML, 'florp_pending_user_page_content_html' );
+    $strWPEditorUserApprovedMessage = $this->get_wp_editor( $this->strUserApprovedMessage, 'florp_user_approved_message' );
+
     return str_replace(
       array( '%%loadMapsAsyncChecked%%',
         '%%loadMapsLazyChecked%%',
         '%%loadVideosLazyChecked%%',
         '%%useMapImageChecked%%',
-        '%%optionsYears%%', '%%optionsMonths%%', '%%optionsDays%%', '%%optionsHours%%', '%%optionsMinutes%%' ),
+        '%%optionsYears%%', '%%optionsMonths%%', '%%optionsDays%%', '%%optionsHours%%', '%%optionsMinutes%%',
+        '%%approveUsersAutomaticallyChecked%%', '%%wpEditorPendingUserPageContentHTML%%', '%%wpEditorUserApprovedMessage%%' ),
       array( $aBooleanOptionsChecked['bLoadMapsAsync'],
         $aBooleanOptionsChecked['bLoadMapsLazy'],
         $aBooleanOptionsChecked['bLoadVideosLazy'],
         $aBooleanOptionsChecked['bUseMapImage'],
-        $aNumOptions['optionsYears'], $optionsMonths, $aNumOptions['optionsDays'], $aNumOptions['optionsHours'], $aNumOptions['optionsMinutes'] ),
+        $aNumOptions['optionsYears'], $optionsMonths, $aNumOptions['optionsDays'], $aNumOptions['optionsHours'], $aNumOptions['optionsMinutes'],
+        $aBooleanOptionsChecked['bApproveUsersAutomatically'], $strWPEditorPendingUserPageContentHTML, $strWPEditorUserApprovedMessage ),
       '
             <tr style="width: 98%; padding:  5px 1%;">
               <th colspan="2"><h3>Spoločné nastavenia</h3></th>
@@ -1852,7 +1902,30 @@ class FLORP{
                 <input id="florp_load_videos_lazy" name="florp_load_videos_lazy" type="checkbox" %%loadVideosLazyChecked%% value="1"/>
               </td>
             </tr>
-      '
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                <label for="florp_approve_users_automatically">Schváliť registrovaných používateľov automaticky?</label>
+              </th>
+              <td>
+                <input id="florp_approve_users_automatically" name="florp_approve_users_automatically" type="checkbox" %%approveUsersAutomaticallyChecked%% value="1"/>
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                Správa zobrazená prihláseným užívateľom, čakajúcim na schválenie
+              </th>
+              <td>
+                %%wpEditorPendingUserPageContentHTML%%
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                Správa poslaná užívateľom po schválení
+              </th>
+              <td>
+                %%wpEditorUserApprovedMessage%%
+              </td>
+            </tr>      '
     );
   }
 
@@ -1901,20 +1974,15 @@ class FLORP{
       if (in_array( $strOptionKey, $this->aBooleanOptions )) {
         // Boolean //
         $this->aOptions[$strOptionKey] = ($val == '1');
-      } else {
+      } elseif (strpos($key, 'i') === 0) {
         $this->aOptions[$strOptionKey] = $val;
+      } else {
+        $this->aOptions[$strOptionKey] = stripslashes($val);
       }
     }
     update_site_option( $this->strOptionKey, $this->aOptions, true );
 
-    $this->set_variables_per_subsite();
-    if ($this->isMainBlog) {
-      $this->iProfileFormNinjaFormIDMain = intval($this->aOptions['iProfileFormNinjaFormIDMain']);
-      $this->iProfileFormPopupIDMain = intval($this->aOptions['iProfileFormPopupIDMain']);
-    } elseif ($this->isFlashmobBlog) {
-      $this->iProfileFormNinjaFormIDFlashmob = intval($this->aOptions['iProfileFormNinjaFormIDFlashmob']);
-      $this->iProfileFormPopupIDFlashmob = intval($this->aOptions['iProfileFormPopupIDFlashmob']);
-    }
+    $this->set_variables();
 
     $this->export_ninja_form();
 
@@ -2296,7 +2364,7 @@ class FLORP{
         // Success
         $iUserID = $mixResult;
         if (is_multisite()) {
-          add_user_to_blog( $this->iMainBlogID, $iUserID, 'subscriber' );
+          add_user_to_blog( $this->iMainBlogID, $iUserID, $this->get_registration_user_role() );
         }
         $strBlogname = wp_specialchars_decode(get_option('blogname'), ENT_QUOTES);
         LoginWithAjax::new_user_notification( $strUsername, $aFieldData['user_pass'], $aFieldData['user_email'], $strBlogname );
@@ -2350,18 +2418,42 @@ class FLORP{
     setcookie('florp-form-saved', "1", time() + (1 * 24 * 60 * 60), '/');
   }
 
+  public function action__set_user_role( $iUserID, $strNewRole, $aOldRoles ) {
+    if (!in_array($this->strUserRolePending, $aOldRoles)) {
+      return;
+    }
+    $strProfilePageUrl = '';
+    if ( $this->iProfileFormPageIDMain > 0 ) {
+      $strProfilePageUrl = get_permalink( $this->iProfileFormPageIDMain );
+    }
+    $strMessageContent = str_replace( '{profile_url}', $strProfilePageUrl, $this->strWPEditorUserApprovedMessage );
+    // TODO send notification to user and admins when approved //
+  }
+
+  private function get_wp_editor( $strContent, $strEditorID, $aSettings = array() ) {
+    $aDefaultsSettings = array(
+      'media_buttons' => false,
+      'textarea_rows' => 4,
+      'wpautop'       => false,
+    );
+    $aSettings = array_merge( $aDefaultsSettings, $aSettings );
+
+    ob_start();
+    wp_editor( $strContent, $strEditorID, $aSettings );
+    return ob_get_clean();
+  }
+
   public function get_profile_form_id() {
     return $this->iProfileFormNinjaFormIDMain;
   }
 
   public static function activate() {
-//     if ( !wp_next_scheduled( 'ai1ecf_add_missing_featured_images' ) ) {
-//       wp_schedule_event( time(), 'hourly', 'ai1ecf_add_missing_featured_images');
-//     }
   }
-  
+
   public static function deactivate() {
-//     wp_clear_scheduled_hook('ai1ecf_add_missing_featured_images');
+    if (get_role($this->strUserRolePending)) {
+      remove_role($this->strUserRolePending);
+    }
   }
 }
 
