@@ -47,6 +47,8 @@ class FLORP{
   private $strUserRoleApproved = 'subscriber';
   private $strPendingUserPageContentHTML;
   private $strUserApprovedMessage;
+  private $strBeforeLoginFormHtmlMain;
+  private $strBeforeLoginFormHtmlFlashmob;
 
   public function __construct() {
     // TODO: if not multisite, deactivate plugin with notice //
@@ -80,6 +82,8 @@ class FLORP{
       'strUserApprovedMessage'                    => '<p>Vaša registrácia bola schválená!</p>
 <p><a href="{profile_url}">Prihláste sa</a> emailovou adresou a heslom, ktoré ste zadali pri registrácii.</p>
 <p>Váš SalsaRueda.Dance team</p>',
+      'strBeforeLoginFormHtmlMain'                => '',
+      'strBeforeLoginFormHtmlFlashmob'            => '',
     );
     $this->aOptionFormKeys = array(
       'florp_reload_after_ok_submission_main'     => 'bReloadAfterSuccessfulSubmissionMain',
@@ -104,6 +108,8 @@ class FLORP{
       'florp_pending_user_page_content_html'      => 'strPendingUserPageContentHTML',
       'florp_user_approved_message'               => 'strUserApprovedMessage',
       'florp_approve_users_automatically'         => 'bApproveUsersAutomatically',
+      'florp_before_login_form_html_main'         => 'strBeforeLoginFormHtmlMain',
+      'florp_before_login_form_html_flashmob'     => 'strBeforeLoginFormHtmlFlashmob',
     );
     $aDeprecatedKeys = array(
       'iCurrentFlashmobYear',
@@ -137,6 +143,7 @@ class FLORP{
         'bApproveUsersAutomatically',
         'strPendingUserPageContentHTML',
         'strUserApprovedMessage',
+        'strBeforeLoginFormHtmlMain',
       ),
       'flashmob'  => array(
         'iFlashmobBlogID',
@@ -145,6 +152,7 @@ class FLORP{
         'iProfileFormPopupIDFlashmob',
         'bUseMapImage',
         'iProfileFormPageIDFlashmob',
+        'strBeforeLoginFormHtmlFlashmob',
       ),
     );
 
@@ -463,6 +471,7 @@ class FLORP{
     add_action( 'plugins_loaded', array( $this, 'action__plugins_loaded' ));
     add_action( 'init', array( $this, 'action__init' ));
     add_action( 'set_user_role', array( $this, 'action__set_user_role' ), 10, 3 );
+    add_action( 'lwa_before_login_form', array( $this, 'action__lwa_before_login_form' ));
 
     $this->map_shortcode_template = '
       [us_gmaps
@@ -1593,17 +1602,21 @@ class FLORP{
       $optionsPagesMain .= '<option value="'.$iID.'" '.$strSelectedMain.'>'.$strTitle.'</option>';
     }
 
+    $strBeforeLoginFormHtmlMain = $this->get_wp_editor( $this->strBeforeLoginFormHtmlMain, 'florp_before_login_form_html_main' );
+
     return str_replace(
       array( '%%reloadCheckedMain%%',
         '%%optionsNinjaFormsMain%%',
         '%%optionsPopupsMain%%',
         '%%optionsMainSite%%',
-        '%%optionsPagesMain%%' ),
+        '%%optionsPagesMain%%',
+        '%%wpEditorBeforeLoginFormHtmlMain%%' ),
       array( $aBooleanOptionsChecked['bReloadAfterSuccessfulSubmissionMain'],
         $optionsNinjaFormsMain,
         $optionsPopupsMain,
         $optionsMainSite,
-        $optionsPagesMain ),
+        $optionsPagesMain,
+        $strBeforeLoginFormHtmlMain ),
       '
             <tr style="width: 98%; padding:  5px 1%;">
               <th colspan="2"><h3>Hlavná stránka</h3></th>
@@ -1649,6 +1662,14 @@ class FLORP{
               <th colspan="2">
                 <span style="font-size: smaller;">Znovunačítanie je odporúčané zapnúť iba ak je problém s obnovením mapky / mapiek po uložení formuláru.</span>
               </th>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                HTML text zobrazený nad prihlasovacím (resp. registračným) formulárom
+              </th>
+              <td>
+                %%wpEditorBeforeLoginFormHtmlMain%%
+              </td>
             </tr>
       '
     );
@@ -1718,17 +1739,21 @@ class FLORP{
       $optionsPagesFlashmob .= '<option value="'.$iID.'" '.$strSelectedFlashmob.'>'.$strTitle.'</option>';
     }
 
+    $strBeforeLoginFormHtmlFlashmob = $this->get_wp_editor( $this->strBeforeLoginFormHtmlFlashmob, 'florp_before_login_form_html_flashmob' );
+
     return str_replace(
       array( '%%reloadCheckedFlashmob%%',
         '%%optionsNinjaFormsFlashmob%%',
         '%%optionsPopupsFlashmob%%',
         '%%optionsFlashmobSite%%',
-        '%%optionsPagesFlashmob%%' ),
+        '%%optionsPagesFlashmob%%',
+        '%%wpEditorBeforeLoginFormHtmlFlashmob%%' ),
       array( $aBooleanOptionsChecked['bReloadAfterSuccessfulSubmissionFlashmob'],
         $optionsNinjaFormsFlashmob,
         $optionsPopupsFlashmob,
         $optionsFlashmobSite,
-        $optionsPagesFlashmob ),
+        $optionsPagesFlashmob,
+        $strBeforeLoginFormHtmlFlashmob ),
       '
             <tr style="width: 98%; padding:  5px 1%;">
               <th colspan="2"><h3>Flashmobová podstránka</h3></th>
@@ -1781,6 +1806,14 @@ class FLORP{
               </th>
               <td>
                 <input id="florp_use_map_image" name="florp_use_map_image" type="checkbox" %%useMapImageChecked%% value="1"/>
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                HTML text zobrazený nad prihlasovacím (resp. registračným) formulárom
+              </th>
+              <td>
+                %%wpEditorBeforeLoginFormHtmlFlashmob%%
               </td>
             </tr>
       '
@@ -1925,7 +1958,8 @@ class FLORP{
               <td>
                 %%wpEditorUserApprovedMessage%%
               </td>
-            </tr>      '
+            </tr>
+      '
     );
   }
 
@@ -2422,12 +2456,44 @@ class FLORP{
     if (!in_array($this->strUserRolePending, $aOldRoles)) {
       return;
     }
-    $strProfilePageUrl = '';
-    if ( $this->iProfileFormPageIDMain > 0 ) {
-      $strProfilePageUrl = get_permalink( $this->iProfileFormPageIDMain );
+
+    // User approval notification to approved user //
+    if (strlen(trim($this->strWPEditorUserApprovedMessage)) > 0) {
+      $strProfilePageUrl = '';
+      if ( $this->iProfileFormPageIDMain > 0 ) {
+        $strProfilePageUrl = get_permalink( $this->iProfileFormPageIDMain );
+      }
+      $strMessageContent = str_replace( '{profile_url}', $strProfilePageUrl, $this->strWPEditorUserApprovedMessage );
+
+      $oUser = get_user_by( 'id', $iUserID );
+      $strBlogname = wp_specialchars_decode(get_option('blogname'), ENT_QUOTES);
+      LoginWithAjax::new_user_notification( $oUser->user_email, '', $oUser->user_email, $strBlogname, $strMessageContent );
     }
-    $strMessageContent = str_replace( '{profile_url}', $strProfilePageUrl, $this->strWPEditorUserApprovedMessage );
-    // TODO send notification to user and admins when approved //
+
+    // User approval notification to admins //
+    $message  = sprintf(__('A user was approved on your site %s:'), $strBlogname) . "\n\n";
+    $message .= sprintf(__('Username: %s'), $oUser->user_login ) . "\n\n";
+    $message .= sprintf(__('E-mail: %s'), $oUser->user_email ) . "\n";
+    $aAdminArgs = array(
+      'blog_id' => get_current_blog_id(),
+      'role'    => 'administrator'
+    );
+    $aAdmins = get_users( $aAdminArgs );
+    if (empty($aAdmins) || (defined('FLORP_DEVEL') && FLORP_DEVEL === true)) {
+      @wp_mail(get_option('admin_email'), sprintf(__('[%s] User Approval'), $strBlogname), $message);
+    } else {
+      foreach ($aAdmins as $iKey => $oAdmin) {
+        @wp_mail($oAdmin->user_email, sprintf(__('[%s] User Approval'), $strBlogname), $message);
+      }
+    }
+  }
+
+  public function action__lwa_before_login_form( $aLwaData ) {
+    if ($this->isMainBlog) {
+      echo $this->strBeforeLoginFormHtmlMain;
+    } elseif ($this->isFlashmobBlog) {
+      echo $this->strBeforeLoginFormHtmlFlashmob;
+    }
   }
 
   private function get_wp_editor( $strContent, $strEditorID, $aSettings = array() ) {

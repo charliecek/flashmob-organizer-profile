@@ -315,9 +315,6 @@ class LoginWithAjaxAdmin{
 									}
 									?>
 									<input type="text" name="lwa_notification_subject" value='<?php echo (!empty($lwa_data['notification_subject'])) ? $lwa_data['notification_subject'] : ''; ?>' class='wide' />
-									<em><?php _e("<code>%USERNAME%</code> will be replaced with a username.", 'login-with-ajax'); ?></em><br />
-									<em><?php echo sprintf(esc_html__("%s will be replaced with the user's password.", 'login-with-ajax'), '<code>%PASSWORD%</code>'); ?></em><br />
-									<em><?php _e("<code>%EMAIL%</code> will be replaced with the user's email.", 'login-with-ajax'); ?></em><br />
 									<em><?php _e("<code>%BLOGNAME%</code> will be replaced with the name of your blog.", 'login-with-ajax'); ?></em><br />
 									<em><?php _e("<code>%BLOGURL%</code> will be replaced with the url of your blog.", 'login-with-ajax'); ?></em>
 								</td>
@@ -329,18 +326,6 @@ class LoginWithAjaxAdmin{
 								<td>
 									<?php 
 										if( empty($lwa_data['notification_message']) ){
-										    if( version_compare($wp_version, '4.3', '>=') ){
-										        $lwa_data['notification_message'] = __('Thanks for signing up to our blog. 
-
-You can login with the following credentials by visiting %BLOGURL%
-
-Username: %USERNAME%
-To set your password, visit the following address: %PASSWORD%
-
-We look forward to your next visit!
-
-The team at %BLOGNAME%', 'login-with-ajax');
-										    }else{
 											$lwa_data['notification_message'] = __('Thanks for signing up to our blog. 
 
 You can login with the following credentials by visiting %BLOGURL%
@@ -351,17 +336,13 @@ Password : %PASSWORD%
 We look forward to your next visit!
 
 The team at %BLOGNAME%', 'login-with-ajax');
-										    }
 										}
 										?>
 									<textarea name="lwa_notification_message" class='wide' style="width:100%; height:250px;"><?php echo $lwa_data['notification_message'] ?></textarea>
-									<em><?php _e("<code>%USERNAME%</code> will be replaced with a username.", 'login-with-ajax'); ?></em><br />
-									<?php if( version_compare($wp_version, '4.3', '>=') ): ?>
-									<em><strong><?php echo sprintf(esc_html__("%s will be replaced with a link to set the user password.", 'login-with-ajax'), '<code>%PASSWORD%</code>'); ?></strong></em><br />
-									<?php else: ?>
+									<em><?php _e("<code>%USERNAME%</code> will be replaced with the user's username.", 'login-with-ajax'); ?></em><br />
 									<em><?php _e("<code>%PASSWORD%</code> will be replaced with the user's password.", 'login-with-ajax'); ?></em><br />
-									<?php endif; ?>
-									<em><?php _e("<code>%BLOGNAME%</code> will be replaced with the name of your blog.", 'login-with-ajax'); ?></em>
+									<em><?php _e("<code>%EMAIL%</code> will be replaced with the user's email.", 'login-with-ajax'); ?></em><br />
+									<em><?php _e("<code>%BLOGNAME%</code> will be replaced with the name of your blog.", 'login-with-ajax'); ?></em><br />
 									<em><?php _e("<code>%BLOGURL%</code> will be replaced with the url of your blog.", 'login-with-ajax'); ?></em>
 								</td>
 							</tr>
