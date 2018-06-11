@@ -25,7 +25,7 @@ class FLORP{
   private $aUserFields;
   private $aUserFieldsMap;
   private $aMetaFields;
-  private $aMetaFieldsToClean;
+  private $aFlashmobMetaFieldsToClean;
   private $aLocationFields;
   private $strProfileFormWrapperID = 'florp-profile-form-wrapper-div';
   private $strClickTriggerClass = 'florp-click-register-trigger';
@@ -49,6 +49,7 @@ class FLORP{
   private $strUserApprovedMessage;
   private $strBeforeLoginFormHtmlMain;
   private $strBeforeLoginFormHtmlFlashmob;
+  private $iFlashmobTimestamp = 0;
 
   public function __construct() {
     // TODO: if not multisite, deactivate plugin with notice //
@@ -84,6 +85,9 @@ class FLORP{
 <p>Váš SalsaRueda.Dance team</p>',
       'strBeforeLoginFormHtmlMain'                => '',
       'strBeforeLoginFormHtmlFlashmob'            => '',
+      'strGoogleMapKey'                           => 'AIzaSyC_g9bY9qgW7mA0L1EupZ4SDYrBQWWi-V0',
+      'strFbAppID'                                => '768253436664320',
+      'strLoggingInMessage'                       => "Prihlasujeme Vás... Prosíme, počkajte, kým sa stránka znovu načíta.",
     );
     $this->aOptionFormKeys = array(
       'florp_reload_after_ok_submission_main'     => 'bReloadAfterSuccessfulSubmissionMain',
@@ -110,6 +114,9 @@ class FLORP{
       'florp_approve_users_automatically'         => 'bApproveUsersAutomatically',
       'florp_before_login_form_html_main'         => 'strBeforeLoginFormHtmlMain',
       'florp_before_login_form_html_flashmob'     => 'strBeforeLoginFormHtmlFlashmob',
+      'florp_google_map_key'                      => 'strGoogleMapKey',
+      'florp_fb_app_id'                           => 'strFbAppID',
+      'florp_logging_in_message'                  => 'strLoggingInMessage',
     );
     $aDeprecatedKeys = array(
       'iCurrentFlashmobYear',
@@ -144,6 +151,9 @@ class FLORP{
         'strPendingUserPageContentHTML',
         'strUserApprovedMessage',
         'strBeforeLoginFormHtmlMain',
+        'strGoogleMapKey',
+        'strFbAppID',
+        'strLoggingInMessage',
       ),
       'flashmob'  => array(
         'iFlashmobBlogID',
@@ -194,9 +204,9 @@ class FLORP{
     $this->set_variables();
 
     $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
-    $iFlashmobTime = intval(mktime( $this->aOptions['iFlashmobHour'] - $iTimeZoneOffset, $this->aOptions['iFlashmobMinute'], 0, $this->aOptions['iFlashmobMonth'], $this->aOptions['iFlashmobDay'], $this->aOptions['iFlashmobYear'] ));
+    $this->iFlashmobTimestamp = intval(mktime( $this->aOptions['iFlashmobHour'] - $iTimeZoneOffset, $this->aOptions['iFlashmobMinute'], 0, $this->aOptions['iFlashmobMonth'], $this->aOptions['iFlashmobDay'], $this->aOptions['iFlashmobYear'] ));
     $iNow = time();
-    if ($iFlashmobTime < $iNow) {
+    if ($this->iFlashmobTimestamp < $iNow) {
       $this->aOptions['bHideFlashmobFields'] = false;
     } else {
       $this->aOptions['bHideFlashmobFields'] = true;
@@ -494,16 +504,19 @@ class FLORP{
           <div class="florp-course-info">%%courses_info%%</div>
         </div>',
     );
-    // TODO: add new meta fields!
-    // TODO: make changes for new fields in user update if necessary
-    // TODO: add field placeholders in NF (to load the right values in the form) + field localization
     $this->aUserFields = array( 'user_email', 'first_name', 'last_name', 'user_pass' );
     $this->aUserFieldsMap = array( 'first_name', 'last_name' );
     $this->aMetaFields = array( 'webpage', 'school_name', 'school_webpage', 'school_city', 'subscriber_type',
-                          'flashmob_number_of_dancers', 'video_link_type', 'youtube_link', 'facebook_link', 'vimeo_link', 'embed_code', 'flashmob_address', 'longitude', 'latitude' );
-    $this->aMetaFieldsToClean = array(
-                          'flashmob_number_of_dancers', 'video_link_type', 'youtube_link', 'facebook_link', 'vimeo_link', 'embed_code', 'flashmob_address', 'longitude', 'latitude' );
-    $this->aLocationFields = array( "school_city", "flashmob_address", "longitude", "latitude" );
+                          'flashmob_number_of_dancers', 'video_link_type', 'youtube_link', 'facebook_link', 'vimeo_link', 'embed_code', 'flashmob_address', 'longitude', 'latitude',
+                          'preferences', 'flashmob_leader_tshirt_size', 'flashmob_leader_tshirt_gender',
+                          'courses_city', 'courses_city_2', 'courses_city_3', 'courses_info', 'courses_info_2', 'courses_info_3', 'courses_in_city_2', 'courses_in_city_3' );
+    $this->aFlashmobMetaFieldsToClean = array(
+                          'subscriber_type:flashmob_organizer', 'flashmob_number_of_dancers', 'video_link_type', 'youtube_link', 'facebook_link', 'vimeo_link', 'embed_code', 'flashmob_address', 'longitude', 'latitude',
+                          'preferences:flashmob_leader_tshirt', 'flashmob_leader_tshirt_size', 'flashmob_leader_tshirt_gender' );
+    $this->aLocationFields = array(
+      'flashmob_organizer'  => array( "school_city", "flashmob_address", "longitude", "latitude" ),
+      'teacher'             => array( "school_city", "courses_city", "courses_city_2", "courses_city_3" ),
+    );
     $this->aGeneralMapOptions = array(
       'map_init_raw'  => array(
         'zoom'        => 8,
@@ -526,10 +539,10 @@ class FLORP{
         'maptype'   => 'roadmap',
         'center'    => '48.72,19.7',
         'size'      => '640x320',
-        'key'       => 'AIzaSyC_g9bY9qgW7mA0L1EupZ4SDYrBQWWi-V0',
+        'key'       => $this->aOptions['strGoogleMapKey'],
       ),
       'og_map_image_alt'  => "Mapka registrovaných organizátorov rueda flashmobu na Slovensku",
-      'fb_app_id'         => '768253436664320',
+      'fb_app_id'         => $this->aOptions['strFbAppID'],
     );
   }
 
@@ -601,6 +614,8 @@ class FLORP{
         $this->aOptions[$key] = $iVal;
       }
     }
+    $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
+    $this->iFlashmobTimestamp = intval(mktime( $this->aOptions['iFlashmobHour'] - $iTimeZoneOffset, $this->aOptions['iFlashmobMinute'], 0, $this->aOptions['iFlashmobMonth'], $this->aOptions['iFlashmobDay'], $this->aOptions['iFlashmobYear'] ));
 
     $this->set_variables_per_subsite();
   }
@@ -697,10 +712,41 @@ class FLORP{
     if ($this->isMainBlog) {
       // Settings specific to the NF on the Flashmob Blog //
 
-      // TODO: replace {flashmob_date}
+      // Replace flashmob date/time in preference['flashmob_organizer] checkbox //
+      if ('listcheckbox' === $aField['settings']['type'] && 'subscriber_type' === $aField['settings']['key']) {
+        // echo "<pre>" .var_export($aField, true). "</pre>";
+        // echo "<pre>" .var_export($aField['settings']['options'], true). "</pre>";
+        $aPatterns = array(
+          '~{flashmob_date(\[[^\]]*\])?}~' => get_option('date_format'),
+          '~{flashmob_time(\[[^\]]*\])?}~' => get_option('time_format'),
+        );
+        foreach ($aField['settings']['options'] as $key => $aOptions) {
+          if ($aOptions['value'] !== 'flashmob_organizer') {
+            continue;
+          }
+          foreach ($aPatterns as $strPattern => $strDefaultFormat) {
+            $aMatches = array();
+            if (preg_match_all( $strPattern, $aOptions['label'], $aMatches )) {
+              // echo "<pre>" .var_export($aMatches, true). "</pre>";
+              foreach ($aMatches[0] as $iKey => $strMatchFull) {
+                if (empty($aMatches[1][$iKey])) {
+                  $strFormat = $strDefaultFormat;
+                } else {
+                  $strFormat = trim($aMatches[1][$iKey], "[]");
+                }
+                // echo "<pre>" .$strFormat. "</pre>";
+                $strTimeOrDate = date( $strFormat, $this->iFlashmobTimestamp );
+                $aField['settings']['options'][$key]['label'] = str_replace( $strMatchFull, $strTimeOrDate, $aField['settings']['options'][$key]['label'] );
+              }
+            }
+          }
+        }
+      }
+
       if ($bLoggedIn) {
         $iUserID = get_current_user_id();
         $aSubscriberTypesOfUser = get_user_meta( $iUserID, 'subscriber_type', true );
+        $aPreferencesOfUser = get_user_meta( $iUserID, 'preferences', true );
         // echo "<pre>" .var_export($aSubscriberTypesOfUser, true). "</pre>";
         if ('listcheckbox' === $aField['settings']['type'] && 'subscriber_type' === $aField['settings']['key']) {
           foreach ($aField['settings']['options'] as $iOptionKey => $aOption) {
@@ -709,12 +755,42 @@ class FLORP{
               $aField['settings']['options'][$iOptionKey]['selected'] = 1;
             }
           }
+        } elseif ('listcheckbox' === $aField['settings']['type'] && 'preferences' === $aField['settings']['key']) {
+          // echo "<pre>" .var_export($aField, true). "</pre>";
+          foreach ($aField['settings']['options'] as $iOptionKey => $aOption) {
+            $strValue = $aOption['value'];
+            if (is_array($aPreferencesOfUser) && in_array($strValue, $aSubscriberTypesOfUser)) {
+              $aField['settings']['options'][$iOptionKey]['selected'] = 1;
+            }
+          }
+        }
+
+        // Set checked as default value on checkboxes saved as checked //
+        if ($aField['settings']['type'] === 'checkbox') {
+          $strValue = get_user_meta( $iUserID, $aField['settings']['key'], true );
+//           echo "<pre>" .var_export($aField['settings']['key'], true). "</pre>";
+//           echo "<pre>" .var_export($aField, true). "</pre>";
+//           echo "<pre>" .var_export($strValue, true). "</pre>";
+          $aField['settings']['default_value'] = ($strValue == '1') ? 'checked' : 'unchecked';
+        }
+        if ($aField['settings']['type'] === 'listselect') {
+//           echo "<pre>" .var_export(array_merge($aField['settings'],array('options'=>'removed')), true). "</pre>";
+//           echo "<pre>" .var_export($aField['settings']['options'][0], true). "</pre>";
+          $strValue = get_user_meta( $iUserID, $aField['settings']['key'], true );
+          foreach ($aField['settings']['options'] as $iKey => $aOption) {
+            if ($aOption['value'] === $strValue) {
+              $aField['settings']['options'][$iKey]['selected'] = 1;
+            }
+          }
+//           $aField['settings']['default_value'] = $strValue;
         }
 
         if (isset($aField['settings']['container_class'])) {
+          // Hide fields //
           $bHide = true;
-          if (stripos($aField['settings']['container_class'], 'florp-togglable-field_all') !== false
-                  || stripos($aField['settings']['container_class'], 'florp-registration-field') !== false
+          if (count($aSubscriberTypesOfUser) === 2 && stripos($aField['settings']['container_class'], 'florp-togglable-field_all') !== false) {
+            $bHide = false;
+          } elseif (stripos($aField['settings']['container_class'], 'florp-registration-field') !== false
                   || stripos($aField['settings']['container_class'], 'florp-profile-field') !== false) {
             $bHide = false;
           } else {
@@ -725,6 +801,13 @@ class FLORP{
                 $bHide = false;
                 break;
               }
+            }
+          }
+          // Go through prefereneces of user and leave field unhidden if matched //
+          foreach ($aPreferencesOfUser as $strSubscriberType) {
+            if (stripos($aField['settings']['container_class'], 'florp-preference-field_'.$strSubscriberType) !== false) {
+              $bHide = false;
+              break;
             }
           }
           if ($bHide) {
@@ -739,7 +822,7 @@ class FLORP{
   //       }
       }
 
-      // echo "<pre>" .var_export($aField, tDrue). "</pre>";
+      // echo "<pre>" .var_export($aField, true). "</pre>";
       if(!$bLoggedIn){
         // Registration form //
         if (isset($aField['settings']['container_class']) && stripos($aField['settings']['container_class'], 'florp-registration-field') === false) {
@@ -1114,9 +1197,6 @@ class FLORP{
         $iIsCurrentYear = 1;
       }
     }
-    $iTimestamp = date('U');
-    $strRandomString = wp_generate_password( 5, false );
-    $strID = $iTimestamp . '_' . $strRandomString;
     
     if ($bAllYears) {
       // Current year: //
@@ -1124,7 +1204,7 @@ class FLORP{
       $aSchoolCitiesNoVideo = array();
       $aMapOptionsNoVideo = array();
       $aMapOptionsArray = array();
-      $aCurrentYearOptions = $this->get_map_options_array(true, 0);
+      $aCurrentYearOptions = $this->get_flashmob_map_options_array(true, 0);
       $aVideoFields = array('facebook_link', 'youtube_link', 'vimeo_link', 'embed_code');
       foreach ($aCurrentYearOptions as $iUserID => $aOptions) {
         $strCity = $aOptions['school_city'];
@@ -1196,9 +1276,9 @@ class FLORP{
       }
     } else {
       // Get the map options array //
-      $aMapOptionsArray = $this->get_map_options_array($iIsCurrentYear === 1, $mixYear);
+      $aMapOptionsArray = $this->get_flashmob_map_options_array($iIsCurrentYear === 1, $mixYear);
     }
-    
+
     if (isset($aAttributes['city-shown-on-load'])) {
       $strCity = trim($aAttributes['city-shown-on-load']);
       if (!empty($strCity)) {
@@ -1211,24 +1291,49 @@ class FLORP{
         }
       }
     }
-    $strMapOptionsArrayJson = json_encode($aMapOptionsArray);
-    $strMapJson = '<script type="text/javascript">
+
+    $aDivAttributes = array(
+      'data-year' => $mixYear,
+      'data-is-current-year' => $iIsCurrentYear,
+      'data-map-type' => 'flashmob_organizer',
+    );
+    return $this->get_map_html( $aMapOptionsArray, $aDivAttributes, 'f_' );
+  }
+
+  public function map_teachers( $aAttributes ) {
+    $aMapOptionsArray = $this->get_teacher_map_options_array();
+    $aDivAttributes = array(
+      'data-map-type' => 'teacher',
+    );
+    return $this->get_map_html( $aMapOptionsArray, $aDivAttributes, 't_' );
+  }
+
+  private function get_map_html( $aMapOptionsArray, $aDivAttributes = array(), $strDivID_prefix = '' ) {
+    $iTimestamp = date('U');
+    $strRandomString = wp_generate_password( 5, false );
+    $strID = $strDivID_prefix . $iTimestamp . '_' . $strRandomString;
+
+    $strMapOptionsArrayJson = json_encode( $aMapOptionsArray );
+    $strMapScript = '<script type="text/javascript">
       if ("undefined" === typeof florp_map_options_object) {
         var florp_map_options_object = {};
       }
       florp_map_options_object["'.$strID.'"] = '.$strMapOptionsArrayJson.';
     </script>';
       /* '.var_export(array($mixYear, $iFlashmobYear, $aAttributes), true).' */
-    $strMapDivHtml = '<div id="'.$strID.'" class="florp-map" data-year="'.$mixYear.'" data-is-current-year="'.$iIsCurrentYear.'"></div>';
-    return $strMapJson.PHP_EOL.$strMapDivHtml; //."<!-- ".var_export($aAttributes, true)." ".var_export($this->aOptions["aYearlyMapOptions"], true)." -->";
+    $strMapDivHtml = '<div id="'.$strID.'" class="florp-map"';
+    if (!empty($aDivAttributes)) {
+      foreach ($aDivAttributes as $strAttrKey => $strAttrValue) {
+        $strMapDivHtml .= $strAttrKey.'="'.$strAttrValue.'"';
+      }
+    }
+    $strMapDivHtml .= '></div>';
+    return $strMapScript.PHP_EOL.$strMapDivHtml; //."<!-- ".var_export($aAttributes, true)." ".var_export($this->aOptions["aYearlyMapOptions"], true)." -->";
   }
 
-  public function map_teachers( $aAttributes ) {
-    return '';
-  }
-
-  private function get_map_options_array( $bIsCurrentYear = true, $iYear = 0 ) {
+  private function get_flashmob_map_options_array( $bIsCurrentYear = true, $iYear = 0 ) {
     if ($bIsCurrentYear || $iYear == 0) {
+      $aMapOptionsArray = array();
       // Construct the current year's user array //
       $aUsers = $this->getFlashmobSubscribers('flashmob_organizer');
       foreach ($aUsers as $key => $oUser) {
@@ -1243,7 +1348,16 @@ class FLORP{
     }
     return $aMapOptionsArray;
   }
-  
+
+  private function get_teacher_map_options_array() {
+    $aMapOptionsArray = array();
+    $aUsers = $this->getFlashmobSubscribers('teacher');
+    foreach ($aUsers as $key => $oUser) {
+      $aMapOptionsArray[$oUser->ID] = $this->getOneUserMapInfo($oUser);
+    }
+    return $aMapOptionsArray;
+  }
+
   private function getOneUserMapInfo($oUser) {
     $aMapOptionsArray = array();
     foreach ($this->aUserFieldsMap as $keyVal) {
@@ -1273,15 +1387,36 @@ class FLORP{
 
   private function archive_current_year_map_options() {
     $iFlashmobYear = $this->aOptions['iFlashmobYear'];
-    $aMapOptions = $this->get_map_options_array(true, $iFlashmobYear);
+    $aMapOptions = $this->get_flashmob_map_options_array(true, $iFlashmobYear);
     $this->aOptions['aYearlyMapOptions'][$iFlashmobYear] = $aMapOptions;
     update_site_option( $this->strOptionKey, $this->aOptions, true );
-    
+
     // clean user meta //
     $aUsers = $this->getFlashmobSubscribers('flashmob_organizer');
     foreach ($aUsers as $key => $oUser) {
-      foreach ($this->aMetaFieldsToClean as $keyVal) {
-        delete_user_meta( $oUser->ID, $keyVal );
+      foreach ($this->aFlashmobMetaFieldsToClean as $keyVal) {
+        if (strpos($keyVal, ':') === false) {
+          // whole field //
+          delete_user_meta( $oUser->ID, $keyVal );
+        } else {
+          // setting is an array and only one or more of its items should be cleaned //
+          $aParts = explode( ':', $keyVal );
+          $strMetaKey = $aParts[0];
+          $mixMetaValuesToClean = explode( ',', $aParts[1] );
+          if (empty($mixMetaValuesToClean) || !is_array($mixMetaValuesToClean)) {
+            continue;
+          }
+          $aMetaValue = get_user_meta( $oUser->ID, $strMetaKey, true );
+          if ($aMetaValue === '') {
+            // empty, do nothing //
+          } elseif (is_array($aMetaValue)) {
+            // Setting was present => remove values that should be cleaned //
+            $aNewVal = array_diff( $mixMetaValuesToClean, $aMetaValue );
+            update_user_meta( $oUser->ID, $strMetaKey, $aNewVal );
+          } else {
+            // meta value is not an array - do something? //
+          }
+        }
       }
     }
   }
@@ -1289,7 +1424,7 @@ class FLORP{
   public function getMapImage() {
     $aMapOptions = $this->aGeneralMapOptions;
     $aSizeArr = explode( "x", $aMapOptions['og_map']['size']);
-    $aOptionsFromUsers = $this->get_map_options_array();
+    $aOptionsFromUsers = $this->get_flashmob_map_options_array();
     $aMarkerOptions = array( 'icon:'.urlencode($aMapOptions['markers']['icon']) );
     
     if (!empty($aOptionsFromUsers)) {
@@ -1375,9 +1510,19 @@ class FLORP{
       $iNFID = 0;
       $bReloadAfterSuccessfulSubmission = false;
     }
+
+    if ($this->isMainBlog) {
+      $strBlogType = 'main';
+    } elseif ($this->isFlashmobBlog) {
+      $strBlogType = 'flashmob';
+    } else {
+      $strBlogType = 'other';
+    }
     $aJS = array(
       'hide_flashmob_fields'          => $this->aOptions['bHideFlashmobFields'] ? 1 : 0,
       'reload_ok_submission'          => $bReloadAfterSuccessfulSubmission ? 1 : 0,
+      'using_og_map_image'            => $this->aOptions['bUseMapImage'] ? 1 : 0,
+      'blog_type'                     => $strBlogType,
       'reload_ok_cookie'              => 'florp-form-saved',
       'florp_trigger_anchor'          => $this->strClickTriggerAnchor,
       'get_markerInfoHTML_action'     => 'get_markerInfoHTML',
@@ -1390,11 +1535,12 @@ class FLORP{
       'do_trigger_popup_click'        => $bDoTriggerPopupClick,
       'general_map_options'           => $this->aGeneralMapOptions,
       'form_id'                       => $iNFID,
-      'logging_in_msg'                => "Prihlasujeme Vás... Prosíme, počkajte, kým sa stránka znovu načíta.",
+      'logging_in_msg'                => $this->aOptions['strLoggingInMessage'],
       'popup_id'                      => $iPopupID,
       'load_maps_lazy'                => $this->aOptions['bLoadMapsLazy'] ? 1 : 0,
       'load_maps_async'               => $this->aOptions['bLoadMapsAsync'] ? 1 : 0,
       'load_videos_lazy'              => $this->aOptions['bLoadVideosLazy'] ? 1 : 0,
+      'has_participants'              => 0, // TODO
     );
     if (is_user_logged_in()) {
       $oCurrentUser = wp_get_current_user();
@@ -1487,7 +1633,7 @@ class FLORP{
 
     // echo "<pre>" .var_export($this->aOptions, true). "</pre>";
     // echo "<pre>" .var_export(array_merge($this->aOptions, array('aYearlyMapOptions' => 'removedForPreview')), true). "</pre>";
-    // $aMapOptions = $this->get_map_options_array(false, 0);
+    // $aMapOptions = $this->get_flashmob_map_options_array(false, 0);
     // echo "<pre>" .var_export($aMapOptions, true). "</pre>";
     // echo "<pre>" .var_export($this->getFlashmobSubscribers('subscriber_only'), true). "</pre>";
     // echo "<pre>" .var_export($this->getFlashmobSubscribers('flashmob_organizer'), true). "</pre>";
@@ -1627,25 +1773,25 @@ class FLORP{
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_main_blog_id">Podstránka</label></th>
               <td>
-                <select id="florp_main_blog_id" name="florp_main_blog_id">%%optionsMainSite%%</select>
+                <select id="florp_main_blog_id" name="florp_main_blog_id" style="width: 100%;">%%optionsMainSite%%</select>
               </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_profile_form_ninja_form_id_main">Registračný / profilový formulár (spomedzi Ninja Form formulárov)</label></th>
               <td>
-                <select id="florp_profile_form_ninja_form_id_main" name="florp_profile_form_ninja_form_id_main">%%optionsNinjaFormsMain%%</select>
+                <select id="florp_profile_form_ninja_form_id_main" name="florp_profile_form_ninja_form_id_main" style="width: 100%;">%%optionsNinjaFormsMain%%</select>
               </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_profile_form_page_id_main">Dedikovaná profilová stránka (v ktorej je registračný / profilový formulár)</label></th>
               <td>
-                <select id="florp_profile_form_page_id_main" name="florp_profile_form_page_id_main">%%optionsPagesMain%%</select>
+                <select id="florp_profile_form_page_id_main" name="florp_profile_form_page_id_main" style="width: 100%;">%%optionsPagesMain%%</select>
               </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_profile_form_popup_id_main">PUM Popup, v ktorom je registračný / profilový formulár</label></th>
               <td>
-                <select id="florp_profile_form_popup_id_main" name="florp_profile_form_popup_id_main">%%optionsPopupsMain%%</select>
+                <select id="florp_profile_form_popup_id_main" name="florp_profile_form_popup_id_main" style="width: 100%;">%%optionsPopupsMain%%</select>
               </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
@@ -1764,25 +1910,25 @@ class FLORP{
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_flashmob_blog_id">Podstránka</label></th>
               <td>
-                <select id="florp_flashmob_blog_id" name="florp_flashmob_blog_id">%%optionsFlashmobSite%%</select>
+                <select id="florp_flashmob_blog_id" name="florp_flashmob_blog_id" style="width: 100%;">%%optionsFlashmobSite%%</select>
               </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_profile_form_ninja_form_id_flashmob">Registračný / profilový formulár (spomedzi Ninja Form formulárov)</label></th>
               <td>
-                <select id="florp_profile_form_ninja_form_id_flashmob" name="florp_profile_form_ninja_form_id_flashmob">%%optionsNinjaFormsFlashmob%%</select>
+                <select id="florp_profile_form_ninja_form_id_flashmob" name="florp_profile_form_ninja_form_id_flashmob" style="width: 100%;">%%optionsNinjaFormsFlashmob%%</select>
               </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_profile_form_page_id_flashmob">Dedikovaná profilová stránka (v ktorej je registračný / profilový formulár)</label></th>
               <td>
-                <select id="florp_profile_form_page_id_flashmob" name="florp_profile_form_page_id_flashmob">%%optionsPagesFlashmob%%</select>
+                <select id="florp_profile_form_page_id_flashmob" name="florp_profile_form_page_id_flashmob" style="width: 100%;">%%optionsPagesFlashmob%%</select>
               </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_profile_form_popup_id_flashmob">PUM Popup, v ktorom je registračný / profilový formulár</label></th>
               <td>
-                <select id="florp_profile_form_popup_id_flashmob" name="florp_profile_form_popup_id_flashmob">%%optionsPopupsFlashmob%%</select>
+                <select id="florp_profile_form_popup_id_flashmob" name="florp_profile_form_popup_id_flashmob" style="width: 100%;">%%optionsPopupsFlashmob%%</select>
               </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
@@ -1888,13 +2034,15 @@ class FLORP{
         '%%loadVideosLazyChecked%%',
         '%%useMapImageChecked%%',
         '%%optionsYears%%', '%%optionsMonths%%', '%%optionsDays%%', '%%optionsHours%%', '%%optionsMinutes%%',
-        '%%approveUsersAutomaticallyChecked%%', '%%wpEditorPendingUserPageContentHTML%%', '%%wpEditorUserApprovedMessage%%' ),
+        '%%approveUsersAutomaticallyChecked%%', '%%wpEditorPendingUserPageContentHTML%%', '%%wpEditorUserApprovedMessage%%',
+        '%%strGoogleMapKey%%', '%%strFbAppID%%', '%%strLoggingInMessage%%' ),
       array( $aBooleanOptionsChecked['bLoadMapsAsync'],
         $aBooleanOptionsChecked['bLoadMapsLazy'],
         $aBooleanOptionsChecked['bLoadVideosLazy'],
         $aBooleanOptionsChecked['bUseMapImage'],
         $aNumOptions['optionsYears'], $optionsMonths, $aNumOptions['optionsDays'], $aNumOptions['optionsHours'], $aNumOptions['optionsMinutes'],
-        $aBooleanOptionsChecked['bApproveUsersAutomatically'], $strWPEditorPendingUserPageContentHTML, $strWPEditorUserApprovedMessage ),
+        $aBooleanOptionsChecked['bApproveUsersAutomatically'], $strWPEditorPendingUserPageContentHTML, $strWPEditorUserApprovedMessage,
+        $this->aOptions['strGoogleMapKey'], $this->aOptions['strFbAppID'], $this->aOptions['strLoggingInMessage'] ),
       '
             <tr style="width: 98%; padding:  5px 1%;">
               <th colspan="2"><h3>Spoločné nastavenia</h3></th>
@@ -1940,6 +2088,14 @@ class FLORP{
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;">
+                Správa zobrazená po úspešnom prihlásení
+              </th>
+              <td>
+                <input id="florp_logging_in_message" name="florp_logging_in_message" type="text" value="%%strLoggingInMessage%%" style="width: 100%;" />
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
                 <label for="florp_approve_users_automatically">Schváliť registrovaných používateľov automaticky?</label>
               </th>
               <td>
@@ -1960,6 +2116,22 @@ class FLORP{
               </th>
               <td>
                 %%wpEditorUserApprovedMessage%%
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                Google Maps Key
+              </th>
+              <td>
+                <input id="florp_google_map_key" name="florp_google_map_key" type="text" value="%%strGoogleMapKey%%" style="width: 100%;" />
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                Facebook app ID
+              </th>
+              <td>
+                <input id="florp_fb_app_id" name="florp_fb_app_id" type="text" value="%%strFbAppID%%" style="width: 100%;" />
               </td>
             </tr>
       '
@@ -2197,8 +2369,9 @@ class FLORP{
     } else {
       $aSubscriberTypesOfUser = get_user_meta( $oUser->ID, 'subscriber_type', true );
       $aMapOptionsArray = $this->getOneUserMapInfo($oUser);
-      if (!is_array($aSubscriberTypesOfUser) || !in_array('flashmob_organizer', $aSubscriberTypesOfUser)) {
-        foreach ($this->aLocationFields as $strFieldKey) {
+      $strMapType = $_POST['strMapType'];
+      if (!is_array($aSubscriberTypesOfUser) || !in_array( $strMapType, $aSubscriberTypesOfUser )) {
+        foreach ($this->aLocationFields[$strMapType] as $strFieldKey) {
           unset($aMapOptionsArray[$strFieldKey]);
         }
       }
@@ -2343,7 +2516,7 @@ class FLORP{
       default:
         $strCoursesInfo = "";
     }
-//     $strCoursesInfo = wpautop( $strCoursesInfo );
+    // $strCoursesInfo = wpautop( $strCoursesInfo ); // Not needed, since we're using rich text editors //
     $aReplace = array( $strLocation, $strOrganizer, $strSchool, $strEmbedCode, $strDancers, $strYear, $strNote, $strLocation, $strCoursesInfo );
     $strText = str_replace( $aSearch, $aReplace, $this->aMarkerInfoWindowTemplates[$aInfoWindowData['strMapType']] );
     return $strText;
@@ -2393,8 +2566,8 @@ class FLORP{
     // Update the user's profile //
     // file_put_contents( __DIR__ . "/kk-debug-after-submission.log", var_export( $aFormData, true ) );
 
-    if (intval($aFormData['form_id']) !== $this->iProfileFormNinjaFormIDMain) {
-      // Not the profile form //
+    if (!$this->isMainBlog || intval($aFormData['form_id']) !== $this->iProfileFormNinjaFormIDMain) {
+      // Not the profile form (or the main site at all) //
       return;
     }
 

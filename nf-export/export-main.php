@@ -123,7 +123,7 @@ $aFlorpNinjaFormExportData = array (
       'admin_label' => '',
       'help_text' => '',
       'desc_text' => '',
-      'drawerDisabled' => '',
+      'drawerDisabled' => false,
       'manual_key' => '1',
       'custom_name_attribute' => 'fname',
       'label' => 'Meno',
@@ -219,7 +219,7 @@ $aFlorpNinjaFormExportData = array (
           array (
           ),
           'max_options' => 0,
-          'label' => 'Zorganizujem flashmob {flashmob_date}',
+          'label' => 'Zorganizujem rueda flashmob {flashmob_date[j. n. Y]}',
           'value' => 'flashmob_organizer',
           'calc' => '0',
           'selected' => 0,
@@ -368,7 +368,8 @@ $aFlorpNinjaFormExportData = array (
       'help_text' => '',
       'manual_key' => '1',
       'drawerDisabled' => false,
-      'desc_text' => '<p class="flashmob_organizer_warning">Zaškrtávacie políčko "Organizátor rueda flashmobu" LEN je pre organizátorov rueda flashmob-u: ak ním nie ste, prosíme, nezaškrtávajte túto možnosť, ale kontaktujte svojho Rueda inštruktora vo Vašom alebo najbližšom meste, aby sa zaregistroval a zorganizoval Flashmob. Ďakujeme za porozumenie.</p>',
+      'desc_text' => '<p class="flashmob_organizer_warning">Zaškrtávacie políčko "Organizátor rueda flashmobu" LEN je pre organizátorov rueda flashmob-u: ak ním nie ste, prosíme, nezaškrtávajte túto možnosť, ale kontaktujte svojho Rueda inštruktora vo Vašom alebo najbližšom meste, aby sa zaregistroval a zorganizoval Flashmob. Ďakujeme za porozumenie.</p>
+<p class="flashmob_organizer_has_participants_warning hidden">Máte prihlásených záujemcov na flashmob! Ak zrušíte organizovanie flashmobu, Vaši záujemcovia budú odhlásení a dostanú o tejto skutočnosti emailovú notifikáciu.</p>',
       'label' => 'Preferencie:',
       'key' => 'subscriber_type',
       'type' => 'listcheckbox',
@@ -10604,11 +10605,15 @@ $aFlorpNinjaFormExportData = array (
           array (
           ),
           'max_options' => 0,
-          'label' => 'S',
-          'value' => 'S',
+          'order' => 0,
+          'new' => false,
+          'options' => 
+          array (
+          ),
+          'label' => 'vyberte veľkosť',
+          'value' => 'null',
           'calc' => '0',
           'selected' => 0,
-          'order' => 0,
           'settingModel' => 
           array (
             'settings' => false,
@@ -10678,8 +10683,8 @@ $aFlorpNinjaFormExportData = array (
           array (
           ),
           'max_options' => 0,
-          'label' => 'M',
-          'value' => 'M',
+          'label' => 'S',
+          'value' => 'S',
           'calc' => '0',
           'selected' => 0,
           'order' => 1,
@@ -10752,8 +10757,8 @@ $aFlorpNinjaFormExportData = array (
           array (
           ),
           'max_options' => 0,
-          'label' => 'L',
-          'value' => 'L',
+          'label' => 'M',
+          'value' => 'M',
           'calc' => '0',
           'selected' => 0,
           'order' => 2,
@@ -10826,7 +10831,81 @@ $aFlorpNinjaFormExportData = array (
           array (
           ),
           'max_options' => 0,
+          'label' => 'L',
+          'value' => 'L',
+          'calc' => '0',
+          'selected' => 0,
           'order' => 3,
+          'settingModel' => 
+          array (
+            'settings' => false,
+            'hide_merge_tags' => false,
+            'error' => false,
+            'name' => 'options',
+            'type' => 'option-repeater',
+            'label' => 'Options <a href="#" class="nf-add-new">Add New</a> <a href="#" class="extra nf-open-import-tooltip"><i class="fa fa-sign-in" aria-hidden="true"></i> Import</a>',
+            'width' => 'full',
+            'group' => '',
+            'value' => 
+            array (
+              0 => 
+              array (
+                'label' => 'One',
+                'value' => 'one',
+                'calc' => '',
+                'selected' => 0,
+                'order' => 0,
+              ),
+              1 => 
+              array (
+                'label' => 'Two',
+                'value' => 'two',
+                'calc' => '',
+                'selected' => 0,
+                'order' => 1,
+              ),
+              2 => 
+              array (
+                'label' => 'Three',
+                'value' => 'three',
+                'calc' => '',
+                'selected' => 0,
+                'order' => 2,
+              ),
+            ),
+            'columns' => 
+            array (
+              'label' => 
+              array (
+                'header' => 'Label',
+                'default' => '',
+              ),
+              'value' => 
+              array (
+                'header' => 'Value',
+                'default' => '',
+              ),
+              'calc' => 
+              array (
+                'header' => 'Calc Value',
+                'default' => '',
+              ),
+              'selected' => 
+              array (
+                'header' => '<span class="dashicons dashicons-yes"></span>',
+                'default' => 0,
+              ),
+            ),
+          ),
+          'manual_value' => true,
+        ),
+        4 => 
+        array (
+          'errors' => 
+          array (
+          ),
+          'max_options' => 0,
+          'order' => 4,
           'new' => false,
           'options' => 
           array (
@@ -10925,11 +11004,15 @@ $aFlorpNinjaFormExportData = array (
           array (
           ),
           'max_options' => 0,
-          'label' => 'Mužské',
-          'value' => 'muz',
+          'order' => 0,
+          'new' => false,
+          'options' => 
+          array (
+          ),
+          'label' => 'vyberte typ',
+          'value' => 'null',
           'calc' => '0',
           'selected' => 0,
-          'order' => 0,
           'settingModel' => 
           array (
             'settings' => false,
@@ -10999,11 +11082,85 @@ $aFlorpNinjaFormExportData = array (
           array (
           ),
           'max_options' => 0,
+          'label' => 'Mužské',
+          'value' => 'muz',
+          'calc' => '0',
+          'selected' => 0,
+          'order' => 1,
+          'settingModel' => 
+          array (
+            'settings' => false,
+            'hide_merge_tags' => false,
+            'error' => false,
+            'name' => 'options',
+            'type' => 'option-repeater',
+            'label' => 'Options <a href="#" class="nf-add-new">Add New</a> <a href="#" class="extra nf-open-import-tooltip"><i class="fa fa-sign-in" aria-hidden="true"></i> Import</a>',
+            'width' => 'full',
+            'group' => '',
+            'value' => 
+            array (
+              0 => 
+              array (
+                'label' => 'One',
+                'value' => 'one',
+                'calc' => '',
+                'selected' => 0,
+                'order' => 0,
+              ),
+              1 => 
+              array (
+                'label' => 'Two',
+                'value' => 'two',
+                'calc' => '',
+                'selected' => 0,
+                'order' => 1,
+              ),
+              2 => 
+              array (
+                'label' => 'Three',
+                'value' => 'three',
+                'calc' => '',
+                'selected' => 0,
+                'order' => 2,
+              ),
+            ),
+            'columns' => 
+            array (
+              'label' => 
+              array (
+                'header' => 'Label',
+                'default' => '',
+              ),
+              'value' => 
+              array (
+                'header' => 'Value',
+                'default' => '',
+              ),
+              'calc' => 
+              array (
+                'header' => 'Calc Value',
+                'default' => '',
+              ),
+              'selected' => 
+              array (
+                'header' => '<span class="dashicons dashicons-yes"></span>',
+                'default' => 0,
+              ),
+            ),
+          ),
+          'manual_value' => true,
+        ),
+        2 => 
+        array (
+          'errors' => 
+          array (
+          ),
+          'max_options' => 0,
           'label' => 'Ženské',
           'value' => 'zena',
           'calc' => '0',
           'selected' => 0,
-          'order' => 1,
+          'order' => 2,
           'settingModel' => 
           array (
             'settings' => false,
@@ -21236,7 +21393,7 @@ $aFlorpNinjaFormExportData = array (
       'key' => 'courses_info',
       'label_pos' => 'above',
       'required' => false,
-      'default' => '',
+      'default' => '{usermeta:courses_info}',
       'placeholder' => '',
       'container_class' => 'florp-class florp-togglable-field_teacher',
       'element_class' => 'florp_courses_info',
@@ -31250,7 +31407,7 @@ $aFlorpNinjaFormExportData = array (
       'key' => 'courses_info_2',
       'label_pos' => 'above',
       'required' => false,
-      'default' => '',
+      'default' => '{usermeta:courses_info_2}',
       'placeholder' => '',
       'container_class' => 'florp-class florp-checkbox-field_courses2',
       'element_class' => 'florp_courses_info_2',
@@ -41241,7 +41398,7 @@ $aFlorpNinjaFormExportData = array (
       'key' => 'courses_info_3',
       'label_pos' => 'above',
       'required' => false,
-      'default' => '',
+      'default' => '{usermeta:courses_info_3}',
       'placeholder' => '',
       'container_class' => 'florp-class florp-checkbox-field_courses3',
       'element_class' => 'florp_courses_info_3',

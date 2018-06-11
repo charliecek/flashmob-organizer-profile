@@ -112,7 +112,10 @@ function florpUnescapeRegexp(strRegex) {
 }
 
 function florpRescrapeFbOgMapImage() {
-    jQuery.post(
+  if (florp.blog_type != 'main' || florp.using_og_map_image != 1) {
+    return
+  }
+  jQuery.post(
     'https://graph.facebook.com',
     {
         id: 'http://flashmob.salsarueda.dance/',
@@ -128,6 +131,8 @@ function florp_reload_on_successful_submission() {
     florpReloadYearlyMap();
     return;
   }
+
+  // Rescrape the FB OG map image //
   florpRescrapeFbOgMapImage();
 
   var strCookieName = florp.reload_ok_cookie;
@@ -270,7 +275,7 @@ function initFlorpMapsObject() {
   };
 }
 
-function florpGenerateMap( oDivDOMElement, divID, oMapOptions, oAdditionalMarkerOptions = {}, strMapType = 'flashmob_organizer' ) {
+function florpGenerateMap( oDivDOMElement, divID, oMapOptions, oAdditionalMarkerOptions = {}, strMapType = '' ) {
   /*
    * we get the year from the element: data-year=201*, data-is-current-year="0|1"
    * By Ajax, ask for an array of info for each map by year (location[address and/or coord], marker icon, marker HTML,
@@ -283,6 +288,10 @@ function florpGenerateMap( oDivDOMElement, divID, oMapOptions, oAdditionalMarker
   // console.log(oMapOptions);
   // initialize map //
   
+  if (strMapType.length === 0) {
+    strMapType = jQuery('#'+divID).data('mapType')
+  }
+
   if ("undefined" === typeof florp.maps) {
     initFlorpMapsObject();
   }
@@ -339,6 +348,7 @@ function florpGenerateMap( oDivDOMElement, divID, oMapOptions, oAdditionalMarker
   }
 
   if ("undefined" !== typeof oAdditionalMarkerOptions) {
+    // NOTE: oAdditionalMarkerOptions is NOT per-marker! //
     florp.maps.additionalMarkerOptions[divID] = jQuery.extend(true, {}, florp.maps.additionalMarkerOptions[divID], oAdditionalMarkerOptions)
   }
 
@@ -351,8 +361,10 @@ function florpGenerateMap( oDivDOMElement, divID, oMapOptions, oAdditionalMarker
         strLocation = oUserOptions.flashmob_address || oUserOptions.school_city || ""
         florpSetUserMarker( iUserID, oUserOptions, map, divID, florp.maps.markerShownOnLoad[divID] === iUserID, strLocation, 0, strMapType );
       } else if (strMapType === "teacher") {
-        var bShowOnLoad = true, bDontShow = false
-        var aProperties = ["school_city", "courses_city", "courses_city_2", "courses_city_3"]
+        var bShowOnLoad = true, bDontShow = false, aProperties = ["school_city", "courses_city", "courses_city_2", "courses_city_3"]
+        if (divID !== 'teacher_map_preview') {
+          bShowOnLoad = false
+        }
         aProperties.forEach(function(prop) {
           if ("undefined" === typeof oUserOptions[prop]) {
             strLocation = ""
@@ -384,7 +396,7 @@ function florpSetUserMarker(iUserID, oUserOptions, map, divID, show, strLocation
   }
   // console.log(oInfoWindowData)
 
-  var location = strLocation;
+  var location = strLocation || "";
   if (location.length === 0) {
     console.info("No location found for user "+iUserID);
     // console.log(oUserOptions)
@@ -611,7 +623,7 @@ function florpSetUserMarker(iUserID, oUserOptions, map, divID, show, strLocation
             }
           }
         } catch(e) {
-          console.log(e);
+          console.warn(e);
         }
       },
       error: function(errorThrown){
@@ -637,20 +649,24 @@ function florpOpenInfoWindow(map, marker, infowindow, divID) {
   florp.maps.open_infowindow[divID] = infowindow;
 }
 
+// NOTE We'll use this to reload the yearly map after a participant has registered //
 function florpReloadYearlyMap( iYear = 0 ) {
   /*
    * We look for the map div(s) by data-is-current-year="1" and iterate through these
-   * we ask for all the info by ajax 
+   * we ask for all the info by ajax, reloading the MARKER that belongs to the edited user
    */
   
   if ("undefined" === typeof florp.user_id || "undefined" === typeof florp_map_options_object || florpObjectLength(florp_map_options_object) === 0) {
     return;
   }
-  
+
+  // Rescrape the FB OG map image //
+  florpRescrapeFbOgMapImage();
+
   var currentYearMaps = jQuery(".florp-map[data-is-current-year='1']");
   currentYearMaps.each(function () {
-    var thisObj = jQuery(this);
-    var id = thisObj.attr('id');
+    var $this = jQuery(this);
+    var id = $this.attr('id');
     var old_map_options = florp_map_options_object[id][florp.user_id];
     
     var data = {
@@ -659,6 +675,7 @@ function florpReloadYearlyMap( iYear = 0 ) {
       old_map_options: old_map_options,
       user_id: florp.user_id,
       divID: id,
+      strMapType: $this.data('mapType'),
     };
     jQuery.ajax({
       type: "POST",
@@ -671,13 +688,12 @@ function florpReloadYearlyMap( iYear = 0 ) {
           // console.log(getMarkerInfoHtmlRes);
           if (getMarkerInfoHtmlRes.new_map_options !== false) {
             var map = florp.maps.objects[getMarkerInfoHtmlRes.data.divID];
-            // TODO check - using location for flashmob_organizer map type //
+            // NOTE implicitly using location for flashmob_organizer map type //
             var strLocation = getMarkerInfoHtmlRes.new_map_options.flashmob_address || getMarkerInfoHtmlRes.new_map_options.school_city || ""
             florpSetUserMarker(florp.user_id, getMarkerInfoHtmlRes.new_map_options, map, getMarkerInfoHtmlRes.data.divID, true, strLocation);
-            florpRescrapeFbOgMapImage();
           }
         } catch(e) {
-          console.log(e);
+          console.warn(e);
         }
       },
       error: function(errorThrown){
@@ -855,7 +871,6 @@ function florpFixFormClasses() {
     strCityLabelBoth = "Mesto flashmobu a kurzov",
     strCityLabelCourses = jQuery(".florp_courses_city").parents("nf-field").find(".nf-field-label label").html(),
     strCityLabelFlashmob = "Mesto flashmobu"
-    console.log(bIsTeacher, bIsFlashmobOrganizer, bCoursesInDifferentCity, $cityLabel)
 
     if (bIsTeacher && bIsFlashmobOrganizer) {
       if (bCoursesInDifferentCity) {
@@ -879,6 +894,7 @@ function florpFixFormClasses() {
       // Add, set specific selectors //
       strSelectorPreventToggling = ":not(.florp-registration-field)"
       strTogglableFieldSelector = ".florp-"+strToggleType+"-field_all"+strSelectorPreventToggling+" .nf-field-container,.florp-"+strToggleType+"-field_any"+strSelectorPreventToggling+" .nf-field-container, .florp-"+strToggleType+"-element_all"
+      var bIsFlashmobOrganizer = jQuery(".florp_subscriber_type_container input[value=flashmob_organizer]").is(":checked")
     }
     aFlorpTogglableValuesLoc.forEach(function (strType) {
       if (strTogglableFieldSelector.length > 0) {
@@ -929,6 +945,9 @@ function florpFixFormClasses() {
             })
           })
           florpAnimateHide($aTogglableFieldsAll)
+          if (strToggleType === "togglable" && florp.has_participants == 1) {
+            florpAnimateShow(jQuery('.flashmob_organizer_has_participants_warning'))
+          }
         }
         break;
       case iNumberOfCheckboxes:
@@ -937,6 +956,9 @@ function florpFixFormClasses() {
           // No fields to toggle //
         } else {
           florpAnimateShow($aTogglableFieldsAll)
+          if (strToggleType === "togglable" && florp.has_participants == 1) {
+            florpAnimateHide(jQuery('.flashmob_organizer_has_participants_warning'))
+          }
         }
         break;
       default:
@@ -961,11 +983,31 @@ function florpFixFormClasses() {
           }
         }
 
+        if (strToggleType === "togglable" && florp.has_participants == 1) {
+          if (bIsFlashmobOrganizer) {
+            if (strSelectorHide.length > 0) {
+              strSelectorHide += ","
+            }
+            strSelectorHide += '.flashmob_organizer_has_participants_warning'
+          } else {
+            if (strSelectorShow.length > 0) {
+              strSelectorShow += ","
+            }
+            strSelectorShow += '.flashmob_organizer_has_participants_warning'
+          }
+        }
+
         // Also hide 'all' //
         if (strSelectorHide.length > 0) {
           strSelectorHide += ","
         }
         strSelectorHide += ".florp-"+strToggleType+"-field_all"+strSelectorPreventToggling+" .nf-field-container%%not%%,.florp-"+strToggleType+"-element_all%%not%%"
+
+        // Also show 'any' //
+        if (strSelectorShow.length > 0) {
+          strSelectorShow += ","
+        }
+        strSelectorShow += ".florp-"+strToggleType+"-field_any"+strSelectorPreventToggling+" .nf-field-container"
 
         var strShownIDs = "";
         if (strSelectorShow.length > 0) {
@@ -1090,11 +1132,6 @@ function florpFixFormClasses() {
   }
 
   var florpSchoolCitySelect = jQuery(".florp_school_city");
-  if (typeof florp.school_city !== "undefined" && florp.school_city.length > 0) {
-    jQuery(".florp_school_city option").removeAttr("selected");
-//     jQuery(".florp_school_city option[value="+florp.school_city+"]").attr("selected", "selected");
-    florpSchoolCitySelect.val(florp.school_city);
-  }
 
   // Add correct classes to buttons //
   var buttons = jQuery(".florp-button,florp-profile-form-wrapper-div input[type=button]");
@@ -1213,7 +1250,7 @@ function florpFixFormClasses() {
                   }
                 }
               } else {
-                console.log('No results found');
+                console.warn('No results found');
               }
             } else {
               console.warn('Geocoder failed due to: ' + status);
@@ -1227,7 +1264,7 @@ function florpFixFormClasses() {
         "bDraggable" : bUsingFlashmobAddress,
         "draggableCallback" : fnDraggableCallback
       }
-      florpGenerateMap( $previewContainer, divID, oMapOptions, oAdditionalMarkerOptions)
+      florpGenerateMap( $previewContainer, divID, oMapOptions, oAdditionalMarkerOptions, 'flashmob_organizer' )
     }
   }
   // END find location //
@@ -1274,11 +1311,6 @@ function florpFixFormClasses() {
 
     // Add video link select events //
     var florpVideoTypeSelect = jQuery(".florp-video-type-select");
-    if (florp.video_link_type.length > 0 && (florp.video_link_type === 'youtube' || florp.video_link_type === 'facebook' || florp.video_link_type === 'vimeo' || florp.video_link_type === 'other')) {
-      jQuery(".florp-video-type-select option").removeAttr("selected");
-      jQuery(".florp-video-type-select option[value="+florp.video_link_type+"]").attr("selected", "selected");
-//         florpVideoTypeSelect.val(florp.video_link_type);
-    }
     fnFlorpVideoTypeSelect();
     florpVideoTypeSelect.change(function() {
       fnFlorpVideoTypeSelect();
@@ -1312,20 +1344,20 @@ function florpFixFormClasses() {
 //     if ($checkbox.val() === 'teacher') {
 //     }
     reloadCoursesButton.on('click', fnReloadCoursesMap)
-    if (bCoursesInDifferentCity) {
-      var strSelector = ".florp_courses_city"
-      var $select = jQuery(strSelector)
+    if (bCoursesInCity2) {
+      strSelector = ".florp_courses_city_2"
+      $select = jQuery(strSelector)
       $select.on('change', fnReloadCoursesMap)
-      if (bCoursesInCity2) {
-        strSelector = ".florp_courses_city_2"
-        $select = jQuery(strSelector)
-        $select.on('change', fnReloadCoursesMap)
-      }
       if (bCoursesInCity3) {
         strSelector = ".florp_courses_city_3"
         $select = jQuery(strSelector)
         $select.on('change', fnReloadCoursesMap)
       }
+    }
+    if (bCoursesInDifferentCity) {
+      var strSelector = ".florp_courses_city"
+      var $select = jQuery(strSelector)
+      $select.on('change', fnReloadCoursesMap)
     } else {
       var strSelector = ".florp_school_city"
       var $select = jQuery(strSelector)
@@ -1356,20 +1388,12 @@ function florpFixFormClasses() {
       'school_name',
       'school_webpage'
     ];
-    if (bCoursesInDifferentCity) {
-      var strSelector = ".florp_courses_city"
-      var strCity = jQuery(strSelector).val()
+    if (bCoursesInCity2) {
+      strSelector = ".florp_courses_city_2"
+      strCity = jQuery(strSelector).val()
       if (strCity !== "null") {
-        inputIDs.push("courses_city")
-        inputIDs.push("courses_info")
-      }
-      if (bCoursesInCity2) {
-        strSelector = ".florp_courses_city_2"
-        strCity = jQuery(strSelector).val()
-        if (strCity !== "null") {
-          inputIDs.push("courses_city_2")
-          inputIDs.push("courses_info_2")
-        }
+        inputIDs.push("courses_city_2")
+        inputIDs.push("courses_info_2")
       }
       if (bCoursesInCity3) {
         strSelector = ".florp_courses_city_3"
@@ -1378,6 +1402,14 @@ function florpFixFormClasses() {
           inputIDs.push("courses_city_3")
           inputIDs.push("courses_info_3")
         }
+      }
+    }
+    if (bCoursesInDifferentCity) {
+      var strSelector = ".florp_courses_city"
+      var strCity = jQuery(strSelector).val()
+      if (strCity !== "null") {
+        inputIDs.push("courses_city")
+        inputIDs.push("courses_info")
       }
     } else {
       var strSelector = ".florp_school_city"

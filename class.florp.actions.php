@@ -134,7 +134,7 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
               ARRAY_N
             );
             if (!empty($results)) {
-              $data[ 'errors' ][ 'form' ][$strKey] = "V databáze už existuje organizátor rueda flashmobu s mestom pôsobenia nastaveným na '$strValue'!";
+              $data[ 'errors' ][ 'form' ][$strKey] = "V databáze už existuje líder, ktorý organizuje flashmob v meste '$strValue'!";
             }
             break;
           default:

@@ -143,3 +143,9 @@ nf-field.florp-hidden-if-map-correct{
 .nf-field .textarea-wrap .nf-field-element {
   background-color: #eeeeee;
 }
+
+.flashmob_organizer_has_participants_warning {
+    font-weight: bold;
+    font-style: italic;
+    color: red;
+}
