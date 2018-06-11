@@ -454,8 +454,6 @@ class FLORP{
     add_action( 'ninja_forms_register_actions', array( $this, 'action__register_nf_florp_action' ));
     add_action( 'ninja_forms_after_submission', array( $this, 'action__update_user_profile' ));
     add_action( 'after_setup_theme', array( $this, 'action__remove_admin_bar' ));
-    add_action( 'wp_ajax_florp_map_ajax', array( $this, 'action__map_ajax_callback' ));
-    add_action( 'wp_ajax_nopriv_florp_map_ajax', array( $this, 'action__map_ajax_callback' ) );
     add_action( 'wp_ajax_get_markerInfoHTML', array( $this, 'action__get_markerInfoHTML_callback' ));
     add_action( 'wp_ajax_nopriv_get_markerInfoHTML', array( $this, 'action__get_markerInfoHTML_callback' ));
     add_action( 'wp_ajax_get_mapUserInfo', array( $this, 'action__get_mapUserInfo_callback' ));
@@ -473,32 +471,32 @@ class FLORP{
     add_action( 'set_user_role', array( $this, 'action__set_user_role' ), 10, 3 );
     add_action( 'lwa_before_login_form', array( $this, 'action__lwa_before_login_form' ));
 
-    $this->map_shortcode_template = '
-      [us_gmaps
-        marker_address="%%marker_address%%"
-        marker_text="%%base_64_encoded_url_encoded_text%%"
-        show_infowindow="%%show_infowindow%%"
-        height="590"
-        zoom="8"
-        custom_marker_img="5236"
-        custom_marker_size="40"
-        disable_zoom="1"
-        el_class="slovensky-flashmob-mapa"
-        markers="%5B%7B%7D%5D"
-      ]';
-    $this->markerInfoWindowTemplate = '
-      <div style="width: 285px; margin-left: 28px;">
-        <h5 class="flashmob-location" style="padding:0!important">%%flashmob_city%%</h5>
-        <p style="padding-left:0!important">
-          <strong>Organizátor</strong>: %%organizer%%
-          %%year%%
-          %%school%%
-          %%dancers%%
-          %%note%%
-        </p>
-        %%embed_code%%
-      </div>
-    ';
+    $this->aMarkerInfoWindowTemplates = array(
+      'flashmob_organizer' =>
+        '        <div class="florp-marker-infowindow-wrapper">
+          <h5 class="florp-flashmob-location">%%flashmob_city%%</h5>
+          <p>
+            <strong>Organizátor</strong>: %%organizer%%
+            %%year%%
+            %%school%%
+            %%dancers%%
+            %%note%%
+          </p>
+          %%embed_code%%
+        </div>',
+      'teacher' =>
+        '        <div class="florp-marker-infowindow-wrapper">
+          <h5 class="florp-course-location">%%courses_city%%</h5>
+          <p>
+            <strong>Líder</strong>: %%organizer%%
+            %%school%%
+          </p>
+          <div class="florp-course-info">%%courses_info%%</div>
+        </div>',
+    );
+    // TODO: add new meta fields!
+    // TODO: make changes for new fields in user update if necessary
+    // TODO: add field placeholders in NF (to load the right values in the form) + field localization
     $this->aUserFields = array( 'user_email', 'first_name', 'last_name', 'user_pass' );
     $this->aUserFieldsMap = array( 'first_name', 'last_name' );
     $this->aMetaFields = array( 'webpage', 'school_name', 'school_webpage', 'school_city', 'subscriber_type',
@@ -511,12 +509,13 @@ class FLORP{
         'zoom'        => 8,
         'mapTypeId'   => 'roadmap',
         'scrollwheel' => false,
+        'keyboardShortcuts' => false,
       ),
       'map_init_aux'  => array(
         'center'      => array( 'lat' => 48.669026, 'lng' => 19.699024 ),
       ),
       'markers'   => array(
-        'icon'        => "http://flashmob.salsarueda.dance/wp-content/uploads/sites/6/2013/05/marker40.png",
+        'icon'        => plugins_url( 'flashmob-organizer-profile/img/florp-icon-40.png' ), //"http://flashmob.salsarueda.dance/wp-content/uploads/sites/6/2013/05/marker40.png",
       ),
       'custom'    => array(
         'height'       => 590,
@@ -697,6 +696,8 @@ class FLORP{
 
     if ($this->isMainBlog) {
       // Settings specific to the NF on the Flashmob Blog //
+
+      // TODO: replace {flashmob_date}
       if ($bLoggedIn) {
         $iUserID = get_current_user_id();
         $aSubscriberTypesOfUser = get_user_meta( $iUserID, 'subscriber_type', true );
@@ -712,15 +713,17 @@ class FLORP{
 
         if (isset($aField['settings']['container_class'])) {
           $bHide = true;
-          if (stripos($aField['settings']['container_class'], 'florp-subscriber-type-field_all') !== false
-                  || stripos($aField['settings']['container_class'], 'florp-registration-field') !== false) {
+          if (stripos($aField['settings']['container_class'], 'florp-togglable-field_all') !== false
+                  || stripos($aField['settings']['container_class'], 'florp-registration-field') !== false
+                  || stripos($aField['settings']['container_class'], 'florp-profile-field') !== false) {
             $bHide = false;
           } else {
             // Go through subscriber types of user and leave field unhidden if matched //
             foreach ($aSubscriberTypesOfUser as $strSubscriberType) {
-              if (stripos($aField['settings']['container_class'], 'florp-subscriber-type-field_'.$strSubscriberType) !== false
-                  || stripos($aField['settings']['container_class'], 'florp-subscriber-type-field_any') !== false) {
+              if (stripos($aField['settings']['container_class'], 'florp-togglable-field_'.$strSubscriberType) !== false
+                  || stripos($aField['settings']['container_class'], 'florp-togglable-field_any') !== false) {
                 $bHide = false;
+                break;
               }
             }
           }
@@ -819,7 +822,8 @@ class FLORP{
         if ( in_array( $this->strUserRolePending, (array) $oUser->roles ) ) {
           return $this->strPendingUserPageContentHTML;
         }
-      } elseif (!is_user_logged_in() || !has_shortcode( $post->post_content, 'florp-profile' )) {
+      }
+      if (!is_user_logged_in() || !has_shortcode( $post->post_content, 'florp-profile' )) {
         return $this->main_blog_profile();
       }
     }
@@ -1376,7 +1380,6 @@ class FLORP{
       'reload_ok_submission'          => $bReloadAfterSuccessfulSubmission ? 1 : 0,
       'reload_ok_cookie'              => 'florp-form-saved',
       'florp_trigger_anchor'          => $this->strClickTriggerAnchor,
-      'map_ajax_action'               => 'florp_map_ajax',
       'get_markerInfoHTML_action'     => 'get_markerInfoHTML',
       'get_mapUserInfo_action'        => 'get_mapUserInfo',
       'ajaxurl'                       => admin_url( 'admin-ajax.php'),
@@ -2162,22 +2165,15 @@ class FLORP{
     Ninja_Forms()->merge_tags[ 'florp_merge_tags' ] = new FlorpMergeTags();
   }
   
-  public function action__map_ajax_callback() {
-    check_ajax_referer( 'srd-florp-security-string', 'security' );
-    $strLocation = $_POST['location'];
-    $strMarkerText = $this->getMarkerInfoWindowContent($_POST['infoWindowData']);
-    $strMarkerTextEncoded = base64_encode( $strMarkerText );
-    $aSearch = array( '%%marker_address%%', '%%show_infowindow%%', '%%base_64_encoded_url_encoded_text%%' );
-    $aReplace = array( $strLocation, '1', $strMarkerTextEncoded );
-    $strShortcode = str_replace( $aSearch, $aReplace, $this->map_shortcode_template);
-    $strResponse = do_shortcode($strShortcode);
-    echo json_encode($strResponse);
-    wp_die();
-  }
-  
   public function action__get_markerInfoHTML_callback() {
     check_ajax_referer( 'srd-florp-security-string', 'security' );
-    $strMarkerText = $this->getMarkerInfoWindowContent($_POST['infoWindowData']);
+    $aMarkerData = array_merge(
+      $_POST['infoWindowData'],
+      array(
+        'mixMarkerKey'  => $_POST['mixMarkerKey'],
+        'strMapType'    => $_POST['strMapType'],
+    ));
+    $strMarkerText = $this->getMarkerInfoWindowContent( $aMarkerData );
     $aRes = array(
       'contentHtml' => $strMarkerText,
       'data'        => $_POST
@@ -2299,20 +2295,24 @@ class FLORP{
     } else {
       $strEmbedCode = "";
     }
-    $aSearch = array( 'flashmob_city', 'organizer', 'school', 'embed_code', 'dancers', 'year', 'note' );
-    foreach ($aSearch as $key => $value) {
-      $aSearch[$key] = '%%'.$value.'%%';
-    }
     if (empty($aInfoWindowData['flashmob_number_of_dancers']['value'])) {
       $strDancers = "";
     } else {
       $strDancers = "<br>Počet tancujúcich: ".$aInfoWindowData['flashmob_number_of_dancers']['value'];
     }
-    $strLocation = trim($aInfoWindowData['flashmob_address']['value']);
-    if (empty($strLocation)) {
-      $strLocation = trim($aInfoWindowData['school_city']['value']);
+    $mixMarkerKey = $aInfoWindowData['mixMarkerKey'];
+    if (isset($mixMarkerKey) && !is_numeric($mixMarkerKey)) {
+      $strLocation = trim($aInfoWindowData[$mixMarkerKey]['value']);
       if ($strLocation === "null") {
         $strLocation = "";
+      }
+    } else {
+      $strLocation = trim($aInfoWindowData['flashmob_address']['value']);
+      if (empty($strLocation)) {
+        $strLocation = trim($aInfoWindowData['school_city']['value']);
+        if ($strLocation === "null") {
+          $strLocation = "";
+        }
       }
     }
     if (isset($aInfoWindowData['year']) && isset($aInfoWindowData['year']["value"])) {
@@ -2325,8 +2325,27 @@ class FLORP{
     } else {
       $strNote = "";
     }
-    $aReplace = array( $strLocation, $strOrganizer, $strSchool, $strEmbedCode, $strDancers, $strYear, $strNote );
-    $strText = str_replace( $aSearch, $aReplace, $this->markerInfoWindowTemplate );
+    $aSearch = array( 'flashmob_city', 'organizer', 'school', 'embed_code', 'dancers', 'year', 'note', 'courses_city' ,'courses_info' );
+    foreach ($aSearch as $key => $value) {
+      $aSearch[$key] = '%%'.$value.'%%';
+    }
+    switch ($mixMarkerKey) {
+      case 'school_city':
+      case 'courses_city':
+        $strCoursesInfo = trim($aInfoWindowData['courses_info']["value"]);
+        break;
+      case 'courses_city_2':
+        $strCoursesInfo = trim($aInfoWindowData['courses_info_2']["value"]);
+        break;
+      case 'courses_city_3':
+        $strCoursesInfo = trim($aInfoWindowData['courses_info_3']["value"]);
+        break;
+      default:
+        $strCoursesInfo = "";
+    }
+//     $strCoursesInfo = wpautop( $strCoursesInfo );
+    $aReplace = array( $strLocation, $strOrganizer, $strSchool, $strEmbedCode, $strDancers, $strYear, $strNote, $strLocation, $strCoursesInfo );
+    $strText = str_replace( $aSearch, $aReplace, $this->aMarkerInfoWindowTemplates[$aInfoWindowData['strMapType']] );
     return $strText;
     /*
      * Fields:

@@ -11,10 +11,12 @@ body.state_default nf-field.florp-right{
   float: right;
   width: 49%;
 }
+nf-field .florp-right-button,
 nf-field.florp-right-button{
   float: right;
   width: 14%;
 }
+nf-field .florp-left-with-button,
 nf-field.florp-left-with-button{
   float: left;
   width: 85%;
@@ -123,4 +125,21 @@ nf-field.florp-hidden-if-map-correct{
 }
 .florp-flashmob-info-p{
   margin-bottom: 21px;
+}
+
+.florp-marker-infowindow-wrapper{
+  width: 285px;
+  margin-left: 28px;
+}
+.florp-marker-infowindow-wrapper .florp-flashmob-location,
+.florp-marker-infowindow-wrapper .florp-course-location {
+  padding:0!important;
+}
+.florp-marker-infowindow-wrapper>p,
+.florp-marker-infowindow-wrapper .florp-course-info>p {
+  padding-left:0!important;
+}
+
+.nf-field .textarea-wrap .nf-field-element {
+  background-color: #eeeeee;
 }
