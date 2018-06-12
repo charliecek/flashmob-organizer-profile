@@ -106,11 +106,11 @@ function add_florp_action_controllers() {
 
           // wait 2 sec before filling in the login form //
           setTimeout(function() {
-            var form = jQuery("#pum-"+florp.popup_id+" .lwa");
+            var form = jQuery(".florp-profile-wrapper .lwa");
             var idPrefix = form.data("idPrefix");
-            var loginForm = jQuery("#pum-"+florp.popup_id+" form.lwa-form");
-            var loginUsernameInput = jQuery("#pum-"+florp.popup_id+" #"+idPrefix+"lwa_user_login");
-            var loginPasswordInput = jQuery("#pum-"+florp.popup_id+" #"+idPrefix+"lwa_user_pass");
+            var loginForm = jQuery(".florp-profile-wrapper form.lwa-form");
+            var loginUsernameInput = jQuery(".florp-profile-wrapper #"+idPrefix+"lwa_user_login");
+            var loginPasswordInput = jQuery(".florp-profile-wrapper #"+idPrefix+"lwa_user_pass");
             var loginUsername = response.data.fields_by_key.user_email.value;
             var loginPassword = response.data.fields_by_key.user_pass.value;
 
@@ -120,7 +120,7 @@ function add_florp_action_controllers() {
             florp.doNotSetCookie = true;
 
             // hide registration form //
-            jQuery("#pum-"+florp.popup_id+" .lwa-register").hide('slow');
+            jQuery(".florp-profile-wrapper .lwa-register").hide('slow');
             loginForm.show('slow');
 
             // wait .5 sec before submitting the login form

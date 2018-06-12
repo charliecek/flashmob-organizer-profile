@@ -459,6 +459,7 @@ class FLORP{
     add_filter( 'ninja_forms_register_fields', array( $this, 'filter__ninja_forms_register_fields' ));
     add_filter( 'ninja_forms_display_form_settings', array( $this, 'filter__displaying_profile_form_nf_start' ), 10, 2 );
     add_filter( 'the_content', array( $this, 'filter__the_content' ), 9999 );
+    add_filter( 'us_load_header_settings', array( $this, 'filter__us_load_header_settings' ), 11 );
 
     // ACTIONS //
     add_action( 'ninja_forms_register_actions', array( $this, 'action__register_nf_florp_action' ));
@@ -911,6 +912,68 @@ class FLORP{
       }
     }
     return $strTheContent;
+  }
+
+  public function filter__us_load_header_settings( $aSettings ) {
+    if (!$this->isMainBlog) {
+      return $aSettings;
+    }
+
+    global $post;
+    $aNewSettingsByType = array();
+    $iSize = 14;
+    $aNewSettingsCommon = array(
+      'size'          => $iSize,
+      'size_tablets'  => $iSize,
+      'size_mobiles'  => $iSize,
+    );
+    $aFieldsToUse = array( 'text:1', 'text:4' );
+    if ($this->iProfileFormPageIDMain > 0) {
+      if (!is_object($post) || $post->post_type !== 'page' || $post->ID !== $this->iProfileFormPageIDMain) {
+        $aNewSettingsByType['profile'] = array(
+          'text' => "Profil Rueda Lídra",
+          'link' => get_permalink( $this->iProfileFormPageIDMain ),
+          'el_class' => 'florp_profile_link_profile',
+        );
+      }
+    }
+
+    if (is_user_logged_in()) {
+      if (is_object($post)) {
+        $strRedir = get_permalink( $post->ID );
+      } else {
+        $strRedir = home_url();
+      }
+      $aNewSettingsByType['logout'] = array(
+        'text' => "Odhlásiť sa",
+        'link' => wp_logout_url( $strRedir ),
+        'el_class' => 'florp_profile_link_logout',
+      );
+    }
+
+    if (count($aNewSettingsByType) > 0) {
+      foreach ($aNewSettingsByType as $strType => $aNewSettings) {
+        $bFound = false;
+        foreach ($aSettings as $strDevice => $aDeviceSettings) {
+          if ($strDevice === 'data') {
+            continue;
+          }
+          foreach ($aDeviceSettings['layout']['hidden'] as $key => $strFieldID) {
+            if (in_array( $strFieldID, $aFieldsToUse )) {
+              $aSettings[$strDevice]['layout']['top_right'][] = $strFieldID;
+              unset($aSettings[$strDevice]['layout']['hidden'][$key]);
+              $bFound = true;
+              break;
+            }
+          }
+        }
+        if ($bFound) {
+          $aSettings['data'][$strFieldID] = array_merge( $aSettings['data'][$strFieldID], $aNewSettingsCommon, $aNewSettings );
+        }
+      }
+      // echo "<!-- " .var_export($aSettings, true). " -->";
+    }
+    return $aSettings;
   }
 
   public function profile_form( $aAttributes ) {
@@ -2701,8 +2764,12 @@ class FLORP{
     return ob_get_clean();
   }
 
-  public function get_profile_form_id() {
+  public function get_profile_form_id_main() {
     return $this->iProfileFormNinjaFormIDMain;
+  }
+
+  public function get_profile_form_id_flashmob() {
+    return $this->iProfileFormNinjaFormIDFlashmob;
   }
 
   public static function activate() {
@@ -2723,9 +2790,13 @@ function florp_profile_form( $aAttributes = array() ) {
   global $FLORP;
   echo $FLORP->profile_form( $aAttributes );
 }
-function florp_get_profile_form_id() {
+function florp_get_profile_form_id_main() {
   global $FLORP;
-  return $FLORP->get_profile_form_id();
+  return $FLORP->get_profile_form_id_main();
+}
+function florp_get_profile_form_id_flashmob() {
+  global $FLORP;
+  return $FLORP->get_profile_form_id_flashmob();
 }
 function florp_profile_form_loader( $aAttributes = array() ) {
   return;
