@@ -180,7 +180,8 @@ class LoginWithAjax {
 				self::$current_user = $loginResult;
 				/* @var $loginResult WP_User */
 				$return['result'] = true;
-				$return['message'] = __("Login Successful, redirecting...",'login-with-ajax');
+				// $return['message'] = __("Login Successful, redirecting...",'login-with-ajax');
+				$return['message'] = florp_get_message('login_success', __("Login Successful, redirecting...",'login-with-ajax'));
 				//Do a redirect if necessary
 				$redirect = self::getLoginRedirect(self::$current_user);
 				if( !empty($_REQUEST['redirect_to']) ) $redirect= wp_sanitize_redirect($_REQUEST['redirect_to']);

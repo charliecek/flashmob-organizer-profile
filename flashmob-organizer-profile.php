@@ -87,7 +87,8 @@ class FLORP{
       'strBeforeLoginFormHtmlFlashmob'            => '',
       'strGoogleMapKey'                           => 'AIzaSyC_g9bY9qgW7mA0L1EupZ4SDYrBQWWi-V0',
       'strFbAppID'                                => '768253436664320',
-      'strLoggingInMessage'                       => "Prihlasujeme Vás... Prosíme, počkajte, kým sa stránka znovu načíta.",
+      'strRegistrationSuccessfulMessage'          => "Prihlasujeme Vás... Prosíme, počkajte, kým sa stránka znovu načíta.",
+      'strLoginSuccessfulMessage'                 => "Prihlásenie prebehlo úspešne, prosíme, počkajte, kým sa stránka znovu načíta.",
     );
     $this->aOptionFormKeys = array(
       'florp_reload_after_ok_submission_main'     => 'bReloadAfterSuccessfulSubmissionMain',
@@ -116,7 +117,8 @@ class FLORP{
       'florp_before_login_form_html_flashmob'     => 'strBeforeLoginFormHtmlFlashmob',
       'florp_google_map_key'                      => 'strGoogleMapKey',
       'florp_fb_app_id'                           => 'strFbAppID',
-      'florp_logging_in_message'                  => 'strLoggingInMessage',
+      'florp_registration_successful_message'     => 'strRegistrationSuccessfulMessage',
+      'florp_login_successful_message'            => 'strLoginSuccessfulMessage',
     );
     $aDeprecatedKeys = array(
       'iCurrentFlashmobYear',
@@ -153,7 +155,8 @@ class FLORP{
         'strBeforeLoginFormHtmlMain',
         'strGoogleMapKey',
         'strFbAppID',
-        'strLoggingInMessage',
+        'strRegistrationSuccessfulMessage',
+        'strLoginSuccessfulMessage',
       ),
       'flashmob'  => array(
         'iFlashmobBlogID',
@@ -1598,7 +1601,7 @@ class FLORP{
       'do_trigger_popup_click'        => $bDoTriggerPopupClick,
       'general_map_options'           => $this->aGeneralMapOptions,
       'form_id'                       => $iNFID,
-      'logging_in_msg'                => $this->aOptions['strLoggingInMessage'],
+      'logging_in_msg'                => $this->aOptions['strRegistrationSuccessfulMessage'],
       'popup_id'                      => $iPopupID,
       'load_maps_lazy'                => $this->aOptions['bLoadMapsLazy'] ? 1 : 0,
       'load_maps_async'               => $this->aOptions['bLoadMapsAsync'] ? 1 : 0,
@@ -2098,14 +2101,14 @@ class FLORP{
         '%%useMapImageChecked%%',
         '%%optionsYears%%', '%%optionsMonths%%', '%%optionsDays%%', '%%optionsHours%%', '%%optionsMinutes%%',
         '%%approveUsersAutomaticallyChecked%%', '%%wpEditorPendingUserPageContentHTML%%', '%%wpEditorUserApprovedMessage%%',
-        '%%strGoogleMapKey%%', '%%strFbAppID%%', '%%strLoggingInMessage%%' ),
+        '%%strGoogleMapKey%%', '%%strFbAppID%%', '%%strRegistrationSuccessfulMessage%%', '%%strLoginSuccessfulMessage%%' ),
       array( $aBooleanOptionsChecked['bLoadMapsAsync'],
         $aBooleanOptionsChecked['bLoadMapsLazy'],
         $aBooleanOptionsChecked['bLoadVideosLazy'],
         $aBooleanOptionsChecked['bUseMapImage'],
         $aNumOptions['optionsYears'], $optionsMonths, $aNumOptions['optionsDays'], $aNumOptions['optionsHours'], $aNumOptions['optionsMinutes'],
         $aBooleanOptionsChecked['bApproveUsersAutomatically'], $strWPEditorPendingUserPageContentHTML, $strWPEditorUserApprovedMessage,
-        $this->aOptions['strGoogleMapKey'], $this->aOptions['strFbAppID'], $this->aOptions['strLoggingInMessage'] ),
+        $this->aOptions['strGoogleMapKey'], $this->aOptions['strFbAppID'], $this->aOptions['strRegistrationSuccessfulMessage'], $this->aOptions['strLoginSuccessfulMessage'] ),
       '
             <tr style="width: 98%; padding:  5px 1%;">
               <th colspan="2"><h3>Spoločné nastavenia</h3></th>
@@ -2151,10 +2154,18 @@ class FLORP{
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;">
+                Správa zobrazená po úspešnej registrácii (pred prihlásením)
+              </th>
+              <td>
+                <input id="florp_registration_successful_message" name="florp_registration_successful_message" type="text" value="%%strRegistrationSuccessfulMessage%%" style="width: 100%;" />
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
                 Správa zobrazená po úspešnom prihlásení
               </th>
               <td>
-                <input id="florp_logging_in_message" name="florp_logging_in_message" type="text" value="%%strLoggingInMessage%%" style="width: 100%;" />
+                <input id="florp_login_successful_message" name="florp_login_successful_message" type="text" value="%%strLoginSuccessfulMessage%%" style="width: 100%;" />
               </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
@@ -2772,6 +2783,23 @@ class FLORP{
     return $this->iProfileFormNinjaFormIDFlashmob;
   }
 
+  public function get_message( $strKey = false, $strDefault = "" ) {
+    $aMessages = array(
+      'login_success' => $this->aOptions['strLoginSuccessfulMessage'],
+      'registration_success' => $this->aOptions['strRegistrationSuccessfulMessage'],
+    );
+
+    if ($strKey) {
+      if (isset($aMessages[$strKey]) && !empty($aMessages[$strKey])) {
+        return $aMessages[$strKey];
+      } else {
+        return $strDefault;
+      }
+    } else {
+      return $aMessages;
+    }
+  }
+
   public static function activate() {
   }
 
@@ -2810,4 +2838,8 @@ function florp_popup_anchor( $aAttributes = array() ) {
 function florp_get_map_image() {
   global $FLORP;
   return $FLORP->getMapImage();
+}
+function florp_get_message( $strKey = false, $strDefault = "" ) {
+  global $FLORP;
+  return $FLORP->get_message( $strKey, $strDefault );
 }
