@@ -556,7 +556,7 @@ class LoginWithAjax {
 		return ob_get_clean();
 	}
 
-	public static function new_user_notification($user_login, $password, $user_email, $blogname, $message = false ){
+	public static function new_user_notification($user_login, $password, $user_email, $blogname, $message = false, $subject = false, $mixHeaders = '' ){
 		//Copied out of /wp-includes/pluggable.php
 		if (!$message) {
       $message = self::$data['notification_message'];
@@ -565,13 +565,15 @@ class LoginWithAjax {
 		$message = str_replace('%PASSWORD%', $password, $message);
 		$message = str_replace('%EMAIL%', $user_email, $message);
 		$message = str_replace('%BLOGNAME%', $blogname, $message);
-		$message = str_replace('%BLOGURL%', get_bloginfo('wpurl'), $message);
+		$message = str_replace('%BLOGURL%', home_url(), $message);
 
-		$subject = self::$data['notification_subject'];
+		if (!$subject) {
+      $subject = self::$data['notification_subject'];
+		}
 		$subject = str_replace('%BLOGNAME%', $blogname, $subject);
-		$subject = str_replace('%BLOGURL%', get_bloginfo('wpurl'), $subject);
+		$subject = str_replace('%BLOGURL%', home_url(), $subject);
 
-		wp_mail($user_email, $subject, $message);
+		wp_mail($user_email, $subject, $message, $mixHeaders);
 	}
 
 	/*

@@ -83,6 +83,7 @@ class FLORP{
       'strUserApprovedMessage'                    => '<p>Vaša registrácia bola schválená!</p>
 <p><a href="{profile_url}">Prihláste sa</a> emailovou adresou a heslom, ktoré ste zadali pri registrácii.</p>
 <p>Váš SalsaRueda.Dance team</p>',
+      'strUserApprovedSubject'                    => 'Vaša registrácia na %BLOGURL% bola schválená',
       'strBeforeLoginFormHtmlMain'                => '',
       'strBeforeLoginFormHtmlFlashmob'            => '',
       'strGoogleMapKey'                           => 'AIzaSyC_g9bY9qgW7mA0L1EupZ4SDYrBQWWi-V0',
@@ -112,6 +113,7 @@ class FLORP{
       'florp_profile_form_page_id_flashmob'       => 'iProfileFormPageIDFlashmob',
       'florp_pending_user_page_content_html'      => 'strPendingUserPageContentHTML',
       'florp_user_approved_message'               => 'strUserApprovedMessage',
+      'florp_user_approved_subject'               => 'strUserApprovedSubject',
       'florp_approve_users_automatically'         => 'bApproveUsersAutomatically',
       'florp_before_login_form_html_main'         => 'strBeforeLoginFormHtmlMain',
       'florp_before_login_form_html_flashmob'     => 'strBeforeLoginFormHtmlFlashmob',
@@ -152,6 +154,7 @@ class FLORP{
         'bApproveUsersAutomatically',
         'strPendingUserPageContentHTML',
         'strUserApprovedMessage',
+        'strUserApprovedSubject',
         'strBeforeLoginFormHtmlMain',
         'strGoogleMapKey',
         'strFbAppID',
@@ -2101,14 +2104,14 @@ class FLORP{
         '%%useMapImageChecked%%',
         '%%optionsYears%%', '%%optionsMonths%%', '%%optionsDays%%', '%%optionsHours%%', '%%optionsMinutes%%',
         '%%approveUsersAutomaticallyChecked%%', '%%wpEditorPendingUserPageContentHTML%%', '%%wpEditorUserApprovedMessage%%',
-        '%%strGoogleMapKey%%', '%%strFbAppID%%', '%%strRegistrationSuccessfulMessage%%', '%%strLoginSuccessfulMessage%%' ),
+        '%%strGoogleMapKey%%', '%%strFbAppID%%', '%%strRegistrationSuccessfulMessage%%', '%%strLoginSuccessfulMessage%%', '%%strUserApprovedSubject%%' ),
       array( $aBooleanOptionsChecked['bLoadMapsAsync'],
         $aBooleanOptionsChecked['bLoadMapsLazy'],
         $aBooleanOptionsChecked['bLoadVideosLazy'],
         $aBooleanOptionsChecked['bUseMapImage'],
         $aNumOptions['optionsYears'], $optionsMonths, $aNumOptions['optionsDays'], $aNumOptions['optionsHours'], $aNumOptions['optionsMinutes'],
         $aBooleanOptionsChecked['bApproveUsersAutomatically'], $strWPEditorPendingUserPageContentHTML, $strWPEditorUserApprovedMessage,
-        $this->aOptions['strGoogleMapKey'], $this->aOptions['strFbAppID'], $this->aOptions['strRegistrationSuccessfulMessage'], $this->aOptions['strLoginSuccessfulMessage'] ),
+        $this->aOptions['strGoogleMapKey'], $this->aOptions['strFbAppID'], $this->aOptions['strRegistrationSuccessfulMessage'], $this->aOptions['strLoginSuccessfulMessage'], $this->aOptions['strUserApprovedSubject'] ),
       '
             <tr style="width: 98%; padding:  5px 1%;">
               <th colspan="2"><h3>Spoločné nastavenia</h3></th>
@@ -2182,6 +2185,14 @@ class FLORP{
               </th>
               <td>
                 %%wpEditorPendingUserPageContentHTML%%
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                Predmet správy poslanej užívateľom po schválení
+              </th>
+              <td>
+                <input id="florp_user_approved_subject" name="florp_user_approved_subject" type="text" value="%%strUserApprovedSubject%%" style="width: 100%;" />
               </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
@@ -2723,17 +2734,17 @@ class FLORP{
       return;
     }
 
+    $strBlogname = wp_specialchars_decode(get_option('blogname'), ENT_QUOTES);
+    $oUser = get_user_by( 'id', $iUserID );
     // User approval notification to approved user //
-    if (strlen(trim($this->strWPEditorUserApprovedMessage)) > 0) {
+    if (strlen(trim($this->strUserApprovedMessage)) > 0) {
       $strProfilePageUrl = '';
       if ( $this->iProfileFormPageIDMain > 0 ) {
         $strProfilePageUrl = get_permalink( $this->iProfileFormPageIDMain );
       }
-      $strMessageContent = str_replace( '{profile_url}', $strProfilePageUrl, $this->strWPEditorUserApprovedMessage );
-
-      $oUser = get_user_by( 'id', $iUserID );
-      $strBlogname = wp_specialchars_decode(get_option('blogname'), ENT_QUOTES);
-      LoginWithAjax::new_user_notification( $oUser->user_email, '', $oUser->user_email, $strBlogname, $strMessageContent );
+      $strMessageContent = str_replace( '{profile_url}', $strProfilePageUrl, $this->strUserApprovedMessage );
+      $aHeaders = array('Content-Type: text/html; charset=UTF-8');
+      LoginWithAjax::new_user_notification( $oUser->user_email, '', $oUser->user_email, $strBlogname, $strMessageContent, $this->aOptions['strUserApprovedSubject'], $aHeaders );
     }
 
     // User approval notification to admins //
