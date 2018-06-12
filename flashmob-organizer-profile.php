@@ -90,6 +90,7 @@ class FLORP{
       'strFbAppID'                                => '768253436664320',
       'strRegistrationSuccessfulMessage'          => "Prihlasujeme Vás... Prosíme, počkajte, kým sa stránka znovu načíta.",
       'strLoginSuccessfulMessage'                 => "Prihlásenie prebehlo úspešne, prosíme, počkajte, kým sa stránka znovu načíta.",
+      'bPreventDirectMediaDownloads'              => false,
     );
     $this->aOptionFormKeys = array(
       'florp_reload_after_ok_submission_main'     => 'bReloadAfterSuccessfulSubmissionMain',
@@ -121,6 +122,7 @@ class FLORP{
       'florp_fb_app_id'                           => 'strFbAppID',
       'florp_registration_successful_message'     => 'strRegistrationSuccessfulMessage',
       'florp_login_successful_message'            => 'strLoginSuccessfulMessage',
+      'florp_prevent_direct_media_downloads'      => 'bPreventDirectMediaDownloads',
     );
     $aDeprecatedKeys = array(
       'iCurrentFlashmobYear',
@@ -133,6 +135,7 @@ class FLORP{
       'bReloadAfterSuccessfulSubmissionMain', 'bReloadAfterSuccessfulSubmissionFlashmob',
       'bLoadMapsAsync', 'bLoadMapsLazy', 'bLoadVideosLazy', 'bUseMapImage',
       'bApproveUsersAutomatically',
+      'bPreventDirectMediaDownloads',
     );
     $this->aOptionKeysByBlog = array(
       'main'      => array(
@@ -160,6 +163,7 @@ class FLORP{
         'strFbAppID',
         'strRegistrationSuccessfulMessage',
         'strLoginSuccessfulMessage',
+        'bPreventDirectMediaDownloads',
       ),
       'flashmob'  => array(
         'iFlashmobBlogID',
@@ -641,26 +645,152 @@ class FLORP{
     }
   }
 
+  private function get_admin_notices( $strType ) {
+    $aNotices = array();
+    switch ($strType) {
+      case 'htaccess_remove_failed':
+        $aNotices[] = array( 'warning' => 'Could not re-enable media files download: could not remove HTACCESS file.');
+        break;
+      case 'htaccess_revert_failed':
+        $aNotices[] = array( 'warning' => 'Could not re-enable media files download: could not rename old HTACCESS file to <code>.htaccess</code>.');
+        break;
+      case 'htaccess_rename_failed':
+        $aNotices[] = array( 'warning' => 'Could not prevent media files download: could not rename HTACCESS file.');
+        break;
+      case 'htaccess_save_failed':
+        $aNotices[] = array( 'warning' => 'Could not prevent media files download: could not save HTACCESS file.');
+        break;
+      case 'florp_devel_is_on':
+        $aNotices[] = array( 'warning' => 'FLORP_DEVEL constant is on. Contact your site admin if you think this is not right!' );
+        if (defined('FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION') && FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION === true) {
+          $aNotices[] = array( 'warning' => 'Flashmob organizer archivation is off!' );
+        }
+        break;
+      case 'lwa_is_active':
+        $aNotices[] = array( 'error' => 'Nepodarilo sa automaticky deaktivovať plugin "Login With Ajax". Prosíme, spravte tak pre najlepšie fungovanie pluginu "Profil organizátora SVK flashmobu".' );
+        break;
+    }
+
+    $strNotices = "";
+    foreach ($aNotices as $aOneNotice) {
+      foreach ($aOneNotice as $strNoticeType => $strNoticeText) {
+        $strNotices .= '<div class="notice notice-'.$strNoticeType.'"><p>'.$strNoticeText.'</p></div>'.PHP_EOL;
+      }
+    }
+    return $strNotices;
+  }
+
+  public function preventDirectMediaDownloads() {
+    if (!current_user_can('administrator') || !is_admin()) {
+      return;
+    }
+
+    $strHtaccessPath = WP_CONTENT_DIR . "/.htaccess";
+    if (!$this->aOptions['bPreventDirectMediaDownloads']) {
+      if (file_exists($strHtaccessPath)) {
+        $bRes = unlink( $strHtaccessPath );
+        if (!$bRes || file_exists($strHtaccessPath)) {
+          // Show error message //
+          add_action( 'admin_notices', array( $this, 'action__admin_notices__htaccess_remove_failed' ));
+          return;
+        }
+        foreach (scandir(WP_CONTENT_DIR, SCANDIR_SORT_DESCENDING) as $strFileOrDirName) {
+          if (strpos($strFileOrDirName, '.htaccess.old-')) {
+            $bRes = rename( WP_CONTENT_DIR.'/'.$strFileOrDirName, $strHtaccessPath );
+            if (!$bRes) {
+              // Show error message
+              add_action( 'admin_notices', array( $this, 'action__admin_notices__htaccess_revert_failed' ));
+              return;
+            }
+            break;
+          }
+        }
+      }
+      return;
+    }
+
+    $strComment = '# FLORP: Prevent direct download of media files';
+    if (file_exists($strHtaccessPath)) {
+      $strContents = file_get_contents( $strHtaccessPath );
+      if (false !== strpos( $strContents, $strComment )) {
+        // OK //
+        return;
+      } else {
+        $bRes = rename( $strHtaccessPath, $strHtaccessPath.'.old-'.date('Ymd-His'));
+        if (!$bRes) {
+          // Show error message
+          add_action( 'admin_notices', array( $this, 'action__admin_notices__htaccess_rename_failed' ));
+          return;
+        }
+      }
+    }
+
+    $aMediaDlPreventionRuleLines = array(
+      "{$strComment}",
+      "<IfModule mod_rewrite.c>",
+      "  RewriteEngine On",
+      "  RewriteCond %{REQUEST_URI} \.(mp4|mp3|avi)$ [NC]",
+    );
+    $aSites = wp_get_sites();
+    $strProtocol = is_ssl() ? 'https' : 'http';
+    foreach ( $aSites as $i => $aSite ) {
+      if ($aSite['public'] != 1 || $aSite['deleted'] == 1 || $aSite['archived'] == 1) {
+        continue;
+      }
+      $aMediaDlPreventionRuleLines[] = "  RewriteCond %{HTTP_REFERER} !^{$strProtocol}://{$aSite['domain']}$ [NC]";
+      $aMediaDlPreventionRuleLines[] = "  RewriteCond %{HTTP_REFERER} !^{$strProtocol}://{$aSite['domain']}/.*$ [NC]";
+    }
+    $aMediaDlPreventionRuleLines = array_merge($aMediaDlPreventionRuleLines, array(
+      "  RewriteRule ^.* - [F,L]",
+      "</IfModule>",
+    ));
+    $strMediaDlPreventionRules = implode( PHP_EOL, $aMediaDlPreventionRuleLines );
+
+    $bRes = file_put_contents( $strHtaccessPath, $strMediaDlPreventionRules );
+    if (false === $bRes || !file_exists($strHtaccessPath)) {
+      // Show error message
+      add_action( 'admin_notices', array( $this, 'action__admin_notices__htaccess_save_failed' ));
+      return;
+    }
+
+    return;
+  }
+
   public function action__plugins_loaded() {
     $this->run_upgrades();
     $this->set_variables_per_subsite();
 
+    $this->preventDirectMediaDownloads();
+
+    // Add and/or clean up user roles //
     if ($this->isMainBlog) {
       if (!get_role($this->strUserRolePending)) {
         add_role($this->strUserRolePending, "Čaká na schválenie", array());
       }
+    } elseif (get_role($this->strUserRolePending)) {
+      $aPendingArgs = array(
+        'blog_id' => get_current_blog_id(),
+        'role'    => $this->strUserRolePending
+      );
+      $aPendingUsers = get_users( $aPendingArgs );
+      if (empty($aPendingUsers)) {
+        remove_role($this->strUserRolePending);
+      }
     }
 
-    $strLwaBasename = 'login-with-ajax/login-with-ajax.php';
-    if (is_plugin_active( $strLwaBasename )) {
-      deactivate_plugins( $strLwaBasename, true );
-    }
-    if (is_plugin_active( $strLwaBasename ) || defined('LOGIN_WITH_AJAX_VERSION')) {
-      if (is_admin() && current_user_can( 'activate_plugins' )) {
-        add_action( 'admin_notices', array( $this, 'action__admin_notices__lwa_is_active' ));
+    // Deactivate and include LWA on main blog //
+    if ($this->isMainBlog) {
+      $strLwaBasename = 'login-with-ajax/login-with-ajax.php';
+      if (is_plugin_active( $strLwaBasename )) {
+        deactivate_plugins( $strLwaBasename, true );
       }
-    } else {
-      require_once __DIR__ . '/lwa/login-with-ajax.php';
+      if (is_plugin_active( $strLwaBasename ) || defined('LOGIN_WITH_AJAX_VERSION')) {
+        if (is_admin() && current_user_can( 'activate_plugins' )) {
+          add_action( 'admin_notices', array( $this, 'action__admin_notices__lwa_is_active' ));
+        }
+      } else {
+        require_once __DIR__ . '/lwa/login-with-ajax.php';
+      }
     }
   }
 
@@ -671,14 +801,39 @@ class FLORP{
   }
 
   public function action__admin_notices__lwa_is_active() {
-    echo '<div class="notice notice-error"><p>Nepodarilo sa automaticky deaktivovať plugin "Login With Ajax". Prosíme, spravte tak pre najlepšie fungovanie pluginu "Profil organizátora SVK flashmobu".</p></div>';
+    echo $this->get_admin_notices('lwa_is_active');
   }
 
   public function action__admin_notices__florp_devel_is_on() {
-    echo '<div class="notice notice-warning"><p>FLORP_DEVEL constant is on. Contact your site admin if you think this is not right!</p></div>';
-    if (defined('FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION') && FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION === true) {
-      echo '<div class="notice notice-warning"><p>Flashmob organizer archivation is off!</p></div>';
+    echo $this->get_admin_notices('florp_devel_is_on');
+  }
+
+  public function action__admin_notices__htaccess_remove_failed() {
+    if (!current_user_can('administrator') || !is_admin()) {
+      return;
     }
+    echo $this->get_admin_notices('htaccess_remove_failed');
+  }
+
+  public function action__admin_notices__htaccess_rename_failed() {
+    if (!current_user_can('administrator') || !is_admin()) {
+      return;
+    }
+    echo $this->get_admin_notices('htaccess_rename_failed');
+  }
+
+  public function action__admin_notices__htaccess_revert_failed() {
+    if (!current_user_can('administrator') || !is_admin()) {
+      return;
+    }
+    echo $this->get_admin_notices('htaccess_revert_failed');
+  }
+
+  public function action__admin_notices__htaccess_save_failed() {
+    if (!current_user_can('administrator') || !is_admin()) {
+      return;
+    }
+    echo $this->get_admin_notices('htaccess_save_failed');
   }
 
   public function filter__ninja_forms_preview_display_field( $aField ) {
@@ -752,13 +907,14 @@ class FLORP{
 
       if ($bLoggedIn) {
         $iUserID = get_current_user_id();
-        $aSubscriberTypesOfUser = get_user_meta( $iUserID, 'subscriber_type', true );
-        $aPreferencesOfUser = get_user_meta( $iUserID, 'preferences', true );
+        $aSubscriberTypesOfUser = (array) get_user_meta( $iUserID, 'subscriber_type', true );
+        $aPreferencesOfUser = (array) get_user_meta( $iUserID, 'preferences', true );
+
         // echo "<pre>" .var_export($aSubscriberTypesOfUser, true). "</pre>";
         if ('listcheckbox' === $aField['settings']['type'] && 'subscriber_type' === $aField['settings']['key']) {
           foreach ($aField['settings']['options'] as $iOptionKey => $aOption) {
             $strValue = $aOption['value'];
-            if (is_array($aSubscriberTypesOfUser) && in_array($strValue, $aSubscriberTypesOfUser)) {
+            if (in_array($strValue, $aSubscriberTypesOfUser)) {
               $aField['settings']['options'][$iOptionKey]['selected'] = 1;
             }
           }
@@ -766,7 +922,7 @@ class FLORP{
           // echo "<pre>" .var_export($aField, true). "</pre>";
           foreach ($aField['settings']['options'] as $iOptionKey => $aOption) {
             $strValue = $aOption['value'];
-            if (is_array($aPreferencesOfUser) && in_array($strValue, $aSubscriberTypesOfUser)) {
+            if (in_array($strValue, $aPreferencesOfUser)) {
               $aField['settings']['options'][$iOptionKey]['selected'] = 1;
             }
           }
@@ -811,8 +967,8 @@ class FLORP{
             }
           }
           // Go through prefereneces of user and leave field unhidden if matched //
-          foreach ($aPreferencesOfUser as $strSubscriberType) {
-            if (stripos($aField['settings']['container_class'], 'florp-preference-field_'.$strSubscriberType) !== false) {
+          foreach ($aPreferencesOfUser as $strPreference) {
+            if (stripos($aField['settings']['container_class'], 'florp-preference-field_'.$strPreference) !== false) {
               $bHide = false;
               break;
             }
@@ -907,7 +1063,7 @@ class FLORP{
     if (
           (($this->isMainBlog && $post->ID === $this->iProfileFormPageIDMain) || ($this->isFlashmobBlog && $post->ID === $this->iProfileFormPageIDFlashmob))
     ) {
-      if (is_user_logged_in()) {
+      if (is_user_logged_in() && $this->isMainBlog) {
         $oUser = wp_get_current_user();
         if ( in_array( $this->strUserRolePending, (array) $oUser->roles ) ) {
           return $this->strPendingUserPageContentHTML;
@@ -926,6 +1082,7 @@ class FLORP{
     }
 
     global $post;
+    $bUserLoggedIn = is_user_logged_in();
     $aNewSettingsByType = array();
     $iSize = 14;
     $aNewSettingsCommon = array(
@@ -937,16 +1094,18 @@ class FLORP{
     if ($this->iProfileFormPageIDMain > 0) {
       if (!is_object($post) || $post->post_type !== 'page' || $post->ID !== $this->iProfileFormPageIDMain) {
         $aNewSettingsByType['profile'] = array(
-          'text' => "Profil Rueda Lídra",
+          'text' => $bUserLoggedIn ? "Môj profil" : "Profil Rueda Lídra",
           'link' => get_permalink( $this->iProfileFormPageIDMain ),
           'el_class' => 'florp_profile_link_profile',
         );
       }
     }
 
-    if (is_user_logged_in()) {
+    if ($bUserLoggedIn) {
       if (is_object($post)) {
         $strRedir = get_permalink( $post->ID );
+      } elseif ($_SERVER['HTTP_HOST'] && $_SERVER['REQUEST_URI']) {
+        $strRedir = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://{$_SERVER['HTTP_HOST']}{$_SERVER['REQUEST_URI']}";
       } else {
         $strRedir = home_url();
       }
@@ -1017,25 +1176,28 @@ class FLORP{
   }
   
   public function main_blog_profile( $aAttributes = array() ) {
-    if (!$this->isMainBlog) {
+    if ($this->isMainBlog) {
+      $aDefaults = array(
+        'hide_info_box' => '1',
+        'registration' => '1',
+      );
+      if (is_array($aAttributes)) {
+        $aAttributes = array_merge( $aDefaults, $aAttributes );
+      } else {
+        $aAttributes = $aDefaults;
+      }
+      $strAttributes = '';
+      foreach ($aAttributes as $key => $val) {
+        $strAttributes .= " {$key}='{$val}'";
+      }
+      $strShortcodeOutput = do_shortcode( '[login-with-ajax'.$strAttributes.']' );
+      return '<div class="florp-profile-wrapper">'.$strShortcodeOutput.'</div>';
+    } elseif ($this->isFlashmobBlog) {
+      return '<div class="florp-profile-wrapper">'.$this->profile_form().'</div>';
+    } else {
       return '';
     }
 
-    $aDefaults = array(
-      'hide_info_box' => '1',
-      'registration' => '1',
-    );
-    if (is_array($aAttributes)) {
-      $aAttributes = array_merge( $aDefaults, $aAttributes );
-    } else {
-      $aAttributes = $aDefaults;
-    }
-    $strAttributes = '';
-    foreach ($aAttributes as $key => $val) {
-      $strAttributes .= " {$key}='{$val}'";
-    }
-    $strShortcodeOutput = do_shortcode( '[login-with-ajax'.$strAttributes.']' );
-    return '<div class="florp-profile-wrapper">'.$strShortcodeOutput.'</div>';
   }
 
   public function popup_anchor( $aAttributes ) {
@@ -1821,6 +1983,8 @@ class FLORP{
     }
 
     $strBeforeLoginFormHtmlMain = $this->get_wp_editor( $this->strBeforeLoginFormHtmlMain, 'florp_before_login_form_html_main' );
+    $strWPEditorPendingUserPageContentHTML = $this->get_wp_editor( $this->strPendingUserPageContentHTML, 'florp_pending_user_page_content_html' );
+    $strWPEditorUserApprovedMessage = $this->get_wp_editor( $this->strUserApprovedMessage, 'florp_user_approved_message' );
 
     return str_replace(
       array( '%%reloadCheckedMain%%',
@@ -1828,13 +1992,17 @@ class FLORP{
         '%%optionsPopupsMain%%',
         '%%optionsMainSite%%',
         '%%optionsPagesMain%%',
-        '%%wpEditorBeforeLoginFormHtmlMain%%' ),
+        '%%wpEditorBeforeLoginFormHtmlMain%%',
+        '%%approveUsersAutomaticallyChecked%%', '%%wpEditorPendingUserPageContentHTML%%', '%%wpEditorUserApprovedMessage%%',
+        '%%strRegistrationSuccessfulMessage%%', '%%strLoginSuccessfulMessage%%', '%%strUserApprovedSubject%%' ),
       array( $aBooleanOptionsChecked['bReloadAfterSuccessfulSubmissionMain'],
         $optionsNinjaFormsMain,
         $optionsPopupsMain,
         $optionsMainSite,
         $optionsPagesMain,
-        $strBeforeLoginFormHtmlMain ),
+        $strBeforeLoginFormHtmlMain,
+        $aBooleanOptionsChecked['bApproveUsersAutomatically'], $strWPEditorPendingUserPageContentHTML, $strWPEditorUserApprovedMessage,
+        $this->aOptions['strRegistrationSuccessfulMessage'], $this->aOptions['strLoginSuccessfulMessage'], $this->aOptions['strUserApprovedSubject'] ),
       '
             <tr style="width: 98%; padding:  5px 1%;">
               <th colspan="2"><h3>Hlavná stránka</h3></th>
@@ -1887,6 +2055,54 @@ class FLORP{
               </th>
               <td>
                 %%wpEditorBeforeLoginFormHtmlMain%%
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                Správa zobrazená po úspešnej registrácii (pred prihlásením)
+              </th>
+              <td>
+                <input id="florp_registration_successful_message" name="florp_registration_successful_message" type="text" value="%%strRegistrationSuccessfulMessage%%" style="width: 100%;" />
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                Správa zobrazená po úspešnom prihlásení
+              </th>
+              <td>
+                <input id="florp_login_successful_message" name="florp_login_successful_message" type="text" value="%%strLoginSuccessfulMessage%%" style="width: 100%;" />
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                <label for="florp_approve_users_automatically">Schváliť registrovaných používateľov automaticky?</label>
+              </th>
+              <td>
+                <input id="florp_approve_users_automatically" name="florp_approve_users_automatically" type="checkbox" %%approveUsersAutomaticallyChecked%% value="1"/>
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                Správa zobrazená prihláseným užívateľom, čakajúcim na schválenie
+              </th>
+              <td>
+                %%wpEditorPendingUserPageContentHTML%%
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                Predmet správy poslanej užívateľom po schválení
+              </th>
+              <td>
+                <input id="florp_user_approved_subject" name="florp_user_approved_subject" type="text" value="%%strUserApprovedSubject%%" style="width: 100%;" />
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                Správa poslaná užívateľom po schválení
+              </th>
+              <td>
+                %%wpEditorUserApprovedMessage%%
               </td>
             </tr>
       '
@@ -2094,24 +2310,19 @@ class FLORP{
     $iSeasonStartDay = $this->aOptions["iSeasonStartDay"];
     $iSeasonEndDay = $this->aOptions["iSeasonEndDay"];
 
-    $strWPEditorPendingUserPageContentHTML = $this->get_wp_editor( $this->strPendingUserPageContentHTML, 'florp_pending_user_page_content_html' );
-    $strWPEditorUserApprovedMessage = $this->get_wp_editor( $this->strUserApprovedMessage, 'florp_user_approved_message' );
-
     return str_replace(
       array( '%%loadMapsAsyncChecked%%',
         '%%loadMapsLazyChecked%%',
         '%%loadVideosLazyChecked%%',
         '%%useMapImageChecked%%',
         '%%optionsYears%%', '%%optionsMonths%%', '%%optionsDays%%', '%%optionsHours%%', '%%optionsMinutes%%',
-        '%%approveUsersAutomaticallyChecked%%', '%%wpEditorPendingUserPageContentHTML%%', '%%wpEditorUserApprovedMessage%%',
-        '%%strGoogleMapKey%%', '%%strFbAppID%%', '%%strRegistrationSuccessfulMessage%%', '%%strLoginSuccessfulMessage%%', '%%strUserApprovedSubject%%' ),
+        '%%strGoogleMapKey%%', '%%strFbAppID%%', '%%preventDirectMediaDownloadsChecked%%' ),
       array( $aBooleanOptionsChecked['bLoadMapsAsync'],
         $aBooleanOptionsChecked['bLoadMapsLazy'],
         $aBooleanOptionsChecked['bLoadVideosLazy'],
         $aBooleanOptionsChecked['bUseMapImage'],
         $aNumOptions['optionsYears'], $optionsMonths, $aNumOptions['optionsDays'], $aNumOptions['optionsHours'], $aNumOptions['optionsMinutes'],
-        $aBooleanOptionsChecked['bApproveUsersAutomatically'], $strWPEditorPendingUserPageContentHTML, $strWPEditorUserApprovedMessage,
-        $this->aOptions['strGoogleMapKey'], $this->aOptions['strFbAppID'], $this->aOptions['strRegistrationSuccessfulMessage'], $this->aOptions['strLoginSuccessfulMessage'], $this->aOptions['strUserApprovedSubject'] ),
+        $this->aOptions['strGoogleMapKey'], $this->aOptions['strFbAppID'], $aBooleanOptionsChecked['bPreventDirectMediaDownloads'] ),
       '
             <tr style="width: 98%; padding:  5px 1%;">
               <th colspan="2"><h3>Spoločné nastavenia</h3></th>
@@ -2157,54 +2368,6 @@ class FLORP{
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;">
-                Správa zobrazená po úspešnej registrácii (pred prihlásením)
-              </th>
-              <td>
-                <input id="florp_registration_successful_message" name="florp_registration_successful_message" type="text" value="%%strRegistrationSuccessfulMessage%%" style="width: 100%;" />
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                Správa zobrazená po úspešnom prihlásení
-              </th>
-              <td>
-                <input id="florp_login_successful_message" name="florp_login_successful_message" type="text" value="%%strLoginSuccessfulMessage%%" style="width: 100%;" />
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                <label for="florp_approve_users_automatically">Schváliť registrovaných používateľov automaticky?</label>
-              </th>
-              <td>
-                <input id="florp_approve_users_automatically" name="florp_approve_users_automatically" type="checkbox" %%approveUsersAutomaticallyChecked%% value="1"/>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                Správa zobrazená prihláseným užívateľom, čakajúcim na schválenie
-              </th>
-              <td>
-                %%wpEditorPendingUserPageContentHTML%%
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                Predmet správy poslanej užívateľom po schválení
-              </th>
-              <td>
-                <input id="florp_user_approved_subject" name="florp_user_approved_subject" type="text" value="%%strUserApprovedSubject%%" style="width: 100%;" />
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                Správa poslaná užívateľom po schválení
-              </th>
-              <td>
-                %%wpEditorUserApprovedMessage%%
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
                 Google Maps Key
               </th>
               <td>
@@ -2217,6 +2380,14 @@ class FLORP{
               </th>
               <td>
                 <input id="florp_fb_app_id" name="florp_fb_app_id" type="text" value="%%strFbAppID%%" style="width: 100%;" />
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                <label for="florp_prevent_direct_media_downloads">Zakázať priame stiahnutie mediálnych súborov (pomocou <code>.htaccess</code>)?</label>
+              </th>
+              <td>
+                <input id="florp_prevent_direct_media_downloads" name="florp_prevent_direct_media_downloads" type="checkbox" %%preventDirectMediaDownloadsChecked%% value="1"/>
               </td>
             </tr>
       '
@@ -2279,6 +2450,8 @@ class FLORP{
     $this->set_variables();
 
     $this->export_ninja_form();
+
+    $this->preventDirectMediaDownloads();
 
     return true;
   }
@@ -2677,7 +2850,7 @@ class FLORP{
         if (is_multisite()) {
           add_user_to_blog( $this->iMainBlogID, $iUserID, $this->get_registration_user_role() );
         }
-        $strBlogname = wp_specialchars_decode(get_option('blogname'), ENT_QUOTES);
+        $strBlogname = trim(wp_specialchars_decode(get_option('blogname'), ENT_QUOTES));
         LoginWithAjax::new_user_notification( $strUsername, $aFieldData['user_pass'], $aFieldData['user_email'], $strBlogname );
 
         // New user notification to admins //
