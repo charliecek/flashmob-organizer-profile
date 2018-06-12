@@ -65,6 +65,7 @@ class FLORP{
       'iFlashmobMinute'                           => 0,
       'iFlashmobBlogID'                           => 6,
       'iMainBlogID'                               => 1,
+      'iNewsletterBlogID'                         => 0,
       'iProfileFormNinjaFormIDMain'               => 0,
       'iProfileFormPopupIDMain'                   => 0,
       'iProfileFormNinjaFormIDFlashmob'           => 0,
@@ -91,6 +92,9 @@ class FLORP{
       'strRegistrationSuccessfulMessage'          => "Prihlasujeme Vás... Prosíme, počkajte, kým sa stránka znovu načíta.",
       'strLoginSuccessfulMessage'                 => "Prihlásenie prebehlo úspešne, prosíme, počkajte, kým sa stránka znovu načíta.",
       'bPreventDirectMediaDownloads'              => false,
+      'strNewsletterAPIKey'                       => '',
+      'strNewsletterListsMain'                    => '',
+      'strNewsletterListsFlashmob'                => '',
     );
     $this->aOptionFormKeys = array(
       'florp_reload_after_ok_submission_main'     => 'bReloadAfterSuccessfulSubmissionMain',
@@ -102,6 +106,7 @@ class FLORP{
       'florp_flashmob_minute'                     => 'iFlashmobMinute',
       'florp_flashmob_blog_id'                    => 'iFlashmobBlogID',
       'florp_main_blog_id'                        => 'iMainBlogID',
+      'florp_newsletter_blog_id'                  => 'iNewsletterBlogID',
       'florp_profile_form_ninja_form_id_main'     => 'iProfileFormNinjaFormIDMain',
       'florp_profile_form_popup_id_main'          => 'iProfileFormPopupIDMain',
       'florp_profile_form_ninja_form_id_flashmob' => 'iProfileFormNinjaFormIDFlashmob',
@@ -123,6 +128,9 @@ class FLORP{
       'florp_registration_successful_message'     => 'strRegistrationSuccessfulMessage',
       'florp_login_successful_message'            => 'strLoginSuccessfulMessage',
       'florp_prevent_direct_media_downloads'      => 'bPreventDirectMediaDownloads',
+      'florp_newsletter_api_key'                  => 'strNewsletterAPIKey',
+      'florp_newsletter_lists_main'               => 'strNewsletterListsMain',
+      'florp_newsletter_lists_flashmob'           => 'strNewsletterListsFlashmob',
     );
     $aDeprecatedKeys = array(
       'iCurrentFlashmobYear',
@@ -164,6 +172,8 @@ class FLORP{
         'strRegistrationSuccessfulMessage',
         'strLoginSuccessfulMessage',
         'bPreventDirectMediaDownloads',
+        'strNewsletterAPIKey',
+        'strNewsletterListsMain',
       ),
       'flashmob'  => array(
         'iFlashmobBlogID',
@@ -173,6 +183,7 @@ class FLORP{
         'bUseMapImage',
         'iProfileFormPageIDFlashmob',
         'strBeforeLoginFormHtmlFlashmob',
+        'strNewsletterListsFlashmob',
       ),
     );
 
@@ -680,7 +691,7 @@ class FLORP{
     return $strNotices;
   }
 
-  public function preventDirectMediaDownloads() {
+  private function prevent_direct_media_downloads() {
     if (!current_user_can('administrator') || !is_admin()) {
       return;
     }
@@ -756,11 +767,91 @@ class FLORP{
     return;
   }
 
+  private function execute_newsletter_rest_api_call( $strAction = '', $aData = array() ) {
+    if ($this->aOptions['iNewsletterBlogID'] === 0) {
+      return array( 'error' => "Newsletter blog ID is not set!" );
+    }
+
+    $strURL = get_home_url( $this->aOptions['iNewsletterBlogID'], '/wp-json/newsletter/v1/'.$strAction );
+    if ($this->isMainBlog) {
+      $strLists = $this->aOptions['strNewsletterListsMain'];
+    } elseif ($this->isFlashmobBlog) {
+      $strLists = $this->aOptions['strNewsletterListsFlashmob'];
+    } else {
+      return array( 'error' => "Not on either of main or flashmob blogs!" );
+    }
+
+    if (!isset($aData['email'])) {
+      return array( 'error' => "Email is missing!" );
+    }
+    if (strlen(trim($this->aOptions['strNewsletterAPIKey'])) > 0) {
+      $aData = array_merge( $aData, array(
+        'api_key' => trim($this->aOptions['strNewsletterAPIKey']),
+      ));
+    }
+
+    $aRequestArgs = array(
+      'method' => 'POST',
+      'timeout' => 15,
+//       'redirection' => 5,
+//       'httpversion' => '1.0',
+//       'blocking' => true,
+      'headers' => array(
+        "content-type" => "application/json",
+      ),
+    );
+
+    switch ($strAction) {
+      case 'subscribe':
+        if (strlen(trim($strLists)) > 0) {
+          $aData = array_merge( $aData, array(
+            'lists' => array_map( "trim", explode( ',', $strLists ) ),
+          ));
+        }
+        $aRequestArgs['body'] = json_encode($aData);
+        break;
+      case 'unsubscribe':
+      case 'subscribers/delete':
+        $aDelData = array(
+          'email'   => $aData['email'],
+          'api_key' => $aData['api_key'],
+        );
+        if (isset($aData['send_emails'])) {
+          $aDelData['send_emails'] = $aData['send_emails'];
+        }
+        $aRequestArgs['body'] = json_encode( $aDelData );
+        break;
+      default:
+        return array( 'error' => "Invalid action!" );
+    }
+
+    // $ curl -X POST http://<your-site>/wp-json/newsletter/v1/subscribe -d '{"email":"test@example.com", "name":"My name", "gender":"f"}'
+    $mixResponse = wp_remote_post( $strURL, $aRequestArgs );
+
+    if ( is_wp_error( $mixResponse ) ) {
+      return array( 'error' => $mixResponse->get_error_message(), 'request' => $aRequestArgs );
+    } else {
+      $strResponseBody = $mixResponse['body'];
+      $aResponseBody = json_decode( $strResponseBody, true );
+      $aResponse = $mixResponse['response'];
+      if ($aResponse['code'] < 400 && $aResponseBody && (is_array($aResponseBody) || $aResponseBody === 'OK')) {
+        return array( 'ok' => $aResponseBody, 'action' => $strAction, 'request' => $aRequestArgs, 'full-response' => $mixResponse );
+      } else {
+        if ($strAction === 'subscribe' && $aResponseBody && is_array($aResponseBody) && $aResponseBody['message'] === "Email address already exists") {
+          return array( 'body' => $aResponseBody, 'action' => $strAction, 'request' => $aRequestArgs, 'issue' => 'email-exists', 'full-response' => $mixResponse );
+        } elseif (($strAction === 'unsubscribe' || $strAction === 'subscribers/delete') && $aResponse['code'] === 404) {
+          return array( 'ok' => $aResponseBody, 'action' => $strAction, 'request' => $aRequestArgs, 'full-response' => $mixResponse );
+        }
+        return array( 'body' => $aResponseBody, 'action' => $strAction, 'request' => $aRequestArgs, 'full-response' => $mixResponse );
+      }
+    }
+  }
+
   public function action__plugins_loaded() {
     $this->run_upgrades();
     $this->set_variables_per_subsite();
 
-    $this->preventDirectMediaDownloads();
+    $this->prevent_direct_media_downloads();
 
     // Add and/or clean up user roles //
     if ($this->isMainBlog) {
@@ -1824,8 +1915,12 @@ class FLORP{
       $this->save_option_page_options($_POST);
     }
 
+    $optionNone = '<option value="0">Žiadny</option>';
+    $optionNoneF = '<option value="0">Žiadna</option>';
+
     $optionsFlashmobSite = '';
     $optionsMainSite = '';
+    $optionsNewsletterSite = $optionNoneF;
     $aSites = wp_get_sites();
     $strMainBlogDomain = '';
     $strFlashmobBlogDomain = '';
@@ -1847,8 +1942,14 @@ class FLORP{
       } else {
         $strSelectedMainSite = '';
       }
+      if ($this->aOptions['iNewsletterBlogID'] == $iID) {
+        $strSelectedNewsletterSite = 'selected="selected"';
+      } else {
+        $strSelectedNewsletterSite = '';
+      }
       $optionsFlashmobSite .= '<option value="'.$iID.'" '.$strSelectedFlashmobSite.'>'.$strTitle.'</option>';
       $optionsMainSite .= '<option value="'.$iID.'" '.$strSelectedMainSite.'>'.$strTitle.'</option>';
+      $optionsNewsletterSite .= '<option value="'.$iID.'" '.$strSelectedNewsletterSite.'>'.$strTitle.'</option>';
     }
 
     if (!$this->isMainBlog && strlen($strMainBlogDomain) > 0) {
@@ -1880,9 +1981,6 @@ class FLORP{
       }
     }
 
-    $optionNone = '<option value="0">Žiadny</option>';
-    $optionNoneF = '<option value="0">Žiadna</option>';
-
     $aVariablesMain = array(
       'optionsMainSite' => $optionsMainSite,
       'optionNone' => $optionNone,
@@ -1897,6 +1995,7 @@ class FLORP{
     );
     $aVariablesCommon = array(
       'aBooleanOptionsChecked' => $aBooleanOptionsChecked,
+      'optionsNewsletterSite' => $optionsNewsletterSite,
     );
 
     echo str_replace(
@@ -1994,7 +2093,7 @@ class FLORP{
         '%%optionsPagesMain%%',
         '%%wpEditorBeforeLoginFormHtmlMain%%',
         '%%approveUsersAutomaticallyChecked%%', '%%wpEditorPendingUserPageContentHTML%%', '%%wpEditorUserApprovedMessage%%',
-        '%%strRegistrationSuccessfulMessage%%', '%%strLoginSuccessfulMessage%%', '%%strUserApprovedSubject%%' ),
+        '%%strRegistrationSuccessfulMessage%%', '%%strLoginSuccessfulMessage%%', '%%strUserApprovedSubject%%', '%%strNewsletterListsMain%%' ),
       array( $aBooleanOptionsChecked['bReloadAfterSuccessfulSubmissionMain'],
         $optionsNinjaFormsMain,
         $optionsPopupsMain,
@@ -2002,7 +2101,7 @@ class FLORP{
         $optionsPagesMain,
         $strBeforeLoginFormHtmlMain,
         $aBooleanOptionsChecked['bApproveUsersAutomatically'], $strWPEditorPendingUserPageContentHTML, $strWPEditorUserApprovedMessage,
-        $this->aOptions['strRegistrationSuccessfulMessage'], $this->aOptions['strLoginSuccessfulMessage'], $this->aOptions['strUserApprovedSubject'] ),
+        $this->aOptions['strRegistrationSuccessfulMessage'], $this->aOptions['strLoginSuccessfulMessage'], $this->aOptions['strUserApprovedSubject'], $this->aOptions['strNewsletterListsMain'] ),
       '
             <tr style="width: 98%; padding:  5px 1%;">
               <th colspan="2"><h3>Hlavná stránka</h3></th>
@@ -2105,6 +2204,14 @@ class FLORP{
                 %%wpEditorUserApprovedMessage%%
               </td>
             </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                Newsletter zoznamy (oddelené čiarkou)
+              </th>
+              <td>
+                <input id="florp_newsletter_lists_main" name="florp_newsletter_lists_main" type="text" value="%%strNewsletterListsMain%%" style="width: 100%;" />
+              </td>
+            </tr>
       '
     );
   }
@@ -2181,13 +2288,15 @@ class FLORP{
         '%%optionsPopupsFlashmob%%',
         '%%optionsFlashmobSite%%',
         '%%optionsPagesFlashmob%%',
-        '%%wpEditorBeforeLoginFormHtmlFlashmob%%' ),
+        '%%wpEditorBeforeLoginFormHtmlFlashmob%%',
+        '%%strNewsletterListsFlashmob%%' ),
       array( $aBooleanOptionsChecked['bReloadAfterSuccessfulSubmissionFlashmob'],
         $optionsNinjaFormsFlashmob,
         $optionsPopupsFlashmob,
         $optionsFlashmobSite,
         $optionsPagesFlashmob,
-        $strBeforeLoginFormHtmlFlashmob ),
+        $strBeforeLoginFormHtmlFlashmob,
+        $this->aOptions['strNewsletterListsFlashmob'] ),
       '
             <tr style="width: 98%; padding:  5px 1%;">
               <th colspan="2"><h3>Flashmobová podstránka</h3></th>
@@ -2248,6 +2357,14 @@ class FLORP{
               </th>
               <td>
                 %%wpEditorBeforeLoginFormHtmlFlashmob%%
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                Newsletter zoznamy (oddelené čiarkou)
+              </th>
+              <td>
+                <input id="florp_newsletter_lists_flashmob" name="florp_newsletter_lists_flashmob" type="text" value="%%strNewsletterListsFlashmob%%" style="width: 100%;" />
               </td>
             </tr>
       '
@@ -2311,21 +2428,37 @@ class FLORP{
     $iSeasonEndDay = $this->aOptions["iSeasonEndDay"];
 
     return str_replace(
-      array( '%%loadMapsAsyncChecked%%',
+      array( '%%optionsNewsletterSite%%',
+        '%%loadMapsAsyncChecked%%',
         '%%loadMapsLazyChecked%%',
         '%%loadVideosLazyChecked%%',
         '%%useMapImageChecked%%',
         '%%optionsYears%%', '%%optionsMonths%%', '%%optionsDays%%', '%%optionsHours%%', '%%optionsMinutes%%',
-        '%%strGoogleMapKey%%', '%%strFbAppID%%', '%%preventDirectMediaDownloadsChecked%%' ),
-      array( $aBooleanOptionsChecked['bLoadMapsAsync'],
+        '%%strGoogleMapKey%%', '%%strFbAppID%%', '%%preventDirectMediaDownloadsChecked%%', '%%strNewsletterAPIKey%%' ),
+      array( $optionsNewsletterSite,
+        $aBooleanOptionsChecked['bLoadMapsAsync'],
         $aBooleanOptionsChecked['bLoadMapsLazy'],
         $aBooleanOptionsChecked['bLoadVideosLazy'],
         $aBooleanOptionsChecked['bUseMapImage'],
         $aNumOptions['optionsYears'], $optionsMonths, $aNumOptions['optionsDays'], $aNumOptions['optionsHours'], $aNumOptions['optionsMinutes'],
-        $this->aOptions['strGoogleMapKey'], $this->aOptions['strFbAppID'], $aBooleanOptionsChecked['bPreventDirectMediaDownloads'] ),
+        $this->aOptions['strGoogleMapKey'], $this->aOptions['strFbAppID'], $aBooleanOptionsChecked['bPreventDirectMediaDownloads'], $this->aOptions['strNewsletterAPIKey'] ),
       '
             <tr style="width: 98%; padding:  5px 1%;">
               <th colspan="2"><h3>Spoločné nastavenia</h3></th>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_newsletter_blog_id">Podstránka, ktorá obsahuje newsletter</label></th>
+              <td>
+                <select id="florp_newsletter_blog_id" name="florp_newsletter_blog_id" style="width: 100%;">%%optionsNewsletterSite%%</select>
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                Newsletter API kľúč
+              </th>
+              <td>
+                <input id="florp_newsletter_api_key" name="florp_newsletter_api_key" type="text" value="%%strNewsletterAPIKey%%" style="width: 100%;" />
+              </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_flashmob_year">Dátum a čas slovenského flashmobu</label></th>
@@ -2451,7 +2584,7 @@ class FLORP{
 
     $this->export_ninja_form();
 
-    $this->preventDirectMediaDownloads();
+    $this->prevent_direct_media_downloads();
 
     return true;
   }
@@ -2872,6 +3005,11 @@ class FLORP{
       }
     }
 
+    $strPreferencesKey = 'preferences';
+    $strNewsletterSubscribePreferenceKey = 'newsletter_subscribe';
+    $aPreferencesOfUser = (array) get_user_meta( $iUserID, $strPreferencesKey, true );
+    $bNewsletterSubscribeOld = in_array( $strNewsletterSubscribePreferenceKey, $aPreferencesOfUser );
+
     $aUserData = array();
     foreach ($aFormData["fields"] as $strKey => $aData) {
       $strFieldKey = $aData['key'];
@@ -2897,6 +3035,71 @@ class FLORP{
         } else {
           update_user_meta( $iUserID, $strKey, $mixValue );
         }
+      }
+
+      $aFiles = array( 'ok', 'error', 'ok2', 'error2', 'check' );
+      foreach ($aFiles as $strFile) {
+        $strPath = __DIR__ . "/kk-debug-after-submission-newsletter-rest-api-".$strFile.'.log';
+        if (file_exists( $strPath )) {
+          unlink($strPath);
+        }
+      }
+
+      if (isset($aMetaData[$strPreferencesKey])) {
+        $bNewsletterSubscribeNew = in_array( $strNewsletterSubscribePreferenceKey, (array) $aMetaData[$strPreferencesKey] );
+      } else {
+        $bNewsletterSubscribeNew = false;
+      }
+      if ($bNewsletterSubscribeNew !== $bNewsletterSubscribeOld) {
+        if ($bNewsletterSubscribeNew) {
+          $strAction = 'subscribe';
+          $aData = array(
+            'email'       => $aUserData['user_email'],
+            'name'        => $aUserData['first_name'],
+            'surname'     => $aUserData['last_name'],
+            'send_emails' => true,
+          );
+        } else {
+          $strAction = 'unsubscribe';
+          $aData = array(
+            'email' => $aUserData['user_email'],
+          );
+        }
+        $bResult = $this->execute_newsletter_rest_api_call( $strAction, $aData );
+        if ($strAction === 'subscribe' && !$bResult['ok'] && isset($bResult['issue']) && $bResult['issue'] === 'email-exists') {
+          $strAction2 = 'subscribers/delete';
+          $aData2 = array( 'email' => $aUserData['user_email'] );
+          $bResult2 = $this->execute_newsletter_rest_api_call( $strAction2, $aData2 );
+          if ($bResult2['ok']) {
+            $bResult = $this->execute_newsletter_rest_api_call( $strAction, $aData );
+            if (defined('FLORP_DEVEL_REST_API_DEBUG') && FLORP_DEVEL_REST_API_DEBUG === true) {
+              file_put_contents( __DIR__ . "/kk-debug-after-submission-newsletter-rest-api-ok2.log", var_export( $bResult2, true ) );
+            }
+          } elseif (defined('FLORP_DEVEL_REST_API_DEBUG') && FLORP_DEVEL_REST_API_DEBUG === true) {
+            file_put_contents( __DIR__ . "/kk-debug-after-submission-newsletter-rest-api-error2.log", var_export( $bResult2, true ) );
+          }
+        }
+        if (!$bResult['ok']) {
+          if (defined('FLORP_DEVEL_REST_API_DEBUG') && FLORP_DEVEL_REST_API_DEBUG === true) {
+            file_put_contents( __DIR__ . "/kk-debug-after-submission-newsletter-rest-api-error.log", var_export( $bResult, true ) );
+          }
+          $aRevertedPreferences = $aMetaData[$strPreferencesKey];
+          if ($bNewsletterSubscribeNew) {
+            $iKey = array_search( $strNewsletterSubscribePreferenceKey, $aRevertedPreferences );
+            unset( $aRevertedPreferences[$iKey] );
+          } else {
+            $aRevertedPreferences[] = $strNewsletterSubscribePreferenceKey;
+          }
+          update_user_meta( $iUserID, $strPreferencesKey, $aRevertedPreferences );
+        } elseif (defined('FLORP_DEVEL_REST_API_DEBUG') && FLORP_DEVEL_REST_API_DEBUG === true) {
+          file_put_contents( __DIR__ . "/kk-debug-after-submission-newsletter-rest-api-ok.log", var_export( $bResult, true ) );
+        }
+      } elseif (defined('FLORP_DEVEL_REST_API_DEBUG') && FLORP_DEVEL_REST_API_DEBUG === true) {
+        file_put_contents( __DIR__ . "/kk-debug-after-submission-newsletter-rest-api-check.log", var_export( array(
+          'old' => $aPreferencesOfUser,
+          'new-userdata' => $aUserData,
+          'new-metadata' => $aMetaData,
+        ), true ) );
       }
     }
     setcookie('florp-form-saved', "1", time() + (1 * 24 * 60 * 60), '/');
