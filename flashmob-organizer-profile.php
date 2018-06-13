@@ -224,8 +224,6 @@ class FLORP{
       }
     }
 
-    // $this->aOptions['aParticipants'] = array(); update_site_option( $this->strOptionKey, $this->aOptions, true );
-
     $this->set_variables();
 
     $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
@@ -683,6 +681,9 @@ class FLORP{
           $aNotices[] = array( 'warning' => 'Flashmob organizer archivation is off!' );
         }
         break;
+      case 'florp_devel_purge_participants_save_is_on':
+        $aNotices[] = array( 'warning' => 'FLORP_DEVEL_PURGE_PARTICIPANTS_ON_SAVE constant is on. Contact your site admin if you think this is not right!' );
+        break;
       case 'lwa_is_active':
         $aNotices[] = array( 'error' => 'Nepodarilo sa automaticky deaktivovať plugin "Login With Ajax". Prosíme, spravte tak pre najlepšie fungovanie pluginu "Profil organizátora SVK flashmobu".' );
         break;
@@ -895,6 +896,9 @@ class FLORP{
     if (is_admin() && current_user_can( 'activate_plugins' ) && defined('FLORP_DEVEL') && FLORP_DEVEL === true) {
       add_action( 'admin_notices', array( $this, 'action__admin_notices__florp_devel_is_on' ));
     }
+    if (is_admin() && current_user_can( 'activate_plugins' ) && defined('FLORP_DEVEL_PURGE_PARTICIPANTS_ON_SAVE') && FLORP_DEVEL_PURGE_PARTICIPANTS_ON_SAVE === true) {
+      add_action( 'admin_notices', array( $this, 'action__admin_notices__florp_devel_purge_participants_save_is_on' ));
+    }
   }
 
   public function action__admin_notices__lwa_is_active() {
@@ -903,6 +907,10 @@ class FLORP{
 
   public function action__admin_notices__florp_devel_is_on() {
     echo $this->get_admin_notices('florp_devel_is_on');
+  }
+
+  public function action__admin_notices__florp_devel_purge_participants_save_is_on() {
+    echo $this->get_admin_notices('florp_devel_purge_participants_save_is_on');
   }
 
   public function action__admin_notices__htaccess_remove_failed() {
@@ -2000,7 +2008,7 @@ class FLORP{
     // echo "<pre>" .var_export($this->getFlashmobSubscribers('flashmob_organizer'), true). "</pre>";
     // echo "<pre>" .var_export($this->getFlashmobSubscribers('teacher'), true). "</pre>";
     // echo "<pre>" .var_export($this->getFlashmobSubscribers('all'), true). "</pre>";
-    // echo "<pre>" .var_export($this->aOptions['aParticipants'], true). "</pre>";
+    echo "<pre>" .var_export($this->aOptions['aParticipants'], true). "</pre>";
 
     $aBooleanOptionsChecked = array();
     foreach ($this->aBooleanOptions as $strOptionKey) {
@@ -2608,6 +2616,9 @@ class FLORP{
         $this->aOptions[$strOptionKey] = stripslashes($val);
       }
     }
+    if (defined('FLORP_DEVEL_PURGE_PARTICIPANTS_ON_SAVE') || FLORP_DEVEL_PURGE_PARTICIPANTS_ON_SAVE === true ) {
+      $this->aOptions['aParticipants'] = array();
+    }
     update_site_option( $this->strOptionKey, $this->aOptions, true );
 
     $this->set_variables();
@@ -3011,7 +3022,11 @@ class FLORP{
     if ($this->isFlashmobBlog && intval($aFormData['form_id']) === $this->iProfileFormNinjaFormIDFlashmob) {
       // Get field values by keys //
       $aFieldData = array();
+      $aSkipFieldTypes = array( 'recaptcha_logged-out-only', 'recaptcha', 'submit', 'html', 'hr' );
       foreach ($aFormData["fields"] as $strKey => $aData) {
+        if (in_array($aData['type'], $aSkipFieldTypes)) {
+          continue;
+        }
         $aFieldData[$aData["key"]] = $aData['value'];
       }
       $iUserID = $aFieldData['leader_user_id'];

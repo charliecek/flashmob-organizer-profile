@@ -128,7 +128,7 @@ function florpRescrapeFbOgMapImage() {
 }
 function florp_reload_on_successful_submission() {
   if (florp.reload_ok_submission != 1) {
-    florpReloadYearlyMap();
+    florpReloadMaps();
     return;
   }
 
@@ -651,57 +651,129 @@ function florpOpenInfoWindow(map, marker, infowindow, divID) {
   florp.maps.open_infowindow[divID] = infowindow;
 }
 
-// NOTE We'll use this to reload the yearly map after a participant has registered //
-function florpReloadYearlyMap( iYear = 0 ) {
+function florpReloadMaps( iYear = 0 ) {
   /*
    * We look for the map div(s) by data-is-current-year="1" and iterate through these
    * we ask for all the info by ajax, reloading the MARKER that belongs to the edited user
    */
-  
-  if ("undefined" === typeof florp.user_id || "undefined" === typeof florp_map_options_object || florpObjectLength(florp_map_options_object) === 0) {
+  console.info("Reloading maps")
+  if ("undefined" === typeof florp_map_options_object || florpObjectLength(florp_map_options_object) === 0) {
     return;
   }
 
   // Rescrape the FB OG map image //
   florpRescrapeFbOgMapImage();
 
-  var currentYearMaps = jQuery(".florp-map[data-is-current-year='1']");
-  currentYearMaps.each(function () {
+  if (florp.blog_type === "main") {
+    var reloadMaps = jQuery(".florp-map[data-is-current-year='1'], .florp-map[data-map-type=teacher]");
+  } else if (florp.blog_type === "flashmob") {
+    var reloadMaps = jQuery(".florp-map[data-is-current-year='1']");
+    // TODO reopen the marker that triggered the PUM //
+    // florp.maps.markerShownOnLoad[divID] = ...
+  } else {
+    return
+  }
+  var fnReloadMarker = function (response) {
+    try {
+      var getMarkerInfoHtmlRes = JSON.parse(response);
+      // console.log(getMarkerInfoHtmlRes);
+      if (getMarkerInfoHtmlRes.new_map_options !== false) {
+        var divID = getMarkerInfoHtmlRes.data.divID
+        var iUserID = getMarkerInfoHtmlRes.data.user_id
+        var map = florp.maps.objects[divID];
+        var oUserOptions = getMarkerInfoHtmlRes.new_map_options
+        var strMapType = jQuery('#'+divID).data('mapType')
+        var strLocation = ""
+        if (strMapType === "flashmob_organizer") {
+          strLocation = oUserOptions.flashmob_address || oUserOptions.school_city || ""
+          florpSetUserMarker( iUserID, oUserOptions, map, divID, florp.maps.markerShownOnLoad[divID] === iUserID, strLocation, 0, strMapType );
+        } else if (strMapType === "teacher") {
+          var bShowOnLoad = true, bDontShow = false, aProperties = ["school_city", "courses_city", "courses_city_2", "courses_city_3"]
+          if (divID !== 'teacher_map_preview') {
+            bShowOnLoad = false
+          }
+          aProperties.forEach(function(prop) {
+            if ("undefined" === typeof oUserOptions[prop]) {
+              strLocation = ""
+            } else {
+              strLocation = oUserOptions[prop]
+              if (bShowOnLoad) {
+                bDontShow = true
+              }
+            }
+            florpSetUserMarker( iUserID, oUserOptions, map, divID, bShowOnLoad, strLocation, prop, strMapType );
+            if (bDontShow) {
+              bDontShow = false
+              bShowOnLoad = false
+            }
+          })
+        } else {
+          return
+        }
+      }
+    } catch(e) {
+      console.warn(e);
+    }
+  }
+  reloadMaps.each(function () {
     var $this = jQuery(this);
     var id = $this.attr('id');
-    var old_map_options = florp_map_options_object[id][florp.user_id];
-    
-    var data = {
-      action: florp.get_mapUserInfo_action,
-      security : florp.security,
-      old_map_options: old_map_options,
-      user_id: florp.user_id,
-      divID: id,
-      strMapType: $this.data('mapType'),
-    };
-    jQuery.ajax({
-      type: "POST",
-      url: florp.ajaxurl,
-      data: data,
-      success: function(response) {
-        // console.log(response);
-        try {
-          var getMarkerInfoHtmlRes = JSON.parse(response);
-          // console.log(getMarkerInfoHtmlRes);
-          if (getMarkerInfoHtmlRes.new_map_options !== false) {
-            var map = florp.maps.objects[getMarkerInfoHtmlRes.data.divID];
-            // NOTE implicitly using location for flashmob_organizer map type //
-            var strLocation = getMarkerInfoHtmlRes.new_map_options.flashmob_address || getMarkerInfoHtmlRes.new_map_options.school_city || ""
-            florpSetUserMarker(florp.user_id, getMarkerInfoHtmlRes.new_map_options, map, getMarkerInfoHtmlRes.data.divID, true, strLocation);
-          }
-        } catch(e) {
-          console.warn(e);
+    if ("undefined" === typeof florp.user_id || florp.blog_type !== "main") {
+      // reload all markers //
+      console.info("Reloading all markers in map "+id)
+      for (user_id in florp_map_options_object[id]) {
+        if (florp_map_options_object[id].hasOwnProperty(user_id)) {
+          console.info("Reloading marker "+user_id+" in map "+id)
+          var old_map_options = florp_map_options_object[id][user_id];
+
+          var data = {
+            action: florp.get_mapUserInfo_action,
+            security : florp.security,
+            old_map_options: old_map_options,
+            user_id: user_id,
+            divID: id,
+            strMapType: $this.data('mapType'),
+          };
+          jQuery.ajax({
+            type: "POST",
+            url: florp.ajaxurl,
+            data: data,
+            success: function(response) {
+              // console.log(response);
+              fnReloadMarker(response)
+            },
+            error: function(errorThrown){
+              console.warn(errorThrown);
+            }
+          });
         }
-      },
-      error: function(errorThrown){
-        console.warn(errorThrown);
       }
-    });
+    } else {
+      // reload only the marker of the logged in user //
+      console.info("Reloading marker "+florp.user_id+" in map "+id)
+      var old_map_options = florp_map_options_object[id][florp.user_id];
+
+      var data = {
+        action: florp.get_mapUserInfo_action,
+        security : florp.security,
+        old_map_options: old_map_options,
+        user_id: florp.user_id,
+        divID: id,
+        strMapType: $this.data('mapType'),
+      };
+      jQuery.ajax({
+        type: "POST",
+        url: florp.ajaxurl,
+        data: data,
+        success: function(response) {
+          // console.log(response);
+          fnReloadMarker(response)
+        },
+        error: function(errorThrown){
+          console.warn(errorThrown);
+        }
+      });
+    }
   });
 }
 

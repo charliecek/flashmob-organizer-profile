@@ -47,7 +47,7 @@ $aFlorpNinjaFormExportData = array (
     'default_label_pos' => 'left',
     'hide_complete' => '0',
     'show_title' => '0',
-    'clear_complete' => '0',
+    'clear_complete' => 1,
   ),
   'field_settings' => 
   array (
