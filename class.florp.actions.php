@@ -156,7 +156,24 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
   //       }
   //       $data[ 'errors' ][ 'form' ][] = 'DEVEL STOP';
       } elseif ($form_id == florp_get_profile_form_id_flashmob()) {
-
+        foreach ($data['fields'] as $field_id => $field_value ) {
+          $strKey = $field_value['key'];
+          $strValue = $field_value['value'];
+          $strType = $field_value['type'];
+          switch( $strKey ) {
+            case "user_email":
+              $strValue = trim( $strValue );
+              if (email_exists( $strValue ) || florp_flashmob_participant_exists( $strValue )) {
+                $data[ 'errors' ][ 'form' ][$strKey] = 'Zadaný e-mail už je zaregistrovaný'; //__( 'The submitted email is in use already', 'florp' ); // Zadaný e-mail už je zaregistrovaný
+              }
+              break;
+          }
+          if ($strType === 'listselect' && $field_value['required'] == 1 && $strValue === 'null') {
+            $data[ 'errors' ][ 'form' ][$strKey] = '"'.$field_value['label'].'" je povinné pole';
+          }
+//           $data[ 'errors' ][ 'form' ][] = '<pre>'.var_export($data['fields'], true).'</pre>';
+//           $data[ 'errors' ][ 'form' ][] = 'DEVEL STOP';
+        }
       }
       return $data;
     }

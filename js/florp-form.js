@@ -440,6 +440,8 @@ function florpSetUserMarker(iUserID, oUserOptions, map, divID, show, strLocation
       iUserID: iUserID,
       mixMarkerKey: mixMarkerKey,
       strMapType: strMapType,
+      iCurrentYear: jQuery("#"+divID).data('isCurrentYear'),
+      iBeforeFlashmob: florp.hide_flashmob_fields,
     };
     jQuery.ajax({
       type: "POST",
@@ -727,6 +729,32 @@ jQuery(document).on( 'pumAfterOpen', '#pum-'+florp.popup_id, function () {
     }, 500);
   }
 });
+
+jQuery(document).on( 'click', '.florp-click-participant-trigger', function () {
+  if (florp.popup_id > 0) {
+    var $this = jQuery(this),
+        iUserID = $this.data("userId"),
+        strFlashmobCity = $this.data("flashmobCity")
+    console.log($this)
+    var $form = jQuery("#florp-profile-form-wrapper-div nf-form-"+florp.form_id+"-cont")
+    if ("undefined" === typeof nfForms) {
+      return;
+    }
+    nfForms.forEach(function (oForm) {
+      if (oForm.id == florp.form_id) {
+        oForm.fields.forEach(function (oField) {
+          if (oField.key === 'leader_user_id') {
+            jQuery( '#nf-field-' + oField.id ).val( iUserID ).trigger('change')
+          } else if (oField.key === 'flashmob_city') {
+            jQuery( '#nf-field-' + oField.id ).val( strFlashmobCity ).trigger('change')
+          }
+        })
+      }
+    })
+    PUM.open(florp.popup_id);
+  }
+})
+
 jQuery(document).on( 'pumBeforeClose', '#pum-'+florp.popup_id, florpScrollToAnchor );
 // jQuery(document).on( 'pumAfterClose', '#pum-'+florp.popup_id, florpScrollToAnchor );
 jQuery(document).on( 'pumAfterClose', '#pum-'+florp.popup_id, florp_reload_on_successful_submission );
@@ -827,6 +855,8 @@ function florpFixFormClasses() {
   });
   
   jQuery(".nf-help").removeClass("nf-help");
+
+  jQuery(".florp_disabled select,.florp_disabled input").attr("disabled", "disabled");
 
   var fnToggleFlashmobOrganizerWarnings = function( strTogglableValue, bChecked, animate = true ) {
     if (strTogglableValue === 'flashmob_organizer') {

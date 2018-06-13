@@ -95,6 +95,7 @@ class FLORP{
       'strNewsletterAPIKey'                       => '',
       'strNewsletterListsMain'                    => '',
       'strNewsletterListsFlashmob'                => '',
+      'aParticipants'                             => array(),
     );
     $this->aOptionFormKeys = array(
       'florp_reload_after_ok_submission_main'     => 'bReloadAfterSuccessfulSubmissionMain',
@@ -147,8 +148,9 @@ class FLORP{
     );
     $this->aOptionKeysByBlog = array(
       'main'      => array(
-        'bReloadAfterSuccessfulSubmissionMain',
         'aYearlyMapOptions',
+        'aParticipants',
+        'bReloadAfterSuccessfulSubmissionMain',
         'iFlashmobYear',
         'iFlashmobMonth',
         'iFlashmobDay',
@@ -221,6 +223,8 @@ class FLORP{
         update_site_option( $this->strOptionKey, $this->aOptions, true );
       }
     }
+
+    // $this->aOptions['aParticipants'] = array(); update_site_option( $this->strOptionKey, $this->aOptions, true );
 
     $this->set_variables();
 
@@ -509,6 +513,8 @@ class FLORP{
           <h5 class="florp-flashmob-location">%%flashmob_city%%</h5>
           <p>
             <strong>Organizátor</strong>: %%organizer%%
+            %%signup%%
+            %%participant_count%%
             %%year%%
             %%school%%
             %%dancers%%
@@ -1091,6 +1097,22 @@ class FLORP{
       }
     } elseif ($this->isFlashmobBlog) {
       // Settings specific to the NF on the Flashmob Blog //
+      // Hide fields //
+      $bHide = true;
+      if (stripos($aField['settings']['container_class'], 'florp-registration-field') !== false
+            || stripos($aField['settings']['container_class'], 'florp-profile-field') !== false) {
+        $bHide = false;
+      }
+      // Go through prefereneces of user and leave field unhidden if matched //
+      foreach ($aPreferencesOfUser as $strPreference) {
+        if (stripos($aField['settings']['container_class'], 'florp-preference-field_'.$strPreference) !== false) {
+          $bHide = false;
+          break;
+        }
+      }
+      if ($bHide) {
+        $aField['settings']['container_class'] .= " hidden";
+      }
     }
     return $aField;
   }
@@ -1460,7 +1482,14 @@ class FLORP{
     $strFullShortcode = '[us_counter '.$strShortCodeAttributes.']';
     return do_shortcode($strFullShortcode);
   }
-  
+
+  private function get_participant_count( $iUserID ) {
+    if (!isset($this->aOptions['aParticipants'][$iUserID])) {
+      return 0;
+    }
+    return count($this->aOptions['aParticipants'][$iUserID]);
+  }
+
   public function popupLinks( $aAttributes = array() ) {
     // DEPRECATED //
     $aDefaults = array(
@@ -1971,6 +2000,7 @@ class FLORP{
     // echo "<pre>" .var_export($this->getFlashmobSubscribers('flashmob_organizer'), true). "</pre>";
     // echo "<pre>" .var_export($this->getFlashmobSubscribers('teacher'), true). "</pre>";
     // echo "<pre>" .var_export($this->getFlashmobSubscribers('all'), true). "</pre>";
+    // echo "<pre>" .var_export($this->aOptions['aParticipants'], true). "</pre>";
 
     $aBooleanOptionsChecked = array();
     foreach ($this->aBooleanOptions as $strOptionKey) {
@@ -2733,8 +2763,12 @@ class FLORP{
     $aMarkerData = array_merge(
       $_POST['infoWindowData'],
       array(
-        'mixMarkerKey'  => $_POST['mixMarkerKey'],
-        'strMapType'    => $_POST['strMapType'],
+        'mixMarkerKey'      => $_POST['mixMarkerKey'],
+        'strMapType'        => $_POST['strMapType'],
+        'iUserID'           => $_POST['iUserID'],
+        'iCurrentYear'      => $_POST['iCurrentYear'],
+        'iBeforeFlashmob'   => $_POST['iBeforeFlashmob'],
+        'iParticipantCount' => $this->get_participant_count( $_POST['iUserID'] ),
     ));
     $strMarkerText = $this->getMarkerInfoWindowContent( $aMarkerData );
     $aRes = array(
@@ -2889,7 +2923,16 @@ class FLORP{
     } else {
       $strNote = "";
     }
-    $aSearch = array( 'flashmob_city', 'organizer', 'school', 'embed_code', 'dancers', 'year', 'note', 'courses_city' ,'courses_info' );
+
+    if ($aInfoWindowData['strMapType'] === 'flashmob_organizer' && $aInfoWindowData['iCurrentYear'] == '1' && $aInfoWindowData['iBeforeFlashmob'] == '1') {
+      $strSignupLink = '<br><span class="florp-click-trigger florp-click-participant-trigger pum-trigger" data-user-id="'.$aInfoWindowData['iUserID'].'" data-flashmob-city="'.$aInfoWindowData['school_city']['value'].'" style="cursor: pointer;">Chcem sa prihlásiť na tento flashmob!</span>';
+      $strParticipantCount = '<br>Prihlásených účastníkov: '.$aInfoWindowData['iParticipantCount'];
+    } else {
+      $strSignupLink = "";
+      $strParticipantCount = "";
+    }
+
+    $aSearch = array( 'flashmob_city', 'organizer', 'school', 'embed_code', 'dancers', 'year', 'note', 'courses_city' ,'courses_info', 'signup', 'participant_count' );
     foreach ($aSearch as $key => $value) {
       $aSearch[$key] = '%%'.$value.'%%';
     }
@@ -2908,7 +2951,7 @@ class FLORP{
         $strCoursesInfo = "";
     }
     // $strCoursesInfo = wpautop( $strCoursesInfo ); // Not needed, since we're using rich text editors //
-    $aReplace = array( $strLocation, $strOrganizer, $strSchool, $strEmbedCode, $strDancers, $strYear, $strNote, $strLocation, $strCoursesInfo );
+    $aReplace = array( $strLocation, $strOrganizer, $strSchool, $strEmbedCode, $strDancers, $strYear, $strNote, $strLocation, $strCoursesInfo, $strSignupLink, $strParticipantCount );
     $strText = str_replace( $aSearch, $aReplace, $this->aMarkerInfoWindowTemplates[$aInfoWindowData['strMapType']] );
     return $strText;
     /*
@@ -2956,6 +2999,84 @@ class FLORP{
   public function action__update_user_profile( $aFormData ) {
     // Update the user's profile //
     // file_put_contents( __DIR__ . "/kk-debug-after-submission.log", var_export( $aFormData, true ) );
+
+    $aFiles = array( 'ok', 'error', 'ok2', 'error2', 'check' );
+    foreach ($aFiles as $strFile) {
+      $strPath = __DIR__ . "/kk-debug-after-submission-newsletter-rest-api-".$strFile.'.log';
+      if (file_exists( $strPath )) {
+        unlink($strPath);
+      }
+    }
+
+    if ($this->isFlashmobBlog && intval($aFormData['form_id']) === $this->iProfileFormNinjaFormIDFlashmob) {
+      // Get field values by keys //
+      $aFieldData = array();
+      foreach ($aFormData["fields"] as $strKey => $aData) {
+        $aFieldData[$aData["key"]] = $aData['value'];
+      }
+      $iUserID = $aFieldData['leader_user_id'];
+      if (!isset($this->aOptions['aParticipants'][$iUserID])) {
+        $this->aOptions['aParticipants'][$iUserID] = array();
+      }
+      if (!isset($aFieldData) || empty($aFieldData) || !in_array('flashmob_participant_tshirt', $aFieldData['preferences'])) {
+        if (isset($aFieldData['flashmob_participant_tshirt_size'])) {
+          unset($aFieldData['flashmob_participant_tshirt_size']);
+        }
+        if (isset($aFieldData['flashmob_participant_tshirt_gender'])) {
+          unset($aFieldData['flashmob_participant_tshirt_gender']);
+        }
+      }
+
+      if (!empty($aFieldData) && in_array('newsletter_subscribe', $aFieldData['preferences'])) {
+        $strAction = 'subscribe';
+        $aData = array(
+          'email'       => $aFieldData['user_email'],
+          'name'        => $aFieldData['first_name'],
+          'surname'     => $aFieldData['last_name'],
+          'send_emails' => true,
+        );
+        if ($aFieldData['gender'] === 'muz' || $aFieldData['gender'] === 'zena') {
+          $aData['gender'] = $aFieldData['gender'] === 'muz' ? 'm' : 'f';
+        }
+        $aFieldData['newsletter_subscription_result'] = '';
+        $bResult = $this->execute_newsletter_rest_api_call( $strAction, $aData );
+        if ($strAction === 'subscribe' && !$bResult['ok'] && isset($bResult['issue']) && $bResult['issue'] === 'email-exists') {
+          $strAction2 = 'subscribers/delete';
+          $aData2 = array( 'email' => $aFieldData['user_email'] );
+          $bResult2 = $this->execute_newsletter_rest_api_call( $strAction2, $aData2 );
+          if ($bResult2['ok']) {
+            $bResult = $this->execute_newsletter_rest_api_call( $strAction, $aData );
+            if (defined('FLORP_DEVEL_REST_API_DEBUG') && FLORP_DEVEL_REST_API_DEBUG === true) {
+              file_put_contents( __DIR__ . "/kk-debug-after-submission-newsletter-rest-api-ok2.log", var_export( $bResult2, true ) );
+            }
+          } else {
+            $aFieldData['newsletter_subscription_result'] = 'error: '.var_export( $bResult2, true ).PHP_EOL;
+            if (defined('FLORP_DEVEL_REST_API_DEBUG') && FLORP_DEVEL_REST_API_DEBUG === true) {
+              file_put_contents( __DIR__ . "/kk-debug-after-submission-newsletter-rest-api-error2.log", var_export( $bResult2, true ) );
+            }
+          }
+        }
+        if (!$bResult['ok']) {
+          $aFieldData['newsletter_subscription_result'] .= 'error: '.var_export( $bResult, true );
+          if (defined('FLORP_DEVEL_REST_API_DEBUG') && FLORP_DEVEL_REST_API_DEBUG === true) {
+            file_put_contents( __DIR__ . "/kk-debug-after-submission-newsletter-rest-api-error.log", var_export( $bResult, true ) );
+          }
+        } else {
+          $aFieldData['newsletter_subscription_result'] = 'ok';
+          if (defined('FLORP_DEVEL_REST_API_DEBUG') && FLORP_DEVEL_REST_API_DEBUG === true) {
+            file_put_contents( __DIR__ . "/kk-debug-after-submission-newsletter-rest-api-ok.log", var_export( $bResult, true ) );
+          }
+        }
+      }
+
+      $this->aOptions['aParticipants'][$iUserID] = array_merge($this->aOptions['aParticipants'][$iUserID], array(
+        $aFieldData['user_email'] => $aFieldData,
+      ));
+      update_site_option( $this->strOptionKey, $this->aOptions, true );
+
+      // TODO: send notification to leader?
+      return;
+    }
 
     if (!$this->isMainBlog || intval($aFormData['form_id']) !== $this->iProfileFormNinjaFormIDMain) {
       // Not the profile form (or the main site at all) //
@@ -3034,14 +3155,6 @@ class FLORP{
           delete_user_meta( $iUserID, $strKey );
         } else {
           update_user_meta( $iUserID, $strKey, $mixValue );
-        }
-      }
-
-      $aFiles = array( 'ok', 'error', 'ok2', 'error2', 'check' );
-      foreach ($aFiles as $strFile) {
-        $strPath = __DIR__ . "/kk-debug-after-submission-newsletter-rest-api-".$strFile.'.log';
-        if (file_exists( $strPath )) {
-          unlink($strPath);
         }
       }
 
@@ -3187,6 +3300,18 @@ class FLORP{
     }
   }
 
+  public function flashmob_participant_exists( $strEmail ) {
+    if (empty($this->aOptions['aParticipants'])) {
+      return false;
+    }
+    foreach ($this->aOptions['aParticipants'] as $iUserID => $aParticipants) {
+      if (isset($aParticipants[$strEmail])) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public static function activate() {
   }
 
@@ -3229,4 +3354,8 @@ function florp_get_map_image() {
 function florp_get_message( $strKey = false, $strDefault = "" ) {
   global $FLORP;
   return $FLORP->get_message( $strKey, $strDefault );
+}
+function florp_flashmob_participant_exists( $strEmail ) {
+  global $FLORP;
+  return $FLORP->flashmob_participant_exists( $strEmail );
 }
