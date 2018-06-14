@@ -51,6 +51,7 @@ class FLORP{
   private $strBeforeLoginFormHtmlMain;
   private $strBeforeLoginFormHtmlFlashmob;
   private $iFlashmobTimestamp = 0;
+  private $bHideFlashmobFields;
 
   public function __construct() {
     // TODO: if not multisite, deactivate plugin with notice //
@@ -227,15 +228,6 @@ class FLORP{
 
     $this->set_variables();
 
-    $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
-    $this->iFlashmobTimestamp = intval(mktime( $this->aOptions['iFlashmobHour'] - $iTimeZoneOffset, $this->aOptions['iFlashmobMinute'], 0, $this->aOptions['iFlashmobMonth'], $this->aOptions['iFlashmobDay'], $this->aOptions['iFlashmobYear'] ));
-    $iNow = time();
-    if ($this->iFlashmobTimestamp < $iNow) {
-      $this->aOptions['bHideFlashmobFields'] = false;
-    } else {
-      $this->aOptions['bHideFlashmobFields'] = true;
-    }
-    
     $this->aRegisteredUserCount = array(
       'on-map-only' => -1,
       'all'         => -1
@@ -645,6 +637,13 @@ class FLORP{
     $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
     $this->iFlashmobTimestamp = intval(mktime( $this->aOptions['iFlashmobHour'] - $iTimeZoneOffset, $this->aOptions['iFlashmobMinute'], 0, $this->aOptions['iFlashmobMonth'], $this->aOptions['iFlashmobDay'], $this->aOptions['iFlashmobYear'] ));
 
+    $iNow = time();
+    if ($this->iFlashmobTimestamp < $iNow) {
+      $this->bHideFlashmobFields = false;
+    } else {
+      $this->bHideFlashmobFields = true;
+    }
+
     $this->set_variables_per_subsite();
   }
 
@@ -680,7 +679,7 @@ class FLORP{
       case 'florp_devel_is_on':
         $aNotices[] = array( 'warning' => 'FLORP_DEVEL constant is on. Contact your site admin if you think this is not right!' );
         if (defined('FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION') && FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION === true) {
-          $aNotices[] = array( 'warning' => 'Flashmob organizer archivation is off!' );
+          $aNotices[] = array( 'warning' => 'Flashmob organizer map archivation is off!' );
         }
         break;
       case 'florp_devel_purge_participants_save_is_on':
@@ -1900,7 +1899,7 @@ class FLORP{
     }
 
     $aJS = array(
-      'hide_flashmob_fields'          => $this->aOptions['bHideFlashmobFields'] ? 1 : 0,
+      'hide_flashmob_fields'          => $this->bHideFlashmobFields ? 1 : 0,
       'reload_ok_submission'          => $bReloadAfterSuccessfulSubmission ? 1 : 0,
       'using_og_map_image'            => $this->aOptions['bUseMapImage'] ? 1 : 0,
       'blog_type'                     => $strBlogType,
@@ -2593,22 +2592,22 @@ class FLORP{
       $aKeysToSave = $this->aOptionKeysByBlog['main'];
 
       // Archive current flashmob year's data //
-      if (!$this->aOptions['bHideFlashmobFields']) {
+      if (!$this->bHideFlashmobFields) {
         // Trying to archive after the saved flashmob date //
         $iFlashmobYearCurrent = intval($this->aOptions['iFlashmobYear']);
         $iFlashmobYearNew = isset($aPostedOptions['florp_flashmob_year']) ? intval($aPostedOptions['florp_flashmob_year']) : $iFlashmobYearCurrent;
         if (isset($this->aOptions['aYearlyMapOptions'][$iFlashmobYearNew])) {
           // There is archived data for this flashmob year in the DB already //
-          echo '<span class="warning">Rok flashmobu možno nastaviť len na taký, pre ktorý ešte nie sú archívne dáta v DB!</span>';
+          echo '<div class="notice notice-warning"><p>Rok flashmobu možno nastaviť len na taký, pre ktorý ešte nie sú archívne dáta v DB!</p></div>';
           return false;
         } elseif ($iFlashmobYearNew != $iFlashmobYearCurrent) {
           // Flashmob year was changed //
           if (defined('FLORP_DEVEL') && FLORP_DEVEL === true && defined('FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION') && FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION === true) {
             // NOT ARCHIVING //
-            echo '<span class="info"><code>(FLORP_DEVEL && FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION == true)</code> => nearchivujem flashmobové mapy.</span>';
+            echo '<div class="notice notice-info"><p><code>(FLORP_DEVEL && FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION == true)</code> => nearchivujem flashmobové mapy.</p></div>';
           } else {
             $this->archive_current_year_map_options();
-            echo '<span class="info">Dáta flashmobu z roku '.$iFlashmobYearCurrent.' boli archivované.</span>';
+            echo '<div class="notice notice-info"><p>Dáta flashmobu z roku '.$iFlashmobYearCurrent.' boli archivované.</p></div>';
           }
         }
       }
