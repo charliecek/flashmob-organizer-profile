@@ -293,7 +293,7 @@ $aFlorpNinjaFormExportData = array (
       'container_class' => 'florp-class florp-right florp-profile-field florp_preferences_container florp-clear-on-submission',
       'element_class' => 'florp_preferences',
       'admin_label' => '',
-      'help_text' => '',
+      'help_text' => '<p>Kedykoľvek budete chcieť newsletter zrušiť, môžete tak spraviť kliknutím na odkaz v pätičke ľubovoľného emailu alebo nás kontaktujte na info@salsarueda.dance.</p><p>Vaše informácie budeme rešpektovať a používať výlučne ku kontaktovaniu a zasielaniu noviniek tohoto webu. K vaším údajom bude mať prístup iba majiteľ tohoto webu a nebude ich poskytovať iným osobám.</p><p>Spracovanie týchto údajov nám povoľuje zákon GDPR a tieto údaje budeme uchovávať po dobu existencie tohoto webu alebo kým si Vy nevyžiadate zmazanie z databázy.</p><p>Máte právo byť jednoducho vymazaný z databázy, právo na presun údajov a právo na prístup k informáciám ktoré o vás tento web zhromaždil.</p>',
       'manual_key' => '1',
       'drawerDisabled' => false,
       'desc_text' => '',
@@ -964,80 +964,6 @@ $aFlorpNinjaFormExportData = array (
           'calc' => '0',
           'selected' => 0,
           'order' => 1,
-          'settingModel' => 
-          array (
-            'settings' => false,
-            'hide_merge_tags' => false,
-            'error' => false,
-            'name' => 'options',
-            'type' => 'option-repeater',
-            'label' => 'Options <a href="#" class="nf-add-new">Add New</a> <a href="#" class="extra nf-open-import-tooltip"><i class="fa fa-sign-in" aria-hidden="true"></i> Import</a>',
-            'width' => 'full',
-            'group' => '',
-            'value' => 
-            array (
-              0 => 
-              array (
-                'label' => 'One',
-                'value' => 'one',
-                'calc' => '',
-                'selected' => 0,
-                'order' => 0,
-              ),
-              1 => 
-              array (
-                'label' => 'Two',
-                'value' => 'two',
-                'calc' => '',
-                'selected' => 0,
-                'order' => 1,
-              ),
-              2 => 
-              array (
-                'label' => 'Three',
-                'value' => 'three',
-                'calc' => '',
-                'selected' => 0,
-                'order' => 2,
-              ),
-            ),
-            'columns' => 
-            array (
-              'label' => 
-              array (
-                'header' => 'Label',
-                'default' => '',
-              ),
-              'value' => 
-              array (
-                'header' => 'Value',
-                'default' => '',
-              ),
-              'calc' => 
-              array (
-                'header' => 'Calc Value',
-                'default' => '',
-              ),
-              'selected' => 
-              array (
-                'header' => '<span class="dashicons dashicons-yes"></span>',
-                'default' => 0,
-              ),
-            ),
-          ),
-          'manual_value' => true,
-        ),
-        2 => 
-        array (
-          'errors' => 
-          array (
-          ),
-          'max_options' => 0,
-          'label' => 'Pár',
-          'value' => 'par',
-          'calc' => '0',
-          'selected' => 0,
-          'order' => 2,
           'settingModel' => 
           array (
             'settings' => false,
@@ -11727,7 +11653,7 @@ $aFlorpNinjaFormExportData = array (
       'payment_total' => '0',
       'tag' => '',
       'reply_to' => '',
-      'email_subject' => 'Bol vyplnený profil organizátora flashmobu',
+      'email_subject' => 'Bol prihlásený účastník flashmobu',
       'attach_csv' => '1',
       'bcc' => '',
       'cc' => '',

@@ -848,6 +848,11 @@ jQuery(document).on( 'pumAfterOpen', '#pum-'+florp.popup_id, function () {
   sessionStorage.setItem("florpFormSubmitSuccessful", "0");
 });
 
+// jQuery(document).on( 'pumBeforeOpen', '#pum-'+florp.popup_id, function () {
+//   console.log(jQuery(".jBox-wrapper"))
+//   jQuery(".jBox-wrapper").addClass("z-index-1999999999")
+// });
+
 jQuery(document).on( 'pumBeforeClose', '#pum-'+florp.popup_id, florpScrollToAnchor );
 // jQuery(document).on( 'pumAfterClose', '#pum-'+florp.popup_id, florpScrollToAnchor );
 jQuery(document).on( 'pumBeforeClose', '#pum-'+florp.popup_id, florp_reload_on_successful_submission );
@@ -935,7 +940,7 @@ function florpFixFormClasses() {
   // console.info("Fixing FLORP classes")
 
   // Fix classes //
-  jQuery( ".florp-class" ).each(function (){
+  jQuery( ".florp-class" ).each(function () {
     var thisObj = jQuery(this);
     var strClass = thisObj.prop("class");
     var aClasses = strClass.replace("  ", " ").trim().split(" ");
@@ -949,7 +954,24 @@ function florpFixFormClasses() {
   
   jQuery(".nf-help").removeClass("nf-help");
 
+  if (florp.popup_id > 0) {
+    jQuery('body').on('DOMNodeInserted', '.jBox-wrapper', function () {
+      // console.log("jBox-wrapper div was created")
+      jQuery( this ).addClass("z-index-1999999999")
+    });
+  }
+
   jQuery(".florp_disabled select,.florp_disabled input").prop("disabled", true);
+  if (florp.blog_type === "main" && florp.has_participants == 1) {
+    jQuery(".florp_subscriber_type_container input[value=flashmob_organizer]").prop("disabled", true)
+  }
+  $preferenceInfo = jQuery(".florp_preferences_container .nf-field-label label span.fa-info-circle")
+  if ($preferenceInfo.length > 0) {
+    $newsletterSubscribeLabel = jQuery(".florp_preferences_container input[value=newsletter_subscribe]").parent().find("label")
+    if ($newsletterSubscribeLabel.length > 0) {
+      $newsletterSubscribeLabel.html($newsletterSubscribeLabel.html()+" ").append($preferenceInfo)
+    }
+  }
 
   var fnToggleFlashmobOrganizerWarnings = function( strTogglableValue, bChecked, animate = true ) {
     if (strTogglableValue === 'flashmob_organizer') {
@@ -1143,7 +1165,7 @@ function florpFixFormClasses() {
           $show.each(function() {
             var $this = jQuery(this);
             var id = $this.prop("id")
-            if ("undefined" === typeof id) {
+            if ("undefined" === typeof id || id.length === 0) {
               id = "florp-"+strToggleType+"-el-"+iID
               $this.prop("id", id)
             }
@@ -1688,7 +1710,7 @@ jQuery( document ).ready(function() {
     });
   }
 
-  if ("undefined" === typeof florp.user_id ) {
+  if (florp.blog_type === "main" && "undefined" === typeof florp.user_id ) {
     jQuery("#pum_popup_title_"+florp.popup_id).html("Registrácia");
     // console.log(jQuery("#pum_popup_title_"+florp.popup_id))
   }
@@ -1755,7 +1777,7 @@ jQuery(document).on('click', ".w-tabs-item, .w-tabs-section-header", function (e
     florpLoadVisibleVideos();
     return;
   }
-  var divID = objTab.prop("href");
+  var divID = objTab.prop("href")
   if ("undefined" === typeof divID) {
     console.warn("Couldn't find div ID for clicked tab:")
     console.log(objTarget, objTab);
@@ -1763,8 +1785,16 @@ jQuery(document).on('click', ".w-tabs-item, .w-tabs-section-header", function (e
     florpReloadVisibleMaps();
     florpLoadVisibleVideos();
     return;
+  } else {
+    divID = "#"+divID.split("#")[1];
   }
-  var objContent = jQuery( divID )
+  try {
+    var objContent = jQuery( divID )
+  } catch (e) {
+    console.warn(e)
+    console.log(divID)
+    return
+  }
   
   if (objContent.length === 0) {
     console.warn("Couldn't find content associated with clicked tab:")

@@ -91,8 +91,6 @@ function add_florp_action_controllers() {
       if ("undefined" === typeof florp || (florp.blog_type !== 'main' && florp.blog_type !== 'flashmob')) {
         console.info("This is not the main or flashmob blog");
         return;
-      } else if (florp.blog_type === 'main' && ("undefined" !== typeof florp.user_id || florp.user_id > 0)) {
-        console.info("This is not the main blog's registration form");
       }
       var errorCount = 0;
       if ("undefined" === typeof response.errors.length) {
@@ -155,6 +153,12 @@ function add_florp_action_controllers() {
           }, 2000);
           return
         }
+
+        if (florp.blog_type === 'main' && ("undefined" !== typeof florp.user_id || florp.user_id > 0)) {
+          console.info("This is not the main blog's registration form");
+          return;
+        }
+
         // response.data.fields_by_key -> use to login
         var successMessageSpan = jQuery(".florp_success_message");
         var successMessage = successMessageSpan.html();

@@ -84,7 +84,7 @@ class FLORP{
 <p>Vaša registrácia čaká na schválenie. Akonáhle Vás schválime, dostanete o tom notifikáciu na emailovú adresu, ktorú ste zadali pri registrácii.</p>
 <p>Váš SalsaRueda.Dance team</p>',
       'strUserApprovedMessage'                    => '<p>Vaša registrácia bola schválená!</p>
-<p><a href="{profile_url}">Prihláste sa</a> emailovou adresou a heslom, ktoré ste zadali pri registrácii.</p>
+<p><a href="%PROFILE_URL%">Prihláste sa</a> emailovou adresou a heslom, ktoré ste zadali pri registrácii.</p>
 <p>Váš SalsaRueda.Dance team</p>',
       'strUserApprovedSubject'                    => 'Vaša registrácia na %BLOGURL% bola schválená',
       'strBeforeLoginFormHtmlMain'                => '',
@@ -98,6 +98,14 @@ class FLORP{
       'strNewsletterListsMain'                    => '',
       'strNewsletterListsFlashmob'                => '',
       'aParticipants'                             => array(),
+      'strParticipantRegisteredSubject'           => 'Boli ste prihásený na flashmob',
+      'strParticipantRegisteredMessage'           => '<p>Ďakujeme, že ste sa prihlásili na flashmob!</p>
+<p>Váš SalsaRueda.Dance team</p>',
+      'strParticipantRemovedSubject'              => 'Váš flashmob bol zrušený',
+      'strParticipantRemovedMessage'              => '<p>Žiaľ, flashmob, na ktorý ste sa prihlásili, bol zrušený.</p>
+<p>Nezúfajte však! Pozrite si <a href="http://flashmob.salsarueda.dance" target="blank">mapku flashmobov na našej stránke</a> a ak máte niektorý flashmob po ruke, prihláste sa na ten!</p>
+<p>Váš SalsaRueda.Dance team</p>',
+      'logs'                                      => array(),
     );
     $this->aOptionFormKeys = array(
       'florp_reload_after_ok_submission_main'     => 'bReloadAfterSuccessfulSubmissionMain',
@@ -134,6 +142,10 @@ class FLORP{
       'florp_newsletter_api_key'                  => 'strNewsletterAPIKey',
       'florp_newsletter_lists_main'               => 'strNewsletterListsMain',
       'florp_newsletter_lists_flashmob'           => 'strNewsletterListsFlashmob',
+      'florp_participant_registered_subject'      => 'strParticipantRegisteredSubject',
+      'florp_participant_registered_message'      => 'strParticipantRegisteredMessage',
+      'florp_participant_removed_subject'         => 'strParticipantRemovedSubject',
+      'florp_participant_removed_message'         => 'strParticipantRemovedMessage',
     );
     $aDeprecatedKeys = array(
       'iCurrentFlashmobYear',
@@ -188,6 +200,10 @@ class FLORP{
         'iProfileFormPageIDFlashmob',
         'strBeforeLoginFormHtmlFlashmob',
         'strNewsletterListsFlashmob',
+        'strParticipantRegisteredMessage',
+        'strParticipantRegisteredSubject',
+        'strParticipantRemovedMessage',
+        'strParticipantRemovedSubject',
       ),
     );
 
@@ -1112,13 +1128,6 @@ class FLORP{
             || stripos($aField['settings']['container_class'], 'florp-profile-field') !== false) {
         $bHide = false;
       }
-      // Go through prefereneces of user and leave field unhidden if matched //
-      foreach ($aPreferencesOfUser as $strPreference) {
-        if (stripos($aField['settings']['container_class'], 'florp-preference-field_'.$strPreference) !== false) {
-          $bHide = false;
-          break;
-        }
-      }
       if ($bHide) {
         $aField['settings']['container_class'] .= " hidden";
       }
@@ -2031,6 +2040,8 @@ class FLORP{
     // echo "<pre>" .var_export($this->getFlashmobSubscribers('all'), true). "</pre>";
     // echo "<pre>" .var_export($this->aOptions['aParticipants'], true). "</pre>";
     // echo "<pre>" .var_export($this->get_flashmob_map_options_array_to_archive(), true). "</pre>";
+    // $this->delete_logs();
+    // echo "<pre>" .var_export($this->get_logs(), true). "</pre>";
 
     $aBooleanOptionsChecked = array();
     foreach ($this->aBooleanOptions as $strOptionKey) {
@@ -2209,18 +2220,18 @@ class FLORP{
               </th>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
+              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
                 HTML text zobrazený nad prihlasovacím (resp. registračným) formulárom
               </th>
-              <td>
+              <td style="border-top: 1px lightgray dashed;">
                 %%wpEditorBeforeLoginFormHtmlMain%%
               </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
+              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
                 Správa zobrazená po úspešnej registrácii (pred prihlásením)
               </th>
-              <td>
+              <td style="border-top: 1px lightgray dashed;">
                 <input id="florp_registration_successful_message" name="florp_registration_successful_message" type="text" value="%%strRegistrationSuccessfulMessage%%" style="width: 100%;" />
               </td>
             </tr>
@@ -2233,10 +2244,10 @@ class FLORP{
               </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
+              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
                 <label for="florp_approve_users_automatically">Schváliť registrovaných používateľov automaticky?</label>
               </th>
-              <td>
+              <td style="border-top: 1px lightgray dashed;">
                 <input id="florp_approve_users_automatically" name="florp_approve_users_automatically" type="checkbox" %%approveUsersAutomaticallyChecked%% value="1"/>
               </td>
             </tr>
@@ -2244,7 +2255,7 @@ class FLORP{
               <th style="width: 47%; padding: 0 1%; text-align: right;">
                 Správa zobrazená prihláseným užívateľom, čakajúcim na schválenie
               </th>
-              <td>
+              <td style="border-top: 1px lightgray dashed;">
                 %%wpEditorPendingUserPageContentHTML%%
               </td>
             </tr>
@@ -2252,23 +2263,25 @@ class FLORP{
               <th style="width: 47%; padding: 0 1%; text-align: right;">
                 Predmet správy poslanej užívateľom po schválení
               </th>
-              <td>
+              <td style="border-top: 1px lightgray dashed;">
                 <input id="florp_user_approved_subject" name="florp_user_approved_subject" type="text" value="%%strUserApprovedSubject%%" style="width: 100%;" />
+                <span style="width: 100%;">Placeholdre: <code>%BLOGNAME%</code>, <code>%BLOGURL%</code></span>
               </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;">
                 Správa poslaná užívateľom po schválení
               </th>
-              <td>
+              <td style="border-top: 1px lightgray dashed;">
                 %%wpEditorUserApprovedMessage%%
+                <span style="width: 100%;">Placeholdre: <code>%BLOGNAME%</code>, <code>%BLOGURL%</code>, <code>%USERNAME%</code>, <code>%EMAIL%</code>, <code>%PROFILE_URL%</code></span>
               </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
+              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
                 Newsletter zoznamy (oddelené čiarkou)
               </th>
-              <td>
+              <td style="border-top: 1px lightgray dashed;">
                 <input id="florp_newsletter_lists_main" name="florp_newsletter_lists_main" type="text" value="%%strNewsletterListsMain%%" style="width: 100%;" />
               </td>
             </tr>
@@ -2341,6 +2354,8 @@ class FLORP{
     }
 
     $strBeforeLoginFormHtmlFlashmob = $this->get_wp_editor( $this->strBeforeLoginFormHtmlFlashmob, 'florp_before_login_form_html_flashmob' );
+    $strParticipantRegisteredMessage = $this->get_wp_editor( $this->aOptions['strParticipantRegisteredMessage'], 'florp_participant_registered_message' );
+    $strParticipantRemovedMessage = $this->get_wp_editor( $this->aOptions['strParticipantRemovedMessage'], 'florp_participant_removed_message' );
 
     return str_replace(
       array( '%%reloadCheckedFlashmob%%',
@@ -2349,14 +2364,22 @@ class FLORP{
         '%%optionsFlashmobSite%%',
         '%%optionsPagesFlashmob%%',
         '%%wpEditorBeforeLoginFormHtmlFlashmob%%',
-        '%%strNewsletterListsFlashmob%%' ),
+        '%%strNewsletterListsFlashmob%%',
+        '%%wpEditorParticipantRegisteredMessage%%',
+        '%%strParticipantRegisteredSubject%%',
+        '%%wpEditorParticipantRemovedMessage%%',
+        '%%strParticipantRemovedSubject%%' ),
       array( $aBooleanOptionsChecked['bReloadAfterSuccessfulSubmissionFlashmob'],
         $optionsNinjaFormsFlashmob,
         $optionsPopupsFlashmob,
         $optionsFlashmobSite,
         $optionsPagesFlashmob,
         $strBeforeLoginFormHtmlFlashmob,
-        $this->aOptions['strNewsletterListsFlashmob'] ),
+        $this->aOptions['strNewsletterListsFlashmob'],
+        $strParticipantRegisteredMessage,
+        $this->aOptions['strParticipantRegisteredSubject'],
+        $strParticipantRemovedMessage,
+        $this->aOptions['strParticipantRemovedSubject'] ),
       '
             <tr style="width: 98%; padding:  5px 1%;">
               <th colspan="2"><h3>Flashmobová podstránka</h3></th>
@@ -2412,19 +2435,54 @@ class FLORP{
               </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
+              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
                 HTML text zobrazený nad prihlasovacím (resp. registračným) formulárom
               </th>
-              <td>
+              <td style="border-top: 1px lightgray dashed;">
                 %%wpEditorBeforeLoginFormHtmlFlashmob%%
               </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
+              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
                 Newsletter zoznamy (oddelené čiarkou)
               </th>
-              <td>
+              <td style="border-top: 1px lightgray dashed;">
                 <input id="florp_newsletter_lists_flashmob" name="florp_newsletter_lists_flashmob" type="text" value="%%strNewsletterListsFlashmob%%" style="width: 100%;" />
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
+                Predmet správy poslanej prihláseným účastníkom flashmobu
+              </th>
+              <td style="border-top: 1px lightgray dashed;">
+                <input id="florp_participant_registered_subject" name="florp_participant_registered_subject" type="text" value="%%strParticipantRegisteredSubject%%" style="width: 100%;" />
+                <span style="width: 100%;">Placeholdre: <code>%BLOGNAME%</code>, <code>%BLOGURL%</code></span>
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                Správa poslaná prihláseným účastníkom flashmobu
+              </th>
+              <td style="border-top: 1px lightgray dashed;">
+                %%wpEditorParticipantRegisteredMessage%%
+                <span style="width: 100%;">Placeholdre: <code>%BLOGNAME%</code>, <code>%BLOGURL%</code>, <code>%USERNAME%</code>, <code>%EMAIL%</code></span>
+              </td>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
+                Predmet správy poslanej odstráneným účastníkom flashmobu
+              </th>
+              <td style="border-top: 1px lightgray dashed;">
+                <input id="florp_participant_removed_subject" name="florp_participant_removed_subject" type="text" value="%%strParticipantRemovedSubject%%" style="width: 100%;" />
+                <span style="width: 100%;">Placeholdre: <code>%BLOGNAME%</code>, <code>%BLOGURL%</code></span>
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                Správa poslaná odstráneným účastníkom flashmobu
+              </th>
+              <td style="border-top: 1px lightgray dashed;">
+                %%wpEditorParticipantRemovedMessage%%
+                <span style="width: 100%;">Placeholdre: <code>%BLOGNAME%</code>, <code>%BLOGURL%</code>, <code>%USERNAME%</code>, <code>%EMAIL%</code></span>
               </td>
             </tr>
       '
@@ -3035,7 +3093,63 @@ class FLORP{
     }
     return $strUserName;
   }
-  
+
+  private function add_log( $strKey, $mixContent ) {
+    if (!isset($this->aOptions['logs'][$strKey])) {
+      $this->aOptions['logs'][$strKey] = array();
+    }
+    $this->aOptions['logs'][$strKey] = array_merge( $this->aOptions['logs'][$strKey], (array) $mixContent );
+    update_site_option( $this->strOptionKey, $this->aOptions, true );
+  }
+
+  private function get_log( $strKey ) {
+    if (!isset($this->aOptions['logs'][$strKey])) {
+      return array();
+    } else {
+      return $this->aOptions['logs'][$strKey];
+    }
+  }
+
+  private function delete_log( $strKey ) {
+    if (isset($this->aOptions['logs'][$strKey])) {
+      unset($this->aOptions['logs'][$strKey]);
+    }
+    update_site_option( $this->strOptionKey, $this->aOptions, true );
+  }
+
+  private function get_logs() {
+    return $this->aOptions['logs'];
+  }
+
+  private function delete_logs() {
+    $this->aOptions['logs'] = array();
+    update_site_option( $this->strOptionKey, $this->aOptions, true );
+  }
+
+  private function new_user_notification( $user_login, $password, $user_email, $blogname, $message = false, $subject = false, $mixHeaders = '' ){
+    //Copied out of /wp-includes/pluggable.php
+
+    if (class_exists('LoginWithAjax')) {
+      // $this->add_log( 'new_user_notification_lwa', array( time() => array( $user_login, $password, $user_email, $blogname, $message, $subject, $mixHeaders ) ) );
+      LoginWithAjax::new_user_notification( $user_login, $password, $user_email, $blogname, $message, $subject, $mixHeaders );
+      return;
+    }
+    // $this->add_log( 'new_user_notification_this', array( time() => array( $user_login, $password, $user_email, $blogname, $message, $subject, $mixHeaders ) ) );
+    if (!$message || !$subject) {
+      return;
+    }
+    $message = str_replace('%USERNAME%', $user_login, $message);
+    $message = str_replace('%PASSWORD%', $password, $message);
+    $message = str_replace('%EMAIL%', $user_email, $message);
+    $message = str_replace('%BLOGNAME%', $blogname, $message);
+    $message = str_replace('%BLOGURL%', home_url(), $message);
+
+    $subject = str_replace('%BLOGNAME%', $blogname, $subject);
+    $subject = str_replace('%BLOGURL%', home_url(), $subject);
+
+    wp_mail($user_email, $subject, $message, $mixHeaders);
+  }
+
   public function action__update_user_profile( $aFormData ) {
     // Update the user's profile //
     // file_put_contents( __DIR__ . "/kk-debug-after-submission.log", var_export( $aFormData, true ) );
@@ -3072,6 +3186,7 @@ class FLORP{
       }
 
       if (!empty($aFieldData) && in_array('newsletter_subscribe', $aFieldData['preferences'])) {
+        // Subscribe participant to newsletter via REST API //
         $strAction = 'subscribe';
         $aData = array(
           'email'       => $aFieldData['user_email'],
@@ -3118,6 +3233,13 @@ class FLORP{
       ));
       update_site_option( $this->strOptionKey, $this->aOptions, true );
 
+      if (strlen(trim($this->aOptions['strParticipantRegisteredMessage'])) > 0) {
+        $strMessageContent = $this->aOptions['strParticipantRegisteredMessage'];
+        $strBlogname = trim(wp_specialchars_decode(get_option('blogname'), ENT_QUOTES));
+        $aHeaders = array('Content-Type: text/html; charset=UTF-8');
+        $this->new_user_notification( $aFieldData['user_email'], '', $aFieldData['user_email'], $strBlogname, $strMessageContent, $this->aOptions['strParticipantRegisteredSubject'], $aHeaders );
+      }
+
       // TODO: send notification to leader?
       return;
     }
@@ -3149,19 +3271,28 @@ class FLORP{
           add_user_to_blog( $this->iMainBlogID, $iUserID, $this->get_registration_user_role() );
         }
         $strBlogname = trim(wp_specialchars_decode(get_option('blogname'), ENT_QUOTES));
-        LoginWithAjax::new_user_notification( $strUsername, $aFieldData['user_pass'], $aFieldData['user_email'], $strBlogname );
+        $this->new_user_notification( $strUsername, $aFieldData['user_pass'], $aFieldData['user_email'], $strBlogname );
 
         // New user notification to admins //
         $message  = sprintf(__('New user registration on your site %s:'), $strBlogname) . "\n\n";
         $message .= sprintf(__('Username: %s'), $strUsername ) . "\n\n";
         $message .= sprintf(__('E-mail: %s'), $aFieldData['user_email'] ) . "\n";
+        if (!$this->aOptions['bApproveUsersAutomatically']) {
+          $strUserListUrl = admin_url( 'users.php' );
+          $message .= "\n".sprintf(__('Approval needed - go to the user list: %s'), $strUserListUrl ) . "\n";
+        }
         $aAdminArgs = array(
           'blog_id' => get_current_blog_id(),
           'role'    => 'administrator'
         );
         $aAdmins = get_users( $aAdminArgs );
         if (empty($aAdmins) || (defined('FLORP_DEVEL') && FLORP_DEVEL === true)) {
-          @wp_mail(get_option('admin_email'), sprintf(__('[%s] New User Registration'), $strBlogname), $message);
+          $strSubjectRaw = '[%s] New User Registration';
+          if (!$this->aOptions['bApproveUsersAutomatically']) {
+            $strSubjectRaw .= ". Approval needed";
+          }
+
+          @wp_mail(get_option('admin_email'), sprintf(__($strSubjectRaw), $strBlogname), $message);
         } else {
           foreach ($aAdmins as $iKey => $oAdmin) {
             @wp_mail($oAdmin->user_email, sprintf(__('[%s] New User Registration'), $strBlogname), $message);
@@ -3174,6 +3305,11 @@ class FLORP{
     $strNewsletterSubscribePreferenceKey = 'newsletter_subscribe';
     $aPreferencesOfUser = (array) get_user_meta( $iUserID, $strPreferencesKey, true );
     $bNewsletterSubscribeOld = in_array( $strNewsletterSubscribePreferenceKey, $aPreferencesOfUser );
+
+    $strSubscriberTypeKey = 'subscriber_type';
+    $strFlashmobOrganizerKey = 'flashmob_organizer';
+    $aSubscriberTypesOfUser = (array) get_user_meta( $iUserID, $strSubscriberTypeKey, true );
+    $bIsFlashmobOrganizerOld = in_array( $strFlashmobOrganizerKey, $aSubscriberTypesOfUser );
 
     $aUserData = array();
     foreach ($aFormData["fields"] as $strKey => $aData) {
@@ -3188,6 +3324,8 @@ class FLORP{
 
     if (!empty($aUserData)) {
       $aUserData['ID'] = $iUserID;
+      add_filter( 'send_password_change_email', '__return_false' );
+      add_filter( 'send_email_change_email', '__return_false' );
       $mixRes = wp_update_user( $aUserData );
     }
     if (!empty($aMetaData)) {
@@ -3202,6 +3340,29 @@ class FLORP{
         }
       }
 
+      // Remove participants of organizer if they decide not to organize a flashmob //
+      if (isset($aMetaData[$strSubscriberTypeKey])) {
+        $bIsFlashmobOrganizerNew = in_array( $strFlashmobOrganizerKey, (array) $aMetaData[$strSubscriberTypeKey] );
+      } else {
+        $bIsFlashmobOrganizerNew = false;
+      }
+      if ($bIsFlashmobOrganizerNew !== $bIsFlashmobOrganizerOld && !$bIsFlashmobOrganizerNew && $this->get_participant_count( $iUserID ) > 0) {
+        // Send notification to participants //
+        foreach ($this->aOptions['aParticipants'][$iUserID] as $strEmail => $aParticipantData) {
+          if (strlen(trim($this->aOptions['strParticipantRemovedMessage'])) > 0) {
+            $strMessageContent = $this->aOptions['strParticipantRemovedMessage'];
+            $strBlogname = trim(wp_specialchars_decode(get_option('blogname'), ENT_QUOTES));
+            $aHeaders = array('Content-Type: text/html; charset=UTF-8');
+            $this->new_user_notification( $strEmail, '', $strEmail, $strBlogname, $strMessageContent, $this->aOptions['strParticipantRemovedSubject'], $aHeaders );
+          }
+        }
+
+        // Remove participants //
+        $this->aOptions['aParticipants'][$iUserID] = array();
+        update_site_option( $this->strOptionKey, $this->aOptions, true );
+      }
+
+      // Subscribe or unsubscribe to/from newsletter via REST API //
       if (isset($aMetaData[$strPreferencesKey])) {
         $bNewsletterSubscribeNew = in_array( $strNewsletterSubscribePreferenceKey, (array) $aMetaData[$strPreferencesKey] );
       } else {
@@ -3275,9 +3436,9 @@ class FLORP{
       if ( $this->iProfileFormPageIDMain > 0 ) {
         $strProfilePageUrl = get_permalink( $this->iProfileFormPageIDMain );
       }
-      $strMessageContent = str_replace( '{profile_url}', $strProfilePageUrl, $this->strUserApprovedMessage );
+      $strMessageContent = str_replace( '%PROFILE_URL%', $strProfilePageUrl, $this->strUserApprovedMessage );
       $aHeaders = array('Content-Type: text/html; charset=UTF-8');
-      LoginWithAjax::new_user_notification( $oUser->user_email, '', $oUser->user_email, $strBlogname, $strMessageContent, $this->aOptions['strUserApprovedSubject'], $aHeaders );
+      $this->new_user_notification( $oUser->user_email, '', $oUser->user_email, $strBlogname, $strMessageContent, $this->aOptions['strUserApprovedSubject'], $aHeaders );
     }
 
     // User approval notification to admins //
