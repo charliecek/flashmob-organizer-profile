@@ -25,7 +25,7 @@ function add_florp_action_controllers() {
             try {
                 grecaptcha.reset(e)
             } catch (e) {
-                console.log("Notice: Error trying to reset grecaptcha.")
+                console.warn("Notice: Error trying to reset grecaptcha.")
             }
             e++
         })
@@ -37,7 +37,7 @@ function add_florp_action_controllers() {
 
   var florpSubmitController = Marionette.Object.extend( {
     formModel: null,
-    formID: florp.form_id || 2,
+    formID: florp.form_id,
     initialize: function() {
       // On the Form Submission's field validaiton...
       var submitChannel = Backbone.Radio.channel( 'submit' );
@@ -48,6 +48,13 @@ function add_florp_action_controllers() {
     },
 
     validateSubmit: function( model ) {
+      if ("undefined" === typeof this.formID) {
+        this.formID = florp.form_id
+      }
+      if ("undefined" === typeof this.formID) {
+        console.warn("formID wasn't set");
+        return
+      }
       jQuery(".nf-response-msg").children().remove()
 
       if (this.formModel === null || typeof this.formModel === "undefined") {
@@ -62,7 +69,7 @@ function add_florp_action_controllers() {
       if (errors.length > 0) {
         for (var i in errors.models) {
           var error = errors.models[i];
-          var model_id = model.get('id');
+          // var model_id = model.get('id');
           var error_id = error.get('id');
           this.formModel.removeError(error_id);
         }
@@ -70,6 +77,13 @@ function add_florp_action_controllers() {
     },
 
     actionSubmit: function( response ) {
+      if ("undefined" === typeof this.formID) {
+        this.formID = florp.form_id
+      }
+      if ("undefined" === typeof this.formID) {
+        console.warn("formID wasn't set");
+        return
+      }
       if (response.data.form_id != this.formID) {
         console.info("This is not form with ID="+this.formID);
         return;
@@ -98,9 +112,47 @@ function add_florp_action_controllers() {
         errorCount = response.errors.length;
       }
       if (errorCount == 0) {
+        sessionStorage.setItem("florpFormSubmitSuccessful", "1");
         if (florp.blog_type === 'flashmob') {
           console.info("Successful submission on the flashmob blog => clearing form")
-          // TODO: add a .florp-clear-on-submission class
+          jQuery('.florp-clear-on-submission').find("input, select").each(function () {
+            var $this = jQuery(this)
+            if ($this.is("select")) {
+              if ($this.val() !== "null") {
+                $this.val("null").trigger('change')
+              }
+            } else if ($this.is("input") && ($this.prop("type") === "checkbox" || $this.prop("type") === "radio")) {
+              if ($this.prop("checked")) {
+                $this.prop("checked", false).trigger('change')
+              }
+            } else if ($this.is("input")) {
+              if ($this.val().length > 0) {
+                $this.val("").trigger('change')
+              }
+            }
+            // Remove form field errors //
+            var fieldID = $this.parents(".field-wrap").data('fieldId')
+            if ("undefined" === typeof fieldID) {
+              fieldID = $this.prop("id").replace("nf-field-", "").split("-")[0]
+            }
+            var field = nfRadio.channel("fields").request("get:field", fieldID);
+            nfRadio.channel("fields").request("remove:error", field.get("id"), "required-error")
+          })
+          // Remove form errors //
+          var errors = this.formModel.get( 'errors' );
+          if (errors.length > 0) {
+            for (var i in errors.models) {
+              var error = errors.models[i];
+              // var model_id = model.get('id');
+              var error_id = error.get('id');
+              this.formModel.removeError(error_id);
+            }
+          }
+          setTimeout(function() {
+            jQuery(".nf-response-msg").children().fadeOut(500, function() {
+              jQuery(this).remove()
+            })
+          }, 2000);
           return
         }
         // response.data.fields_by_key -> use to login

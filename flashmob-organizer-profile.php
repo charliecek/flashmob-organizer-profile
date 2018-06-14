@@ -1877,6 +1877,13 @@ class FLORP{
     } else {
       $strBlogType = 'other';
     }
+
+    if ($this->isMainBlog && is_user_logged_in() && $this->get_participant_count( get_current_user_id() ) > 0) {
+      $iHasParticipants = 1;
+    } else {
+      $iHasParticipants = 0;
+    }
+
     $aJS = array(
       'hide_flashmob_fields'          => $this->aOptions['bHideFlashmobFields'] ? 1 : 0,
       'reload_ok_submission'          => $bReloadAfterSuccessfulSubmission ? 1 : 0,
@@ -1899,7 +1906,7 @@ class FLORP{
       'load_maps_lazy'                => $this->aOptions['bLoadMapsLazy'] ? 1 : 0,
       'load_maps_async'               => $this->aOptions['bLoadMapsAsync'] ? 1 : 0,
       'load_videos_lazy'              => $this->aOptions['bLoadVideosLazy'] ? 1 : 0,
-      'has_participants'              => 0, // TODO
+      'has_participants'              => $iHasParticipants,
     );
     if (is_user_logged_in()) {
       $oCurrentUser = wp_get_current_user();
@@ -2008,7 +2015,7 @@ class FLORP{
     // echo "<pre>" .var_export($this->getFlashmobSubscribers('flashmob_organizer'), true). "</pre>";
     // echo "<pre>" .var_export($this->getFlashmobSubscribers('teacher'), true). "</pre>";
     // echo "<pre>" .var_export($this->getFlashmobSubscribers('all'), true). "</pre>";
-    echo "<pre>" .var_export($this->aOptions['aParticipants'], true). "</pre>";
+    // echo "<pre>" .var_export($this->aOptions['aParticipants'], true). "</pre>";
 
     $aBooleanOptionsChecked = array();
     foreach ($this->aBooleanOptions as $strOptionKey) {
@@ -2777,6 +2784,7 @@ class FLORP{
         'mixMarkerKey'      => $_POST['mixMarkerKey'],
         'strMapType'        => $_POST['strMapType'],
         'iUserID'           => $_POST['iUserID'],
+        'strDivID'          => $_POST['divID'],
         'iCurrentYear'      => $_POST['iCurrentYear'],
         'iBeforeFlashmob'   => $_POST['iBeforeFlashmob'],
         'iParticipantCount' => $this->get_participant_count( $_POST['iUserID'] ),
@@ -2936,7 +2944,7 @@ class FLORP{
     }
 
     if ($aInfoWindowData['strMapType'] === 'flashmob_organizer' && $aInfoWindowData['iCurrentYear'] == '1' && $aInfoWindowData['iBeforeFlashmob'] == '1') {
-      $strSignupLink = '<br><span class="florp-click-trigger florp-click-participant-trigger pum-trigger" data-user-id="'.$aInfoWindowData['iUserID'].'" data-flashmob-city="'.$aInfoWindowData['school_city']['value'].'" style="cursor: pointer;">Chcem sa prihlásiť na tento flashmob!</span>';
+      $strSignupLink = '<br><span class="florp-click-trigger florp-click-participant-trigger pum-trigger" data-user-id="'.$aInfoWindowData['iUserID'].'" data-flashmob-city="'.$aInfoWindowData['school_city']['value'].'" data-marker-key="'.$aInfoWindowData['mixMarkerKey'].'" data-div-id="'.$aInfoWindowData['strDivID'].'" style="cursor: pointer;">Chcem sa prihlásiť na tento flashmob!</span>';
       $strParticipantCount = '<br>Prihlásených účastníkov: '.$aInfoWindowData['iParticipantCount'];
     } else {
       $strSignupLink = "";
