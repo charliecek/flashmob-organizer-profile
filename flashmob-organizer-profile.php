@@ -25,6 +25,7 @@ class FLORP{
   private $aUserFields;
   private $aUserFieldsMap;
   private $aMetaFields;
+  private $aMetaFieldsFlashmobToArchive;
   private $aFlashmobMetaFieldsToClean;
   private $aLocationFields;
   private $strProfileFormWrapperID = 'florp-profile-form-wrapper-div';
@@ -532,10 +533,11 @@ class FLORP{
     );
     $this->aUserFields = array( 'user_email', 'first_name', 'last_name', 'user_pass' );
     $this->aUserFieldsMap = array( 'first_name', 'last_name' );
-    $this->aMetaFields = array( 'webpage', 'school_name', 'school_webpage', 'school_city', 'subscriber_type',
-                          'flashmob_number_of_dancers', 'video_link_type', 'youtube_link', 'facebook_link', 'vimeo_link', 'embed_code', 'flashmob_address', 'longitude', 'latitude',
-                          'preferences', 'flashmob_leader_tshirt_size', 'flashmob_leader_tshirt_gender',
-                          'courses_city', 'courses_city_2', 'courses_city_3', 'courses_info', 'courses_info_2', 'courses_info_3', 'courses_in_city_2', 'courses_in_city_3' );
+    $this->aMetaFieldsFlashmobToArchive = array( 'webpage', 'school_name', 'school_webpage', 'school_city',
+                          'flashmob_number_of_dancers', 'video_link_type', 'youtube_link', 'facebook_link', 'vimeo_link', 'embed_code', 'flashmob_address', 'longitude', 'latitude' );
+    $this->aMetaFields = array_merge( $this->aMetaFieldsFlashmobToArchive, array(
+                          'subscriber_type', 'preferences', 'flashmob_leader_tshirt_size', 'flashmob_leader_tshirt_gender',
+                          'courses_city', 'courses_city_2', 'courses_city_3', 'courses_info', 'courses_info_2', 'courses_info_3', 'courses_in_city_2', 'courses_in_city_3' ) );
     $this->aFlashmobMetaFieldsToClean = array(
                           'subscriber_type:flashmob_organizer', 'flashmob_number_of_dancers', 'video_link_type', 'youtube_link', 'facebook_link', 'vimeo_link', 'embed_code', 'flashmob_address', 'longitude', 'latitude',
                           'preferences:flashmob_leader_tshirt', 'flashmob_leader_tshirt_size', 'flashmob_leader_tshirt_gender' );
@@ -1744,10 +1746,23 @@ class FLORP{
     return $aMapOptionsArray;
   }
 
-  private function archive_current_year_map_options() {
+  private function get_flashmob_map_options_array_to_archive() {
     $iFlashmobYear = $this->aOptions['iFlashmobYear'];
     $aMapOptions = $this->get_flashmob_map_options_array(true, $iFlashmobYear);
-    $this->aOptions['aYearlyMapOptions'][$iFlashmobYear] = $aMapOptions;
+    foreach ($aMapOptions as $iUserID => $aUserMapOptions) {
+      foreach ($aUserMapOptions as $strKey => $mixVal) {
+        if (!in_array( $strKey, $this->aMetaFieldsFlashmobToArchive ) && !in_array( $strKey, $this->aUserFieldsMap )) {
+          unset( $aMapOptions[$iUserID][$strKey] );
+        }
+      }
+    }
+    return $aMapOptions;
+  }
+
+  private function archive_current_year_map_options() {
+    $iFlashmobYear = $this->aOptions['iFlashmobYear'];
+    $this->aOptions['aYearlyMapOptions'][$iFlashmobYear] = $this->get_flashmob_map_options_array_to_archive();
+    $this->aOptions['aParticipants'] = array();
     update_site_option( $this->strOptionKey, $this->aOptions, true );
 
     // clean user meta //
@@ -2016,6 +2031,7 @@ class FLORP{
     // echo "<pre>" .var_export($this->getFlashmobSubscribers('teacher'), true). "</pre>";
     // echo "<pre>" .var_export($this->getFlashmobSubscribers('all'), true). "</pre>";
     // echo "<pre>" .var_export($this->aOptions['aParticipants'], true). "</pre>";
+    // echo "<pre>" .var_export($this->get_flashmob_map_options_array_to_archive(), true). "</pre>";
 
     $aBooleanOptionsChecked = array();
     foreach ($this->aBooleanOptions as $strOptionKey) {
@@ -2577,21 +2593,27 @@ class FLORP{
       $aKeysToSave = $this->aOptionKeysByBlog['main'];
 
       // Archive current flashmob year's data //
-      $iFlashmobYearCurrent = intval($this->aOptions['iFlashmobYear']);
-      $iFlashmobYearNew = isset($aPostedOptions['florp_flashmob_year']) ? intval($aPostedOptions['florp_flashmob_year']) : $iFlashmobYearCurrent;
-      if (isset($this->aOptions['aYearlyMapOptions'][$iFlashmobYearNew])) {
-        echo '<span class="warning">Rok flashmobu možno nastaviť len na taký, pre ktorý ešte nie sú archívne dáta v DB!</span>';
-        return false;
-      } elseif ($iFlashmobYearNew != $iFlashmobYearCurrent) {
-        if (defined('FLORP_DEVEL') && FLORP_DEVEL === true && defined('FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION') && FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION === true) {
-          // NOT ARCHIVING //
-        } else {
-          $this->archive_current_year_map_options();
-          echo '<span class="info">Dáta flashmobu z roku '.$iFlashmobYearCurrent.' boli archivované.</span>';
+      if (!$this->aOptions['bHideFlashmobFields']) {
+        // Trying to archive after the saved flashmob date //
+        $iFlashmobYearCurrent = intval($this->aOptions['iFlashmobYear']);
+        $iFlashmobYearNew = isset($aPostedOptions['florp_flashmob_year']) ? intval($aPostedOptions['florp_flashmob_year']) : $iFlashmobYearCurrent;
+        if (isset($this->aOptions['aYearlyMapOptions'][$iFlashmobYearNew])) {
+          // There is archived data for this flashmob year in the DB already //
+          echo '<span class="warning">Rok flashmobu možno nastaviť len na taký, pre ktorý ešte nie sú archívne dáta v DB!</span>';
+          return false;
+        } elseif ($iFlashmobYearNew != $iFlashmobYearCurrent) {
+          // Flashmob year was changed //
+          if (defined('FLORP_DEVEL') && FLORP_DEVEL === true && defined('FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION') && FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION === true) {
+            // NOT ARCHIVING //
+            echo '<span class="info"><code>(FLORP_DEVEL && FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION == true)</code> => nearchivujem flashmobové mapy.</span>';
+          } else {
+            $this->archive_current_year_map_options();
+            echo '<span class="info">Dáta flashmobu z roku '.$iFlashmobYearCurrent.' boli archivované.</span>';
+          }
         }
       }
 
-      // Migrate users from Flashmob blog to main blog on change of Main blog //
+      // Migrate users from previously set main blog to newly selected main blog on change of Main blog //
       $iNewMainBlogID = intval($aPostedOptions['florp_main_blog_id']);
       if ($iNewMainBlogID !== $this->iMainBlogID) {
         $this->migrate_subscribers( $this->iMainBlogID, $iNewMainBlogID );
