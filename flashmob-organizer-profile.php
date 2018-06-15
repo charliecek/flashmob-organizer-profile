@@ -1494,7 +1494,7 @@ class FLORP{
     } elseif ($bUnnotifiedOnly && $iUserID === 0) {
       foreach ($this->aOptions['aParticipants'] as $iLeaderID => $aParticipants) {
         foreach ($aParticipants as $strEmail => $aParticipantData) {
-          if (isset($aParticipantData['bLeaderNotified']) && $aParticipantData['bLeaderNotified'] === true) {
+          if (isset($aParticipantData['leader_notified']) && $aParticipantData['leader_notified'] === true) {
             continue;
           }
           if (!isset($aParticipantsReturned[$iLeaderID])) {
@@ -1509,7 +1509,7 @@ class FLORP{
     } elseif ($bUnnotifiedOnly && $iUserID > 0) {
       if (isset( $this->aOptions['aParticipants'][$iUserID] )) {
         foreach ($this->aOptions['aParticipants'][$iUserID] as $strEmail => $aParticipantData) {
-          if (isset($aParticipantData['bLeaderNotified']) && $aParticipantData['bLeaderNotified'] === true) {
+          if (isset($aParticipantData['leader_notified']) && $aParticipantData['leader_notified'] === true) {
             continue;
           }
           if (!isset($aParticipantsReturned[$iUserID])) {
@@ -1525,6 +1525,14 @@ class FLORP{
       // !$bUnnotifiedOnly && $iUserID > 0
       $aParticipantsReturned = (isset($this->aOptions['aParticipants'][$iUserID])) ? array( $iUserID => $this->aOptions['aParticipants'][$iUserID] ) : array();
     }
+
+    foreach ($aParticipantsReturned as $iLeaderID => $aParticipants) {
+      $oLeader = get_user_by( 'id', $iLeaderID );
+      if ( in_array( $this->strUserRolePending, (array) $oLeader->roles ) ) {
+        unset($aParticipantsReturned[$iLeaderID]);
+      }
+    }
+
     return $aParticipantsReturned;
   }
 
@@ -1542,7 +1550,7 @@ class FLORP{
         continue;
       }
       foreach ($aParticipants as $strEmail => $aParticipantData) {
-        $this->aOptions['aParticipants'][$iLeaderID][$strEmail]['bLeaderNotified'] = true;
+        $this->aOptions['aParticipants'][$iLeaderID][$strEmail]['leader_notified'] = true;
       }
 
       $strTable = $this->get_leader_participants_table( $aParticipants, true );
@@ -2074,6 +2082,160 @@ class FLORP{
       plugins_url( 'flashmob-organizer-profile/img/florp-icon-30.png' ),
       58
     );
+    if ($this->isMainBlog) {
+      $page = add_submenu_page(
+        'florp-main',
+        'Zoznam lídrov',
+        'Zoznam lídrov',
+        'manage_options',
+        'florp-leaders',
+        array( $this, 'leaders_table_admin' )
+      );
+      $page = add_submenu_page(
+        'florp-main',
+        'Zoznam účastníkov',
+        'Zoznam účastníkov',
+        'manage_options',
+        'florp-participants',
+        array( $this, 'participants_table_admin' )
+      );
+    }
+  }
+
+  public function leaders_table_admin() {
+    echo "<div class=\"wrap\"><h1>" . "Zoznam lídrov" . "</h1>";
+    $aUsers = $this->getFlashmobSubscribers( 'all' );
+    $aEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Preferencie</th><th>Profil</th><th>Účastníci</th>';
+    foreach ($aUsers as $oUser) {
+      $aAllMeta = array_map(
+        function( $a ){
+          if (is_string($a) && strpos($a, 'a:') === 0) {
+            return maybe_unserialize( $a );
+          } elseif (is_array($a) && count($a) === 1) {
+            if (is_string($a[0]) && strpos($a[0], 'a:') === 0) {
+              return maybe_unserialize( $a[0] );
+            } else {
+              return $a[0];
+            }
+          } else {
+            return $a;
+          }
+        },
+        get_user_meta( $oUser->ID )
+      );
+      $aEcho .= '<tr>';
+      $aEcho .=   '<td>'.$oUser->first_name.' '.$oUser->last_name.'</td>';
+      $aEcho .=   '<td><a name="'.$oUser->ID.'">'.$oUser->user_email.'</a></td>';
+      $aEcho .=   '<td>'.$aAllMeta['school_city'].'</td>';
+      $aEcho .=   '<td>';
+      if (is_array($aAllMeta['subscriber_type'])) {
+        foreach ($aAllMeta['subscriber_type'] as $strSubscriberType) {
+          $aEcho .= str_replace(
+            array('flashmob_organizer', 'teacher'),
+            array('Zorganizuje Flashmob', 'Učí kurzy'),
+            $strSubscriberType
+          ).'<br>';
+        }
+      }
+      $aEcho .=   '</td>';
+      $aEcho .=   '<td>';
+      $aCoursesInfoKeys = array( 'courses_info', 'courses_info_2', 'courses_info_3' );
+      $aSingleCheckboxes = array( 'courses_in_city_2', 'courses_in_city_3' );
+      foreach ($this->aMetaFields as $strMetaKey) {
+        if (!isset($aAllMeta[$strMetaKey]) || (!is_bool($aAllMeta[$strMetaKey]) && !is_numeric($aAllMeta[$strMetaKey]) && empty($aAllMeta[$strMetaKey])) || $aAllMeta[$strMetaKey] === 'null' || $strMetaKey === 'subscriber_type') {
+          continue;
+        }
+
+        if (in_array( $strMetaKey, $aCoursesInfoKeys )) {
+          continue;
+        }
+
+        if (is_array($aAllMeta[$strMetaKey])) {
+          $strValue = implode( ', ', $aAllMeta[$strMetaKey]);
+        } elseif (in_array($strMetaKey, $aSingleCheckboxes) || is_bool($aAllMeta[$strMetaKey])) {
+          $strValue = $aAllMeta[$strMetaKey] ? '<input type="checkbox" disabled checked />' : '<input type="checkbox" disabled />';
+        } else {
+          $strValue = $aAllMeta[$strMetaKey];
+        }
+        $strFieldName = ucfirst( str_replace( '_', ' ', $strMetaKey ) );
+        if (stripos( $strValue, 'https://' ) === 0 || stripos( $strValue, 'http://' ) === 0) {
+          $aEcho .= '<a href="'.$strValue.'" target="_blank">'.$strFieldName.'</a><br>';
+        } else {
+          $aEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>';
+        }
+      }
+      $aEcho .=   '</td>';
+      $aEcho .=   '<td>';
+      $aParticipants = $this->get_flashmob_participants( $oUser->ID, false );
+      if (!empty($aParticipants)) {
+        $aParticipantsOfUser = $aParticipants[$oUser->ID];
+        if (!empty($aParticipantsOfUser)) {
+          foreach ($aParticipantsOfUser as $strEmail => $aParticipantData) {
+            $aEcho .= "<a href=\"".admin_url('admin.php?page=florp-participants')."#{$aParticipantData['user_email']}\">{$aParticipantData['first_name']} {$aParticipantData['last_name']}</a><br>";
+          }
+        }
+      }
+      $aEcho .=   '</td>';
+      $aEcho .= '</tr>';
+    }
+    $aEcho .= '</table>';
+    echo $aEcho;
+    echo '</div><!-- .wrap -->';
+  }
+
+  public function participants_table_admin() {
+    echo "<div class=\"wrap\"><h1>" . "Zoznam účastníkov" . "</h1>";
+    $aEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Líder</th><th>Pohlavie</th><th>Tanečná úroveň</th><th>Profil</th>';
+    $aParticipants = $this->get_flashmob_participants();
+    $aReplacements = array(
+      'gender' => array(
+        'from'  => array( 'muz', 'zena', 'par' ),
+        'to'    => array( 'muž', 'žena', 'pár' )
+      ),
+      'dance_level' => array(
+        'from'  => array( 'zaciatocnik', 'pokrocily', 'ucitel' ),
+        'to'    => array( 'začiatočník', 'pokročilý', 'učiteľ' )
+      )
+    );
+    foreach ($aParticipants as $iLeaderID => $aParticipantsOfLeader) {
+      foreach ($aParticipantsOfLeader as $strEmail => $aParticipantData) {
+        foreach ($aReplacements as $strKey => $aReplacementArr) {
+          $aParticipantData[$strKey] = str_replace( $aReplacementArr['from'], $aReplacementArr['to'], $aParticipantData[$strKey]);
+        }
+        $aEcho .= '<tr>';
+        $aEcho .=   '<td>'.$aParticipantData['first_name'].' '.$aParticipantData['last_name'].'</td>';
+        $aEcho .=   '<td><a name="'.$aParticipantData['user_email'].'">'.$aParticipantData['user_email'].'</a></td>';
+        $aEcho .=   '<td>'.$aParticipantData['flashmob_city'].'</td>';
+        $oLeader = get_user_by( 'id', $iLeaderID );
+        $aEcho .=   '<td><a href="'.admin_url('admin.php?page=florp-leaders')."#{$iLeaderID}\">{$oLeader->first_name} {$oLeader->last_name}</a></td>";
+        $aEcho .=   '<td>'.$aParticipantData['gender'].'</td>';
+        $aEcho .=   '<td>'.$aParticipantData['dance_level'].'</td>';
+        $aEcho .=   '<td>';
+        $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', 'leader_user_id', 'dance_level', 'gender' );
+        if (!isset($aParticipantData['leader_notified'])) {
+          $aParticipantData['leader_notified'] = false;
+        }
+        foreach ($aParticipantData as $strKey => $mixValue) {
+          if (!isset($mixValue) || (!is_bool($mixValue) && !is_numeric($mixValue) && empty($mixValue)) || $mixValue === 'null' || in_array( $strKey, $aSkip )) {
+            continue;
+          }
+          if (is_array($mixValue)) {
+            $strValue = implode( ', ', $mixValue);
+          } elseif (is_bool($mixValue)) {
+            $strValue = $mixValue ? '<input type="checkbox" disabled checked />' : '<input type="checkbox" disabled />';
+          } else {
+            $strValue = $mixValue;
+          }
+          $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
+          $aEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>';
+        }
+        $aEcho .=   '</td>';
+        $aEcho .= '</tr>';
+      }
+    }
+    $aEcho .= '</table>';
+    echo $aEcho;
+    echo '</div><!-- .wrap -->';
   }
 
   public function options_page() {
@@ -2144,7 +2306,7 @@ class FLORP{
       // echo "<pre>" .var_export($this->get_flashmob_map_options_array_to_archive(), true). "</pre>";
       // $this->delete_logs();
       // echo "<pre>" .var_export($this->get_logs(), true). "</pre>";
-      // foreach($this->aOptions['aParticipants'] as $i => $a) {foreach($a as $e => $ap) {$this->aOptions['aParticipants'][$i][$e]['bLeaderNotified']=false;}}; update_site_option( $this->strOptionKey, $this->aOptions, true );
+      // foreach($this->aOptions['aParticipants'] as $i => $a) {foreach($a as $e => $ap) {$this->aOptions['aParticipants'][$i][$e]['leader_notified']=false;}}; update_site_option( $this->strOptionKey, $this->aOptions, true );
       // echo "<pre>" .var_export($this->aOptions['aParticipants'], true). "</pre>";
     }
 
