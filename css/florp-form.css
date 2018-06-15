@@ -152,3 +152,17 @@ nf-field.florp-hidden-if-map-correct{
 .z-index-1999999999{
   z-index: 1999999999 !important;
 }
+.florp-leader-participants-table{
+  width: 100%;
+}
+.florp-leader-participants-hcell{
+  border-top: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  background-color: #eee;
+}
+.florp-leader-participants-table tr:last-of-type .florp-leader-participants-cell {
+  border-bottom: 1px solid #ccc;
+}
+.florp-leader-participants-table tr:nth-child(odd) {
+  background-color: #eee;
+}

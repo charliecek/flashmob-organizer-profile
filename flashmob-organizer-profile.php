@@ -105,6 +105,8 @@ class FLORP{
       'strParticipantRemovedMessage'              => '<p>Žiaľ, flashmob, na ktorý ste sa prihlásili, bol zrušený.</p>
 <p>Nezúfajte však! Pozrite si <a href="http://flashmob.salsarueda.dance" target="blank">mapku flashmobov na našej stránke</a> a ak máte niektorý flashmob po ruke, prihláste sa na ten!</p>
 <p>Váš SalsaRueda.Dance team</p>',
+      'strLeaderParticipantListNotificationMsg'   => '<p>Tu sú Vaši noví účastníci:</p><p>%PARTICIPANT_LIST%</p><p>Celý zoznam si môžete pozrieť <a href="%PROFILE_URL%">vo Vašom profile</a>.</p><p>Váš SalsaRueda.Dance team</p>',
+      'strLeaderParticipantListNotificationSbj'   => 'Máte nových účastníkov prihlásených na flashmob',
       'logs'                                      => array(),
     );
     $this->aOptionFormKeys = array(
@@ -146,6 +148,8 @@ class FLORP{
       'florp_participant_registered_message'      => 'strParticipantRegisteredMessage',
       'florp_participant_removed_subject'         => 'strParticipantRemovedSubject',
       'florp_participant_removed_message'         => 'strParticipantRemovedMessage',
+      'florp_leader_participant_list_notif_msg'   => 'strLeaderParticipantListNotificationMsg',
+      'florp_leader_participant_list_notif_sbj'   => 'strLeaderParticipantListNotificationSbj',
     );
     $aDeprecatedKeys = array(
       'iCurrentFlashmobYear',
@@ -190,6 +194,8 @@ class FLORP{
         'bPreventDirectMediaDownloads',
         'strNewsletterAPIKey',
         'strNewsletterListsMain',
+        'strLeaderParticipantListNotificationMsg',
+        'strLeaderParticipantListNotificationSbj',
       ),
       'flashmob'  => array(
         'iFlashmobBlogID',
@@ -255,6 +261,8 @@ class FLORP{
       'all' => array(),
     );
     krsort($this->aOptions["aYearlyMapOptions"]);
+
+    $this->maybe_add_crons();
 
     if (empty($this->aOptions['aYearlyMapOptions'])) {
       $this->aOptions['aYearlyMapOptions'] = array(
@@ -479,6 +487,7 @@ class FLORP{
     add_shortcode( 'florp-registered-counter-impreza', array( $this, 'registeredUserImprezaCounter' ));
     add_shortcode( 'florp-popup-links', array( $this, 'popupLinks' )); // DEPRECATED //
     add_shortcode( 'florp-profile', array( $this, 'main_blog_profile' ));
+    add_shortcode( 'florp-leader-participant-list', array( $this, 'leader_participants_table_shortcode' ));
 
     // FILTERS //
     // add_filter( 'ninja_forms_render_default_value', array( $this, 'filter__set_nf_default_values'), 10, 3 );
@@ -513,6 +522,7 @@ class FLORP{
     add_action( 'init', array( $this, 'action__init' ));
     add_action( 'set_user_role', array( $this, 'action__set_user_role' ), 10, 3 );
     add_action( 'lwa_before_login_form', array( $this, 'action__lwa_before_login_form' ));
+    add_action( 'florp_notify_leaders_about_participants_cron', array( $this, 'notify_leaders_about_participants' ) );
 
     $this->aMarkerInfoWindowTemplates = array(
       'flashmob_organizer' =>
@@ -998,8 +1008,6 @@ class FLORP{
 
       // Replace flashmob date/time in preference['flashmob_organizer] checkbox //
       if ('listcheckbox' === $aField['settings']['type'] && 'subscriber_type' === $aField['settings']['key']) {
-        // echo "<pre>" .var_export($aField, true). "</pre>";
-        // echo "<pre>" .var_export($aField['settings']['options'], true). "</pre>";
         $aPatterns = array(
           '~{flashmob_date(\[[^\]]*\])?}~' => get_option('date_format'),
           '~{flashmob_time(\[[^\]]*\])?}~' => get_option('time_format'),
@@ -1011,14 +1019,12 @@ class FLORP{
           foreach ($aPatterns as $strPattern => $strDefaultFormat) {
             $aMatches = array();
             if (preg_match_all( $strPattern, $aOptions['label'], $aMatches )) {
-              // echo "<pre>" .var_export($aMatches, true). "</pre>";
               foreach ($aMatches[0] as $iKey => $strMatchFull) {
                 if (empty($aMatches[1][$iKey])) {
                   $strFormat = $strDefaultFormat;
                 } else {
                   $strFormat = trim($aMatches[1][$iKey], "[]");
                 }
-                // echo "<pre>" .$strFormat. "</pre>";
                 $strTimeOrDate = date( $strFormat, $this->iFlashmobTimestamp );
                 $aField['settings']['options'][$key]['label'] = str_replace( $strMatchFull, $strTimeOrDate, $aField['settings']['options'][$key]['label'] );
               }
@@ -1032,7 +1038,6 @@ class FLORP{
         $aSubscriberTypesOfUser = (array) get_user_meta( $iUserID, 'subscriber_type', true );
         $aPreferencesOfUser = (array) get_user_meta( $iUserID, 'preferences', true );
 
-        // echo "<pre>" .var_export($aSubscriberTypesOfUser, true). "</pre>";
         if ('listcheckbox' === $aField['settings']['type'] && 'subscriber_type' === $aField['settings']['key']) {
           foreach ($aField['settings']['options'] as $iOptionKey => $aOption) {
             $strValue = $aOption['value'];
@@ -1041,7 +1046,6 @@ class FLORP{
             }
           }
         } elseif ('listcheckbox' === $aField['settings']['type'] && 'preferences' === $aField['settings']['key']) {
-          // echo "<pre>" .var_export($aField, true). "</pre>";
           foreach ($aField['settings']['options'] as $iOptionKey => $aOption) {
             $strValue = $aOption['value'];
             if (in_array($strValue, $aPreferencesOfUser)) {
@@ -1053,21 +1057,15 @@ class FLORP{
         // Set checked as default value on checkboxes saved as checked //
         if ($aField['settings']['type'] === 'checkbox') {
           $strValue = get_user_meta( $iUserID, $aField['settings']['key'], true );
-//           echo "<pre>" .var_export($aField['settings']['key'], true). "</pre>";
-//           echo "<pre>" .var_export($aField, true). "</pre>";
-//           echo "<pre>" .var_export($strValue, true). "</pre>";
           $aField['settings']['default_value'] = ($strValue == '1') ? 'checked' : 'unchecked';
         }
         if ($aField['settings']['type'] === 'listselect') {
-//           echo "<pre>" .var_export(array_merge($aField['settings'],array('options'=>'removed')), true). "</pre>";
-//           echo "<pre>" .var_export($aField['settings']['options'][0], true). "</pre>";
           $strValue = get_user_meta( $iUserID, $aField['settings']['key'], true );
           foreach ($aField['settings']['options'] as $iKey => $aOption) {
             if ($aOption['value'] === $strValue) {
               $aField['settings']['options'][$iKey]['selected'] = 1;
             }
           }
-//           $aField['settings']['default_value'] = $strValue;
         }
 
         if (isset($aField['settings']['container_class'])) {
@@ -1099,15 +1097,8 @@ class FLORP{
             $aField['settings']['container_class'] .= " hidden";
           }
         }
-  //       if ('checkbox' === $aField['settings']['type'] && 'som_organizator_rueda_flashmobu' === $aField['settings']['key']) {
-  //         $iUserID = get_current_user_id();
-  //         $strIsRuedaFlashmobOrganizer = get_user_meta( $iUserID, $aField['settings']['key'], true );
-  //         $strCheckboxValue = ($strIsRuedaFlashmobOrganizer == '1') ? 'checked' : 'unchecked';
-  //         $aField['settings']['default_value'] = $strCheckboxValue;
-  //       }
       }
 
-      // echo "<pre>" .var_export($aField, true). "</pre>";
       if(!$bLoggedIn){
         // Registration form //
         if (isset($aField['settings']['container_class']) && stripos($aField['settings']['container_class'], 'florp-registration-field') === false) {
@@ -1328,13 +1319,34 @@ class FLORP{
     } else {
       return '';
     }
+  }
 
+  public function leader_participants_table_shortcode( $aAttributes ) {
+    if (!$this->isMainBlog || !is_user_logged_in()) {
+      return '';
+    }
+
+    $iUserID = get_current_user_id();
+    $aSubscriberTypesOfUser = (array) get_user_meta( $iUserID, 'subscriber_type', true );
+    if (!is_array($aSubscriberTypesOfUser) || !in_array( 'flashmob_organizer', $aSubscriberTypesOfUser )) {
+      return '<p>Neorganizujete flashmob ' .  date( 'j.n.Y', $this->iFlashmobTimestamp ) . '.</p>';
+    }
+    $aParticipants = $this->get_flashmob_participants( $iUserID, false );
+    if (empty($aParticipants)) {
+      return '<p>Zatiaľ nemáte prihlásených účastníkov.</p>';
+    }
+    $aParticipantsOfUser = $aParticipants[$iUserID];
+    if (empty($aParticipantsOfUser)) {
+      return '<p>Zatiaľ nemáte prihlásených účastníkov.</p>';
+    }
+
+    return $this->get_leader_participants_table( $aParticipantsOfUser, false );
   }
 
   public function popup_anchor( $aAttributes ) {
     return '<a name="'.$this->strClickTriggerAnchor.'"></a>';
   }
-  
+
   private function getFlashmobSubscribers( $strType ) {
     if (empty($this->aFlashmobSubscribers[$strType])) {
       $aArgs = array(
@@ -1449,7 +1461,7 @@ class FLORP{
       return $iCnt;
     }
   }
-  
+
   public function registeredUserImprezaCounter( $aAttributes ) {
     $bOnMapOnly = isset($aAttributes['on-map-only']) || (is_array($aAttributes) && in_array('on-map-only', $aAttributes));
     $aCountAttrs = array();
@@ -1458,39 +1470,13 @@ class FLORP{
     }
     $iCount = $this->getRegisteredUserCount( $aCountAttrs );
     $aAttributes['target'] = $iCount;
-    
+
     $aCities = array();
-//     $aSubscribers = $this->getFlashmobSubscribers();
-//     // $aMetas = array();
-//     foreach ($aSubscribers as $oUser) {
-//       $aInfoArray = $this->getOneUserMapInfo( $oUser );
-//       // $aMetas[$oUser->user_login] = $aInfoArray;
-//       $strSchoolCity = $aInfoArray['school_city'];
-//       if (isset($strSchoolCity)) {
-//         $strSchoolCity = trim($strSchoolCity);
-//         if (!empty($strSchoolCity)) {
-//           $aCities[] = $strSchoolCity;
-//         }
-//       }
-//     }
-    if ($iCount === 0 && empty($aCities)) {
-      // OK //
-    } elseif ($iCount > 0 && empty($aCities)) {
-      // $aAttributes['title'] = var_export($aMetas, true);
-    } else {
-      // $aAttributes['title'] = __('Registered cities','florp') . ": " . implode(', ', $aCities); // TODO ked sa spravi lokalizacia!
-      // $aAttributes['title'] = "Registrované mestá: " . implode(', ', $aCities);
-    }
-//     if ($iCount === 0 || $iCount >= 5) {
-//       $aAttributes['title'] = "registrovaných miest";
-//     } elseif ($iCount === 1) {
-//       $aAttributes['title'] = "registrované mesto";
-//     } else {
-//       $aAttributes['title'] = "registrované mestá";
-//     }
+
     if (!isset($aAttributes['title'])) {
       $aAttributes['title'] = "MESTÁ";
     }
+
     $aShortCodeAttributes = array();
     foreach ($aAttributes as $key => $val) {
       if ($key === 'on-map-only' || $val === 'on-map-only') continue;
@@ -1501,7 +1487,124 @@ class FLORP{
     return do_shortcode($strFullShortcode);
   }
 
-  private function get_participant_count( $iUserID ) {
+  private function get_flashmob_participants( $iUserID = 0, $bUnnotifiedOnly = false ) {
+    $aParticipantsReturned = array();
+    if ($iUserID === 0 && !$bUnnotifiedOnly) {
+      $aParticipantsReturned = $this->aOptions['aParticipants'];
+    } elseif ($bUnnotifiedOnly && $iUserID === 0) {
+      foreach ($this->aOptions['aParticipants'] as $iLeaderID => $aParticipants) {
+        foreach ($aParticipants as $strEmail => $aParticipantData) {
+          if (isset($aParticipantData['bLeaderNotified']) && $aParticipantData['bLeaderNotified'] === true) {
+            continue;
+          }
+          if (!isset($aParticipantsReturned[$iLeaderID])) {
+            $aParticipantsReturned[$iLeaderID] = array(
+              $strEmail => $aParticipantData
+            );
+          } else {
+            $aParticipantsReturned[$iLeaderID][$strEmail] = $aParticipantData;
+          }
+        }
+      }
+    } elseif ($bUnnotifiedOnly && $iUserID > 0) {
+      if (isset( $this->aOptions['aParticipants'][$iUserID] )) {
+        foreach ($this->aOptions['aParticipants'][$iUserID] as $strEmail => $aParticipantData) {
+          if (isset($aParticipantData['bLeaderNotified']) && $aParticipantData['bLeaderNotified'] === true) {
+            continue;
+          }
+          if (!isset($aParticipantsReturned[$iUserID])) {
+            $aParticipantsReturned[$iUserID] = array(
+              $strEmail => $aParticipantData
+            );
+          } else {
+            $aParticipantsReturned[$iUserID][$strEmail] = $aParticipantData;
+          }
+        }
+      }
+    } else {
+      // !$bUnnotifiedOnly && $iUserID > 0
+      $aParticipantsReturned = (isset($this->aOptions['aParticipants'][$iUserID])) ? array( $iUserID => $this->aOptions['aParticipants'][$iUserID] ) : array();
+    }
+    return $aParticipantsReturned;
+  }
+
+  public function notify_leaders_about_participants( $iUserID = 0 ) {
+    if (!$this->isMainBlog) {
+      return;
+    }
+    $aParticipantsNotNotified = $this->get_flashmob_participants( $iUserID, true );
+
+    if (empty($aParticipantsNotNotified)) {
+      return;
+    }
+    foreach ($aParticipantsNotNotified as $iLeaderID => $aParticipants) {
+      if (empty($aParticipants)) {
+        continue;
+      }
+      foreach ($aParticipants as $strEmail => $aParticipantData) {
+        $this->aOptions['aParticipants'][$iLeaderID][$strEmail]['bLeaderNotified'] = true;
+      }
+
+      $strTable = $this->get_leader_participants_table( $aParticipants, true );
+
+      $strMessage = $this->aOptions['strLeaderParticipantListNotificationMsg'];
+      if (strpos( $strMessage, "%PARTICIPANT_LIST%") === false) {
+        $strMessage .= $strTable;
+      } elseif (strpos( $strMessage, "<p>%PARTICIPANT_LIST%</p>") !== false) {
+        $strMessage = str_replace( "<p>%PARTICIPANT_LIST%</p>", $strTable, $strMessage );
+      } else {
+        $strMessage = str_replace( "%PARTICIPANT_LIST%", $strTable, $strMessage );
+      }
+
+      $strProfilePageUrl = '';
+      if ( $this->iProfileFormPageIDMain > 0 ) {
+        $strProfilePageUrl = get_permalink( $this->iProfileFormPageIDMain );
+      }
+      $strMessage = str_replace( '%PROFILE_URL%', $strProfilePageUrl, $strMessage );
+
+      $oLeader = get_user_by( 'id', $iLeaderID );
+      $strBlogname = trim(wp_specialchars_decode(get_option('blogname'), ENT_QUOTES));
+      $aHeaders = array('Content-Type: text/html; charset=UTF-8');
+      $this->new_user_notification( $oLeader->user_login, '', $oLeader->user_email, $strBlogname, $strMessage, $this->aOptions['strLeaderParticipantListNotificationSbj'], $aHeaders );
+    }
+    update_site_option( $this->strOptionKey, $this->aOptions, true );
+  }
+
+  private function get_leader_participants_table( $aParticipants, $bEmail = false ) {
+    if (empty($aParticipants)) {
+      return '';
+    }
+    if ($bEmail) {
+      $sTblAtt = ' style="width: 100%; border: 1px solid #ccc;"';
+      $sThAtt = ' style="border: 1px solid #ccc;"';
+      $sTdAtt = ' style="border: 1px solid #ccc;"';
+    } else {
+      $sTblAtt = ' class="florp-leader-participants-table"';
+      $sThAtt = ' class="florp-leader-participants-hcell"';
+      $sTdAtt = ' class="florp-leader-participants-cell"';
+    }
+    $aReplacements = array(
+      'gender' => array(
+        'from'  => array( 'muz', 'zena', 'par' ),
+        'to'    => array( 'muž', 'žena', 'pár' )
+      ),
+      'dance_level' => array(
+        'from'  => array( 'zaciatocnik', 'pokrocily', 'ucitel' ),
+        'to'    => array( 'začiatočník', 'pokročilý', 'učiteľ' )
+      )
+    );
+    $strTable = "<table{$sTblAtt}><tr><th{$sThAtt}>Meno</th><th{$sThAtt}>Priezvisko</th><th{$sThAtt}>Pohlavie</th><th{$sThAtt}>Tanečná úroveň</th></tr>";
+    foreach ($aParticipants as $strEmail => $aParticipantData) {
+      foreach ($aReplacements as $strKey => $aReplacementArr) {
+        $aParticipantData[$strKey] = str_replace( $aReplacementArr['from'], $aReplacementArr['to'], $aParticipantData[$strKey]);
+      }
+      $strTable .= "<tr><td{$sTdAtt}>{$aParticipantData['first_name']}</td><td{$sTdAtt}>{$aParticipantData['last_name']}</td><td{$sTdAtt}>{$aParticipantData['gender']}</td><td{$sTdAtt}>{$aParticipantData['dance_level']}</td></tr>";
+    }
+    $strTable .= "</table>";
+    return $strTable;
+  }
+
+  private function get_flashmob_participant_count( $iUserID ) {
     if (!isset($this->aOptions['aParticipants'][$iUserID])) {
       return 0;
     }
@@ -1689,7 +1792,6 @@ class FLORP{
       }
       florp_map_options_object["'.$strID.'"] = '.$strMapOptionsArrayJson.';
     </script>';
-      /* '.var_export(array($mixYear, $iFlashmobYear, $aAttributes), true).' */
     $strMapDivHtml = '<div id="'.$strID.'" class="florp-map"';
     if (!empty($aDivAttributes)) {
       foreach ($aDivAttributes as $strAttrKey => $strAttrValue) {
@@ -1697,7 +1799,7 @@ class FLORP{
       }
     }
     $strMapDivHtml .= '></div>';
-    return $strMapScript.PHP_EOL.$strMapDivHtml; //."<!-- ".var_export($aAttributes, true)." ".var_export($this->aOptions["aYearlyMapOptions"], true)." -->";
+    return $strMapScript.PHP_EOL.$strMapDivHtml;
   }
 
   private function get_flashmob_map_options_array( $bIsCurrentYear = true, $iYear = 0 ) {
@@ -1901,7 +2003,7 @@ class FLORP{
       $strBlogType = 'other';
     }
 
-    if ($this->isMainBlog && is_user_logged_in() && $this->get_participant_count( get_current_user_id() ) > 0) {
+    if ($this->isMainBlog && is_user_logged_in() && $this->get_flashmob_participant_count( get_current_user_id() ) > 0) {
       $iHasParticipants = 1;
     } else {
       $iHasParticipants = 0;
@@ -2030,18 +2132,21 @@ class FLORP{
       return;
     }
 
-    // echo "<pre>" .var_export($this->aOptions, true). "</pre>";
-    // echo "<pre>" .var_export(array_merge($this->aOptions, array('aYearlyMapOptions' => 'removedForPreview')), true). "</pre>";
-    // $aMapOptions = $this->get_flashmob_map_options_array(false, 0);
-    // echo "<pre>" .var_export($aMapOptions, true). "</pre>";
-    // echo "<pre>" .var_export($this->getFlashmobSubscribers('subscriber_only'), true). "</pre>";
-    // echo "<pre>" .var_export($this->getFlashmobSubscribers('flashmob_organizer'), true). "</pre>";
-    // echo "<pre>" .var_export($this->getFlashmobSubscribers('teacher'), true). "</pre>";
-    // echo "<pre>" .var_export($this->getFlashmobSubscribers('all'), true). "</pre>";
-    // echo "<pre>" .var_export($this->aOptions['aParticipants'], true). "</pre>";
-    // echo "<pre>" .var_export($this->get_flashmob_map_options_array_to_archive(), true). "</pre>";
-    // $this->delete_logs();
-    // echo "<pre>" .var_export($this->get_logs(), true). "</pre>";
+    if (defined('FLORP_DEVEL') && FLORP_DEVEL === true) {
+      // echo "<pre>" .var_export($this->aOptions, true). "</pre>";
+      // echo "<pre>" .var_export(array_merge($this->aOptions, array('aYearlyMapOptions' => 'removedForPreview', 'aParticipants' => 'removedForPreview')), true). "</pre>";
+      // $aMapOptions = $this->get_flashmob_map_options_array(false, 0);
+      // echo "<pre>" .var_export($aMapOptions, true). "</pre>";
+      // echo "<pre>" .var_export($this->getFlashmobSubscribers('subscriber_only'), true). "</pre>";
+      // echo "<pre>" .var_export($this->getFlashmobSubscribers('flashmob_organizer'), true). "</pre>";
+      // echo "<pre>" .var_export($this->getFlashmobSubscribers('teacher'), true). "</pre>";
+      // echo "<pre>" .var_export($this->getFlashmobSubscribers('all'), true). "</pre>";
+      // echo "<pre>" .var_export($this->get_flashmob_map_options_array_to_archive(), true). "</pre>";
+      // $this->delete_logs();
+      // echo "<pre>" .var_export($this->get_logs(), true). "</pre>";
+      // foreach($this->aOptions['aParticipants'] as $i => $a) {foreach($a as $e => $ap) {$this->aOptions['aParticipants'][$i][$e]['bLeaderNotified']=false;}}; update_site_option( $this->strOptionKey, $this->aOptions, true );
+      // echo "<pre>" .var_export($this->aOptions['aParticipants'], true). "</pre>";
+    }
 
     $aBooleanOptionsChecked = array();
     foreach ($this->aBooleanOptions as $strOptionKey) {
@@ -2153,8 +2258,9 @@ class FLORP{
     }
 
     $strBeforeLoginFormHtmlMain = $this->get_wp_editor( $this->strBeforeLoginFormHtmlMain, 'florp_before_login_form_html_main' );
-    $strWPEditorPendingUserPageContentHTML = $this->get_wp_editor( $this->strPendingUserPageContentHTML, 'florp_pending_user_page_content_html' );
-    $strWPEditorUserApprovedMessage = $this->get_wp_editor( $this->strUserApprovedMessage, 'florp_user_approved_message' );
+    $wpEditorPendingUserPageContentHTML = $this->get_wp_editor( $this->strPendingUserPageContentHTML, 'florp_pending_user_page_content_html' );
+    $wpEditorUserApprovedMessage = $this->get_wp_editor( $this->strUserApprovedMessage, 'florp_user_approved_message' );
+    $wpEditorLeaderParticipantListNotificationMsg = $this->get_wp_editor( $this->aOptions['strLeaderParticipantListNotificationMsg'], 'florp_leader_participant_list_notif_msg' );
 
     return str_replace(
       array( '%%reloadCheckedMain%%',
@@ -2164,15 +2270,17 @@ class FLORP{
         '%%optionsPagesMain%%',
         '%%wpEditorBeforeLoginFormHtmlMain%%',
         '%%approveUsersAutomaticallyChecked%%', '%%wpEditorPendingUserPageContentHTML%%', '%%wpEditorUserApprovedMessage%%',
-        '%%strRegistrationSuccessfulMessage%%', '%%strLoginSuccessfulMessage%%', '%%strUserApprovedSubject%%', '%%strNewsletterListsMain%%' ),
+        '%%strRegistrationSuccessfulMessage%%', '%%strLoginSuccessfulMessage%%', '%%strUserApprovedSubject%%',
+        '%%strNewsletterListsMain%%', '%%strLeaderParticipantListNotificationSbj%%', '%%wpEditorLeaderParticipantListNotificationMsg%%' ),
       array( $aBooleanOptionsChecked['bReloadAfterSuccessfulSubmissionMain'],
         $optionsNinjaFormsMain,
         $optionsPopupsMain,
         $optionsMainSite,
         $optionsPagesMain,
         $strBeforeLoginFormHtmlMain,
-        $aBooleanOptionsChecked['bApproveUsersAutomatically'], $strWPEditorPendingUserPageContentHTML, $strWPEditorUserApprovedMessage,
-        $this->aOptions['strRegistrationSuccessfulMessage'], $this->aOptions['strLoginSuccessfulMessage'], $this->aOptions['strUserApprovedSubject'], $this->aOptions['strNewsletterListsMain'] ),
+        $aBooleanOptionsChecked['bApproveUsersAutomatically'], $wpEditorPendingUserPageContentHTML, $wpEditorUserApprovedMessage,
+        $this->aOptions['strRegistrationSuccessfulMessage'], $this->aOptions['strLoginSuccessfulMessage'], $this->aOptions['strUserApprovedSubject'],
+        $this->aOptions['strNewsletterListsMain'], $this->aOptions['strLeaderParticipantListNotificationSbj'], $wpEditorLeaderParticipantListNotificationMsg ),
       '
             <tr style="width: 98%; padding:  5px 1%;">
               <th colspan="2"><h3>Hlavná stránka</h3></th>
@@ -2283,6 +2391,24 @@ class FLORP{
               </th>
               <td style="border-top: 1px lightgray dashed;">
                 <input id="florp_newsletter_lists_main" name="florp_newsletter_lists_main" type="text" value="%%strNewsletterListsMain%%" style="width: 100%;" />
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
+                Predmet správy poslanej lídrom raz za deň o prihlásených účastníkoch flashmobu
+              </th>
+              <td style="border-top: 1px lightgray dashed;">
+                <input id="florp_leader_participant_list_notif_sbj" name="florp_leader_participant_list_notif_sbj" type="text" value="%%strLeaderParticipantListNotificationSbj%%" style="width: 100%;" />
+                <span style="width: 100%;">Placeholdre: <code>%BLOGNAME%</code>, <code>%BLOGURL%</code></span>
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                Správa poslaná lídrom raz za deň o prihlásených účastníkoch flashmobu
+              </th>
+              <td style="border-top: 1px lightgray dashed;">
+                %%wpEditorLeaderParticipantListNotificationMsg%%
+                <span style="width: 100%;">Placeholdre: <strong><code>%PARTICIPANT_LIST%</code></strong>, <code>%BLOGNAME%</code>, <code>%BLOGURL%</code>, <code>%USERNAME%</code>, <code>%EMAIL%</code>, <code>%PROFILE_URL%</code></span>
               </td>
             </tr>
       '
@@ -2866,7 +2992,7 @@ class FLORP{
         'strDivID'          => $_POST['divID'],
         'iCurrentYear'      => $_POST['iCurrentYear'],
         'iBeforeFlashmob'   => $_POST['iBeforeFlashmob'],
-        'iParticipantCount' => $this->get_participant_count( $_POST['iUserID'] ),
+        'iParticipantCount' => $this->get_flashmob_participant_count( $_POST['iUserID'] ),
     ));
     $strMarkerText = $this->getMarkerInfoWindowContent( $aMarkerData );
     $aRes = array(
@@ -3239,8 +3365,6 @@ class FLORP{
         $aHeaders = array('Content-Type: text/html; charset=UTF-8');
         $this->new_user_notification( $aFieldData['user_email'], '', $aFieldData['user_email'], $strBlogname, $strMessageContent, $this->aOptions['strParticipantRegisteredSubject'], $aHeaders );
       }
-
-      // TODO: send notification to leader?
       return;
     }
 
@@ -3346,7 +3470,7 @@ class FLORP{
       } else {
         $bIsFlashmobOrganizerNew = false;
       }
-      if ($bIsFlashmobOrganizerNew !== $bIsFlashmobOrganizerOld && !$bIsFlashmobOrganizerNew && $this->get_participant_count( $iUserID ) > 0) {
+      if ($bIsFlashmobOrganizerNew !== $bIsFlashmobOrganizerOld && !$bIsFlashmobOrganizerNew && $this->get_flashmob_participant_count( $iUserID ) > 0) {
         // Send notification to participants //
         foreach ($this->aOptions['aParticipants'][$iUserID] as $strEmail => $aParticipantData) {
           if (strlen(trim($this->aOptions['strParticipantRemovedMessage'])) > 0) {
@@ -3518,13 +3642,39 @@ class FLORP{
   }
 
   public static function activate() {
+    $this->maybe_add_crons();
   }
 
   public static function deactivate() {
     if (get_role($this->strUserRolePending)) {
       remove_role($this->strUserRolePending);
     }
+    $this->remove_crons();
   }
+
+  private function maybe_add_crons() {
+    if ($this->isMainBlog) {
+      $iNow = time();
+      $iTimestamp = strtotime('today 10am');
+      $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
+      if ($iTimestamp < $iNow) {
+        $iTimestamp = strtotime('tomorrow '.(10-$iTimeZoneOffset).'am');
+      }
+      if ( !wp_next_scheduled( 'florp_notify_leaders_about_participants_cron' ) ) {
+        wp_schedule_event( $iTimestamp, 'daily', 'florp_notify_leaders_about_participants_cron');
+      }
+    } elseif (wp_next_scheduled( 'florp_notify_leaders_about_participants_cron' )) {
+      wp_clear_scheduled_hook('florp_notify_leaders_about_participants_cron');
+    }
+  }
+
+  private function remove_crons() {
+    if (wp_next_scheduled( 'florp_notify_leaders_about_participants_cron' )) {
+      wp_clear_scheduled_hook('florp_notify_leaders_about_participants_cron');
+    }
+  }
+
+
 }
 
 $FLORP = new FLORP();
