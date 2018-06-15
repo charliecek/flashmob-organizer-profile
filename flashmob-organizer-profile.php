@@ -5,12 +5,12 @@
  * Description: Creates shortcodes for flashmob organizer login / registration / profile editing form and for maps showing cities with videos of flashmobs for each year
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.0.0
+ * Version: 4.0.1
  */
 
 class FLORP{
 
-  private $strVersion = '4.0.0';
+  private $strVersion = '4.0.1';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -46,6 +46,7 @@ class FLORP{
   private $iProfileFormPageIDFlashmob;
   private $strUserRolePending = 'florp-pending';
   private $strUserRoleApproved = 'subscriber';
+  private $strUserRolePendingName = "Čaká na schválenie";
   private $strPendingUserPageContentHTML;
   private $strUserApprovedMessage;
   private $strBeforeLoginFormHtmlMain;
@@ -890,7 +891,7 @@ class FLORP{
     // Add and/or clean up user roles //
     if ($this->isMainBlog) {
       if (!get_role($this->strUserRolePending)) {
-        add_role($this->strUserRolePending, "Čaká na schválenie", array());
+        add_role($this->strUserRolePending, $this->strUserRolePendingName, array());
       }
     } elseif (get_role($this->strUserRolePending)) {
       $aPendingArgs = array(
@@ -1347,12 +1348,19 @@ class FLORP{
     return '<a name="'.$this->strClickTriggerAnchor.'"></a>';
   }
 
-  private function getFlashmobSubscribers( $strType ) {
-    if (empty($this->aFlashmobSubscribers[$strType])) {
+  private function getFlashmobSubscribers( $strType, $bPending = false ) {
+    if ($bPending) {
+      $aBak = $this->aFlashmobSubscribers[$strType];
+    }
+    if (empty($this->aFlashmobSubscribers[$strType]) || $bPending) {
       $aArgs = array(
-        'blog_id' => $this->iMainBlogID,
-        'role'    => $this->strUserRoleApproved
+        'blog_id' => $this->iMainBlogID
       );
+      if ($bPending) {
+        $aArgs['role__in'] = array( $this->strUserRoleApproved, $this->strUserRolePending );
+      } else {
+        $aArgs['role'] = $this->strUserRoleApproved;
+      }
       $aArgsTypeSpecific = array();
       switch ($strType) {
         case 'flashmob_organizer':
@@ -1422,6 +1430,11 @@ class FLORP{
           break;
       }
     }
+    if ($bPending) {
+      $aReturn = $this->aFlashmobSubscribers[$strType];
+      $this->aFlashmobSubscribers[$strType] = $aBak;
+      return $aReturn;
+    }
     return $this->aFlashmobSubscribers[$strType];
   }
 
@@ -1487,7 +1500,7 @@ class FLORP{
     return do_shortcode($strFullShortcode);
   }
 
-  private function get_flashmob_participants( $iUserID = 0, $bUnnotifiedOnly = false ) {
+  private function get_flashmob_participants( $iUserID = 0, $bUnnotifiedOnly = false, $bPending = false ) {
     $aParticipantsReturned = array();
     if ($iUserID === 0 && !$bUnnotifiedOnly) {
       $aParticipantsReturned = $this->aOptions['aParticipants'];
@@ -1528,7 +1541,11 @@ class FLORP{
 
     foreach ($aParticipantsReturned as $iLeaderID => $aParticipants) {
       $oLeader = get_user_by( 'id', $iLeaderID );
-      if ( in_array( $this->strUserRolePending, (array) $oLeader->roles ) ) {
+      if ( false === $oLeader ) {
+        unset($aParticipantsReturned[$iLeaderID]);
+        unset($this->aOptions['aParticipants'][$iLeaderID]);
+        update_site_option( $this->strOptionKey, $this->aOptions, true );
+      } elseif ( !$bPending && in_array( $this->strUserRolePending, (array) $oLeader->roles ) ) {
         unset($aParticipantsReturned[$iLeaderID]);
       }
     }
@@ -2104,7 +2121,7 @@ class FLORP{
 
   public function leaders_table_admin() {
     echo "<div class=\"wrap\"><h1>" . "Zoznam lídrov" . "</h1>";
-    $aUsers = $this->getFlashmobSubscribers( 'all' );
+    $aUsers = $this->getFlashmobSubscribers( 'all', true );
     $aEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Preferencie</th><th>Profil</th><th>Účastníci</th>';
     foreach ($aUsers as $oUser) {
       $aAllMeta = array_map(
@@ -2123,8 +2140,12 @@ class FLORP{
         },
         get_user_meta( $oUser->ID )
       );
+      $strIsPending = "";
+      if (in_array( $this->strUserRolePending, (array) $oUser->roles )) {
+        $strIsPending = " ({$this->strUserRolePendingName})";
+      }
       $aEcho .= '<tr>';
-      $aEcho .=   '<td>'.$oUser->first_name.' '.$oUser->last_name.'</td>';
+      $aEcho .=   '<td>'.$oUser->first_name.' '.$oUser->last_name.$strIsPending.'</td>';
       $aEcho .=   '<td><a name="'.$oUser->ID.'">'.$oUser->user_email.'</a></td>';
       $aEcho .=   '<td>'.$aAllMeta['school_city'].'</td>';
       $aEcho .=   '<td>';
@@ -2186,7 +2207,7 @@ class FLORP{
   public function participants_table_admin() {
     echo "<div class=\"wrap\"><h1>" . "Zoznam účastníkov" . "</h1>";
     $aEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Líder</th><th>Pohlavie</th><th>Tanečná úroveň</th><th>Profil</th>';
-    $aParticipants = $this->get_flashmob_participants();
+    $aParticipants = $this->get_flashmob_participants( 0, false, true );
     $aReplacements = array(
       'gender' => array(
         'from'  => array( 'muz', 'zena', 'par' ),
@@ -2207,7 +2228,11 @@ class FLORP{
         $aEcho .=   '<td><a name="'.$aParticipantData['user_email'].'">'.$aParticipantData['user_email'].'</a></td>';
         $aEcho .=   '<td>'.$aParticipantData['flashmob_city'].'</td>';
         $oLeader = get_user_by( 'id', $iLeaderID );
-        $aEcho .=   '<td><a href="'.admin_url('admin.php?page=florp-leaders')."#{$iLeaderID}\">{$oLeader->first_name} {$oLeader->last_name}</a></td>";
+        $strIsPending = "";
+        if (in_array( $this->strUserRolePending, (array) $oLeader->roles )) {
+          $strIsPending = " ({$this->strUserRolePendingName})";
+        }
+        $aEcho .=   '<td><a href="'.admin_url('admin.php?page=florp-leaders')."#{$iLeaderID}\">{$oLeader->first_name} {$oLeader->last_name}</a>{$strIsPending}</td>";
         $aEcho .=   '<td>'.$aParticipantData['gender'].'</td>';
         $aEcho .=   '<td>'.$aParticipantData['dance_level'].'</td>';
         $aEcho .=   '<td>';
@@ -3803,11 +3828,11 @@ class FLORP{
     return false;
   }
 
-  public static function activate() {
+  public function activate() {
     $this->maybe_add_crons();
   }
 
-  public static function deactivate() {
+  public function deactivate() {
     if (get_role($this->strUserRolePending)) {
       remove_role($this->strUserRolePending);
     }
@@ -3840,8 +3865,21 @@ class FLORP{
 }
 
 $FLORP = new FLORP();
-register_activation_hook(__FILE__, array('FLORP', 'activate'));
-register_deactivation_hook(__FILE__, array('FLORP', 'deactivate'));
+
+register_activation_hook(__FILE__, 'florp_activate');
+register_deactivation_hook(__FILE__, 'florp_deactivate');
+function florp_activate() {
+  global $FLORP;
+  if (is_object($FLORP) && has_method($FLORP, 'activate')) {
+    $FLORP->activate();
+  }
+}
+function florp_deactivate() {
+  global $FLORP;
+  if (is_object($FLORP) && has_method($FLORP, 'deactivate')) {
+    $FLORP->deactivate();
+  }
+}
 
 function florp_profile_form( $aAttributes = array() ) {
   global $FLORP;
