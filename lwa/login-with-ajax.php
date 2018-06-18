@@ -489,7 +489,7 @@ class LoginWithAjax {
 		$defaultTemplate = array_key_exists( 'florp', self::$templates ) ? 'florp' : 'default';
 		self::$template = ( !empty($lwa_data['template']) && array_key_exists($lwa_data['template'], self::$templates) ) ? $lwa_data['template'] : $defaultTemplate;
 		//Choose the widget content to display.
-// 		echo "<pre>".var_export($lwa_data, true)."</pre>";
+		// echo "<pre>".var_export($lwa_data, true)."</pre>";
 		$bRegistrationFormOnly = $lwa_data['registration-form-only'] !== false && ($lwa_data['registration-form-only'] === "1" || $lwa_data['registration-form-only'] === 1 || strtolower($lwa_data['registration-form-only']) === "true");
     $bLoginOnly = $lwa_data['login-form-only'] !== false && ($lwa_data['login-form-only'] === "1" || $lwa_data['login-form-only'] === 1 || strtolower($lwa_data['login-form-only']) === "true");
 		if (is_user_logged_in()) {
@@ -541,10 +541,18 @@ class LoginWithAjax {
 	}
 
 	public static function shortcode($atts){
+    $lwa_data = get_option('lwa_data');
+    if (!empty($lwa_data['template']) && array_key_exists( $lwa_data['template'], self::$templates )) {
+      $strTemplate = $lwa_data['template'];
+    } elseif (array_key_exists( 'florp', self::$templates )) {
+      $strTemplate = 'florp';
+    } else {
+      $strTemplate = 'default';
+    }
 		ob_start();
 		$defaults = array(
 			'profile_link' => true,
-			'template' => array_key_exists( 'florp', self::$templates ) ? 'florp' : 'default',
+			'template' => $strTemplate,
 			'registration' => true,
 			'redirect' => false,
 			'remember' => true,
