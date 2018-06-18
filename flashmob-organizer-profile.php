@@ -5,12 +5,12 @@
  * Description: Creates shortcodes for flashmob organizer login / registration / profile editing form and for maps showing cities with videos of flashmobs for each year
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.0.1
+ * Version: 4.0.2
  */
 
 class FLORP{
 
-  private $strVersion = '4.0.1';
+  private $strVersion = '4.0.2';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -90,7 +90,8 @@ class FLORP{
       'strUserApprovedSubject'                    => 'Vaša registrácia na %BLOGURL% bola schválená',
       'strBeforeLoginFormHtmlMain'                => '',
       'strBeforeLoginFormHtmlFlashmob'            => '',
-      'strGoogleMapKey'                           => 'AIzaSyC_g9bY9qgW7mA0L1EupZ4SDYrBQWWi-V0',
+      'strGoogleMapsKeyStatic'                    => 'AIzaSyC_g9bY9qgW7mA0L1EupZ4SDYrBQWWi-V0',
+      'strGoogleMapsKey'                          => 'AIzaSyBaPowbVdIBpJqo_yhEfLn1v60EWbow6ZY',
       'strFbAppID'                                => '768253436664320',
       'strRegistrationSuccessfulMessage'          => "Prihlasujeme Vás... Prosíme, počkajte, kým sa stránka znovu načíta.",
       'strLoginSuccessfulMessage'                 => "Prihlásenie prebehlo úspešne, prosíme, počkajte, kým sa stránka znovu načíta.",
@@ -109,6 +110,9 @@ class FLORP{
       'strLeaderParticipantListNotificationMsg'   => '<p>Tu sú Vaši noví účastníci:</p><p>%PARTICIPANT_LIST%</p><p>Celý zoznam si môžete pozrieť <a href="%PROFILE_URL%">vo Vašom profile</a>.</p><p>Váš SalsaRueda.Dance team</p>',
       'strLeaderParticipantListNotificationSbj'   => 'Máte nových účastníkov prihlásených na flashmob',
       'logs'                                      => array(),
+      'strLoginBarLabelLogin'                     => 'Prihlásiť sa',
+      'strLoginBarLabelLogout'                    => 'Odhlásiť sa',
+      'strLoginBarLabelProfile'                   => 'Môj profil',
     );
     $this->aOptionFormKeys = array(
       'florp_reload_after_ok_submission_main'     => 'bReloadAfterSuccessfulSubmissionMain',
@@ -137,7 +141,8 @@ class FLORP{
       'florp_approve_users_automatically'         => 'bApproveUsersAutomatically',
       'florp_before_login_form_html_main'         => 'strBeforeLoginFormHtmlMain',
       'florp_before_login_form_html_flashmob'     => 'strBeforeLoginFormHtmlFlashmob',
-      'florp_google_map_key'                      => 'strGoogleMapKey',
+      'florp_google_maps_key'                     => 'strGoogleMapsKey',
+      'florp_google_maps_key_static'              => 'strGoogleMapsKeyStatic',
       'florp_fb_app_id'                           => 'strFbAppID',
       'florp_registration_successful_message'     => 'strRegistrationSuccessfulMessage',
       'florp_login_successful_message'            => 'strLoginSuccessfulMessage',
@@ -151,13 +156,19 @@ class FLORP{
       'florp_participant_removed_message'         => 'strParticipantRemovedMessage',
       'florp_leader_participant_list_notif_msg'   => 'strLeaderParticipantListNotificationMsg',
       'florp_leader_participant_list_notif_sbj'   => 'strLeaderParticipantListNotificationSbj',
+      'florp_login_bar_label_login'               => 'strLoginBarLabelLogin',
+      'florp_login_bar_label_logout'              => 'strLoginBarLabelLogout',
+      'florp_login_bar_label_profile'             => 'strLoginBarLabelProfile',
     );
     $aDeprecatedKeys = array(
+      // new => old //
+      // OR: old //
       'iCurrentFlashmobYear',
       'bHideFlashmobFields',
       'bReloadAfterSuccessfulSubmissionMain,bReloadAfterSuccessfulSubmissionFlashmob' => 'bReloadAfterSuccessfulSubmission',
       'iProfileFormNinjaFormIDFlashmob' => 'iProfileFormNinjaFormID',
       'iProfileFormPopupIDFlashmob' => 'iProfileFormPopupID',
+      'strGoogleMapsKey' => 'strGoogleMapKey',
     );
     $this->aBooleanOptions = array(
       'bReloadAfterSuccessfulSubmissionMain', 'bReloadAfterSuccessfulSubmissionFlashmob',
@@ -188,7 +199,8 @@ class FLORP{
         'strUserApprovedMessage',
         'strUserApprovedSubject',
         'strBeforeLoginFormHtmlMain',
-        'strGoogleMapKey',
+        'strGoogleMapsKey',
+        'strGoogleMapsKeyStatic',
         'strFbAppID',
         'strRegistrationSuccessfulMessage',
         'strLoginSuccessfulMessage',
@@ -197,6 +209,9 @@ class FLORP{
         'strNewsletterListsMain',
         'strLeaderParticipantListNotificationMsg',
         'strLeaderParticipantListNotificationSbj',
+        'strLoginBarLabelLogin',
+        'strLoginBarLabelLogout',
+        'strLoginBarLabelProfile',
       ),
       'flashmob'  => array(
         'iFlashmobBlogID',
@@ -586,7 +601,7 @@ class FLORP{
         'maptype'   => 'roadmap',
         'center'    => '48.72,19.7',
         'size'      => '640x320',
-        'key'       => $this->aOptions['strGoogleMapKey'],
+        'key'       => $this->aOptions['strGoogleMapsKeyStatic'],
       ),
       'og_map_image_alt'  => "Mapka registrovaných organizátorov rueda flashmobu na Slovensku",
       'fb_app_id'         => $this->aOptions['strFbAppID'],
@@ -1217,7 +1232,7 @@ class FLORP{
     if ($this->iProfileFormPageIDMain > 0) {
       if (!is_object($post) || $post->post_type !== 'page' || $post->ID !== $this->iProfileFormPageIDMain) {
         $aNewSettingsByType['profile'] = array(
-          'text' => $bUserLoggedIn ? "Môj profil" : "Profil Rueda Lídra",
+          'text' => $bUserLoggedIn ? $this->aOptions['strLoginBarLabelProfile'] : $this->aOptions['strLoginBarLabelLogin'],
           'link' => get_permalink( $this->iProfileFormPageIDMain ),
           'el_class' => 'florp_profile_link_profile',
         );
@@ -1233,7 +1248,7 @@ class FLORP{
         $strRedir = home_url();
       }
       $aNewSettingsByType['logout'] = array(
-        'text' => "Odhlásiť sa",
+        'text' => $this->aOptions['strLoginBarLabelLogout'],
         'link' => wp_logout_url( $strRedir ),
         'el_class' => 'florp_profile_link_logout',
       );
@@ -1997,8 +2012,8 @@ class FLORP{
     $iUserID = get_current_user_id();
     wp_enqueue_script('florp_nf_action_controller', plugins_url('js/florp_nf_action_controller.js', __FILE__), array('jquery'), $this->strVersion, true);
     wp_enqueue_script('florp_form_js', plugins_url('js/florp-form.js', __FILE__), array('jquery'), $this->strVersion, true);
-    
-    wp_enqueue_script('us-google-maps-with-key', '//maps.googleapis.com/maps/api/js?key=AIzaSyBaPowbVdIBpJqo_yhEfLn1v60EWbow6ZY', array(), '', FALSE );
+
+    wp_enqueue_script('florp-google-maps-with-key', '//maps.googleapis.com/maps/api/js?key='.$this->aOptions['strGoogleMapsKey'], array(), '', FALSE );
     $bDoTriggerPopupClick = false;
     if (isset($_GET[$this->strClickTriggerGetParam])) {
       if (isset($_COOKIE[$this->strClickTriggerCookieKey]) && $_COOKIE[$this->strClickTriggerCookieKey] === '1') {
@@ -2458,7 +2473,8 @@ class FLORP{
         '%%wpEditorBeforeLoginFormHtmlMain%%',
         '%%approveUsersAutomaticallyChecked%%', '%%wpEditorPendingUserPageContentHTML%%', '%%wpEditorUserApprovedMessage%%',
         '%%strRegistrationSuccessfulMessage%%', '%%strLoginSuccessfulMessage%%', '%%strUserApprovedSubject%%',
-        '%%strNewsletterListsMain%%', '%%strLeaderParticipantListNotificationSbj%%', '%%wpEditorLeaderParticipantListNotificationMsg%%' ),
+        '%%strNewsletterListsMain%%', '%%strLeaderParticipantListNotificationSbj%%', '%%wpEditorLeaderParticipantListNotificationMsg%%',
+        '%%strLoginBarLabelLogin%%', '%%strLoginBarLabelLogout%%', '%%strLoginBarLabelProfile%%' ),
       array( $aBooleanOptionsChecked['bReloadAfterSuccessfulSubmissionMain'],
         $optionsNinjaFormsMain,
         $optionsPopupsMain,
@@ -2467,7 +2483,8 @@ class FLORP{
         $strBeforeLoginFormHtmlMain,
         $aBooleanOptionsChecked['bApproveUsersAutomatically'], $wpEditorPendingUserPageContentHTML, $wpEditorUserApprovedMessage,
         $this->aOptions['strRegistrationSuccessfulMessage'], $this->aOptions['strLoginSuccessfulMessage'], $this->aOptions['strUserApprovedSubject'],
-        $this->aOptions['strNewsletterListsMain'], $this->aOptions['strLeaderParticipantListNotificationSbj'], $wpEditorLeaderParticipantListNotificationMsg ),
+        $this->aOptions['strNewsletterListsMain'], $this->aOptions['strLeaderParticipantListNotificationSbj'], $wpEditorLeaderParticipantListNotificationMsg,
+        $this->aOptions['strLoginBarLabelLogin'], $this->aOptions['strLoginBarLabelLogout'], $this->aOptions['strLoginBarLabelProfile'] ),
       '
             <tr style="width: 98%; padding:  5px 1%;">
               <th colspan="2"><h3>Hlavná stránka</h3></th>
@@ -2598,6 +2615,30 @@ class FLORP{
                 <span style="width: 100%;">Placeholdre: <strong><code>%PARTICIPANT_LIST%</code></strong>, <code>%BLOGNAME%</code>, <code>%BLOGURL%</code>, <code>%USERNAME%</code>, <code>%EMAIL%</code>, <code>%PROFILE_URL%</code></span>
               </td>
             </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
+                Text linky prihlasovacieho formulára
+              </th>
+              <td style="border-top: 1px lightgray dashed;">
+                <input id="florp_login_bar_label_login" name="florp_login_bar_label_login" type="text" value="%%strLoginBarLabelLogin%%" style="width: 100%;" />
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                Text linky na odhlásenie
+              </th>
+              <td>
+                <input id="florp_login_bar_label_logout" name="florp_login_bar_label_logout" type="text" value="%%strLoginBarLabelLogout%%" style="width: 100%;" />
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                Text linky profilu (keď je líder prihlásený)
+              </th>
+              <td>
+                <input id="florp_login_bar_label_profile" name="florp_login_bar_label_profile" type="text" value="%%strLoginBarLabelProfile%%" style="width: 100%;" />
+              </td>
+            </tr>
       '
     );
   }
@@ -2672,6 +2713,7 @@ class FLORP{
 
     return str_replace(
       array( '%%reloadCheckedFlashmob%%',
+        '%%useMapImageChecked%%',
         '%%optionsNinjaFormsFlashmob%%',
         '%%optionsPopupsFlashmob%%',
         '%%optionsFlashmobSite%%',
@@ -2683,6 +2725,7 @@ class FLORP{
         '%%wpEditorParticipantRemovedMessage%%',
         '%%strParticipantRemovedSubject%%' ),
       array( $aBooleanOptionsChecked['bReloadAfterSuccessfulSubmissionFlashmob'],
+        $aBooleanOptionsChecked['bUseMapImage'],
         $optionsNinjaFormsFlashmob,
         $optionsPopupsFlashmob,
         $optionsFlashmobSite,
@@ -2863,16 +2906,14 @@ class FLORP{
         '%%loadMapsAsyncChecked%%',
         '%%loadMapsLazyChecked%%',
         '%%loadVideosLazyChecked%%',
-        '%%useMapImageChecked%%',
         '%%optionsYears%%', '%%optionsMonths%%', '%%optionsDays%%', '%%optionsHours%%', '%%optionsMinutes%%',
-        '%%strGoogleMapKey%%', '%%strFbAppID%%', '%%preventDirectMediaDownloadsChecked%%', '%%strNewsletterAPIKey%%' ),
+        '%%strGoogleMapsKey%%', '%%strGoogleMapsKeyStatic%%', '%%strFbAppID%%', '%%preventDirectMediaDownloadsChecked%%', '%%strNewsletterAPIKey%%' ),
       array( $optionsNewsletterSite,
         $aBooleanOptionsChecked['bLoadMapsAsync'],
         $aBooleanOptionsChecked['bLoadMapsLazy'],
         $aBooleanOptionsChecked['bLoadVideosLazy'],
-        $aBooleanOptionsChecked['bUseMapImage'],
         $aNumOptions['optionsYears'], $optionsMonths, $aNumOptions['optionsDays'], $aNumOptions['optionsHours'], $aNumOptions['optionsMinutes'],
-        $this->aOptions['strGoogleMapKey'], $this->aOptions['strFbAppID'], $aBooleanOptionsChecked['bPreventDirectMediaDownloads'], $this->aOptions['strNewsletterAPIKey'] ),
+        $this->aOptions['strGoogleMapsKey'], $this->aOptions['strGoogleMapsKeyStatic'], $this->aOptions['strFbAppID'], $aBooleanOptionsChecked['bPreventDirectMediaDownloads'], $this->aOptions['strNewsletterAPIKey'] ),
       '
             <tr style="width: 98%; padding:  5px 1%;">
               <th colspan="2"><h3>Spoločné nastavenia</h3></th>
@@ -2932,10 +2973,18 @@ class FLORP{
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;">
-                Google Maps Key
+                Google Maps API Key
               </th>
               <td>
-                <input id="florp_google_map_key" name="florp_google_map_key" type="text" value="%%strGoogleMapKey%%" style="width: 100%;" />
+                <input id="florp_google_maps_key" name="florp_google_maps_key" type="text" value="%%strGoogleMapsKey%%" style="width: 100%;" />
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                Google Maps Static API Key
+              </th>
+              <td>
+                <input id="florp_google_maps_key_static" name="florp_google_maps_key_static" type="text" value="%%strGoogleMapsKeyStatic%%" style="width: 100%;" />
               </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">

@@ -81,7 +81,7 @@ class LoginWithAjax {
 		//Get Templates from theme and default by checking for folders - we assume a template works if a folder exists!
 		//Note that duplicate template names are overwritten in this order of precedence (highest to lowest) - Child Theme > Parent Theme > Plugin Defaults
 		//First are the defaults in the plugin directory
-		self::find_templates( path_join( WP_PLUGIN_DIR , basename( dirname( __FILE__ ) ). "/widget/") );
+		self::find_templates( path_join( WP_PLUGIN_DIR . "/flashmob-organizer-profile", basename( dirname( __FILE__ ) ). "/widget/") );
 		//Now, the parent theme (if exists)
 		if( get_stylesheet_directory() != get_template_directory() ){
 			self::find_templates( get_template_directory().'/plugins/login-with-ajax/' );
@@ -486,7 +486,8 @@ class LoginWithAjax {
 		$lwa_data['profile_link'] = ( !empty($lwa_data['profile_link']) && $lwa_data['profile_link'] != "false" );
 		$lwa_data['hide_info_box'] = ( !empty($lwa_data['hide_info_box']) && $lwa_data['hide_info_box'] != "false" );
 		//Add template logic
-		self::$template = ( !empty($lwa_data['template']) && array_key_exists($lwa_data['template'], self::$templates) ) ? $lwa_data['template']:'default';
+		$defaultTemplate = array_key_exists( 'florp', self::$templates ) ? 'florp' : 'default';
+		self::$template = ( !empty($lwa_data['template']) && array_key_exists($lwa_data['template'], self::$templates) ) ? $lwa_data['template'] : $defaultTemplate;
 		//Choose the widget content to display.
 // 		echo "<pre>".var_export($lwa_data, true)."</pre>";
 		$bRegistrationFormOnly = $lwa_data['registration-form-only'] !== false && ($lwa_data['registration-form-only'] === "1" || $lwa_data['registration-form-only'] === 1 || strtolower($lwa_data['registration-form-only']) === "true");
@@ -500,12 +501,12 @@ class LoginWithAjax {
       $template_loc = locate_template( array('plugins/login-with-ajax/widget_in.php') );
       //Then check for custom templates or theme template default
       $template_loc = ($template_loc == '' && self::$template) ? self::$templates[self::$template].'/widget_in.php':$template_loc;
-      include ( $template_loc != '' && file_exists($template_loc) ) ? $template_loc : 'widget/default/widget_in.php';
+      include ( $template_loc != '' && file_exists($template_loc) ) ? $template_loc : 'widget/'.$defaultTemplate.'/widget_in.php';
     } elseif ($bRegistrationFormOnly) {
       $template_loc = locate_template( array('plugins/login-with-ajax/widget_out_registration_only.php') );
       //Then check for custom templates or theme template default
       $template_loc = ($template_loc == '' && self::$template) ? self::$templates[self::$template].'/widget_out_registration_only.php':$template_loc;
-      include ( $template_loc != '' && file_exists($template_loc) ) ? $template_loc : 'widget/default/widget_out_registration_only.php';
+      include ( $template_loc != '' && file_exists($template_loc) ) ? $template_loc : 'widget/'.$defaultTemplate.'/widget_out_registration_only.php';
 //     } elseif ($bLoggedInFormOnly) {
 //       if (is_user_logged_in()) {
 //         //Firstly check for template in theme with no template folder (legacy)
@@ -531,7 +532,7 @@ class LoginWithAjax {
 			$template_loc = locate_template( array('plugins/login-with-ajax/widget_out.php') );
 			//First check for custom templates or theme template default
 			$template_loc = ($template_loc == '' && self::$template) ? self::$templates[self::$template].'/widget_out.php' : $template_loc;
-			include ( $template_loc != '' && file_exists($template_loc) ) ? $template_loc : 'widget/default/widget_out.php';
+			include ( $template_loc != '' && file_exists($template_loc) ) ? $template_loc : 'widget/'.$defaultTemplate.'/widget_out.php';
 			//quick/easy WPML fix, should eventually go into a seperate file
 			if(  defined('ICL_LANGUAGE_CODE') ){
 			    foreach( array('login_form','lwa_register_form', 'lostpassword_form') as $action ) remove_action($action, 'lwa_wpml_input_var');
@@ -543,7 +544,7 @@ class LoginWithAjax {
 		ob_start();
 		$defaults = array(
 			'profile_link' => true,
-			'template' => 'default',
+			'template' => array_key_exists( 'florp', self::$templates ) ? 'florp' : 'default',
 			'registration' => true,
 			'redirect' => false,
 			'remember' => true,
