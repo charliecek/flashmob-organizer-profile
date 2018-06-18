@@ -2202,7 +2202,7 @@ class FLORP{
       }
       $aEcho .=   '</td>';
       $aEcho .=   '<td>';
-      $aParticipants = $this->get_flashmob_participants( $oUser->ID, false );
+      $aParticipants = $this->get_flashmob_participants( $oUser->ID, false, true );
       if (!empty($aParticipants)) {
         $aParticipantsOfUser = $aParticipants[$oUser->ID];
         if (!empty($aParticipantsOfUser)) {
