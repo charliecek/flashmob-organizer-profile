@@ -55,7 +55,6 @@ class FLORP{
   private $bHideFlashmobFields;
 
   public function __construct() {
-    // TODO: if not multisite, deactivate plugin with notice //
     $this->aOptions = get_site_option( $this->strOptionKey, array() );
     $this->aOptionDefaults = array(
       'bReloadAfterSuccessfulSubmissionMain'      => false,
@@ -3878,6 +3877,10 @@ class FLORP{
   }
 
   public function activate() {
+    if (!is_multisite()) {
+      deactivate_plugins( plugin_basename( __FILE__ ) );
+      wp_die( 'This plugin requires a multisite WP installation.  Sorry about that.' );
+    }
     $this->maybe_add_crons();
   }
 
