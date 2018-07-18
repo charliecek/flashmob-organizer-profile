@@ -5,12 +5,12 @@
  * Description: Creates shortcodes for flashmob organizer login / registration / profile editing form and for maps showing cities with videos of flashmobs for each year
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.0.3
+ * Version: 4.1.0
  */
 
 class FLORP{
 
-  private $strVersion = '4.0.3';
+  private $strVersion = '4.1.0';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -112,6 +112,15 @@ class FLORP{
       'strLoginBarLabelLogin'                     => 'Prihlásiť sa',
       'strLoginBarLabelLogout'                    => 'Odhlásiť sa',
       'strLoginBarLabelProfile'                   => 'Môj profil',
+      'strMarkerInfoWindowTemplateOrganizer'      => '<div class="florp-marker-infowindow-wrapper">
+<h5 class="florp-flashmob-location">%%flashmob_city%%</h5>
+<p>%%signup%% <strong>Organizátor</strong>: %%organizer%% %%year%% %%school%% %%dancers%% %%note%%</p>
+%%embed_code%%</div>',
+      'strMarkerInfoWindowTemplateTeacher'        => '<div class="florp-marker-infowindow-wrapper">
+<h5 class="florp-course-location">%%courses_city%%</h5>
+<p><strong>Líder</strong>: %%organizer%% %%school%%</p>
+<div class="florp-course-info">%%courses_info%%</div>
+</div>',
     );
     $this->aOptionFormKeys = array(
       'florp_reload_after_ok_submission_main'     => 'bReloadAfterSuccessfulSubmissionMain',
@@ -158,6 +167,8 @@ class FLORP{
       'florp_login_bar_label_login'               => 'strLoginBarLabelLogin',
       'florp_login_bar_label_logout'              => 'strLoginBarLabelLogout',
       'florp_login_bar_label_profile'             => 'strLoginBarLabelProfile',
+      'florp_infowindow_template_organizer'       => 'strMarkerInfoWindowTemplateOrganizer',
+      'florp_infowindow_template_teacher'         => 'strMarkerInfoWindowTemplateTeacher',
     );
     $aDeprecatedKeys = array(
       // new => old //
@@ -211,6 +222,8 @@ class FLORP{
         'strLoginBarLabelLogin',
         'strLoginBarLabelLogout',
         'strLoginBarLabelProfile',
+        'strMarkerInfoWindowTemplateOrganizer',
+        'strMarkerInfoWindowTemplateTeacher',
       ),
       'flashmob'  => array(
         'iFlashmobBlogID',
@@ -539,31 +552,6 @@ class FLORP{
     add_action( 'lwa_before_login_form', array( $this, 'action__lwa_before_login_form' ));
     add_action( 'florp_notify_leaders_about_participants_cron', array( $this, 'notify_leaders_about_participants' ) );
 
-    $this->aMarkerInfoWindowTemplates = array(
-      'flashmob_organizer' =>
-        '        <div class="florp-marker-infowindow-wrapper">
-          <h5 class="florp-flashmob-location">%%flashmob_city%%</h5>
-          <p>
-            <strong>Organizátor</strong>: %%organizer%%
-            %%signup%%
-            %%participant_count%%
-            %%year%%
-            %%school%%
-            %%dancers%%
-            %%note%%
-          </p>
-          %%embed_code%%
-        </div>',
-      'teacher' =>
-        '        <div class="florp-marker-infowindow-wrapper">
-          <h5 class="florp-course-location">%%courses_city%%</h5>
-          <p>
-            <strong>Líder</strong>: %%organizer%%
-            %%school%%
-          </p>
-          <div class="florp-course-info">%%courses_info%%</div>
-        </div>',
-    );
     $this->aUserFields = array( 'user_email', 'first_name', 'last_name', 'user_pass' );
     $this->aUserFieldsMap = array( 'first_name', 'last_name' );
     $this->aMetaFieldsFlashmobToArchive = array( 'webpage', 'school_name', 'school_webpage', 'school_city',
@@ -685,6 +673,10 @@ class FLORP{
       $this->bHideFlashmobFields = true;
     }
 
+    $this->aMarkerInfoWindowTemplates = array(
+      'flashmob_organizer' => $this->aOptions['strMarkerInfoWindowTemplateOrganizer'],
+      'teacher' => $this->aOptions['strMarkerInfoWindowTemplateTeacher'],
+    );
     $this->set_variables_per_subsite();
   }
 
@@ -2899,6 +2891,9 @@ class FLORP{
     $strOptionsDaysEnd = "";
     $iSeasonStartDay = $this->aOptions["iSeasonStartDay"];
     $iSeasonEndDay = $this->aOptions["iSeasonEndDay"];
+    
+    $strMarkerInfoWindowTemplateOrganizer = $this->get_wp_editor( $this->aOptions['strMarkerInfoWindowTemplateOrganizer'], 'florp_infowindow_template_organizer' );
+    $strMarkerInfoWindowTemplateTeacher = $this->get_wp_editor( $this->aOptions['strMarkerInfoWindowTemplateTeacher'], 'florp_infowindow_template_teacher' );
 
     return str_replace(
       array( '%%optionsNewsletterSite%%',
@@ -2906,13 +2901,15 @@ class FLORP{
         '%%loadMapsLazyChecked%%',
         '%%loadVideosLazyChecked%%',
         '%%optionsYears%%', '%%optionsMonths%%', '%%optionsDays%%', '%%optionsHours%%', '%%optionsMinutes%%',
-        '%%strGoogleMapsKey%%', '%%strGoogleMapsKeyStatic%%', '%%strFbAppID%%', '%%preventDirectMediaDownloadsChecked%%', '%%strNewsletterAPIKey%%' ),
+        '%%strGoogleMapsKey%%', '%%strGoogleMapsKeyStatic%%', '%%strFbAppID%%', '%%preventDirectMediaDownloadsChecked%%', '%%strNewsletterAPIKey%%',
+        '%%wpEditorMarkerInfoWindowTemplateOrganizer%%', '%%wpEditorMarkerInfoWindowTemplateTeacher%%' ),
       array( $optionsNewsletterSite,
         $aBooleanOptionsChecked['bLoadMapsAsync'],
         $aBooleanOptionsChecked['bLoadMapsLazy'],
         $aBooleanOptionsChecked['bLoadVideosLazy'],
         $aNumOptions['optionsYears'], $optionsMonths, $aNumOptions['optionsDays'], $aNumOptions['optionsHours'], $aNumOptions['optionsMinutes'],
-        $this->aOptions['strGoogleMapsKey'], $this->aOptions['strGoogleMapsKeyStatic'], $this->aOptions['strFbAppID'], $aBooleanOptionsChecked['bPreventDirectMediaDownloads'], $this->aOptions['strNewsletterAPIKey'] ),
+        $this->aOptions['strGoogleMapsKey'], $this->aOptions['strGoogleMapsKeyStatic'], $this->aOptions['strFbAppID'], $aBooleanOptionsChecked['bPreventDirectMediaDownloads'], $this->aOptions['strNewsletterAPIKey'],
+        $strMarkerInfoWindowTemplateOrganizer, $strMarkerInfoWindowTemplateTeacher ),
       '
             <tr style="width: 98%; padding:  5px 1%;">
               <th colspan="2"><h3>Spoločné nastavenia</h3></th>
@@ -3000,6 +2997,26 @@ class FLORP{
               </th>
               <td>
                 <input id="florp_prevent_direct_media_downloads" name="florp_prevent_direct_media_downloads" type="checkbox" %%preventDirectMediaDownloadsChecked%% value="1"/>
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
+                Info okno leadra ako organizátora flashmobu na mape
+              </th>
+              <td style="border-top: 1px lightgray dashed;">
+                %%wpEditorMarkerInfoWindowTemplateOrganizer%%
+                <span style="width: 100%;">Placeholdre: <code>%%flashmob_city%%</code>, <code>%%organizer%%</code>*, <code>%%signup%%</code>*, <code>%%participant_count%%</code>*, <code>%%year%%</code>*, <code>%%school%%</code>*, <code>%%dancers%%</code>*, <code>%%note%%</code>*, <code>%%embed_code%%</code></span><br>
+                <span style="width: 100%;">*Pozor: nepridavaj zalomenie riadkov (&lt;br&gt;, &lt;br /&gt;) pred a za placeholdre s hviezdickou - ak sa zamenia za prazdny text, ostane po nich prazdny riadok!
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
+                Info okno kurzov leadra na mape
+              </th>
+              <td style="border-top: 1px lightgray dashed;">
+                %%wpEditorMarkerInfoWindowTemplateTeacher%%
+                <span style="width: 100%;">Placeholdre: <code>%%courses_city%%</code>, <code>%%organizer%%</code>*, <code>%%school%%</code>*, <code>%%courses_info%%</code></span><br>
+                <span style="width: 100%;">*Pozor: nepridavaj zalomenie riadkov (&lt;br&gt;, &lt;br /&gt;) pred a za placeholdre s hviezdickou - ak sa zamenia za prazdny text, ostane po nich prazdny riadok!
               </td>
             </tr>
       '
@@ -3282,7 +3299,7 @@ class FLORP{
       if (!empty($aInfoWindowData['school_webpage']['value'])) {
         $strSchool = '<a href="'.$aInfoWindowData['school_webpage']['value'].'" target="_blank">'.$strSchool.'</a>';
       }
-      $strSchool = '<br>Škola / skupina: ' . $strSchool;
+      $strSchool = 'Škola / skupina: ' . $strSchool;
       if (!empty($aInfoWindowData['school_city']['value'])) {
         $strSchool .= " (".$aInfoWindowData['school_city']['value'].")";
       }
@@ -3355,7 +3372,7 @@ class FLORP{
     if (empty($aInfoWindowData['flashmob_number_of_dancers']['value'])) {
       $strDancers = "";
     } else {
-      $strDancers = "<br>Počet tancujúcich: ".$aInfoWindowData['flashmob_number_of_dancers']['value'];
+      $strDancers = "Počet tancujúcich: ".$aInfoWindowData['flashmob_number_of_dancers']['value'];
     }
     $mixMarkerKey = $aInfoWindowData['mixMarkerKey'];
     if (isset($mixMarkerKey) && !is_numeric($mixMarkerKey)) {
@@ -3373,24 +3390,42 @@ class FLORP{
       }
     }
     if (isset($aInfoWindowData['year']) && isset($aInfoWindowData['year']["value"])) {
-      $strYear = '<br><strong>Rok</strong>: '.$aInfoWindowData['year']["value"];
+      $strYear = '<strong>Rok</strong>: '.$aInfoWindowData['year']["value"];
     } else {
       $strYear = "";
     }
     if (isset($aInfoWindowData['note']) && isset($aInfoWindowData['note']["value"])) {
-      $strNote = '<br>Poznámka: '.stripslashes($aInfoWindowData['note']["value"]);
+      $strNote = 'Poznámka: '.stripslashes($aInfoWindowData['note']["value"]);
     } else {
       $strNote = "";
     }
 
     if ($aInfoWindowData['strMapType'] === 'flashmob_organizer' && $aInfoWindowData['iCurrentYear'] == '1' && $aInfoWindowData['iBeforeFlashmob'] == '1') {
-      $strSignupLink = '<br><span class="florp-click-trigger florp-click-participant-trigger pum-trigger" data-user-id="'.$aInfoWindowData['iUserID'].'" data-flashmob-city="'.$aInfoWindowData['school_city']['value'].'" data-marker-key="'.$aInfoWindowData['mixMarkerKey'].'" data-div-id="'.$aInfoWindowData['strDivID'].'" style="cursor: pointer;">Chcem sa prihlásiť na tento flashmob!</span>';
-      $strParticipantCount = '<br>Prihlásených účastníkov: '.$aInfoWindowData['iParticipantCount'];
+      $strSignupLink = '<span class="florp-click-trigger florp-click-participant-trigger pum-trigger" data-user-id="'.$aInfoWindowData['iUserID'].'" data-flashmob-city="'.$aInfoWindowData['school_city']['value'].'" data-marker-key="'.$aInfoWindowData['mixMarkerKey'].'" data-div-id="'.$aInfoWindowData['strDivID'].'" style="cursor: pointer;">Chcem sa prihlásiť na tento flashmob!</span>';
+      $strParticipantCount = 'Prihlásených účastníkov: '.$aInfoWindowData['iParticipantCount'];
     } else {
       $strSignupLink = "";
       $strParticipantCount = "";
     }
 
+    // Separate optional placeholders by a line break //
+    $aPlaceholdersToSeparate = array( 'organizer' => 'strOrganizer', 'school' => 'strSchool', 'dancers' => 'strDancers', 'year' => 'strYear', 'note' => 'strNote', 'signup' => 'strSignupLink', 'participant_count' => 'strParticipantCount' );
+    $aPlaceholdersToSeparatePositions = array();
+    foreach ($aPlaceholdersToSeparate as $strPlaceholder => $strVarName) {
+      $mixPosition = strpos($this->aMarkerInfoWindowTemplates[$aInfoWindowData['strMapType']],'%%'.$strPlaceholder.'%%');
+      if ($mixPosition !== false && ${$strVarName} !== "") {
+        $aPlaceholdersToSeparatePositions[$strPlaceholder] = $mixPosition;
+      }
+    }
+    $iPlaceholdersToSeparateMaxPosition = max($aPlaceholdersToSeparatePositions);
+    foreach ($aPlaceholdersToSeparatePositions as $strPlaceholder => $iPosition) {
+      if ($iPosition === $iPlaceholdersToSeparateMaxPosition) {
+        continue;
+      }
+      $strVarName = $aPlaceholdersToSeparate[$strPlaceholder];
+      ${$strVarName} .= "<br>";
+    }
+    
     $aSearch = array( 'flashmob_city', 'organizer', 'school', 'embed_code', 'dancers', 'year', 'note', 'courses_city' ,'courses_info', 'signup', 'participant_count' );
     foreach ($aSearch as $key => $value) {
       $aSearch[$key] = '%%'.$value.'%%';

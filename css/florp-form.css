@@ -166,3 +166,9 @@ nf-field.florp-hidden-if-map-correct{
 .florp-leader-participants-table tr:nth-child(odd) {
   background-color: #eee;
 }
+.florp-click-participant-trigger {
+  /* color: red; */
+  color: #277cea;
+  /* text-decoration: underline dashed; */
+  /* font-weight: bold; */
+}
