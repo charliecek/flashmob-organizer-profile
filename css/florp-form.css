@@ -169,6 +169,7 @@ nf-field.florp-hidden-if-map-correct{
 .florp-click-participant-trigger {
   /* color: red; */
   color: #277cea;
-  /* text-decoration: underline dashed; */
+/*   text-decoration: underline dashed; */
+  text-decoration: underline;
   /* font-weight: bold; */
 }
