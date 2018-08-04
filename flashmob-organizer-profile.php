@@ -538,6 +538,7 @@ class FLORP{
     add_action( 'wp_ajax_nopriv_get_markerInfoHTML', array( $this, 'action__get_markerInfoHTML_callback' ));
     add_action( 'wp_ajax_get_mapUserInfo', array( $this, 'action__get_mapUserInfo_callback' ));
     add_action( 'wp_ajax_nopriv_get_mapUserInfo', array( $this, 'action__get_mapUserInfo_callback' ));
+    add_action( 'admin_menu', array( $this, "action__remove_admin_menu_items" ), 9999 );
     add_action( 'admin_menu', array( $this, "action__add_options_page" ));
     add_action( 'wp_enqueue_scripts', array( $this, 'action__wp_enqueue_scripts' ), 9999 );
     add_action( 'ninja_forms_enqueue_scripts', array( $this, 'action__ninja_forms_enqueue_scripts' ));
@@ -2091,6 +2092,32 @@ class FLORP{
       $ver = Ninja_Forms::VERSION;
       $recaptcha_lang = Ninja_Forms()->get_setting('recaptcha_lang');
       wp_enqueue_script('nf-google-recaptcha', 'https://www.google.com/recaptcha/api.js?hl=' . $recaptcha_lang . '&onload=nfRenderRecaptcha&render=explicit', array( 'jquery', 'nf-front-end-deps' ), $ver, TRUE );
+    }
+  }
+
+  public function action__remove_admin_menu_items() {
+    $oUser = wp_get_current_user();
+    $strAdminEmail = get_option('admin_email');
+    if( $oUser && isset($oUser->user_email) && $strAdminEmail !== $oUser->user_email ) {
+      $aMenuPages = array(
+        'ninja-forms' => array(
+          'admin.php?page=ninja-forms#new-form',
+          'edit.php?post_type=nf_sub',
+          'nf-import-export',
+          'nf-settings',
+          'nf-system-status',
+          'ninja-forms#apps',
+        ),
+        'edit.php?post_type=popup' => array(),
+      );
+      foreach ($aMenuPages as $strMenuPage => $aSubMenuPages) {
+        if (is_array($aSubMenuPages) && !empty($aSubMenuPages)) {
+          foreach ($aSubMenuPages as $strSubmenuPage) {
+            remove_submenu_page( $strMenuPage, $strSubmenuPage );
+          }
+        }
+        remove_menu_page( $strMenuPage );
+      }
     }
   }
 
