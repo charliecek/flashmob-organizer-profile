@@ -588,11 +588,11 @@ class FLORP{
     $this->aMetaFieldsFlashmobToArchive = array( 'webpage', 'school_name', 'school_webpage', 'school_city',
                           'flashmob_number_of_dancers', 'video_link_type', 'youtube_link', 'facebook_link', 'vimeo_link', 'embed_code', 'flashmob_address', 'longitude', 'latitude' );
     $this->aMetaFields = array_merge( $this->aMetaFieldsFlashmobToArchive, array(
-                          'subscriber_type', 'preferences', 'flashmob_leader_tshirt_size', 'flashmob_leader_tshirt_gender',
+                          'subscriber_type', 'preferences', 'flashmob_leader_tshirt_size', 'flashmob_leader_tshirt_gender', 'flashmob_leader_tshirt_color',
                           'courses_city', 'courses_city_2', 'courses_city_3', 'courses_info', 'courses_info_2', 'courses_info_3', 'courses_in_city_2', 'courses_in_city_3' ) );
     $this->aFlashmobMetaFieldsToClean = array(
                           'subscriber_type:flashmob_organizer', 'flashmob_number_of_dancers', 'video_link_type', 'youtube_link', 'facebook_link', 'vimeo_link', 'embed_code', 'flashmob_address', 'longitude', 'latitude',
-                          'preferences:flashmob_leader_tshirt', 'flashmob_leader_tshirt_size', 'flashmob_leader_tshirt_gender' );
+                          'preferences:flashmob_leader_tshirt', 'flashmob_leader_tshirt_size', 'flashmob_leader_tshirt_gender', 'flashmob_leader_tshirt_color' );
     $this->aLocationFields = array(
       'flashmob_organizer'  => array( "school_city", "flashmob_address", "longitude", "latitude" ),
       'teacher'             => array( "school_city", "courses_city", "courses_city_2", "courses_city_3" ),
@@ -2071,6 +2071,28 @@ class FLORP{
       $iHasParticipants = 0;
     }
 
+    $aTshirtImages = array();
+//     $aTshirtImagePaths = array();
+    $aFlashmobOrganizers = $this->getFlashmobSubscribers('flashmob_organizer');
+    $strPluginDirPath = WP_CONTENT_DIR . '/plugins/flashmob-organizer-profile';
+    foreach ($aFlashmobOrganizers as $oUser) {
+      $strFlashmobCity = get_user_meta( $oUser->ID, 'school_city', true );
+      if ($strFlashmobCity) {
+        $strTshirtCitySlug = str_replace( " ", "-", strtolower($strFlashmobCity) );
+        $strTshirtCitySlug = preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strTshirtCitySlug );
+        $strTshirtCitySlug = preg_replace( '~__+~', "_", $strTshirtCitySlug );
+        $strWhite = $strPluginDirPath . '/img/t-shirt-white-'.$strTshirtCitySlug.'.png';
+        $strBlack = $strPluginDirPath . '/img/t-shirt-black-'.$strTshirtCitySlug.'.png';
+//         $aTshirtImagePaths[$strWhite] = 1;
+//         $aTshirtImagePaths[$strBlack] = 1;
+        if (file_exists($strWhite) && file_exists($strBlack)) {
+          $aTshirtImages[$strTshirtCitySlug] = 1;
+        } else {
+          $aTshirtImages[$strTshirtCitySlug] = 0;
+        }
+      }
+    }
+
     $aJS = array(
       'hide_flashmob_fields'          => $this->bHideFlashmobFields ? 1 : 0,
       'reload_ok_submission'          => $bReloadAfterSuccessfulSubmission ? 1 : 0,
@@ -2094,6 +2116,9 @@ class FLORP{
       'load_maps_async'               => $this->aOptions['bLoadMapsAsync'] ? 1 : 0,
       'load_videos_lazy'              => $this->aOptions['bLoadVideosLazy'] ? 1 : 0,
       'has_participants'              => $iHasParticipants,
+      'img_path'                      => plugins_url( 'flashmob-organizer-profile/img/' ),
+      'tshirt_imgs'                   => $aTshirtImages,
+//       'tshirt_paths'                  => $aTshirtImagePaths,
     );
     if (is_user_logged_in()) {
       $oCurrentUser = wp_get_current_user();
@@ -3670,6 +3695,9 @@ class FLORP{
         }
         if (isset($aFieldData['flashmob_participant_tshirt_gender'])) {
           unset($aFieldData['flashmob_participant_tshirt_gender']);
+        }
+        if (isset($aFieldData['flashmob_participant_tshirt_color'])) {
+          unset($aFieldData['flashmob_participant_tshirt_color']);
         }
       }
 

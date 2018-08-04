@@ -823,8 +823,9 @@ jQuery(document).on( 'click', '.florp-click-participant-trigger', function () {
         iUserID = $this.data("userId"),
         strDivID = $this.data("divId"),
         strFlashmobCity = $this.data("flashmobCity")
+    var strImgCitySlug = strFlashmobCity.toLowerCase().replace(" ", "-").replace(/[^a-zA-Z0-9_-]/g, "_")
     // console.log($this)
-    var $form = jQuery("#florp-profile-form-wrapper-div nf-form-"+florp.form_id+"-cont")
+    var $form = jQuery("#florp-profile-form-wrapper-div #nf-form-"+florp.form_id+"-cont")
     if ("undefined" === typeof nfForms) {
       return;
     }
@@ -838,6 +839,17 @@ jQuery(document).on( 'click', '.florp-click-participant-trigger', function () {
           }
         })
       }
+    })
+    var $tshirtImgs = $form.find(".florp-tshirt-color-label-img")
+    $tshirtImgs.each(function(index) {
+      var $this = jQuery(this)
+      var strImgCitySlugLoc = "default"
+      if ("undefined" !== typeof florp.tshirt_imgs && "undefined" !== typeof florp.tshirt_imgs[strImgCitySlug] && florp.tshirt_imgs[strImgCitySlug]) {
+        var strImgCitySlugLoc = strImgCitySlug
+      }
+      var color = $this.data("color")
+      var strSrc = florp.img_path+"t-shirt-"+color+"-"+strImgCitySlugLoc+".png"
+      $this.prop("src", strSrc)
     })
     PUM.getPopup(florp.popup_id).data("markerKey", $this.data("markerKey")).data("userId", iUserID).data("divId", strDivID)
     PUM.open(florp.popup_id);
@@ -961,11 +973,23 @@ function florpFixFormClasses() {
     });
   }
 
+  var $tshirtColorRadioButtons = jQuery(".florp-participant-tshirt-color .nf-field-element ul>li input")
+  if ($tshirtColorRadioButtons.length > 0) {
+    $tshirtColorRadioButtons.each(function( index ) {
+      var $this = jQuery(this)
+      var color = $this.val()
+      var imgCitySlug = "default"
+      var tshirtImgPath = florp.img_path+"t-shirt-"+color+"-"+imgCitySlug+".png"
+      var $label = $this.parent().find("label")
+      $label.html(jQuery('<img id="florp-tshirt-color-label-img-'+index+'" data-color="'+color+'" data-city-slug="'+imgCitySlug+'" class="florp-tshirt-color-label-img" src="'+tshirtImgPath+'"/>'))
+    })
+  }
+
   jQuery(".florp_disabled select,.florp_disabled input").prop("disabled", true);
   if (florp.blog_type === "main" && florp.has_participants == 1) {
     jQuery(".florp_subscriber_type_container input[value=flashmob_organizer]").prop("disabled", true)
   }
-  $preferenceInfo = jQuery(".florp_preferences_container .nf-field-label label span.fa-info-circle")
+  var $preferenceInfo = jQuery(".florp_preferences_container .nf-field-label label span.fa-info-circle")
   if ($preferenceInfo.length > 0) {
     $newsletterSubscribeLabel = jQuery(".florp_preferences_container input[value=newsletter_subscribe]").parent().find("label")
     if ($newsletterSubscribeLabel.length > 0) {

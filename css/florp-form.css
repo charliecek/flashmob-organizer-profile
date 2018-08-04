@@ -36,6 +36,66 @@ nf-field.florp-hidden-if-map-correct{
 .florp-map-preview-wrapper{
   display: none;
 }
+
+.florp-multi-columns .nf-field-element ul>li{
+  display: inline-block;
+  width: auto;
+  margin-right: 1em !important;
+}
+.florp-multi-columns.florp-multi-columns-2 .nf-field-element ul>li{
+  width:49%;
+  margin-right: 0 !important;
+}
+.florp-multi-columns.florp-multi-columns-max-2 .nf-field-element ul>li{
+  max-width: 45%;
+  max-width: calc(50% - 2em);
+}
+
+.florp-multi-columns.florp-columns-like-right-left .nf-field-label{
+  clear: both;
+  width: 17.15%;
+  float: left;
+  padding-right: 1em;
+}
+.florp-multi-columns.florp-columns-like-right-left .nf-field-element{
+  float: right;
+  width: 81.85%;
+}
+.florp-multi-columns.florp-columns-like-right-left.florp-multi-columns-2 .nf-field-element ul>li{
+  margin-right: 13% !important;
+}
+.florp-multi-columns.florp-columns-like-right-left.florp-multi-columns-2 .nf-field-element ul>li:last-of-type{
+  margin-right: 0 !important;
+  width: auto;
+}
+.florp-button-wrapper {
+  width: 100%;
+}
+.florp-button-wrapper .nf-field-label {
+  width: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+.florp-button-wrapper .nf-field-element {
+  width: 100%;
+  text-align: center;
+}
+.florp-newsletter-banner img{
+  width: 65%;
+  position: absolute;
+  right: 0;
+  top: -2em;
+}
+
+.florp-participant-tshirt-color .nf-field-element ul>li input{
+/*   visibility: hidden; */
+/*   position: absolute; */
+  display: none;
+}
+.florp-participant-tshirt-color .nf-field-element ul>li .nf-checked-label img{
+  background-color: gray;
+}
+
 .florp-clear{
   clear:both;
 }
@@ -149,8 +209,11 @@ nf-field.florp-hidden-if-map-correct{
     font-style: italic;
     color: red;
 }
-.z-index-1999999999{
+.z-index-1999999999 {
   z-index: 1999999999 !important;
+}
+.jBox-wrapper {
+  max-width: 60% !important;
 }
 .florp-leader-participants-table{
   width: 100%;
