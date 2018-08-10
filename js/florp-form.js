@@ -968,7 +968,6 @@
         } else {
           val = $this.val()
         }
-        console.info(val)
         var strTogglableFieldSelector = ".florp-"+strToggleType+"-field_"+val+" .nf-field-container"
         var $aTogglableFieldsAll = jQuery(strTogglableFieldSelector)
 
@@ -992,16 +991,20 @@
 
     // FN to Toggle sections (accordeons) //
     var fnToggleSection = function($sectionToggler, $sectionItems, sectionTypeSelector) {
+      // Close the other sections //
       aSectionTogglerSelectors.forEach(function(strSelector) {
         if (strSelector !== sectionTypeSelector) {
           var $toggler = jQuery(strSelector+".florp-section-toggler")
           var $togglees = jQuery(strSelector+":not(.florp-section-toggler)")
           $toggler.data("open", 0).removeClass("active")
-          $togglees.addClass("hidden")
+//           $togglees.addClass("hidden")
+          florpAnimateHide($togglees)
         }
       })
-      var open = $sectionToggler.data("open")
+      var open = $sectionToggler.data("open"),
+          animate = true
       if ("undefined" === typeof open) {
+        animate = false
         open = 1;
         $sectionToggler.data("open", open)
       }
@@ -1009,7 +1012,12 @@
         // Closing //
         $sectionToggler.data("open", 0)
         $sectionToggler.removeClass("active")
-        $sectionItems.addClass("hidden")
+        // $sectionItems.addClass("hidden")
+        if (animate) {
+          florpAnimateHide($sectionItems)
+        } else {
+          $sectionItems.addClass("hidden")
+        }
 
         // Open next if any //
         if ("undefined" !== typeof aSectionTogglerSelectorSuccessors && "undefined" !== typeof aSectionTogglerSelectorSuccessors[sectionTypeSelector]) {
@@ -1022,7 +1030,8 @@
         // Opening //
         $sectionToggler.data("open", 1)
         $sectionToggler.addClass("active")
-        $sectionItems.removeClass("hidden")
+        // $sectionItems.removeClass("hidden")
+        florpAnimateShow($sectionItems)
 
         // Scroll to toggler //
         var offset = 0
@@ -1079,16 +1088,17 @@
     });
 
     if (florp.blog_type === "main") {
-      // When logged in, hide/unhide parts of the profile form based on which togglable checkbox values the user has //
-      if ("undefined" === typeof florp.user_id ) {
-        // Not logged in => registration form - toggle warnings //
-//         TODO  fnToggleFlashmobOrganizerWarnings(strTogglableValue, bChecked)
-      }
       // Toggle fields based on checkboxes //
       fnToggleFields($aTogglableSingleCheckboxCheckboxes, "checkbox");
       $aTogglableSingleCheckboxCheckboxes.change(function () {
         fnToggleFields(jQuery(this), "checkbox");
       });
+
+      if ("undefined" === typeof florp.user_id ) {
+        // Not logged in => registration form - toggle warnings //
+//         TODO  fnToggleFlashmobOrganizerWarnings(strTogglableValue, bChecked)
+        return
+      }
 
       var $florpUserCitySelect = jQuery(".florp_user_city");
       var $florpFlashmobCitySelect = jQuery(".florp_flashmob_city");
