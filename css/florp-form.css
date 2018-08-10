@@ -1,5 +1,9 @@
-select[disabled] {
+nf-field input[disabled] {
+  cursor: not-allowed;
+}
+nf-field select[disabled] {
   cursor: default;
+  cursor: not-allowed;
   opacity: 0.5;
 }
 body.state_default nf-field.florp-left{
@@ -7,9 +11,27 @@ body.state_default nf-field.florp-left{
   width: 49%;
   clear: both;
 }
+body.state_default nf-field.florp-left.florp-3-col-1{
+  width: 33%;
+}
+body.state_default nf-field.florp-left.florp-3-col-2{
+  width: 66%;
+}
+body.state_default nf-field.florp-left.florp-4-col-1{
+  width: 24.5%;
+}
+body.state_default nf-field.florp-left.florp-no-clear{
+  clear: none;
+}
 body.state_default nf-field.florp-right{
   float: right;
   width: 49%;
+}
+body.state_default nf-field.florp-right.florp-3-col-1{
+  width: 33%;
+}
+body.state_default nf-field.florp-right.florp-3-col-2{
+  width: 66%;
 }
 nf-field .florp-right-button,
 nf-field.florp-right-button{
@@ -30,17 +52,67 @@ nf-field.florp-hidden-if-map-correct{
 }
 .florp-button[disabled]{
   cursor: default;
+  cursor: not-allowed;
   opacity: .3;
 }
-.florp-video,
+/*.florp-video,
 .florp-map-preview-wrapper{
   display: none;
+}*/
+.label-above .nf-field-element,
+.label-below .nf-field-element{
+  order: 7;
+}
+
+.florp-map-preview-wrapper .nf-field-description{
+  clear: both;
+  margin-left: 0 !important;
+  text-align: center;
+}
+nf-field.florp-section-toggler{
+  clear:both;
+}
+/* nf-field:after, */
+/* nf-field>.nf-field-container:after, */
+.florp-map-preview-wrapper .nf-field-description:after{
+  content: " ";
+  display: block;
+  clear: both;
+  visibility: hidden;
+  line-height: 0;
+  height: 0;
+}
+.florp-map-preview-wrapper .nf-field-description p,
+.florp-map-preview-wrapper .florp-map-preview-title h5{
+  margin-bottom: 0.5em;
+  width: 85%;
+  float: left;
+}
+.florp-map-preview-wrapper .florp-map-preview-title .florp-button{
+  width: 15%;
+  float: right;
+}
+.florp-map-preview{
+  width: 100%;
+  height: 20em;
 }
 
 .florp-multi-columns .nf-field-element ul>li{
   display: inline-block;
   width: auto;
   margin-right: 1em !important;
+}
+.florp-video .label-left .nf-field-description{
+  margin-left: 15% !important;
+}
+.florp-video .nf-field-description p{
+  margin-bottom: 0.5em;
+}
+.florp-video .label-left .nf-field-description p{
+  margin-top: 0.5em;
+}
+.florp-video .label-left .nf-field-description ul{
+  margin-left: 1.5rem;
 }
 .florp-multi-columns.florp-multi-columns-2 .nf-field-element ul>li{
   width:49%;
@@ -72,26 +144,36 @@ nf-field.florp-hidden-if-map-correct{
   width: 100%;
 }
 .florp-button-wrapper .nf-field-label {
-  width: 0;
+  width: 0 !important;
   padding-left: 0;
-  padding-right: 0;
+  padding-right: 0 !important;
 }
 .florp-button-wrapper .nf-field-element {
-  width: 100%;
+  width: 100% !important;
   text-align: center;
 }
 .florp-newsletter-banner img{
   width: 65%;
+}
+.florp-newsletter-banner.participants img{
   position: absolute;
   right: 0;
   top: -2em;
 }
-
-.florp-participant-tshirt-color .nf-field-element ul>li input{
-/*   visibility: hidden; */
-/*   position: absolute; */
+.florp-hide-label .nf-field-label{
   display: none;
 }
+.florp-invisible-label .nf-field-label{
+  visibility: hidden;
+}
+
+.florp-leader-tshirt-color .nf-field-element ul>li input,
+.florp-participant-tshirt-color .nf-field-element ul>li input{
+  visibility: hidden;
+  position: absolute;
+/*   display: none; */
+}
+.florp-leader-tshirt-color .nf-field-element ul>li .nf-checked-label img,
 .florp-participant-tshirt-color .nf-field-element ul>li .nf-checked-label img{
   background-color: gray;
 }
@@ -184,6 +266,7 @@ nf-field.florp-hidden-if-map-correct{
   margin-bottom: 0.5em;
 }
 .florp-flashmob-info-p{
+  text-align: center;
   margin-bottom: 21px;
 }
 
@@ -232,7 +315,41 @@ nf-field.florp-hidden-if-map-correct{
 .florp-click-participant-trigger {
   /* color: red; */
   color: #277cea;
-/*   text-decoration: underline dashed; */
-  text-decoration: underline;
+  text-decoration: underline dashed;
+/*   text-decoration: underline; */
   /* font-weight: bold; */
+}
+
+.florp-section-toggler h5{
+/*     color: #3b3d40; */
+    color: #277cea;
+    cursor: pointer;
+}
+.florp-section-toggler.active h5{
+/*     color: #277cea; */
+}
+
+.florp-section-toggler h5:before {
+    content: '\25B8';
+    color: #3b3d40;
+/*     color: #277cea; */
+    font-weight: bold;
+    margin-right: 0.5em;
+}
+.florp-section-toggler.active h5:before {
+    content: "\25BE";
+}
+
+
+.florp-section-toggler h5:after {
+    display: none;
+    content: '\002B';
+    color: #3b3d40;
+/*     color: #277cea; */
+    font-weight: bold;
+    float: right;
+    margin-left: 5px;
+}
+.florp-section-toggler.active h5:after {
+    content: "\2212";
 }

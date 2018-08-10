@@ -77,6 +77,12 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
           if ($strKey == 'subscriber_type') {
             $aSubscriberType = $strValue;
             break;
+          } elseif ($strKey == 'flashmob_organizer') {
+            if (!isset($aSubscriberType)) {
+              $aSubscriberType = array();
+            }
+            $aSubscriberType[] = 'flashmob_organizer';
+            break;
           }
         }
         foreach ($data['fields'] as $field_id => $field_value ) {
@@ -91,8 +97,9 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
                 $data[ 'errors' ][ 'form' ][$strKey] = 'Zadaný e-mail už je zaregistrovaný'; //__( 'The submitted email is in use already', 'florp' ); // Zadaný e-mail už je zaregistrovaný
               }
               break;
-            case "webpage":
-            case "school_webpage":
+            case "user_webpage":
+            case "school_custom_webpage":
+            case "video_link":
             case "facebook_link":
             case "youtube_link":
             case "vimeo_link":
@@ -112,7 +119,7 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
                 $aPwdCheck[$strKey] = $strValue;
               }
               break;
-            case "school_city":
+            case "flashmob_city":
               if ($strValue === "null") {
                 break;
               }

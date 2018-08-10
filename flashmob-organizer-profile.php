@@ -114,7 +114,7 @@ class FLORP{
       'strLoginBarLabelProfile'                   => 'Môj profil',
       'strMarkerInfoWindowTemplateOrganizer'      => '<div class="florp-marker-infowindow-wrapper">
 <h5 class="florp-flashmob-location">%%flashmob_city%%</h5>
-<p>%%signup%% <strong>Organizátor</strong>: %%organizer%% %%year%% %%school%% %%dancers%% %%note%%</p>
+<p>%%signup%% <strong>Organizátor</strong>: %%organizer%% %%year%% %%school%% %%school_web%% %%dancers%% %%note%%</p>
 %%embed_code%%</div>',
       'strMarkerInfoWindowTemplateTeacher'        => '<div class="florp-marker-infowindow-wrapper">
 <h5 class="florp-course-location">%%courses_city%%</h5>
@@ -127,10 +127,12 @@ class FLORP{
       'strInfoWindowLabel_participant_count'      => 'Prihlásených účastníkov',
       'strInfoWindowLabel_year'                   => '<strong>Rok</strong>',
       'strInfoWindowLabel_school'                 => 'Škola / skupina',
+      'strInfoWindowLabel_school_web'             => '<strong>Web</strong>',
       'strInfoWindowLabel_dancers'                => 'Počet tancujúcich',
       'strInfoWindowLabel_note'                   => 'Poznámka',
       'strInfoWindowLabel_embed_code'             => '',
       'strInfoWindowLabel_courses_info'           => '',
+      'bCoursesInfoDisabled'                      => true,
     );
     $this->aOptionFormKeys = array(
       'florp_reload_after_ok_submission_main'     => 'bReloadAfterSuccessfulSubmissionMain',
@@ -186,9 +188,11 @@ class FLORP{
       'florp_infowindow_label_year'               => 'strInfoWindowLabel_year',
       'florp_infowindow_label_dancers'            => 'strInfoWindowLabel_dancers',
       'florp_infowindow_label_school'             => 'strInfoWindowLabel_school',
+      'florp_infowindow_label_school_web'         => 'strInfoWindowLabel_school_web',
       'florp_infowindow_label_note'               => 'strInfoWindowLabel_note',
       'florp_infowindow_label_embed_code'         => 'strInfoWindowLabel_embed_code',
       'florp_infowindow_label_courses_info'       => 'strInfoWindowLabel_courses_info',
+      'florp_courses_info_disabled'               => 'bCoursesInfoDisabled',
     );
     $aDeprecatedKeys = array(
       // new => old //
@@ -205,6 +209,7 @@ class FLORP{
       'bLoadMapsAsync', 'bLoadMapsLazy', 'bLoadVideosLazy', 'bUseMapImage',
       'bApproveUsersAutomatically',
       'bPreventDirectMediaDownloads',
+      'bCoursesInfoDisabled',
     );
     $this->aOptionKeysByBlog = array(
       'main'      => array(
@@ -251,9 +256,11 @@ class FLORP{
         'strInfoWindowLabel_year',
         'strInfoWindowLabel_dancers',
         'strInfoWindowLabel_school',
+        'strInfoWindowLabel_school_web',
         'strInfoWindowLabel_note',
         'strInfoWindowLabel_embed_code',
         'strInfoWindowLabel_courses_info',
+        'bCoursesInfoDisabled',
       ),
       'flashmob'  => array(
         'iFlashmobBlogID',
@@ -331,7 +338,7 @@ class FLORP{
             'first_name' => 'Jaroslav',
             'last_name' => 'Hluch',
             'webpage' => 'https://www.facebook.com/jaroslav.hluch',
-            'school_city' => 'Bratislava',
+            'flashmob_city' => 'Bratislava',
             'video_link_type' => 'vimeo',
             'vimeo_link' => 'http://vimeo.com/191247547',
             // 'embed_code' => '<iframe src="https://player.vimeo.com/video/191247547" width="340" height="200" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>',
@@ -344,7 +351,7 @@ class FLORP{
             'first_name' => 'Jana',
             'last_name' => 'Kvantová',
             'webpage' => 'https://www.facebook.com/jana.kvantova',
-            'school_city' => 'Piešťany',
+            'flashmob_city' => 'Piešťany',
             'video_link_type' => 'facebook',
             'facebook_link' => 'https://www.facebook.com/tvkarpaty/videos/1275355985822296/',
             'flashmob_address' => 'Winterova ulica, Piešťany',
@@ -357,7 +364,7 @@ class FLORP{
             'first_name' => 'Rišo (Iko)',
             'last_name' => 'Križan',
             'webpage' => 'https://www.facebook.com/riso.krizaniko',
-            'school_city' => 'Bojnice',
+            'flashmob_city' => 'Bojnice',
             'video_link_type' => 'youtube',
             'youtube_link' => 'https://www.youtube.com/watch?v=CCCMo8Jdf9c',
             'flashmob_address' => 'Bojnice',
@@ -372,7 +379,7 @@ class FLORP{
           array (
             'first_name' => 'Barbora',
             'last_name' => 'Boboková',
-            'school_city' => 'Prievidza',
+            'flashmob_city' => 'Prievidza',
             'video_link_type' => 'youtube',
             'youtube_link' => 'https://www.youtube.com/watch?v=8LHBuWI5Hc4',
             'flashmob_address' => 'Prievidza',
@@ -384,7 +391,7 @@ class FLORP{
             'first_name' => 'Zuzana',
             'last_name' => 'Žilinská',
             'webpage' => 'https://www.facebook.com/zzilinska',
-            'school_city' => 'Levice',
+            'flashmob_city' => 'Levice',
             'video_link_type' => 'youtube',
             'youtube_link' => 'https://www.youtube.com/watch?v=_uVA-dEF8BM',
             'flashmob_address' => 'Levice',
@@ -396,7 +403,7 @@ class FLORP{
             'first_name' => 'Michal',
             'last_name' => 'Mravec',
             'webpage' => 'https://www.facebook.com/michal.mravec.7',
-            'school_city' => 'Žilina',
+            'flashmob_city' => 'Žilina',
             'video_link_type' => 'youtube',
             'youtube_link' => 'https://www.youtube.com/watch?v=5gvAasxL8mQ',
             'flashmob_address' => 'OC Mirage, Žilina',
@@ -408,7 +415,7 @@ class FLORP{
             'first_name' => 'Vladimír',
             'last_name' => 'Svorad',
             'webpage' => 'https://www.facebook.com/vladimir.svorad.9',
-            'school_city' => 'Topolčany',
+            'flashmob_city' => 'Topolčany',
             'video_link_type' => 'youtube',
             'flashmob_address' => 'Topolčany',
             'longitude' => '18.170007',
@@ -420,7 +427,7 @@ class FLORP{
             'first_name' => 'Jaroslav',
             'last_name' => 'Hluch',
             'webpage' => 'https://www.facebook.com/jaroslav.hluch',
-            'school_city' => 'Bratislava',
+            'flashmob_city' => 'Bratislava',
             'video_link_type' => 'youtube',
             'youtube_link' => 'https://www.youtube.com/watch?v=Xqo7MhkatQU',
             'flashmob_address' => 'Avion Shopping Park, Bratislava',
@@ -435,7 +442,7 @@ class FLORP{
             'first_name' => 'Jaroslav',
             'last_name' => 'Hluch',
             'webpage' => 'https://www.facebook.com/jaroslav.hluch',
-            'school_city' => 'Bratislava',
+            'flashmob_city' => 'Bratislava',
             'video_link_type' => 'youtube',
             'youtube_link' => 'https://www.youtube.com/watch?v=lIcB_YlAMqU',
             'flashmob_address' => 'Eurovea, Bratislava',
@@ -447,7 +454,7 @@ class FLORP{
             'first_name' => 'Ivana',
             'last_name' => 'Kubišová',
             'webpage' => 'https://www.facebook.com/ivana.kubisova',
-            'school_city' => 'Banská Bystrica',
+            'flashmob_city' => 'Banská Bystrica',
             'video_link_type' => 'youtube',
             'youtube_link' => 'https://www.youtube.com/watch?v=omPI_p1mBJE',
             'flashmob_address' => 'Banská Bystrica',
@@ -460,7 +467,7 @@ class FLORP{
             'first_name' => 'Jana',
             'last_name' => 'Kvantová',
             'webpage' => 'https://www.facebook.com/jana.kvantova',
-            'school_city' => 'Hlohovec',
+            'flashmob_city' => 'Hlohovec',
             'video_link_type' => 'youtube',
             'youtube_link' => 'https://www.youtube.com/watch?v=Dmgn-MEODgI',
             'flashmob_address' => 'Hlohovec',
@@ -472,7 +479,7 @@ class FLORP{
             'first_name' => 'José',
             'last_name' => 'Garcia',
             'webpage' => 'https://www.facebook.com/josegarciask',
-            'school_city' => 'Košice',
+            'flashmob_city' => 'Košice',
             'video_link_type' => 'youtube',
             'youtube_link' => 'https://www.youtube.com/watch?v=Ub0vgUypxGs',
             'flashmob_address' => 'Košice',
@@ -484,7 +491,7 @@ class FLORP{
             'first_name' => 'Eva',
             'last_name' => 'Macháčková',
             'webpage' => 'https://www.facebook.com/evinamachackova',
-            'school_city' => 'Piešťany',
+            'flashmob_city' => 'Piešťany',
             'video_link_type' => 'youtube',
             'youtube_link' => 'https://www.youtube.com/watch?v=rJSCefB6qJw',
             'flashmob_address' => 'Piešťany',
@@ -495,7 +502,7 @@ class FLORP{
           array (
             'first_name' => 'Barbora',
             'last_name' => 'Boboková',
-            'school_city' => 'Prievidza',
+            'flashmob_city' => 'Prievidza',
             'video_link_type' => 'youtube',
             'youtube_link' => 'https://www.youtube.com/watch?v=Bz7-QD8TO9Y',
             'flashmob_address' => 'Prievidza',
@@ -507,7 +514,7 @@ class FLORP{
             'first_name' => 'Vladimír',
             'last_name' => 'Svorad',
             'webpage' => 'https://www.facebook.com/vladimir.svorad.9',
-            'school_city' => 'Topolčany',
+            'flashmob_city' => 'Topolčany',
             'video_link_type' => 'youtube',
             'youtube_link' => 'https://www.youtube.com/watch?v=wAX6EjZOJH4',
             'flashmob_address' => 'Topolčany',
@@ -521,7 +528,7 @@ class FLORP{
           array (
             'first_name' => 'Jaroslav',
             'last_name' => 'Hluch a team',
-            'school_city' => 'Bratislava',
+            'flashmob_city' => 'Bratislava',
             'flashmob_number_of_dancers' => '16',
             'video_link_type' => 'youtube',
             'youtube_link' => 'https://www.youtube.com/watch?v=y_aSUdDk3Cw',
@@ -585,17 +592,19 @@ class FLORP{
 
     $this->aUserFields = array( 'user_email', 'first_name', 'last_name', 'user_pass' );
     $this->aUserFieldsMap = array( 'first_name', 'last_name' );
-    $this->aMetaFieldsFlashmobToArchive = array( 'webpage', 'school_name', 'school_webpage', 'school_city',
-                          'flashmob_number_of_dancers', 'video_link_type', 'youtube_link', 'facebook_link', 'vimeo_link', 'embed_code', 'flashmob_address', 'longitude', 'latitude' );
+    $this->aMetaFieldsFlashmobToArchive = array( 'flashmob_organizer', 'flashmob_city',
+                          'user_webpage', 'school_name', 'school_webpage', 'custom_school_webpage',
+                          'hide_leader_info', 'flashmob_number_of_dancers', 'video_link', 'video_link_type', 'youtube_link', 'facebook_link', 'vimeo_link', 'embed_code', 'flashmob_address', 'longitude', 'latitude' );
     $this->aMetaFields = array_merge( $this->aMetaFieldsFlashmobToArchive, array(
-                          'subscriber_type', 'preferences', 'flashmob_leader_tshirt_size', 'flashmob_leader_tshirt_gender', 'flashmob_leader_tshirt_color',
-                          'courses_city', 'courses_city_2', 'courses_city_3', 'courses_info', 'courses_info_2', 'courses_info_3', 'courses_in_city_2', 'courses_in_city_3' ) );
+                          'user_city', 'flashmob_leader_tshirt_size', 'flashmob_leader_tshirt_gender', 'flashmob_leader_tshirt_color',
+                          'teacher', 'courses_city', 'courses_city_2', 'courses_city_3', 'courses_info', 'courses_info_2', 'courses_info_3', 'courses_in_city_2', 'courses_in_city_3' ));
     $this->aFlashmobMetaFieldsToClean = array(
-                          'subscriber_type:flashmob_organizer', 'flashmob_number_of_dancers', 'video_link_type', 'youtube_link', 'facebook_link', 'vimeo_link', 'embed_code', 'flashmob_address', 'longitude', 'latitude',
-                          'preferences:flashmob_leader_tshirt', 'flashmob_leader_tshirt_size', 'flashmob_leader_tshirt_gender', 'flashmob_leader_tshirt_color' );
+                          'flashmob_organizer', 'flashmob_city',
+                          'flashmob_number_of_dancers', 'video_link', 'video_link_type', 'youtube_link', 'facebook_link', 'vimeo_link', 'embed_code', 'flashmob_address', 'longitude', 'latitude',
+                          'flashmob_leader_tshirt_size', 'flashmob_leader_tshirt_gender', 'flashmob_leader_tshirt_color' );
     $this->aLocationFields = array(
-      'flashmob_organizer'  => array( "school_city", "flashmob_address", "longitude", "latitude" ),
-      'teacher'             => array( "school_city", "courses_city", "courses_city_2", "courses_city_3" ),
+      'flashmob_organizer'  => array( "flashmob_city", "flashmob_address", "longitude", "latitude" ),
+      'teacher'             => array( "courses_city", "courses_city_2", "courses_city_3" ),
     );
     $this->aGeneralMapOptions = array(
       'map_init_raw'  => array(
@@ -611,8 +620,10 @@ class FLORP{
         'icon'        => plugins_url( 'flashmob-organizer-profile/img/florp-icon-40.png' ), //"http://flashmob.salsarueda.dance/wp-content/uploads/sites/6/2013/05/marker40.png",
       ),
       'custom'    => array(
-        'height'       => 590,
-        'disable_zoom' => 1,
+        'height'          => 590,
+        'height_preview'  => 350,
+        'zoom_preview'    => 7,
+        'disable_zoom'    => 1,
       ),
       'og_map'    => array(
         'zoom'      => 7,
@@ -667,6 +678,12 @@ class FLORP{
         update_user_meta( $oUser->ID, 'subscriber_type', array( 'flashmob_organizer' ) );
       }
     }
+    // TODO: from current version on:
+    //  - copy years' school_city => flashmob_city, school_city => user_city
+    //  - change school_webpage => custom_school_webpage (and select 'vlastna' as school_webpage),
+    //           subscriber_type => checkboxes(flashmob_organizer, teacher)
+    //           preferences:newsletter => preference_newsletter
+    //           preferences:tshirt* => remove, it's automatic
 
     if (version_compare( $strVersionInOptions, $strCurrentVersion, '<' )) {
       $this->aOptions['strVersion'] = $strCurrentVersion;
@@ -1069,6 +1086,26 @@ class FLORP{
             }
           }
         }
+      } elseif ('checkbox' === $aField['settings']['type'] && 'flashmob_organizer' === $aField['settings']['key']) {
+        // Replace flashmob date/time in flashmob_organizer single checkbox //
+        $aPatterns = array(
+          '~{flashmob_date(\[[^\]]*\])?}~' => get_option('date_format'),
+          '~{flashmob_time(\[[^\]]*\])?}~' => get_option('time_format'),
+        );
+        foreach ($aPatterns as $strPattern => $strDefaultFormat) {
+          $aMatches = array();
+          if (preg_match_all( $strPattern, $aField['settings']['label'], $aMatches )) {
+            foreach ($aMatches[0] as $iKey => $strMatchFull) {
+              if (empty($aMatches[1][$iKey])) {
+                $strFormat = $strDefaultFormat;
+              } else {
+                $strFormat = trim($aMatches[1][$iKey], "[]");
+              }
+              $strTimeOrDate = date( $strFormat, $this->iFlashmobTimestamp );
+              $aField['settings']['label'] = str_replace( $strMatchFull, $strTimeOrDate, $aField['settings']['label'] );
+            }
+          }
+        }
       }
 
       if ($bLoggedIn) {
@@ -1096,6 +1133,15 @@ class FLORP{
         if ($aField['settings']['type'] === 'checkbox') {
           $strValue = get_user_meta( $iUserID, $aField['settings']['key'], true );
           $aField['settings']['default_value'] = ($strValue == '1') ? 'checked' : 'unchecked';
+        }
+        if ($aField['settings']['type'] === 'listradio') {
+          $strValue = get_user_meta( $iUserID, $aField['settings']['key'], true );
+          foreach ($aField['settings']['options'] as $iKey => $aOption) {
+            $aField['settings']['options'][$iKey]['selected'] = 0;
+            if ($aOption['value'] === $strValue) {
+              $aField['settings']['options'][$iKey]['selected'] = 1;
+            }
+          }
         }
         if ($aField['settings']['type'] === 'listselect') {
           $strValue = get_user_meta( $iUserID, $aField['settings']['key'], true );
@@ -1496,9 +1542,9 @@ class FLORP{
           },
           get_user_meta( $oUser->ID )
         );
-        $strSchoolCity = trim($aAllMeta['school_city']);
+        $strFlashmobCity = trim($aAllMeta['flashmob_city']);
         $strFlashmobAddress = trim($aAllMeta['flashmob_address']);
-        if (empty($strSchoolCity) && empty($strFlashmobAddress)) {
+        if (empty($strFlashmobCity) && empty($strFlashmobAddress)) {
           continue;
         }
         $iCnt++;
@@ -1741,7 +1787,7 @@ class FLORP{
       $aCurrentYearOptions = $this->get_flashmob_map_options_array(true, 0);
       $aVideoFields = array('facebook_link', 'youtube_link', 'vimeo_link', 'embed_code');
       foreach ($aCurrentYearOptions as $iUserID => $aOptions) {
-        $strCity = $aOptions['school_city'];
+        $strCity = $aOptions['flashmob_city'];
         if (!empty($strCity)) {
           $strCity = strtolower($strCity);
         
@@ -1766,7 +1812,7 @@ class FLORP{
       }
       foreach ($this->aOptions["aYearlyMapOptions"] as $iYear => $aMapOptionsForYear) {
         foreach ($aMapOptionsForYear as $iUserID => $aOptions) {
-          $strCity = $aOptions['school_city'];
+          $strCity = $aOptions['flashmob_city'];
           if (!empty($strCity)) {
             $strCity = strtolower($strCity);
             $bVideo = false;
@@ -1818,7 +1864,7 @@ class FLORP{
       if (!empty($strCity)) {
         $strCity = strtolower($strCity);
         foreach ($aMapOptionsArray as $iUserID => $aOptions) {
-          if (strtolower($aOptions['school_city']) == $strCity || stripos($aOptions['school_city'], $strCity) !== false || stripos($aOptions['flashmob_address'], $strCity) !== false) {
+          if (strtolower($aOptions['flashmob_city']) == $strCity || stripos($aOptions['flashmob_city'], $strCity) !== false || stripos($aOptions['flashmob_address'], $strCity) !== false) {
             $aMapOptionsArray[$iUserID]['showOnLoad'] = true;
             break;
           }
@@ -1979,10 +2025,10 @@ class FLORP{
           $aMarkerOptions[] = $aOptions['latitude'].",".$aOptions['longitude'];
           continue;
         }
-        if (isset($aOptions['school_city'])) {
-          $aOptions['school_city'] = trim($aOptions['school_city']);
-          if (!empty($aOptions['school_city'])) {
-            $aMarkerOptions[] = urlencode($aOptions['school_city']);
+        if (isset($aOptions['flashmob_city'])) {
+          $aOptions['flashmob_city'] = trim($aOptions['flashmob_city']);
+          if (!empty($aOptions['flashmob_city'])) {
+            $aMarkerOptions[] = urlencode($aOptions['flashmob_city']);
           }
         }
       }
@@ -2076,7 +2122,7 @@ class FLORP{
     $aFlashmobOrganizers = $this->getFlashmobSubscribers('flashmob_organizer');
     $strPluginDirPath = WP_CONTENT_DIR . '/plugins/flashmob-organizer-profile';
     foreach ($aFlashmobOrganizers as $oUser) {
-      $strFlashmobCity = get_user_meta( $oUser->ID, 'school_city', true );
+      $strFlashmobCity = get_user_meta( $oUser->ID, 'flashmob_city', true );
       if ($strFlashmobCity) {
         $strTshirtCitySlug = str_replace( " ", "-", strtolower($strFlashmobCity) );
         $strTshirtCitySlug = preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strTshirtCitySlug );
@@ -2105,7 +2151,7 @@ class FLORP{
       'ajaxurl'                       => admin_url( 'admin-ajax.php'),
       'security'                      => wp_create_nonce( 'srd-florp-security-string' ),
       'video_link_type'               => get_user_meta( $iUserID, 'video_link_type', true ),
-      'school_city'                   => get_user_meta( $iUserID, 'school_city', true ),
+      'flashmob_city'                 => get_user_meta( $iUserID, 'flashmob_city', true ),
       'click_trigger_class'           => $this->strClickTriggerClass,
       'do_trigger_popup_click'        => $bDoTriggerPopupClick,
       'general_map_options'           => $this->aGeneralMapOptions,
@@ -2118,6 +2164,7 @@ class FLORP{
       'has_participants'              => $iHasParticipants,
       'img_path'                      => plugins_url( 'flashmob-organizer-profile/img/' ),
       'tshirt_imgs'                   => $aTshirtImages,
+      'courses_info_disabled'         => $this->aOptions['bCoursesInfoDisabled'] ? 1 : 0,
 //       'tshirt_paths'                  => $aTshirtImagePaths,
     );
     if (is_user_logged_in()) {
@@ -2235,7 +2282,7 @@ class FLORP{
       $aEcho .= '<tr>';
       $aEcho .=   '<td>'.$oUser->first_name.' '.$oUser->last_name.$strIsPending.'</td>';
       $aEcho .=   '<td><a name="'.$oUser->ID.'">'.$oUser->user_email.'</a></td>';
-      $aEcho .=   '<td>'.$aAllMeta['school_city'].'</td>';
+      $aEcho .=   '<td>'.$aAllMeta['flashmob_city'].'</td>';
       $aEcho .=   '<td>';
       if (is_array($aAllMeta['subscriber_type'])) {
         foreach ($aAllMeta['subscriber_type'] as $strSubscriberType) {
@@ -2977,18 +3024,21 @@ class FLORP{
     $strMarkerInfoWindowTemplateOrganizer = $this->get_wp_editor( $this->aOptions['strMarkerInfoWindowTemplateOrganizer'], 'florp_infowindow_template_organizer' );
     $strMarkerInfoWindowTemplateTeacher = $this->get_wp_editor( $this->aOptions['strMarkerInfoWindowTemplateTeacher'], 'florp_infowindow_template_teacher' );
 
-    // $this->aOptions['strInfoWindowLabel_organizer'], $this->aOptions['strInfoWindowLabel_signup'], $this->aOptions['strInfoWindowLabel_participant_count'], $this->aOptions['strInfoWindowLabel_year'], $this->aOptions['strInfoWindowLabel_dancers'], $this->aOptions['strInfoWindowLabel_school'], $this->aOptions['strInfoWindowLabel_note'], $this->aOptions['strInfoWindowLabel_embed_code'], $this->aOptions['strInfoWindowLabel_courses_info'],
-    $aInfoWindowLabelSlugs = array( 'organizer', 'signup', 'participant_count', 'year', 'dancers', 'school', 'note', /*'embed_code', 'courses_info'*/ );
+    $aInfoWindowLabelSlugs = array( 'organizer', 'signup', 'participant_count', 'year', 'dancers', 'school', 'note', 'school_web', /*'embed_code', 'courses_info'*/ );
     $strInfoWindowLabels = "";
     foreach ($aInfoWindowLabelSlugs as $strSlug) {
       $strElementID = 'florp_infowindow_label_'.$strSlug;
       $strOptionKey = 'strInfoWindowLabel_'.$strSlug;
       $strOptionValue = $this->aOptions[$strOptionKey];
+      $strNote = "";
+      if ('school_web' === $strSlug) {
+        $strNote = '<span style="width: 100%;">Táto položka sa zobrazí len ak nie je povolené zobrazovanie kurzov vo formulári alebo je prázdne meno školy.</span>';
+      }
       $strInfoWindowLabels .= '<th style="width: 47%; padding: 0 1%; text-align: right;">
                 Nadpis pre položku "'.$strSlug.'"
               </th>
               <td>
-                <input id="'.$strElementID.'" name="'.$strElementID.'" type="text" value="'.$strOptionValue.'" style="width: 100%;" />
+                <input id="'.$strElementID.'" name="'.$strElementID.'" type="text" value="'.$strOptionValue.'" style="width: 100%;" />'.$strNote.'
               </td>
             </tr>';
     }
@@ -2998,6 +3048,7 @@ class FLORP{
         '%%loadMapsAsyncChecked%%',
         '%%loadMapsLazyChecked%%',
         '%%loadVideosLazyChecked%%',
+        '%%bCoursesInfoDisabled%%',
         '%%optionsYears%%', '%%optionsMonths%%', '%%optionsDays%%', '%%optionsHours%%', '%%optionsMinutes%%',
         '%%strGoogleMapsKey%%', '%%strGoogleMapsKeyStatic%%', '%%strFbAppID%%', '%%preventDirectMediaDownloadsChecked%%', '%%strNewsletterAPIKey%%',
         '%%strSignupLinkLabel%%', '%%strInfoWindowLabels%%',
@@ -3006,6 +3057,7 @@ class FLORP{
         $aBooleanOptionsChecked['bLoadMapsAsync'],
         $aBooleanOptionsChecked['bLoadMapsLazy'],
         $aBooleanOptionsChecked['bLoadVideosLazy'],
+        $aBooleanOptionsChecked['bCoursesInfoDisabled'],
         $aNumOptions['optionsYears'], $optionsMonths, $aNumOptions['optionsDays'], $aNumOptions['optionsHours'], $aNumOptions['optionsMinutes'],
         $this->aOptions['strGoogleMapsKey'], $this->aOptions['strGoogleMapsKeyStatic'], $this->aOptions['strFbAppID'], $aBooleanOptionsChecked['bPreventDirectMediaDownloads'], $this->aOptions['strNewsletterAPIKey'],
         $this->aOptions['strSignupLinkLabel'], $strInfoWindowLabels,
@@ -3107,6 +3159,14 @@ class FLORP{
                 <input id="florp_signup_link_label" name="florp_signup_link_label" type="text" value="%%strSignupLinkLabel%%" style="width: 100%;" />
               </td>
             </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                <label for="florp_courses_info_disabled">Vypnúť zobrazovanie položiek o kurzoch vo formulári?</label>
+              </th>
+              <td>
+                <input id="florp_courses_info_disabled" name="florp_courses_info_disabled" type="checkbox" %%bCoursesInfoDisabled%% value="1"/>
+              </td>
+            </tr>
             %%strInfoWindowLabels%%
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;">
@@ -3114,8 +3174,9 @@ class FLORP{
               </th>
               <td>
                 %%wpEditorMarkerInfoWindowTemplateOrganizer%%
-                <span style="width: 100%;">Placeholdre: <code>%%flashmob_city%%</code>, <code>%%organizer%%</code>*, <code>%%signup%%</code>*, <code>%%participant_count%%</code>*, <code>%%year%%</code>*, <code>%%school%%</code>*, <code>%%dancers%%</code>*, <code>%%note%%</code>*, <code>%%embed_code%%</code></span><br>
-                <span style="width: 100%;">*Pozor: nepridavaj zalomenie riadkov (&lt;br&gt;, &lt;br /&gt;) pred a za placeholdre s hviezdickou - ak sa zamenia za prazdny text, ostane po nich prazdny riadok!
+                <span style="width: 100%;">Placeholdre: <code>%%flashmob_city%%</code>, <code>%%organizer%%</code>*, <code>%%signup%%</code>*, <code>%%participant_count%%</code>*, <code>%%year%%</code>*, <code>%%school%%</code>*<sup>+</sup>, <code>%%school_web%%</code>*<sup>+</sup>, <code>%%dancers%%</code>*, <code>%%note%%</code>*, <code>%%embed_code%%</code></span><br>
+                <span style="width: 100%;">*Pozor: nepridavaj zalomenie riadkov (&lt;br&gt;, &lt;br /&gt;) pred a za placeholdre s hviezdickou - ak sa zamenia za prazdny text, ostane po nich prazdny riadok!</span><br>
+                <span style="width: 100%;"><sup>+</sup> <code>%%school_web%%</code> sa zobrazí len ak nie je povolené zobrazovanie kurzov vo formulári alebo je prázdne meno školy.</span>
               </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
@@ -3353,6 +3414,7 @@ class FLORP{
         'strDivID'          => $_POST['divID'],
         'iCurrentYear'      => $_POST['iCurrentYear'],
         'iBeforeFlashmob'   => $_POST['iBeforeFlashmob'],
+        'iIsPreview'        => $_POST['iIsPreview'],
         'iParticipantCount' => $this->get_flashmob_participant_count( $_POST['iUserID'] ),
     ));
     $strMarkerText = $this->getMarkerInfoWindowContent( $aMarkerData );
@@ -3404,21 +3466,64 @@ class FLORP{
   }
 
   private function getMarkerInfoWindowContent( $aInfoWindowData ) {
-    if (empty($aInfoWindowData['webpage']['value'])) {
+    $bHideLeaderInfo = isset($aInfoWindowData['hide_leader_info']) && isset($aInfoWindowData['hide_leader_info']['value']) && $aInfoWindowData['hide_leader_info']['value'] == '1';
+    if (empty($aInfoWindowData['user_webpage']['value'])) {
       $strOrganizer = $this->getInfoWindowLabel('organizer').$aInfoWindowData['first_name']['value'] . " " . $aInfoWindowData['last_name']['value'];
     } else {
-      $strOrganizer = $this->getInfoWindowLabel('organizer').'<a href="'.$aInfoWindowData['webpage']['value'].'" target="_blank">'.$aInfoWindowData['first_name']['value'] . " " . $aInfoWindowData['last_name']['value'].'</a>';
+      $strOrganizer = $this->getInfoWindowLabel('organizer').'<a href="'.$aInfoWindowData['user_webpage']['value'].'" target="_blank">'.$aInfoWindowData['first_name']['value'] . " " . $aInfoWindowData['last_name']['value'].'</a>';
     }
-    if (empty($aInfoWindowData['school_name']['value'])) {
-      $strSchool = '';
+    $strSchoolWebpage = '';
+    if (!empty($aInfoWindowData['school_webpage']['value'])) {
+      switch($aInfoWindowData['school_webpage']['value']) {
+        case "flashmob":
+          $strSchoolWebpage = "http://flashmob.salsarueda.dance";
+          break;
+        case "vlastna":
+          if (!empty($aInfoWindowData['custom_school_webpage']['value']) && !$bHideLeaderInfo) {
+            $strSchoolWebpage = $aInfoWindowData['custom_school_webpage']['value'];
+          }
+          break;
+        case "vytvorit":
+          // TODO make a map of "city" => city_webpage
+        default:
+          break;
+      }
+    }
+    $strSchoolWeb = '';
+    $strSchool = '';
+    if ($this->aOptions["bCoursesInfoDisabled"] || empty($aInfoWindowData['school_name']['value'])) {
+      if (!empty($strSchoolWebpage)) {
+        $strSchoolWeb = $this->getInfoWindowLabel('school_web') . '<a href="'.$strSchoolWebpage.'" target="_blank">'.$strSchoolWebpage.'</a>';
+      }
     } else {
       $strSchool = $aInfoWindowData['school_name']['value'];
-      if (!empty($aInfoWindowData['school_webpage']['value'])) {
-        $strSchool = '<a href="'.$aInfoWindowData['school_webpage']['value'].'" target="_blank">'.$strSchool.'</a>';
+      if (!empty($strSchoolWebpage)) {
+        $strSchool = '<a href="'.$strSchoolWebpage.'" target="_blank">'.$strSchool.'</a>';
       }
       $strSchool = $this->getInfoWindowLabel('school') . $strSchool;
-      if (!empty($aInfoWindowData['school_city']['value'])) {
-        $strSchool .= " (".$aInfoWindowData['school_city']['value'].")";
+      if (!empty($aInfoWindowData['courses_city']['value'])) {
+        $strSchool .= " (".$aInfoWindowData['courses_city']['value'].")";
+      }
+    }
+
+    $aVideoRegexes = array(
+      "youtube"   => '~^https?://(www\.|m\.)?youtube\.com/watch\?v=(.+)$~i',
+      "facebook"  => '~^https?://(www.)?facebook.com/[a-zA-Z0-9]+/videos/[a-zA-Z0-9]+/?$~i',
+      "vimeo"     => '~^https?://(www.)?vimeo.com/([0-9]+)/?$~i',
+    );
+    if (isset($aInfoWindowData['video_link']) && isset($aInfoWindowData['video_link']['value']) && !empty($aInfoWindowData['video_link']['value'])) {
+      foreach($aVideoRegexes as $strType => $strRegex) {
+        if (preg_match( $strRegex, $aInfoWindowData['video_link']['value'])) {
+          if (!isset($aInfoWindowData['video_link_type'])) {
+            $aInfoWindowData['video_link_type'] = array();
+          }
+          if (!isset($aInfoWindowData[$strType.'_link'])) {
+            $aInfoWindowData[$strType.'_link'] = array();
+          }
+          $aInfoWindowData['video_link_type']['value'] = $strType;
+          $aInfoWindowData[$strType.'_link']['value'] = $aInfoWindowData['video_link']['value'];
+          break;
+        }
       }
     }
     if (empty($aInfoWindowData['video_link_type']['value'])
@@ -3427,9 +3532,9 @@ class FLORP{
             && empty(trim($aInfoWindowData['facebook_link']['value']))
             && empty(trim($aInfoWindowData['vimeo_link']['value'])) ) ) {
       $strEmbedCode = "";
-    } else if ($aInfoWindowData['video_link_type']['value'] === "youtube" && !empty(trim($aInfoWindowData['youtube_link']['value']))) {
+    } elseif ($aInfoWindowData['video_link_type']['value'] === "youtube" && !empty(trim($aInfoWindowData['youtube_link']['value']))) {
       $strYoutubeLink = trim($aInfoWindowData['youtube_link']['value']);
-      $strYoutubeLinkRegex = '~^https?://(www\.|m\.)?youtube\.com/watch\?v=(.+)$~i';
+      $strYoutubeLinkRegex = $aVideoRegexes["youtube"];
       $aMatches = array();
       $mixCheckRes = preg_match( $strYoutubeLinkRegex, $strYoutubeLink, $aMatches );
       if (!$mixCheckRes || !isset($aMatches[2]) || empty($aMatches[2])) {
@@ -3459,9 +3564,9 @@ class FLORP{
           $strEmbedCode = $this->getInfoWindowLabel('embed_code').'<iframe width="280" height="160" src="https://www.youtube.com/embed/'.$strEmbedSrc.'" frameborder="0" allowfullscreen=""></iframe>';
         }
       }
-    } else if ($aInfoWindowData['video_link_type']['value'] === "facebook" && !empty(trim($aInfoWindowData['facebook_link']['value']))) {
+    } elseif ($aInfoWindowData['video_link_type']['value'] === "facebook" && !empty(trim($aInfoWindowData['facebook_link']['value']))) {
       $strFacebookLink = $aInfoWindowData['facebook_link']['value'];
-      $strFacebookLinkRegex = '~^https?://(www.)?facebook.com/[a-zA-Z0-9]+/videos/[a-zA-Z0-9]+/?$~i';
+      $strFacebookLinkRegex = $aVideoRegexes["facebook"];
       $mixCheckRes = preg_match( $strFacebookLinkRegex, $strFacebookLink );
       if (!$mixCheckRes) {
         $strEmbedCode = "";
@@ -3469,9 +3574,9 @@ class FLORP{
         $strFacebookLink = htmlentities(urlencode($strFacebookLink));
         $strEmbedCode = $this->getInfoWindowLabel('embed_code').'<iframe src="https://www.facebook.com/plugins/video.php?href='.$strFacebookLink.'&show_text=0&width=560" width="280" height="160" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowTransparency="true" allowFullScreen="true"></iframe>';//.'<pre>'.$strFacebookLink.'</pre>';
       }
-    } else if ($aInfoWindowData['video_link_type']['value'] === "vimeo" && !empty(trim($aInfoWindowData['vimeo_link']['value']))) {
+    } elseif ($aInfoWindowData['video_link_type']['value'] === "vimeo" && !empty(trim($aInfoWindowData['vimeo_link']['value']))) {
       $strVimeokLink = $aInfoWindowData['vimeo_link']['value'];
-      $strVimeoLinkRegex = '~^https?://(www.)?vimeo.com/([0-9]+)/?$~i';
+      $strVimeoLinkRegex = $aVideoRegexes["vimeo"];
       $aMatches = array();
       $mixCheckRes = preg_match( $strVimeoLinkRegex, $strVimeokLink, $aMatches );
       if (!$mixCheckRes || !isset($aMatches[2]) || empty($aMatches[2])) {
@@ -3480,7 +3585,7 @@ class FLORP{
         $strVimeoVideoID = $aMatches[2];
         $strEmbedCode = $this->getInfoWindowLabel('embed_code').'<iframe src="https://player.vimeo.com/video/'.$strVimeoVideoID.'" width="340" height="200" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>';//.'<pre>'.$strVimeokLink.'</pre>';
       }
-    } else if ($aInfoWindowData['video_link_type']['value'] === "other" && !empty(trim($aInfoWindowData['embed_code']['value']))) {
+    } elseif ($aInfoWindowData['video_link_type']['value'] === "other" && !empty(trim($aInfoWindowData['embed_code']['value']))) {
       $strEmbedCode = $aInfoWindowData['embed_code']['value'];
       $strEmbedCode = $this->getInfoWindowLabel('embed_code').stripslashes($strEmbedCode);
     } else {
@@ -3500,7 +3605,7 @@ class FLORP{
     } else {
       $strLocation = trim($aInfoWindowData['flashmob_address']['value']);
       if (empty($strLocation)) {
-        $strLocation = trim($aInfoWindowData['school_city']['value']);
+        $strLocation = trim($aInfoWindowData['flashmob_city']['value']);
         if ($strLocation === "null") {
           $strLocation = "";
         }
@@ -3517,8 +3622,8 @@ class FLORP{
       $strNote = "";
     }
 
-    if ($aInfoWindowData['strMapType'] === 'flashmob_organizer' && $aInfoWindowData['iCurrentYear'] == '1' && $aInfoWindowData['iBeforeFlashmob'] == '1') {
-      $strSignupLink = $this->getInfoWindowLabel('signup').'<span class="florp-click-trigger florp-click-participant-trigger pum-trigger" data-user-id="'.$aInfoWindowData['iUserID'].'" data-flashmob-city="'.$aInfoWindowData['school_city']['value'].'" data-marker-key="'.$aInfoWindowData['mixMarkerKey'].'" data-div-id="'.$aInfoWindowData['strDivID'].'" style="cursor: pointer;">'.$this->aOptions['strSignupLinkLabel'].'</span>';
+    if ($aInfoWindowData['strMapType'] === 'flashmob_organizer' && ($aInfoWindowData['iCurrentYear'] == '1' || (isset($aInfoWindowData['iIsPreview']) && $aInfoWindowData['iIsPreview'] == '1')) && $aInfoWindowData['iBeforeFlashmob'] == '1') {
+      $strSignupLink = $this->getInfoWindowLabel('signup').'<span class="florp-click-trigger florp-click-participant-trigger pum-trigger" data-user-id="'.$aInfoWindowData['iUserID'].'" data-flashmob-city="'.$aInfoWindowData['flashmob_city']['value'].'" data-marker-key="'.$aInfoWindowData['mixMarkerKey'].'" data-div-id="'.$aInfoWindowData['strDivID'].'" style="cursor: pointer;">'.$this->aOptions['strSignupLinkLabel'].'</span>';
       $strParticipantCount = $this->getInfoWindowLabel('participant_count').$aInfoWindowData['iParticipantCount'];
     } else {
       $strSignupLink = "";
@@ -3526,7 +3631,7 @@ class FLORP{
     }
 
     // Separate optional placeholders by a line break //
-    $aPlaceholdersToSeparate = array( 'organizer' => 'strOrganizer', 'school' => 'strSchool', 'dancers' => 'strDancers', 'year' => 'strYear', 'note' => 'strNote', 'signup' => 'strSignupLink', 'participant_count' => 'strParticipantCount' );
+    $aPlaceholdersToSeparate = array( 'organizer' => 'strOrganizer', 'school' => 'strSchool', 'school_web' => 'strSchoolWeb', 'dancers' => 'strDancers', 'year' => 'strYear', 'note' => 'strNote', 'signup' => 'strSignupLink', 'participant_count' => 'strParticipantCount' );
     $aPlaceholdersToSeparatePositions = array();
     foreach ($aPlaceholdersToSeparate as $strPlaceholder => $strVarName) {
       $mixPosition = strpos($this->aMarkerInfoWindowTemplates[$aInfoWindowData['strMapType']],'%%'.$strPlaceholder.'%%');
@@ -3543,12 +3648,11 @@ class FLORP{
       ${$strVarName} .= "<br>";
     }
 
-    $aSearch = array( 'flashmob_city', 'organizer', 'school', 'embed_code', 'dancers', 'year', 'note', 'courses_city' ,'courses_info', 'signup', 'participant_count' );
+    $aSearch = array( 'flashmob_city', 'organizer', 'school', 'school_web', 'embed_code', 'dancers', 'year', 'note', 'courses_city' ,'courses_info', 'signup', 'participant_count' );
     foreach ($aSearch as $key => $value) {
       $aSearch[$key] = '%%'.$value.'%%';
     }
     switch ($mixMarkerKey) {
-      case 'school_city':
       case 'courses_city':
         $strCoursesInfo = $this->getInfoWindowLabel('courses_info') .trim($aInfoWindowData['courses_info']["value"]);
         break;
@@ -3562,16 +3666,26 @@ class FLORP{
         $strCoursesInfo = "";
     }
     // $strCoursesInfo = wpautop( $strCoursesInfo ); // Not needed, since we're using rich text editors //
-    $aReplace = array( $strLocation, $strOrganizer, $strSchool, $strEmbedCode, $strDancers, $strYear, $strNote, $strLocation, $strCoursesInfo, $strSignupLink, $strParticipantCount );
+
+    if ($bHideLeaderInfo) {
+      $strOrganizer = "";
+      $strSchool = "";
+    }
+    if ($aInfoWindowData['strMapType'] === "teacher") {
+      // This is a tag only for the organizer info window //
+      $strSchoolWeb = "";
+    }
+    $aReplace = array( $strLocation, $strOrganizer, $strSchool, $strSchoolWeb, $strEmbedCode, $strDancers, $strYear, $strNote, $strLocation, $strCoursesInfo, $strSignupLink, $strParticipantCount );
     $strText = str_replace( $aSearch, $aReplace, $this->aMarkerInfoWindowTemplates[$aInfoWindowData['strMapType']] );
     return $strText;
     /*
      * Fields:
-          'user_email', 'first_name', 'last_name', 'password', 'passwordconfirm',
-          'school_name', 'fb_school_link', 'school_webpage', 'school_city',
-          'flashmob_number_of_dancers', 'video_link_type', 'youtube_link', 'facebook_link', 'embed_code', 'flashmob_address',
+          'user_email', 'first_name', 'last_name', 'password', 'passwordconfirm', 'user_city',
+          'school_name', 'fb_school_link', 'school_webpage',
+          'flashmob_city', 'flashmob_number_of_dancers', 'video_link_type', 'youtube_link', 'facebook_link', 'embed_code', 'flashmob_address',
     */
   }
+
   public function action__register_nf_florp_action( $actions ) {
     require_once __DIR__ . "/class.florp.actions.php";
     $actions['florp'] = new NF_Actions_Florp();
@@ -3581,7 +3695,7 @@ class FLORP{
     $actions['success-message-logged-out'] = new NF_Actions_SuccessMessageLoggedOut();
     return $actions;
   }
-  
+
   private function generate_username( $strFirstName, $strLastName ) {
     $strUserNameBase = $strFirstName.".".$strLastName;
     
@@ -3847,7 +3961,7 @@ class FLORP{
         if (($strKey === "youtube_link" && !empty($mixValue) && $aMetaData['video_link_type'] !== 'youtube')
             || ($strKey === "facebook_link" && !empty($mixValue) && $aMetaData['video_link_type'] !== 'facebook')
             || ($strKey === "embed_code" && !empty($mixValue) && $aMetaData['video_link_type'] !== 'other')
-            || ($strKey === "school_city" && $mixValue === "null")) {
+            || ($strKey === "flashmob_city" && $mixValue === "null")) {
           delete_user_meta( $iUserID, $strKey );
         } else {
           update_user_meta( $iUserID, $strKey, $mixValue );

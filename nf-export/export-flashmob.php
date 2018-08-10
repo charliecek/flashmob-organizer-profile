@@ -11167,8 +11167,8 @@ $aFlorpNinjaFormExportData = array (
       'order' => 10,
       'type' => 'html',
       'label' => 'HTML - newsletter banner',
-      'default' => '<p class="florp-newsletter-banner">
-  <img src="http://festivaly.salsarueda.dance/wp-content/extensions/newsletter/emails/themes/srd/images/20170126185928_news_top_1.jpg" alt="newsletter" title="newsletter" />
+      'default' => '<p class="florp-newsletter-banner participants">
+  <img src="http://festivaly.salsarueda.dance/wp-content/extensions/newsletter/emails/themes/srd/images/20170126185928_news_top_1.jpg" alt="newsletter" title="newsletter">
 </p>',
       'container_class' => 'florp-class florp-right florp-registration-field',
       'element_class' => '',
@@ -11580,7 +11580,7 @@ $aFlorpNinjaFormExportData = array (
       'objectDomain' => 'fields',
       'editActive' => false,
       'order' => 12,
-      'label_pos' => 'default',
+      'label_pos' => 'left',
       'required' => '',
       'options' => 
       array (
