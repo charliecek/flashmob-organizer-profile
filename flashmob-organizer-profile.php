@@ -53,6 +53,7 @@ class FLORP{
   private $strBeforeLoginFormHtmlFlashmob;
   private $iFlashmobTimestamp = 0;
   private $bHideFlashmobFields;
+  private $aSubscriberTypes = array("flashmob_organizer", "teacher");
 
   public function __construct() {
     $this->aOptions = get_site_option( $this->strOptionKey, array() );
@@ -339,8 +340,7 @@ class FLORP{
             'last_name' => 'Hluch',
             'webpage' => 'https://www.facebook.com/jaroslav.hluch',
             'flashmob_city' => 'Bratislava',
-            'video_link_type' => 'vimeo',
-            'vimeo_link' => 'http://vimeo.com/191247547',
+            'video_link' => 'http://vimeo.com/191247547',
             // 'embed_code' => '<iframe src="https://player.vimeo.com/video/191247547" width="340" height="200" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>',
             'flashmob_address' => 'Nákupné centrum Centrál, Bratislava',
             'longitude' => '17.129393',
@@ -352,8 +352,7 @@ class FLORP{
             'last_name' => 'Kvantová',
             'webpage' => 'https://www.facebook.com/jana.kvantova',
             'flashmob_city' => 'Piešťany',
-            'video_link_type' => 'facebook',
-            'facebook_link' => 'https://www.facebook.com/tvkarpaty/videos/1275355985822296/',
+            'video_link' => 'https://www.facebook.com/tvkarpaty/videos/1275355985822296/',
             'flashmob_address' => 'Winterova ulica, Piešťany',
             'longitude' => '17.835444',
             'latitude' => '48.590201',
@@ -365,8 +364,7 @@ class FLORP{
             'last_name' => 'Križan',
             'webpage' => 'https://www.facebook.com/riso.krizaniko',
             'flashmob_city' => 'Bojnice',
-            'video_link_type' => 'youtube',
-            'youtube_link' => 'https://www.youtube.com/watch?v=CCCMo8Jdf9c',
+            'video_link' => 'https://www.youtube.com/watch?v=CCCMo8Jdf9c',
             'flashmob_address' => 'Bojnice',
             'longitude' => '18.582687',
             'latitude' => '48.778839',
@@ -380,8 +378,7 @@ class FLORP{
             'first_name' => 'Barbora',
             'last_name' => 'Boboková',
             'flashmob_city' => 'Prievidza',
-            'video_link_type' => 'youtube',
-            'youtube_link' => 'https://www.youtube.com/watch?v=8LHBuWI5Hc4',
+            'video_link' => 'https://www.youtube.com/watch?v=8LHBuWI5Hc4',
             'flashmob_address' => 'Prievidza',
             'longitude' => '18.624538',
             'latitude' => '48.774521',
@@ -392,8 +389,7 @@ class FLORP{
             'last_name' => 'Žilinská',
             'webpage' => 'https://www.facebook.com/zzilinska',
             'flashmob_city' => 'Levice',
-            'video_link_type' => 'youtube',
-            'youtube_link' => 'https://www.youtube.com/watch?v=_uVA-dEF8BM',
+            'video_link' => 'https://www.youtube.com/watch?v=_uVA-dEF8BM',
             'flashmob_address' => 'Levice',
             'longitude' => '18.598438',
             'latitude' => '48.217424',
@@ -404,8 +400,7 @@ class FLORP{
             'last_name' => 'Mravec',
             'webpage' => 'https://www.facebook.com/michal.mravec.7',
             'flashmob_city' => 'Žilina',
-            'video_link_type' => 'youtube',
-            'youtube_link' => 'https://www.youtube.com/watch?v=5gvAasxL8mQ',
+            'video_link' => 'https://www.youtube.com/watch?v=5gvAasxL8mQ',
             'flashmob_address' => 'OC Mirage, Žilina',
             'longitude' => '18.7408',
             'latitude' => '49.21945',
@@ -416,7 +411,6 @@ class FLORP{
             'last_name' => 'Svorad',
             'webpage' => 'https://www.facebook.com/vladimir.svorad.9',
             'flashmob_city' => 'Topolčany',
-            'video_link_type' => 'youtube',
             'flashmob_address' => 'Topolčany',
             'longitude' => '18.170007',
             'latitude' => '48.558945',
@@ -428,8 +422,7 @@ class FLORP{
             'last_name' => 'Hluch',
             'webpage' => 'https://www.facebook.com/jaroslav.hluch',
             'flashmob_city' => 'Bratislava',
-            'video_link_type' => 'youtube',
-            'youtube_link' => 'https://www.youtube.com/watch?v=Xqo7MhkatQU',
+            'video_link' => 'https://www.youtube.com/watch?v=Xqo7MhkatQU',
             'flashmob_address' => 'Avion Shopping Park, Bratislava',
             'longitude' => '17.18008',
             'latitude' => '48.166776',
@@ -443,8 +436,7 @@ class FLORP{
             'last_name' => 'Hluch',
             'webpage' => 'https://www.facebook.com/jaroslav.hluch',
             'flashmob_city' => 'Bratislava',
-            'video_link_type' => 'youtube',
-            'youtube_link' => 'https://www.youtube.com/watch?v=lIcB_YlAMqU',
+            'video_link' => 'https://www.youtube.com/watch?v=lIcB_YlAMqU',
             'flashmob_address' => 'Eurovea, Bratislava',
             'longitude' => '17.121326',
             'latitude' => '48.140501',
@@ -455,8 +447,7 @@ class FLORP{
             'last_name' => 'Kubišová',
             'webpage' => 'https://www.facebook.com/ivana.kubisova',
             'flashmob_city' => 'Banská Bystrica',
-            'video_link_type' => 'youtube',
-            'youtube_link' => 'https://www.youtube.com/watch?v=omPI_p1mBJE',
+            'video_link' => 'https://www.youtube.com/watch?v=omPI_p1mBJE',
             'flashmob_address' => 'Banská Bystrica',
             'longitude' => '19.146192',
             'latitude' => '48.736277',
@@ -468,8 +459,7 @@ class FLORP{
             'last_name' => 'Kvantová',
             'webpage' => 'https://www.facebook.com/jana.kvantova',
             'flashmob_city' => 'Hlohovec',
-            'video_link_type' => 'youtube',
-            'youtube_link' => 'https://www.youtube.com/watch?v=Dmgn-MEODgI',
+            'video_link' => 'https://www.youtube.com/watch?v=Dmgn-MEODgI',
             'flashmob_address' => 'Hlohovec',
             'longitude' => '17.803329',
             'latitude' => '48.425158',
@@ -480,8 +470,7 @@ class FLORP{
             'last_name' => 'Garcia',
             'webpage' => 'https://www.facebook.com/josegarciask',
             'flashmob_city' => 'Košice',
-            'video_link_type' => 'youtube',
-            'youtube_link' => 'https://www.youtube.com/watch?v=Ub0vgUypxGs',
+            'video_link' => 'https://www.youtube.com/watch?v=Ub0vgUypxGs',
             'flashmob_address' => 'Košice',
             'longitude' => '21.261075',
             'latitude' => '48.716386',
@@ -492,8 +481,7 @@ class FLORP{
             'last_name' => 'Macháčková',
             'webpage' => 'https://www.facebook.com/evinamachackova',
             'flashmob_city' => 'Piešťany',
-            'video_link_type' => 'youtube',
-            'youtube_link' => 'https://www.youtube.com/watch?v=rJSCefB6qJw',
+            'video_link' => 'https://www.youtube.com/watch?v=rJSCefB6qJw',
             'flashmob_address' => 'Piešťany',
             'longitude' => '17.827155',
             'latitude' => '48.591797',
@@ -503,8 +491,7 @@ class FLORP{
             'first_name' => 'Barbora',
             'last_name' => 'Boboková',
             'flashmob_city' => 'Prievidza',
-            'video_link_type' => 'youtube',
-            'youtube_link' => 'https://www.youtube.com/watch?v=Bz7-QD8TO9Y',
+            'video_link' => 'https://www.youtube.com/watch?v=Bz7-QD8TO9Y',
             'flashmob_address' => 'Prievidza',
             'longitude' => '18.624538',
             'latitude' => '48.774521',
@@ -515,8 +502,7 @@ class FLORP{
             'last_name' => 'Svorad',
             'webpage' => 'https://www.facebook.com/vladimir.svorad.9',
             'flashmob_city' => 'Topolčany',
-            'video_link_type' => 'youtube',
-            'youtube_link' => 'https://www.youtube.com/watch?v=wAX6EjZOJH4',
+            'video_link' => 'https://www.youtube.com/watch?v=wAX6EjZOJH4',
             'flashmob_address' => 'Topolčany',
             'longitude' => '18.170007',
             'latitude' => '48.558945',
@@ -530,8 +516,7 @@ class FLORP{
             'last_name' => 'Hluch a team',
             'flashmob_city' => 'Bratislava',
             'flashmob_number_of_dancers' => '16',
-            'video_link_type' => 'youtube',
-            'youtube_link' => 'https://www.youtube.com/watch?v=y_aSUdDk3Cw',
+            'video_link' => 'https://www.youtube.com/watch?v=y_aSUdDk3Cw',
             'flashmob_address' => 'Nákupné centrum Polus, Bratislava',
             'longitude' => '17.138409',
             'latitude' => '48.168235',
@@ -594,13 +579,16 @@ class FLORP{
     $this->aUserFieldsMap = array( 'first_name', 'last_name' );
     $this->aMetaFieldsFlashmobToArchive = array( 'flashmob_organizer', 'flashmob_city',
                           'user_webpage', 'school_name', 'school_webpage', 'custom_school_webpage',
-                          'hide_leader_info', 'flashmob_number_of_dancers', 'video_link', 'video_link_type', 'youtube_link', 'facebook_link', 'vimeo_link', 'embed_code', 'flashmob_address', 'longitude', 'latitude' );
-    $this->aMetaFields = array_merge( $this->aMetaFieldsFlashmobToArchive, array(
-                          'user_city', 'flashmob_leader_tshirt_size', 'flashmob_leader_tshirt_gender', 'flashmob_leader_tshirt_color',
-                          'teacher', 'courses_city', 'courses_city_2', 'courses_city_3', 'courses_info', 'courses_info_2', 'courses_info_3', 'courses_in_city_2', 'courses_in_city_3' ));
+                          'hide_leader_info', 'flashmob_number_of_dancers', 'video_link', 'flashmob_address', 'longitude', 'latitude' );
+    $this->aMetaFieldsTeacher = array('teacher', 'courses_city', 'courses_info', 'courses_in_city_2', 'courses_city_2', 'courses_info_2', 'courses_in_city_3', 'courses_info_3', 'courses_city_3');
+    $this->aMetaFields = array_merge( $this->aMetaFieldsFlashmobToArchive,
+                          $this->aMetaFieldsTeacher,
+                          array(
+                          'user_city', 'flashmob_leader_tshirt_size', 'flashmob_leader_tshirt_gender', 'flashmob_leader_tshirt_color', 'newsletter_preference',
+                           ));
     $this->aFlashmobMetaFieldsToClean = array(
                           'flashmob_organizer', 'flashmob_city',
-                          'flashmob_number_of_dancers', 'video_link', 'video_link_type', 'youtube_link', 'facebook_link', 'vimeo_link', 'embed_code', 'flashmob_address', 'longitude', 'latitude',
+                          'flashmob_number_of_dancers', 'video_link', 'flashmob_address', 'longitude', 'latitude',
                           'flashmob_leader_tshirt_size', 'flashmob_leader_tshirt_gender', 'flashmob_leader_tshirt_color' );
     $this->aLocationFields = array(
       'flashmob_organizer'  => array( "flashmob_city", "flashmob_address", "longitude", "latitude" ),
@@ -653,16 +641,174 @@ class FLORP{
 //     $this->aOptions['strVersion'] = '0'; // NOTE DEVEL TEMP
 //     update_site_option( $this->strOptionKey, $this->aOptions, true ); // NOTE DEVEL TEMP
 
+//     // NOTE DEVEL TEMP
+//     $this->aOptions['aYearlyMapOptions'][2013][22] = array (
+//       'first_name' => 'Jaroslav',
+//       'last_name' => 'Hluch a team',
+//       'flashmob_city' => 'Bratislava',
+//       'flashmob_number_of_dancers' => '16',
+//       'video_link_type' => 'youtube',
+//       'youtube_link' => 'https://www.youtube.com/watch?v=y_aSUdDk3Cw',
+//       'flashmob_address' => 'Nákupné centrum Polus, Bratislava',
+//       'longitude' => '17.138409',
+//       'latitude' => '48.168235',
+//       'webpage' => 'http://example.com',
+//       'school_webpage' => 'http://norika.sk',
+//       'note' => 'za video ďakujeme Michalovi Hrabovcovi (a teamu).',
+//     );
+
     // Migrate users from Flashmob blog to main blog //
     $this->migrate_subscribers( $this->iFlashmobBlogID, $this->iMainBlogID );
 
-    // Remvoe deprecated meta //
+    // Make needed meta changes //
     $aArgsMainBlogSubscribers = array(
       'blog_id' => $this->iMainBlogID,
     );
     $aMainBlogSubscribersUsers = get_users( $aArgsMainBlogUsers );
+
+    $aOldVideoLinkMetaKeys = array(
+      'facebook' => 'facebook_link',
+      'youtube' => 'youtube_link',
+      'vimeo' => 'vimeo_link',
+      'e' => 'embed_code'
+    );
+    $strVideoLinkTypeMetaKey = "video_link_type";
     foreach ($aMainBlogSubscribersUsers as $key => $oUser) {
-      delete_user_meta( $oUser->ID, 'som_organizator_rueda_flashmobu' );
+      // Remove deprecated meta //
+      if (get_user_meta( $oUser->ID, 'som_organizator_rueda_flashmobu', true )) {
+        delete_user_meta( $oUser->ID, 'som_organizator_rueda_flashmobu' );
+      }
+
+      // Transform subscriber_type meta to corresponding checkboxes //
+      $mixSubscriberTypesOfUser = get_user_meta( $oUser->ID, 'subscriber_type', true );
+      $aSubscriberTypesOfUser = array();
+      if ("" === $mixSubscriberTypesOfUser) {
+        // test via wpdb
+        global $wpdb;
+        $strQuery = "SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = {$oUser->ID} AND meta_key = 'flashmob_organizer'";
+        $res = $wpdb->get_var($strQuery);
+        if (!is_null($res)) {
+          delete_user_meta( $oUser->ID, 'subscriber_type' );
+        }
+      } elseif (is_array($mixSubscriberTypesOfUser)) {
+        if (empty($mixSubscriberTypesOfUser)) {
+          delete_user_meta( $oUser->ID, 'subscriber_type' );
+        } else {
+          $aSubscriberTypesOfUser = $mixSubscriberTypesOfUser;
+        }
+      } else {
+        $aSubscriberTypesOfUser = (array) $mixSubscriberTypesOfUser;
+      }
+      if (!empty($aSubscriberTypesOfUser)) {
+        foreach ($this->aSubscriberTypes as $strType) {
+          $sVal = '0';
+          if (in_array($strType, $aSubscriberTypesOfUser)) {
+            $sVal = '1';
+          }
+          update_user_meta( $oUser->ID, $strType, $sVal );
+        }
+        delete_user_meta( $oUser->ID, 'subscriber_type' );
+      }
+
+      // Copy school_city => flashmob_city, school_city => user_city //
+      $strSchoolCity = get_user_meta( $oUser->ID, 'school_city', true );
+      if (!empty($strSchoolCity)) {
+        update_user_meta( $oUser->ID, 'user_city', $strSchoolCity );
+        update_user_meta( $oUser->ID, 'flashmob_city', $strSchoolCity );
+        delete_user_meta( $oUser->ID, 'school_city' );
+      }
+
+      // Change school_webpage => custom_school_webpage (and select 'vlastna' as school_webpage) //
+      $strSchoolWebpage = get_user_meta( $oUser->ID, 'school_webpage', true );
+      if (!empty($strSchoolWebpage) && !in_array($strSchoolWebpage, array('vlastna', 'flashmob', 'vytvorit'))) {
+        update_user_meta( $oUser->ID, 'school_webpage', 'vlastna' );
+        update_user_meta( $oUser->ID, 'custom_school_webpage', $strSchoolWebpage );
+      }
+
+      $strUserWebpage = get_user_meta( $oUser->ID, 'webpage', true );
+      if (!empty($strUserWebpage)) {
+        update_user_meta( $oUser->ID, 'user_webpage', $strUserWebpage );
+        delete_user_meta( $oUser->ID, 'webpage' );
+      }
+
+      // preferences:newsletter => preference_newsletter //
+      // preferences:tshirt* => remove, it's automatic //
+      $mixPreferencesOfUser = get_user_meta( $oUser->ID, 'preferences', true );
+      $aPreferencesOfUser = array();
+      if ("" === $mixPreferencesOfUser) {
+        // test via wpdb
+        global $wpdb;
+        $strQuery = "SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = {$oUser->ID} AND meta_key = 'flashmob_organizer'";
+        $res = $wpdb->get_var($strQuery);
+        if (!is_null($res)) {
+          delete_user_meta( $oUser->ID, 'preferences' );
+        }
+      } elseif (is_array($mixPreferencesOfUser)) {
+        if (empty($mixPreferencesOfUser)) {
+          delete_user_meta( $oUser->ID, 'preferences' );
+        } else {
+          $aPreferencesOfUser = $mixPreferencesOfUser;
+        }
+      } else {
+        $aPreferencesOfUser = (array) $mixPreferencesOfUser;
+      }
+      if (!empty($aPreferencesOfUser)) {
+        if (in_array("newsletter", $aPreferencesOfUser)) {
+          update_user_meta( $oUser->ID, 'preference_newsletter', '1');
+        }
+        delete_user_meta( $oUser->ID, 'preferences' );
+      }
+
+      $strVideoLinkType = get_user_meta( $oUser->ID, $strVideoLinkTypeMetaKey, true );
+      if ($strVideoLinkType && isset($aOldVideoLinkMetaKeys[$strVideoLinkType])) {
+        $strVideoLink = get_user_meta( $oUser->ID, $aOldVideoLinkMetaKeys[$strVideoLinkType], true );
+        if (!empty($strVideoLink)) {
+          update_user_meta( $oUser->ID, 'video_link', $strVideoLink );
+        }
+        foreach ($aOldVideoLinkMetaKeys as $strLinkType => $strMetaKey) {
+          delete_user_meta( $oUser->ID, $strMetaKey );
+        }
+        delete_user_meta( $oUser->ID, $strVideoLinkTypeMetaKey );
+      }
+    }
+
+    // Upgrade archived map options as well //
+    $bSaveOptions = false;
+    foreach ($this->aOptions['aYearlyMapOptions'] as $iYear => $aUsersInYear) {
+      foreach ($aUsersInYear as $iUserID => $aArchivedMeta) {
+        if (isset($aArchivedMeta[$strVideoLinkTypeMetaKey])) {
+          $bSaveOptions = true;
+          $strVideoLinkType = $aArchivedMeta[$strVideoLinkTypeMetaKey];
+          $strVideoLinkKey = $aOldVideoLinkMetaKeys[$strVideoLinkType];
+          if (isset($aArchivedMeta[$strVideoLinkKey]) && !empty($aArchivedMeta[$strVideoLinkKey])) {
+            $strVideoLink = $aArchivedMeta[$strVideoLinkKey];
+            $this->aOptions['aYearlyMapOptions'][$iYear][$iUserID]['video_link'] = $strVideoLink;
+          }
+          foreach( $aOldVideoLinkMetaKeys as $strLinkType => $strMetaKey) {
+            if (isset($aArchivedMeta[$strMetaKey])) {
+              unset($this->aOptions['aYearlyMapOptions'][$iYear][$iUserID][$strMetaKey]);
+            }
+          }
+          unset($this->aOptions['aYearlyMapOptions'][$iYear][$iUserID][$strVideoLinkTypeMetaKey]);
+        }
+
+        $strSchoolWebpage = $aArchivedMeta['school_webpage'];
+        if (!empty($strSchoolWebpage) && !in_array($strSchoolWebpage, array('vlastna', 'flashmob', 'vytvorit'))) {
+          $bSaveOptions = true;
+          $this->aOptions['aYearlyMapOptions'][$iYear][$iUserID]['school_webpage'] = 'vlastna';
+          $this->aOptions['aYearlyMapOptions'][$iYear][$iUserID]['custom_school_webpage'] = $strSchoolWebpage;
+        }
+
+        $strUserWebpage = $aArchivedMeta['webpage'];
+        if (!empty($strUserWebpage)) {
+          $bSaveOptions = true;
+          $this->aOptions['aYearlyMapOptions'][$iYear][$iUserID]['user_webpage'] = $strUserWebpage;
+          unset($this->aOptions['aYearlyMapOptions'][$iYear][$iUserID]['webpage']);
+        }
+      }
+    }
+    if ($bSaveOptions) {
+      update_site_option( $this->strOptionKey, $this->aOptions, true );
     }
 
     // Version based upgrades //
@@ -675,15 +821,11 @@ class FLORP{
       // From 3.0.0 on, we have also subscribers who are not organizers (subscribers, teachers) //
       $aOrganizers = $this->getFlashmobSubscribers('all');
       foreach ($aOrganizers as $key => $oUser) {
-        update_user_meta( $oUser->ID, 'subscriber_type', array( 'flashmob_organizer' ) );
+        update_user_meta( $oUser->ID, 'flashmob_organizer', '1' );
       }
     }
-    // TODO: from current version on:
-    //  - copy years' school_city => flashmob_city, school_city => user_city
-    //  - change school_webpage => custom_school_webpage (and select 'vlastna' as school_webpage),
-    //           subscriber_type => checkboxes(flashmob_organizer, teacher)
-    //           preferences:newsletter => preference_newsletter
-    //           preferences:tshirt* => remove, it's automatic
+    // TODO: check and ensure saving and checking of data is OK for both leader and participant.
+    // TODO: admin views -> buttons: paid; payment warning
 
     if (version_compare( $strVersionInOptions, $strCurrentVersion, '<' )) {
       $this->aOptions['strVersion'] = $strCurrentVersion;
@@ -1061,33 +1203,8 @@ class FLORP{
     if ($this->isMainBlog) {
       // Settings specific to the NF on the Flashmob Blog //
 
-      // Replace flashmob date/time in preference['flashmob_organizer] checkbox //
-      if ('listcheckbox' === $aField['settings']['type'] && 'subscriber_type' === $aField['settings']['key']) {
-        $aPatterns = array(
-          '~{flashmob_date(\[[^\]]*\])?}~' => get_option('date_format'),
-          '~{flashmob_time(\[[^\]]*\])?}~' => get_option('time_format'),
-        );
-        foreach ($aField['settings']['options'] as $key => $aOptions) {
-          if ($aOptions['value'] !== 'flashmob_organizer') {
-            continue;
-          }
-          foreach ($aPatterns as $strPattern => $strDefaultFormat) {
-            $aMatches = array();
-            if (preg_match_all( $strPattern, $aOptions['label'], $aMatches )) {
-              foreach ($aMatches[0] as $iKey => $strMatchFull) {
-                if (empty($aMatches[1][$iKey])) {
-                  $strFormat = $strDefaultFormat;
-                } else {
-                  $strFormat = trim($aMatches[1][$iKey], "[]");
-                }
-                $strTimeOrDate = date( $strFormat, $this->iFlashmobTimestamp );
-                $aField['settings']['options'][$key]['label'] = str_replace( $strMatchFull, $strTimeOrDate, $aField['settings']['options'][$key]['label'] );
-              }
-            }
-          }
-        }
-      } elseif ('checkbox' === $aField['settings']['type'] && 'flashmob_organizer' === $aField['settings']['key']) {
-        // Replace flashmob date/time in flashmob_organizer single checkbox //
+      // Replace flashmob date/time in flashmob_organizer single checkbox //
+      if ('checkbox' === $aField['settings']['type'] && 'flashmob_organizer' === $aField['settings']['key']) {
         $aPatterns = array(
           '~{flashmob_date(\[[^\]]*\])?}~' => get_option('date_format'),
           '~{flashmob_time(\[[^\]]*\])?}~' => get_option('time_format'),
@@ -1110,24 +1227,6 @@ class FLORP{
 
       if ($bLoggedIn) {
         $iUserID = get_current_user_id();
-        $aSubscriberTypesOfUser = (array) get_user_meta( $iUserID, 'subscriber_type', true );
-        $aPreferencesOfUser = (array) get_user_meta( $iUserID, 'preferences', true );
-
-        if ('listcheckbox' === $aField['settings']['type'] && 'subscriber_type' === $aField['settings']['key']) {
-          foreach ($aField['settings']['options'] as $iOptionKey => $aOption) {
-            $strValue = $aOption['value'];
-            if (in_array($strValue, $aSubscriberTypesOfUser)) {
-              $aField['settings']['options'][$iOptionKey]['selected'] = 1;
-            }
-          }
-        } elseif ('listcheckbox' === $aField['settings']['type'] && 'preferences' === $aField['settings']['key']) {
-          foreach ($aField['settings']['options'] as $iOptionKey => $aOption) {
-            $strValue = $aOption['value'];
-            if (in_array($strValue, $aPreferencesOfUser)) {
-              $aField['settings']['options'][$iOptionKey]['selected'] = 1;
-            }
-          }
-        }
 
         // Set checked as default value on checkboxes saved as checked //
         if ($aField['settings']['type'] === 'checkbox') {
@@ -1155,9 +1254,7 @@ class FLORP{
         if (isset($aField['settings']['container_class'])) {
           // Hide fields //
           $bHide = true;
-          if (count($aSubscriberTypesOfUser) === 2 && stripos($aField['settings']['container_class'], 'florp-togglable-field_all') !== false) {
-            $bHide = false;
-          } elseif (stripos($aField['settings']['container_class'], 'florp-registration-field') !== false
+          if (stripos($aField['settings']['container_class'], 'florp-registration-field') !== false
                   || stripos($aField['settings']['container_class'], 'florp-profile-field') !== false) {
             $bHide = false;
           } else {
@@ -1168,13 +1265,6 @@ class FLORP{
                 $bHide = false;
                 break;
               }
-            }
-          }
-          // Go through prefereneces of user and leave field unhidden if matched //
-          foreach ($aPreferencesOfUser as $strPreference) {
-            if (stripos($aField['settings']['container_class'], 'florp-preference-field_'.$strPreference) !== false) {
-              $bHide = false;
-              break;
             }
           }
           if ($bHide) {
@@ -1411,8 +1501,8 @@ class FLORP{
     }
 
     $iUserID = get_current_user_id();
-    $aSubscriberTypesOfUser = (array) get_user_meta( $iUserID, 'subscriber_type', true );
-    if (!is_array($aSubscriberTypesOfUser) || !in_array( 'flashmob_organizer', $aSubscriberTypesOfUser )) {
+    $bIsFlashmobOrganizer = get_user_meta( $iUserID, 'flashmob_organizer', true ) == '1' ? true : false;
+    if (!$bIsFlashmobOrganizer) {
       return '<p>Neorganizujete flashmob ' .  date( 'j.n.Y', $this->iFlashmobTimestamp ) . '.</p>';
     }
     $aParticipants = $this->get_flashmob_participants( $iUserID, false );
@@ -1433,6 +1523,7 @@ class FLORP{
 
   private function getFlashmobSubscribers( $strType, $bPending = false ) {
     if ($bPending) {
+      // If getting pending users, do not save them in the aFlashmobSubscribers variable //
       $aBak = $this->aFlashmobSubscribers[$strType];
     }
     if (empty($this->aFlashmobSubscribers[$strType]) || $bPending) {
@@ -1451,9 +1542,9 @@ class FLORP{
           $aArgsTypeSpecific = array(
             'meta_query' => array(
               array(
-                'key'     => 'subscriber_type',
-                'value'   => $strType,
-                'compare' => 'LIKE'
+                'key'     => $strType,
+                'value'   => '1',
+                'compare' => '='
               )
             )
           );
@@ -1469,19 +1560,7 @@ class FLORP{
       switch ($strType) {
         case 'flashmob_organizer':
         case 'teacher':
-          // Check if 'LIKE' operator didn't match anything unwanted //
-          $aRemoveKeys = array();
-          foreach ($aUsers as $key => $oUser) {
-            $aSubscriberTypesOfUser = get_user_meta( $oUser->ID, 'subscriber_type', true );
-            if (empty($aSubscriberTypesOfUser) || !in_array( $strType, $aSubscriberTypesOfUser )) {
-              $aRemoveKeys[] = $iKey;
-            }
-          }
-          if (!empty($aRemoveKeys)) {
-            foreach ($aRemoveKeys as $iKey) {
-              unset($aUsers[$iKey]);
-            }
-          }
+          // Just update the global aFlashmobSubscribers for this type //
           $this->aFlashmobSubscribers[$strType] = $aUsers;
           break;
         case 'subscriber_only':
@@ -1493,27 +1572,25 @@ class FLORP{
             'subscriber_only' => array(),
             'all' => array(),
           );
-          $aSubscriberTypes = array_keys( $this->aFlashmobSubscribers );
           $this->aFlashmobSubscribers['all'] = $aUsers;
           foreach ($aUsers as $oUser) {
-            $aSubscriberTypesOfUser = get_user_meta( $oUser->ID, 'subscriber_type', true );
-            if (empty($aSubscriberTypesOfUser)) {
-              $this->aFlashmobSubscribers['subscriber_only'][] = $oUser;
-            } else {
-              foreach ($aSubscriberTypes as $strSubscriberType) {
-                if ($strSubscriberType === 'all' || $strSubscriberType === 'subscriber_only') {
-                  continue;
-                }
-                if (in_array( $strSubscriberType, $aSubscriberTypesOfUser )) {
-                  $this->aFlashmobSubscribers[$strSubscriberType][] = $oUser;
-                }
+            $bAtLeastOne = false;
+            foreach( $this->aSubscriberTypes as $strSubscriberType) {
+              $strVal = get_user_meta( $oUser->ID, $strSubscriberType, true );
+              if ($strVal) {
+                $bAtLeastOne = true;
+                $this->aFlashmobSubscribers[$strSubscriberType][] = $oUser;
               }
+            }
+            if (!$bAtLeastOne) {
+              $this->aFlashmobSubscribers['subscriber_only'][] = $oUser;
             }
           }
           break;
       }
     }
     if ($bPending) {
+      // If getting pending users, do not save them in the aFlashmobSubscribers variable //
       $aReturn = $this->aFlashmobSubscribers[$strType];
       $this->aFlashmobSubscribers[$strType] = $aBak;
       return $aReturn;
@@ -2150,7 +2227,6 @@ class FLORP{
       'get_mapUserInfo_action'        => 'get_mapUserInfo',
       'ajaxurl'                       => admin_url( 'admin-ajax.php'),
       'security'                      => wp_create_nonce( 'srd-florp-security-string' ),
-      'video_link_type'               => get_user_meta( $iUserID, 'video_link_type', true ),
       'flashmob_city'                 => get_user_meta( $iUserID, 'flashmob_city', true ),
       'click_trigger_class'           => $this->strClickTriggerClass,
       'do_trigger_popup_click'        => $bDoTriggerPopupClick,
@@ -2257,7 +2333,7 @@ class FLORP{
   public function leaders_table_admin() {
     echo "<div class=\"wrap\"><h1>" . "Zoznam lídrov" . "</h1>";
     $aUsers = $this->getFlashmobSubscribers( 'all', true );
-    $aEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Preferencie</th><th>Profil</th><th>Účastníci</th>';
+    $strEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Preferencie</th><th>Profil</th><th>Účastníci</th>';
     foreach ($aUsers as $oUser) {
       $aAllMeta = array_map(
         function( $a ){
@@ -2279,26 +2355,34 @@ class FLORP{
       if (in_array( $this->strUserRolePending, (array) $oUser->roles )) {
         $strIsPending = " ({$this->strUserRolePendingName})";
       }
-      $aEcho .= '<tr>';
-      $aEcho .=   '<td>'.$oUser->first_name.' '.$oUser->last_name.$strIsPending.'</td>';
-      $aEcho .=   '<td><a name="'.$oUser->ID.'">'.$oUser->user_email.'</a></td>';
-      $aEcho .=   '<td>'.$aAllMeta['flashmob_city'].'</td>';
-      $aEcho .=   '<td>';
-      if (is_array($aAllMeta['subscriber_type'])) {
-        foreach ($aAllMeta['subscriber_type'] as $strSubscriberType) {
-          $aEcho .= str_replace(
-            array('flashmob_organizer', 'teacher'),
-            array('Zorganizuje Flashmob', 'Učí kurzy'),
-            $strSubscriberType
-          ).'<br>';
+      $strEcho .= '<tr>';
+      $strEcho .=   '<td>'.$oUser->first_name.' '.$oUser->last_name.$strIsPending.'</td>';
+      $strEcho .=   '<td><a name="'.$oUser->ID.'">'.$oUser->user_email.'</a></td>';
+      $strEcho .=   '<td>'.$aAllMeta['flashmob_city'].'</td>';
+      $strEcho .=   '<td>';
+      foreach( $this->aSubscriberTypes as $strSubscriberType) {
+        if ($this->aOptions['bCoursesInfoDisabled'] && in_array($strSubscriberType, $this->aMetaFieldsTeacher)) {
+          continue;
         }
+        $bChecked = isset($aAllMeta[$strSubscriberType]) && $aAllMeta[$strSubscriberType];
+        $strValue = $bChecked ? '<input type="checkbox" disabled checked />' : '<input type="checkbox" disabled />';
+        $strLabel = str_replace(
+          array('flashmob_organizer', 'teacher'),
+          array('Zorganizuje Flashmob', 'Učí kurzy'),
+          $strSubscriberType
+        );
+        $strEcho .= $strLabel.": ".$strValue.'<br>';
       }
-      $aEcho .=   '</td>';
-      $aEcho .=   '<td>';
+      $strEcho .=   '</td>';
+      $strEcho .=   '<td>';
       $aCoursesInfoKeys = array( 'courses_info', 'courses_info_2', 'courses_info_3' );
-      $aSingleCheckboxes = array( 'courses_in_city_2', 'courses_in_city_3' );
+      $aSingleCheckboxes = array( 'courses_in_city_2', 'courses_in_city_3', 'newsletter_preference', 'hide_leader_info' );
       foreach ($this->aMetaFields as $strMetaKey) {
-        if (!isset($aAllMeta[$strMetaKey]) || (!is_bool($aAllMeta[$strMetaKey]) && !is_numeric($aAllMeta[$strMetaKey]) && empty($aAllMeta[$strMetaKey])) || $aAllMeta[$strMetaKey] === 'null' || $strMetaKey === 'subscriber_type') {
+        if (!isset($aAllMeta[$strMetaKey]) || (!is_bool($aAllMeta[$strMetaKey]) && !is_numeric($aAllMeta[$strMetaKey]) && empty($aAllMeta[$strMetaKey])) || $aAllMeta[$strMetaKey] === 'null' || in_array($strMetaKey, $this->aSubscriberTypes)) {
+          continue;
+        }
+
+        if ($this->aOptions['bCoursesInfoDisabled'] && in_array($strMetaKey, $this->aMetaFieldsTeacher)) {
           continue;
         }
 
@@ -2315,33 +2399,33 @@ class FLORP{
         }
         $strFieldName = ucfirst( str_replace( '_', ' ', $strMetaKey ) );
         if (stripos( $strValue, 'https://' ) === 0 || stripos( $strValue, 'http://' ) === 0) {
-          $aEcho .= '<a href="'.$strValue.'" target="_blank">'.$strFieldName.'</a><br>';
+          $strEcho .= '<a href="'.$strValue.'" target="_blank">'.$strFieldName.'</a><br>';
         } else {
-          $aEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>';
+          $strEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>';
         }
       }
-      $aEcho .=   '</td>';
-      $aEcho .=   '<td>';
+      $strEcho .=   '</td>';
+      $strEcho .=   '<td>';
       $aParticipants = $this->get_flashmob_participants( $oUser->ID, false, true );
       if (!empty($aParticipants)) {
         $aParticipantsOfUser = $aParticipants[$oUser->ID];
         if (!empty($aParticipantsOfUser)) {
           foreach ($aParticipantsOfUser as $strEmail => $aParticipantData) {
-            $aEcho .= "<a href=\"".admin_url('admin.php?page=florp-participants')."#{$aParticipantData['user_email']}\">{$aParticipantData['first_name']} {$aParticipantData['last_name']}</a><br>";
+            $strEcho .= "<a href=\"".admin_url('admin.php?page=florp-participants')."#{$aParticipantData['user_email']}\">{$aParticipantData['first_name']} {$aParticipantData['last_name']}</a><br>";
           }
         }
       }
-      $aEcho .=   '</td>';
-      $aEcho .= '</tr>';
+      $strEcho .=   '</td>';
+      $strEcho .= '</tr>';
     }
-    $aEcho .= '</table>';
-    echo $aEcho;
+    $strEcho .= '</table>';
+    echo $strEcho;
     echo '</div><!-- .wrap -->';
   }
 
   public function participants_table_admin() {
     echo "<div class=\"wrap\"><h1>" . "Zoznam účastníkov" . "</h1>";
-    $aEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Líder</th><th>Pohlavie</th><th>Tanečná úroveň</th><th>Profil</th>';
+    $strEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Líder</th><th>Pohlavie</th><th>Tanečná úroveň</th><th>Profil</th>';
     $aParticipants = $this->get_flashmob_participants( 0, false, true );
     $aReplacements = array(
       'gender' => array(
@@ -2358,19 +2442,19 @@ class FLORP{
         foreach ($aReplacements as $strKey => $aReplacementArr) {
           $aParticipantData[$strKey] = str_replace( $aReplacementArr['from'], $aReplacementArr['to'], $aParticipantData[$strKey]);
         }
-        $aEcho .= '<tr>';
-        $aEcho .=   '<td>'.$aParticipantData['first_name'].' '.$aParticipantData['last_name'].'</td>';
-        $aEcho .=   '<td><a name="'.$aParticipantData['user_email'].'">'.$aParticipantData['user_email'].'</a></td>';
-        $aEcho .=   '<td>'.$aParticipantData['flashmob_city'].'</td>';
+        $strEcho .= '<tr>';
+        $strEcho .=   '<td>'.$aParticipantData['first_name'].' '.$aParticipantData['last_name'].'</td>';
+        $strEcho .=   '<td><a name="'.$aParticipantData['user_email'].'">'.$aParticipantData['user_email'].'</a></td>';
+        $strEcho .=   '<td>'.$aParticipantData['flashmob_city'].'</td>';
         $oLeader = get_user_by( 'id', $iLeaderID );
         $strIsPending = "";
         if (in_array( $this->strUserRolePending, (array) $oLeader->roles )) {
           $strIsPending = " ({$this->strUserRolePendingName})";
         }
-        $aEcho .=   '<td><a href="'.admin_url('admin.php?page=florp-leaders')."#{$iLeaderID}\">{$oLeader->first_name} {$oLeader->last_name}</a>{$strIsPending}</td>";
-        $aEcho .=   '<td>'.$aParticipantData['gender'].'</td>';
-        $aEcho .=   '<td>'.$aParticipantData['dance_level'].'</td>';
-        $aEcho .=   '<td>';
+        $strEcho .=   '<td><a href="'.admin_url('admin.php?page=florp-leaders')."#{$iLeaderID}\">{$oLeader->first_name} {$oLeader->last_name}</a>{$strIsPending}</td>";
+        $strEcho .=   '<td>'.$aParticipantData['gender'].'</td>';
+        $strEcho .=   '<td>'.$aParticipantData['dance_level'].'</td>';
+        $strEcho .=   '<td>';
         $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', 'leader_user_id', 'dance_level', 'gender' );
         if (!isset($aParticipantData['leader_notified'])) {
           $aParticipantData['leader_notified'] = false;
@@ -2387,14 +2471,14 @@ class FLORP{
             $strValue = $mixValue;
           }
           $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
-          $aEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>';
+          $strEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>';
         }
-        $aEcho .=   '</td>';
-        $aEcho .= '</tr>';
+        $strEcho .=   '</td>';
+        $strEcho .= '</tr>';
       }
     }
-    $aEcho .= '</table>';
-    echo $aEcho;
+    $strEcho .= '</table>';
+    echo $strEcho;
     echo '</div><!-- .wrap -->';
   }
 
@@ -2457,8 +2541,9 @@ class FLORP{
     if (defined('FLORP_DEVEL') && FLORP_DEVEL === true) {
       // echo "<pre>" .var_export($this->aOptions, true). "</pre>";
       // echo "<pre>" .var_export(array_merge($this->aOptions, array('aYearlyMapOptions' => 'removedForPreview', 'aParticipants' => 'removedForPreview')), true). "</pre>";
-      // $aMapOptions = $this->get_flashmob_map_options_array(false, 0);
+      // $aMapOptions = $this->get_flashmob_map_options_array(true, 0);
       // echo "<pre>" .var_export($aMapOptions, true). "</pre>";
+      // echo "<pre>" .var_export($this->aOptions['aYearlyMapOptions'], true). "</pre>";
       // echo "<pre>" .var_export($this->getFlashmobSubscribers('subscriber_only'), true). "</pre>";
       // echo "<pre>" .var_export($this->getFlashmobSubscribers('flashmob_organizer'), true). "</pre>";
       // echo "<pre>" .var_export($this->getFlashmobSubscribers('teacher'), true). "</pre>";
@@ -3439,10 +3524,10 @@ class FLORP{
       echo json_encode($aRes);
       wp_die();
     } else {
-      $aSubscriberTypesOfUser = get_user_meta( $oUser->ID, 'subscriber_type', true );
       $aMapOptionsArray = $this->getOneUserMapInfo($oUser);
       $strMapType = $_POST['strMapType'];
-      if (!is_array($aSubscriberTypesOfUser) || !in_array( $strMapType, $aSubscriberTypesOfUser )) {
+      $strVal = get_user_meta( $oUser->ID, $strMapType, true );
+      if (!$strVal) {
         foreach ($this->aLocationFields[$strMapType] as $strFieldKey) {
           unset($aMapOptionsArray[$strFieldKey]);
         }
@@ -3484,7 +3569,7 @@ class FLORP{
           }
           break;
         case "vytvorit":
-          // TODO make a map of "city" => city_webpage
+          // TODO make a map of "city" => city_webpage - create dynamically generated options
         default:
           break;
       }
@@ -3511,36 +3596,28 @@ class FLORP{
       "facebook"  => '~^https?://(www.)?facebook.com/[a-zA-Z0-9]+/videos/[a-zA-Z0-9]+/?$~i',
       "vimeo"     => '~^https?://(www.)?vimeo.com/([0-9]+)/?$~i',
     );
-    if (isset($aInfoWindowData['video_link']) && isset($aInfoWindowData['video_link']['value']) && !empty($aInfoWindowData['video_link']['value'])) {
+    $aVideoRegexMatchesAll = array("other" => array());
+    $strVideoLink = (isset($aInfoWindowData['video_link']) && isset($aInfoWindowData['video_link']['value'])) ? trim($aInfoWindowData['video_link']['value']) : "";
+    $strVideoLinkType = "other";
+    if (!empty($strVideoLink)) {
       foreach($aVideoRegexes as $strType => $strRegex) {
-        if (preg_match( $strRegex, $aInfoWindowData['video_link']['value'])) {
-          if (!isset($aInfoWindowData['video_link_type'])) {
-            $aInfoWindowData['video_link_type'] = array();
-          }
-          if (!isset($aInfoWindowData[$strType.'_link'])) {
-            $aInfoWindowData[$strType.'_link'] = array();
-          }
-          $aInfoWindowData['video_link_type']['value'] = $strType;
-          $aInfoWindowData[$strType.'_link']['value'] = $aInfoWindowData['video_link']['value'];
+        $aVideoRegexMatchesAll[$strType] = array();
+        if (preg_match( $strRegex, $strVideoLink, $aVideoRegexMatchesAll[$strType])) {
+          $strVideoLinkType = $strType;
           break;
         }
       }
     }
-    if (empty($aInfoWindowData['video_link_type']['value'])
-        || (empty(trim($aInfoWindowData['youtube_link']['value']))
-            && empty(trim($aInfoWindowData['embed_code']['value']))
-            && empty(trim($aInfoWindowData['facebook_link']['value']))
-            && empty(trim($aInfoWindowData['vimeo_link']['value'])) ) ) {
+
+    $aVideoRegexMatches = $aVideoRegexMatchesAll[$strVideoLinkType];
+    if ($strVideoLinkType == "other") {
       $strEmbedCode = "";
-    } elseif ($aInfoWindowData['video_link_type']['value'] === "youtube" && !empty(trim($aInfoWindowData['youtube_link']['value']))) {
-      $strYoutubeLink = trim($aInfoWindowData['youtube_link']['value']);
-      $strYoutubeLinkRegex = $aVideoRegexes["youtube"];
-      $aMatches = array();
-      $mixCheckRes = preg_match( $strYoutubeLinkRegex, $strYoutubeLink, $aMatches );
-      if (!$mixCheckRes || !isset($aMatches[2]) || empty($aMatches[2])) {
+    } elseif ($strVideoLinkType === "youtube") {
+      if (!isset($aVideoRegexMatches[2]) || empty($aVideoRegexMatches[2])) {
         $strEmbedCode = "";
       } else {
-        $strYoutubeVideoParams = $aMatches[2];
+        $strYoutubeVideoParams = $aVideoRegexMatches[2];
+        // Try to explode by &amp; and if it's not present, explode by & //
         $aYoutubeVideoParams = explode('&amp;', $strYoutubeVideoParams);
         if (count($aYoutubeVideoParams) === 1) {
           $aYoutubeVideoParams = explode('&', $strYoutubeVideoParams);
@@ -3559,36 +3636,23 @@ class FLORP{
           $strEmbedSrc = $strYoutubeVideoID.'?'.implode('&', $aYoutubeVideoParams);
         }
         if (!isset($strEmbedSrc) || empty($strEmbedSrc)) {
-          $strEmbedCode = "" . "$strYoutubeLink, $strYoutubeVideoParams";
+          $strEmbedCode = "" . "$strVideoLink, $strYoutubeVideoParams";
         } else {
           $strEmbedCode = $this->getInfoWindowLabel('embed_code').'<iframe width="280" height="160" src="https://www.youtube.com/embed/'.$strEmbedSrc.'" frameborder="0" allowfullscreen=""></iframe>';
         }
       }
-    } elseif ($aInfoWindowData['video_link_type']['value'] === "facebook" && !empty(trim($aInfoWindowData['facebook_link']['value']))) {
-      $strFacebookLink = $aInfoWindowData['facebook_link']['value'];
-      $strFacebookLinkRegex = $aVideoRegexes["facebook"];
-      $mixCheckRes = preg_match( $strFacebookLinkRegex, $strFacebookLink );
-      if (!$mixCheckRes) {
+    } elseif ($strVideoLinkType === "facebook") {
+      $strFacebookLink = htmlentities(urlencode($strVideoLink));
+      $strEmbedCode = $this->getInfoWindowLabel('embed_code').'<iframe src="https://www.facebook.com/plugins/video.php?href='.$strFacebookLink.'&show_text=0&width=560" width="280" height="160" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowTransparency="true" allowFullScreen="true"></iframe>';//.'<pre>'.$strFacebookLink.'</pre>';
+    } elseif ($strVideoLinkType === "vimeo") {
+      if (!isset($aVideoRegexMatches[2]) || empty($aVideoRegexMatches[2])) {
         $strEmbedCode = "";
       } else {
-        $strFacebookLink = htmlentities(urlencode($strFacebookLink));
-        $strEmbedCode = $this->getInfoWindowLabel('embed_code').'<iframe src="https://www.facebook.com/plugins/video.php?href='.$strFacebookLink.'&show_text=0&width=560" width="280" height="160" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowTransparency="true" allowFullScreen="true"></iframe>';//.'<pre>'.$strFacebookLink.'</pre>';
-      }
-    } elseif ($aInfoWindowData['video_link_type']['value'] === "vimeo" && !empty(trim($aInfoWindowData['vimeo_link']['value']))) {
-      $strVimeokLink = $aInfoWindowData['vimeo_link']['value'];
-      $strVimeoLinkRegex = $aVideoRegexes["vimeo"];
-      $aMatches = array();
-      $mixCheckRes = preg_match( $strVimeoLinkRegex, $strVimeokLink, $aMatches );
-      if (!$mixCheckRes || !isset($aMatches[2]) || empty($aMatches[2])) {
-        $strEmbedCode = "";
-      } else {
-        $strVimeoVideoID = $aMatches[2];
+        $strVimeoVideoID = $aVideoRegexMatches[2];
         $strEmbedCode = $this->getInfoWindowLabel('embed_code').'<iframe src="https://player.vimeo.com/video/'.$strVimeoVideoID.'" width="340" height="200" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>';//.'<pre>'.$strVimeokLink.'</pre>';
       }
-    } elseif ($aInfoWindowData['video_link_type']['value'] === "other" && !empty(trim($aInfoWindowData['embed_code']['value']))) {
-      $strEmbedCode = $aInfoWindowData['embed_code']['value'];
-      $strEmbedCode = $this->getInfoWindowLabel('embed_code').stripslashes($strEmbedCode);
     } else {
+      // Should not happen //
       $strEmbedCode = "";
     }
     if (empty($aInfoWindowData['flashmob_number_of_dancers']['value'])) {
@@ -3682,7 +3746,7 @@ class FLORP{
      * Fields:
           'user_email', 'first_name', 'last_name', 'password', 'passwordconfirm', 'user_city',
           'school_name', 'fb_school_link', 'school_webpage',
-          'flashmob_city', 'flashmob_number_of_dancers', 'video_link_type', 'youtube_link', 'facebook_link', 'embed_code', 'flashmob_address',
+          'flashmob_city', 'flashmob_number_of_dancers', 'video_link', 'flashmob_address',
     */
   }
 
@@ -3803,17 +3867,6 @@ class FLORP{
       if (!isset($this->aOptions['aParticipants'][$iUserID])) {
         $this->aOptions['aParticipants'][$iUserID] = array();
       }
-      if (!isset($aFieldData) || empty($aFieldData) || !in_array('flashmob_participant_tshirt', $aFieldData['preferences'])) {
-        if (isset($aFieldData['flashmob_participant_tshirt_size'])) {
-          unset($aFieldData['flashmob_participant_tshirt_size']);
-        }
-        if (isset($aFieldData['flashmob_participant_tshirt_gender'])) {
-          unset($aFieldData['flashmob_participant_tshirt_gender']);
-        }
-        if (isset($aFieldData['flashmob_participant_tshirt_color'])) {
-          unset($aFieldData['flashmob_participant_tshirt_color']);
-        }
-      }
 
       if (!empty($aFieldData) && in_array('newsletter_subscribe', $aFieldData['preferences'])) {
         // Subscribe participant to newsletter via REST API //
@@ -3880,6 +3933,7 @@ class FLORP{
     if (is_user_logged_in()) {
       $iUserID = get_current_user_id();
     } else {
+      // REGISTRATION //
       // Get field values by keys //
       $aFieldData = array();
       foreach ($aFormData["fields"] as $strKey => $aData) {
@@ -3929,15 +3983,11 @@ class FLORP{
       }
     }
 
-    $strPreferencesKey = 'preferences';
-    $strNewsletterSubscribePreferenceKey = 'newsletter_subscribe';
-    $aPreferencesOfUser = (array) get_user_meta( $iUserID, $strPreferencesKey, true );
-    $bNewsletterSubscribeOld = in_array( $strNewsletterSubscribePreferenceKey, $aPreferencesOfUser );
+    $strNewsletterSubscribeKey = 'preference_newsletter';
+    $bNewsletterSubscribeOld = get_user_meta( $iUserID, $strNewsletterSubscribeKey, true ) == '1' ? 1 : 0;
 
-    $strSubscriberTypeKey = 'subscriber_type';
     $strFlashmobOrganizerKey = 'flashmob_organizer';
-    $aSubscriberTypesOfUser = (array) get_user_meta( $iUserID, $strSubscriberTypeKey, true );
-    $bIsFlashmobOrganizerOld = in_array( $strFlashmobOrganizerKey, $aSubscriberTypesOfUser );
+    $bIsFlashmobOrganizerOld = get_user_meta( $iUserID, $strFlashmobOrganizerKey, true ) == '1' ? 1 : 0;
 
     $aUserData = array();
     foreach ($aFormData["fields"] as $strKey => $aData) {
@@ -3956,23 +4006,24 @@ class FLORP{
       add_filter( 'send_email_change_email', '__return_false' );
       $mixRes = wp_update_user( $aUserData );
     }
+    $aSavedMeta = array();
     if (!empty($aMetaData)) {
       foreach ($aMetaData as $strKey => $mixValue) {
-        if (($strKey === "youtube_link" && !empty($mixValue) && $aMetaData['video_link_type'] !== 'youtube')
-            || ($strKey === "facebook_link" && !empty($mixValue) && $aMetaData['video_link_type'] !== 'facebook')
-            || ($strKey === "embed_code" && !empty($mixValue) && $aMetaData['video_link_type'] !== 'other')
-            || ($strKey === "flashmob_city" && $mixValue === "null")) {
+        if (in_array($strKey, array("flashmob_city", "user_city", "courses_city", "courses_city_2", "courses_city_3")) && $mixValue === "null") {
           delete_user_meta( $iUserID, $strKey );
         } else {
+          $mixValue .= ''; // casting to string because of int values //
           update_user_meta( $iUserID, $strKey, $mixValue );
         }
+        $aSavedMeta[$strKey] = get_user_meta( $iUserID, $strKey, true );
       }
 
+      // file_put_contents( __DIR__ . "/kk-debug-after-submission-metadata-".$iUserID.".log", var_export( $aMetaData, true ) . "\n=======================\n" . var_export($aSavedMeta, true) );
       // Remove participants of organizer if they decide not to organize a flashmob //
-      if (isset($aMetaData[$strSubscriberTypeKey])) {
-        $bIsFlashmobOrganizerNew = in_array( $strFlashmobOrganizerKey, (array) $aMetaData[$strSubscriberTypeKey] );
+      if (isset($aMetaData[$strFlashmobOrganizerKey])) {
+        $bIsFlashmobOrganizerNew = $aMetaData[$strFlashmobOrganizerKey]; // int //
       } else {
-        $bIsFlashmobOrganizerNew = false;
+        $bIsFlashmobOrganizerNew = 0;
       }
       if ($bIsFlashmobOrganizerNew !== $bIsFlashmobOrganizerOld && !$bIsFlashmobOrganizerNew && $this->get_flashmob_participant_count( $iUserID ) > 0) {
         // Send notification to participants //
@@ -3991,8 +4042,8 @@ class FLORP{
       }
 
       // Subscribe or unsubscribe to/from newsletter via REST API //
-      if (isset($aMetaData[$strPreferencesKey])) {
-        $bNewsletterSubscribeNew = in_array( $strNewsletterSubscribePreferenceKey, (array) $aMetaData[$strPreferencesKey] );
+      if (isset($aMetaData[$strNewsletterSubscribeKey])) {
+        $bNewsletterSubscribeNew = $aMetaData[$strNewsletterSubscribeKey]; // int //
       } else {
         $bNewsletterSubscribeNew = false;
       }
@@ -4029,20 +4080,13 @@ class FLORP{
           if (defined('FLORP_DEVEL_REST_API_DEBUG') && FLORP_DEVEL_REST_API_DEBUG === true) {
             file_put_contents( __DIR__ . "/kk-debug-after-submission-newsletter-rest-api-error.log", var_export( $bResult, true ) );
           }
-          $aRevertedPreferences = $aMetaData[$strPreferencesKey];
-          if ($bNewsletterSubscribeNew) {
-            $iKey = array_search( $strNewsletterSubscribePreferenceKey, $aRevertedPreferences );
-            unset( $aRevertedPreferences[$iKey] );
-          } else {
-            $aRevertedPreferences[] = $strNewsletterSubscribePreferenceKey;
-          }
-          update_user_meta( $iUserID, $strPreferencesKey, $aRevertedPreferences );
+          update_user_meta( $iUserID, $strNewsletterSubscribeKey, $bNewsletterSubscribeOld );
         } elseif (defined('FLORP_DEVEL_REST_API_DEBUG') && FLORP_DEVEL_REST_API_DEBUG === true) {
           file_put_contents( __DIR__ . "/kk-debug-after-submission-newsletter-rest-api-ok.log", var_export( $bResult, true ) );
         }
       } elseif (defined('FLORP_DEVEL_REST_API_DEBUG') && FLORP_DEVEL_REST_API_DEBUG === true) {
         file_put_contents( __DIR__ . "/kk-debug-after-submission-newsletter-rest-api-check.log", var_export( array(
-          'old' => $aPreferencesOfUser,
+          'old' => $bNewsletterSubscribeOld,
           'new-userdata' => $aUserData,
           'new-metadata' => $aMetaData,
         ), true ) );

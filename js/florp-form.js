@@ -1,10 +1,12 @@
 // BEGIN Globals //
   // Define the main florp map options object if not defined //
   if ("undefined" === typeof florp_map_options_object) {
-    var florp_map_options_object = {};
+    var florp_map_options_object = {}
   }
 
-  var $aTogglableSingleCheckboxCheckboxes = [];
+  var $aTogglableSingleCheckboxCheckboxes = [],
+      $aPreferenceTogglerCheckboxes = [],
+      $aTogglablePreferenceFields
 
   if (florp.courses_info_disabled == 1) {
     var aSectionTogglerSelectors = ['.florp-section-base', '.florp-section-flashmob']
@@ -901,6 +903,13 @@
         $newsletterSubscribeLabel.html($newsletterSubscribeLabel.html()+" ").append($preferenceInfo)
       }
     }
+    var $preferenceInfo = jQuery(".florp_preferences_container .nf-field-label label span.fa-info-circle")
+    if ($preferenceInfo.length > 0) {
+      $newsletterSubscribeLabel = jQuery(".florp_preferences_container input[value=newsletter_subscribe]").parent().find("label")
+      if ($newsletterSubscribeLabel.length > 0) {
+        $newsletterSubscribeLabel.html($newsletterSubscribeLabel.html()+" ").append($preferenceInfo)
+      }
+    }
 
     // FN to get selected school webpage radiolist value //
     var fnGetSchoolWebpageRadiolistValue = function() {
@@ -1165,11 +1174,6 @@
             'user_city',
             'flashmob_number_of_dancers',
             'video_link',
-            'video_link_type',
-            'youtube_link',
-            'facebook_link',
-            'vimeo_link',
-            'embed_code',
             'flashmob_city',
             'flashmob_address',
             'longitude',
@@ -1475,7 +1479,12 @@
       // END reload courses //
     } else if (florp.blog_type === "flashmob") {
       // Get create and populate the togglable checkbox values into an array //
-
+      $aPreferenceTogglerCheckboxes = jQuery(".florp_preferences_container input[type=checkbox]")
+      fnToggleFields($aPreferenceTogglerCheckboxes, "preference");
+      $aPreferenceTogglerCheckboxes.change(function() {
+        var $this = jQuery(this)
+        fnToggleFields($this, "preference");
+      })
     }
   }
 
@@ -1690,10 +1699,10 @@
         }
       }
     }
-    jQuery(document).on('input', '.ninja-forms-field.florp_user_webpage, .ninja-forms-field.florp_custom_school_webpage, .ninja-forms-field.florp_facebook_link, .ninja-forms-field.florp_vimeo_link, .ninja-forms-field.florp_youtube_link', function(event) {
+    jQuery(document).on('input', '.ninja-forms-field.florp_user_webpage, .ninja-forms-field.florp_custom_school_webpage, .ninja-forms-field.florp_video_link', function(event) {
       fixWebPages(event, this);
     });
-    jQuery(document).on('propertychange', '.ninja-forms-field.florp_user_webpage, .ninja-forms-field.florp_custom_school_webpage, .ninja-forms-field.florp_facebook_link, .ninja-forms-field.florp_vimeo_link, .ninja-forms-field.florp_youtube_link', function(event) {//IE8
+    jQuery(document).on('propertychange', '.ninja-forms-field.florp_user_webpage, .ninja-forms-field.florp_custom_school_webpage, .ninja-forms-field.florp_video_link', function(event) {//IE8
       fixWebPages(event, this);
     });
   });
