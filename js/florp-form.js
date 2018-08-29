@@ -1119,6 +1119,32 @@
         $florpCoursesCitySelect.val($florpUserCitySelect.val())
       }
 
+      // Replace tshirt color radio buttons with images //
+      var fnChangeProfileTshirtImgs = function($city) {
+        var strImgCitySlug = $city.val().toLowerCase().replace(" ", "-").replace(/[^a-zA-Z0-9_-]/g, "_")
+        if ("undefined" === typeof nfForms || "undefined" === typeof florp || "undefined" === typeof florp.form_id) {
+          return;
+        }
+        var $form = jQuery("#florp-profile-form-wrapper-div #nf-form-"+florp.form_id+"-cont")
+        var $tshirtImgs = $form.find(".florp-tshirt-color-label-img")
+        $tshirtImgs.each(function(index) {
+          var $this = jQuery(this)
+          var strImgCitySlugLoc = "default"
+          if ("undefined" !== typeof florp.tshirt_imgs && "undefined" !== typeof florp.tshirt_imgs[strImgCitySlug] && florp.tshirt_imgs[strImgCitySlug]) {
+            var strImgCitySlugLoc = strImgCitySlug
+          }
+          var color = $this.data("color")
+          var strSrc = florp.img_path+"t-shirt-"+color+"-"+strImgCitySlugLoc+".png"
+          $this.prop("src", strSrc)
+        })
+      }
+      $florpUserCitySelect.each(function(index) {
+        fnChangeProfileTshirtImgs(jQuery(this))
+      })
+      $florpUserCitySelect.change(function() {
+        fnChangeProfileTshirtImgs(jQuery(this))
+      })
+
       // Add correct classes to map refresh buttons //
       var findFlorpButtons = jQuery("span.florp-button");
       findFlorpButtons.each(function () {
@@ -1587,8 +1613,8 @@
       var $this = jQuery(this),
           iUserID = $this.data("userId"),
           strDivID = $this.data("divId"),
-          strFlashmobCity = $this.data("flashmobCity")
-      var strImgCitySlug = strFlashmobCity.toLowerCase().replace(" ", "-").replace(/[^a-zA-Z0-9_-]/g, "_")
+          strFlashmobCity = $this.data("flashmobCity"),
+          strImgCitySlug = strFlashmobCity.toLowerCase().replace(" ", "-").replace(/[^a-zA-Z0-9_-]/g, "_")
       // console.log($this)
       var $form = jQuery("#florp-profile-form-wrapper-div #nf-form-"+florp.form_id+"-cont")
       if ("undefined" === typeof nfForms) {

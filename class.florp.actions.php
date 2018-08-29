@@ -77,11 +77,11 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
           if ($strKey == 'subscriber_type') {
             $aSubscriberType = $strValue;
             break;
-          } elseif ($strKey == 'flashmob_organizer') {
+          } elseif ($strKey == 'flashmob_organizer' || $strKey == 'teacher') {
             if (!isset($aSubscriberType)) {
               $aSubscriberType = array();
             }
-            $aSubscriberType[] = 'flashmob_organizer';
+            $aSubscriberType[] = $strKey;
             break;
           }
         }

@@ -5,12 +5,12 @@
  * Description: Creates shortcodes for flashmob organizer login / registration / profile editing form and for maps showing cities with videos of flashmobs for each year
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.1.0
+ * Version: 4.2.0
  */
 
 class FLORP{
 
-  private $strVersion = '4.1.0';
+  private $strVersion = '4.2.0';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -2355,8 +2355,9 @@ class FLORP{
       if (in_array( $this->strUserRolePending, (array) $oUser->roles )) {
         $strIsPending = " ({$this->strUserRolePendingName})";
       }
+      $strButtons = ""; // TODO https://wordpress.stackexchange.com/a/24308
       $strEcho .= '<tr>';
-      $strEcho .=   '<td>'.$oUser->first_name.' '.$oUser->last_name.$strIsPending.'</td>';
+      $strEcho .=   '<td>'.$oUser->first_name.' '.$oUser->last_name.$strIsPending.$strButtons.'</td>';
       $strEcho .=   '<td><a name="'.$oUser->ID.'">'.$oUser->user_email.'</a></td>';
       $strEcho .=   '<td>'.$aAllMeta['flashmob_city'].'</td>';
       $strEcho .=   '<td>';
@@ -2425,7 +2426,9 @@ class FLORP{
 
   public function participants_table_admin() {
     echo "<div class=\"wrap\"><h1>" . "Zoznam účastníkov" . "</h1>";
-    $strEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Líder</th><th>Pohlavie</th><th>Tanečná úroveň</th><th>Profil</th>';
+    $strEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Líder</th>';
+//     $strEcho .= '<th>Pohlavie</th><th>Tanečná úroveň</th>';
+    $strEcho .= '<th>Profil</th>';
     $aParticipants = $this->get_flashmob_participants( 0, false, true );
     $aReplacements = array(
       'gender' => array(
@@ -2435,6 +2438,10 @@ class FLORP{
       'dance_level' => array(
         'from'  => array( 'zaciatocnik', 'pokrocily', 'ucitel' ),
         'to'    => array( 'začiatočník', 'pokročilý', 'učiteľ' )
+      ),
+      'preferences' => array(
+        'from'  => array( 'flashmob_participant_tshirt', 'newsletter_subscribe' ),
+        'to'    => array( 'Chcem pamätné Flashmob tričko', 'Chcem dostávať newsletter' )
       )
     );
     foreach ($aParticipants as $iLeaderID => $aParticipantsOfLeader) {
@@ -2442,8 +2449,9 @@ class FLORP{
         foreach ($aReplacements as $strKey => $aReplacementArr) {
           $aParticipantData[$strKey] = str_replace( $aReplacementArr['from'], $aReplacementArr['to'], $aParticipantData[$strKey]);
         }
+        $strButtons = ""; // TODO https://wordpress.stackexchange.com/a/24308
         $strEcho .= '<tr>';
-        $strEcho .=   '<td>'.$aParticipantData['first_name'].' '.$aParticipantData['last_name'].'</td>';
+        $strEcho .=   '<td>'.$aParticipantData['first_name'].' '.$aParticipantData['last_name'].$strButtons.'</td>';
         $strEcho .=   '<td><a name="'.$aParticipantData['user_email'].'">'.$aParticipantData['user_email'].'</a></td>';
         $strEcho .=   '<td>'.$aParticipantData['flashmob_city'].'</td>';
         $oLeader = get_user_by( 'id', $iLeaderID );
@@ -2452,10 +2460,10 @@ class FLORP{
           $strIsPending = " ({$this->strUserRolePendingName})";
         }
         $strEcho .=   '<td><a href="'.admin_url('admin.php?page=florp-leaders')."#{$iLeaderID}\">{$oLeader->first_name} {$oLeader->last_name}</a>{$strIsPending}</td>";
-        $strEcho .=   '<td>'.$aParticipantData['gender'].'</td>';
-        $strEcho .=   '<td>'.$aParticipantData['dance_level'].'</td>';
+//         $strEcho .=   '<td>'.$aParticipantData['gender'].'</td>';
+//         $strEcho .=   '<td>'.$aParticipantData['dance_level'].'</td>';
         $strEcho .=   '<td>';
-        $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', 'leader_user_id', 'dance_level', 'gender' );
+        $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', 'leader_user_id'/*, 'dance_level', 'gender'*/ );
         if (!isset($aParticipantData['leader_notified'])) {
           $aParticipantData['leader_notified'] = false;
         }
