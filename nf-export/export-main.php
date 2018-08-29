@@ -10281,7 +10281,7 @@ $aFlorpNinjaFormExportData = array (
       'manual_key' => true,
       'drawerDisabled' => false,
       'desc_text' => '<p class="florp-newsletter-banner">
-  <img src="http://festivaly.salsarueda.dance/wp-content/extensions/newsletter/emails/themes/srd/images/20170126185928_news_top_1.jpg" alt="newsletter" title="newsletter">
+  <img src="/wpsite/wp-content/plugins/flashmob-organizer-profile/img/newsletter-banner.jpg" alt="newsletter" title="newsletter">
 </p>',
       'label' => 'NL:',
       'key' => 'preference_newsletter',
