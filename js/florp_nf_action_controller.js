@@ -127,7 +127,7 @@ function add_florp_action_controllers() {
               } else if ($this.val() === "flashmob_participant_tshirt") {
                 $this.prop("checked", true).trigger('change')
               }
-            } else if ($this.is("input")) {
+            } else if ($this.is("input") && $this.prop("type") !== "radio") {
               if ($this.val().length > 0) {
                 $this.val("").trigger('change')
               }
@@ -143,10 +143,13 @@ function add_florp_action_controllers() {
           // Remove selected radiobuttons and manually change the value of the field //
           jQuery(".florp-clear-on-submission .listradio-container").each(function() {
             var $this = jQuery(this)
-            $this.find("input[type=radio]").removeAttr("checked").removeClass("nf-checked")
+            var $inputs = $this.find("input[type=radio]")
+            $inputs.removeAttr("checked").removeClass("nf-checked")
             $this.find("label").removeClass("nf-checked-label")
+
             var fieldID = $this.find(".field-wrap").data("fieldId")
             nfRadio.channel("fields").request("get:field", fieldID).set("value", "")
+            nfRadio.channel("fields").request("remove:error", fieldID, "required-error")
           })
 
           // Remove form errors //

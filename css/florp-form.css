@@ -169,9 +169,8 @@ nf-field.florp-section-toggler{
 
 .florp-leader-tshirt-color .nf-field-element ul>li input,
 .florp-participant-tshirt-color .nf-field-element ul>li input{
-  visibility: hidden;
-  position: absolute;
-/*   display: none; */
+/*   visibility: hidden; */
+/*   position: absolute; */
 }
 .florp-leader-tshirt-color .nf-field-element ul>li .nf-checked-label img,
 .florp-participant-tshirt-color .nf-field-element ul>li .nf-checked-label img{

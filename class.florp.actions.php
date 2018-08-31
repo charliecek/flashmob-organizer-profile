@@ -111,8 +111,8 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
                 $data[ 'errors' ][ 'form' ][$strKey] = $strLabel.'Zadaný e-mail už je zaregistrovaný'; //__( 'The submitted email is in use already', 'florp' ); // Zadaný e-mail už je zaregistrovaný
               }
               break;
-            case "user_webpage":
-            case "custom_school_webpage":
+            case "facebook":
+            case "custom_webpage":
             case "video_link":
               if (!empty($strValue)) {
                 $strRegex = '/^https?\:\/\/([a-z0-9][a-z0-9_-]*\.)+[a-z0-9_-]*(\/.*)?$/i';
@@ -129,6 +129,11 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
                   }
                   if (!$strVideoLinkType) {
                     $data[ 'errors' ][ 'form' ][$strKey] = $strLabel.'Zadaná hodnota "'.$strValue.'" nie je validným linkom videa (povolené typy: facebook, vimeo, youtube). Ak by ste chceli pridať iný typ videa, napíšte nám.';
+                  }
+                } elseif ($strKey === "facebook") {
+                  $strRegex = '/^https?\:\/\/(www\.)?facebook\.com\/.+$/i';
+                  if (!preg_match( $strRegex, $strValue )) {
+                    $data[ 'errors' ][ 'form' ][$strKey] = $strLabel.'Zadaná hodnota "'.$strValue.'" nie je validným facebook linkom!';
                   }
                 }
               }
@@ -193,6 +198,7 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
   //       }
   //       $data[ 'errors' ][ 'form' ][] = 'DEVEL STOP';
       } elseif ($form_id == florp_get_profile_form_id_flashmob()) {
+        $bGenderOK = false;
         foreach ($data['fields'] as $field_id => $field_value ) {
           $strKey = $field_value['key'];
           $strValue = $field_value['value'];
@@ -204,12 +210,19 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
                 $data[ 'errors' ][ 'form' ][$strKey] = 'Zadaný e-mail už je zaregistrovaný'; //__( 'The submitted email is in use already', 'florp' ); // Zadaný e-mail už je zaregistrovaný
               }
               break;
+            case "gender":
+              $bGenderOK = in_array($strValue, array("muz", "zena"));
           }
           if ($strType === 'listselect' && $field_value['required'] == 1 && $strValue === 'null') {
+            $data[ 'errors' ][ 'form' ][$strKey] = '"'.$field_value['label'].'" je povinné pole';
+          } elseif ($strType === 'listradio' && $field_value['required'] == 1 && !$strValue) {
             $data[ 'errors' ][ 'form' ][$strKey] = '"'.$field_value['label'].'" je povinné pole';
           }
 //           $data[ 'errors' ][ 'form' ][] = '<pre>'.var_export($data['fields'], true).'</pre>';
 //           $data[ 'errors' ][ 'form' ][] = 'DEVEL STOP';
+        }
+        if (empty($data[ 'errors' ][ 'form' ]) && !$bGenderOK) {
+          $data[ 'errors' ][ 'form' ][$strKey] = '"Pohlavie" je povinné pole!';
         }
       }
       return $data;
