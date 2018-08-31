@@ -71,13 +71,24 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
         if ($bUserIsLoggedIn) {
           $aCurUserInfo = get_currentuserinfo();
         }
+        $aKeyToValue = array();
+        $aKeyToLabel = array();
         foreach ($data['fields'] as $field_id => $field_value ) {
           $strKey = $field_value['key'];
           $strValue = $field_value['value'];
-          if ($strKey == 'subscriber_type') {
+          $aKeyToValue[$strKey] = $strValue;
+          $aKeyToLabel[$strKey] = "";
+          if (!empty($field_value['label'])) {
+            $aKeyToLabel[$strKey] = $field_value['label'];
+          }
+        }
+        foreach ($data['fields'] as $field_id => $field_value ) {
+          $strKey = $field_value['key'];
+          $strValue = $field_value['value'];
+          if ($strKey == 'subscriber_type') { // old way //
             $aSubscriberType = $strValue;
             break;
-          } elseif ($strKey == 'flashmob_organizer' || $strKey == 'teacher') {
+          } elseif ($strKey == 'flashmob_organizer' || $strKey == 'teacher') { // new way //
             if (!isset($aSubscriberType)) {
               $aSubscriberType = array();
             }
@@ -88,28 +99,38 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
         foreach ($data['fields'] as $field_id => $field_value ) {
           $strKey = $field_value['key'];
           $strValue = $field_value['value'];
+          $strLabel = "";
+          if (!empty($field_value['label'])) {
+            $strLabel = $field_value['label'].": ";
+          }
           switch( $strKey ) {
             case "user_email":
               $strValue = trim( $strValue );
               if ($bUserIsLoggedIn && email_exists( $strValue ) && $aCurUserInfo->user_email != $strValue) {
-                $data[ 'errors' ][ 'form' ][$strKey] = 'Zadaný e-mail už je zaregistrovaný'; //__( 'The submitted email is in use already', 'florp' ); // Zadaný e-mail už je zaregistrovaný
+                $data[ 'errors' ][ 'form' ][$strKey] = $strLabel.'Zadaný e-mail už je zaregistrovaný'; //__( 'The submitted email is in use already', 'florp' ); // Zadaný e-mail už je zaregistrovaný
               } elseif (!$bUserIsLoggedIn && email_exists( $strValue )) {
-                $data[ 'errors' ][ 'form' ][$strKey] = 'Zadaný e-mail už je zaregistrovaný'; //__( 'The submitted email is in use already', 'florp' ); // Zadaný e-mail už je zaregistrovaný
+                $data[ 'errors' ][ 'form' ][$strKey] = $strLabel.'Zadaný e-mail už je zaregistrovaný'; //__( 'The submitted email is in use already', 'florp' ); // Zadaný e-mail už je zaregistrovaný
               }
               break;
             case "user_webpage":
-            case "school_custom_webpage":
+            case "custom_school_webpage":
             case "video_link":
-            case "facebook_link":
-            case "youtube_link":
-            case "vimeo_link":
               if (!empty($strValue)) {
                 $strRegex = '/^https?\:\/\/([a-z0-9][a-z0-9_-]*\.)+[a-z0-9_-]*(\/.*)?$/i';
                 $mixCheckRes = preg_match( $strRegex, $strValue );
                 if (!$mixCheckRes) {
-                  $data[ 'errors' ][ 'form' ][$strKey] = 'Zadaná hodnota "'.$strValue.'" nie je validný link webovej stránky!';
-                } else if (isset($aVideoTypes[$strKey]) && !preg_match( $aVideoTypes[$strKey]['regex'], $strValue )) {
-                  $data[ 'errors' ][ 'form' ][$strKey] = 'Zadaná hodnota "'.$strValue.'" nie je validný link videa typu '.$aVideoTypes[$strKey]['name'].'. Ak typ videa, ktoré pridávate, nie je medzi možnosťami, prosíme, vyberte možnosť "Iné" a vložte úplný embedovací kód.';
+                  $data[ 'errors' ][ 'form' ][$strKey] = $strLabel.'Zadaná hodnota "'.$strValue.'" nie je validným linkom webovej stránky!';
+                } elseif ($strKey === "video_link") {
+                  $strVideoLinkType = false;
+                  foreach($aVideoTypes as $strType => $strRegex) {
+                    if (preg_match( $strRegex, $strValue )) {
+                      $strVideoLinkType = $strType;
+                      break;
+                    }
+                  }
+                  if (!$strVideoLinkType) {
+                    $data[ 'errors' ][ 'form' ][$strKey] = $strLabel.'Zadaná hodnota "'.$strValue.'" nie je validným linkom videa (povolené typy: facebook, vimeo, youtube). Ak by ste chceli pridať iný typ videa, napíšte nám.';
+                  }
                 }
               }
               break;
@@ -139,7 +160,7 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
                 ARRAY_N
               );
               if (!empty($results)) {
-                $data[ 'errors' ][ 'form' ][$strKey] = "V databáze už existuje líder, ktorý organizuje flashmob v meste '$strValue'!";
+                $data[ 'errors' ][ 'form' ][$strKey] = $strLabel."V databáze už existuje líder, ktorý organizuje flashmob v meste '$strValue'!";
               }
               break;
             default:
@@ -154,6 +175,13 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
             $data[ 'errors' ][ 'form' ]['user_pass'] = 'Heslo je príliš krátke (aspoň 7 znakov)';
           }
         }
+        if ($aKeyToValue["school_webpage"] === "vlastna" && empty($aKeyToValue["custom_school_webpage"])) {
+          $data[ 'errors' ][ 'form' ][] = $aKeyToLabel['custom_school_webpage'].' je povinné pole!';
+        }
+//         if (empty($data[ 'errors' ][ 'form' ])) {
+//           $data[ 'errors' ][ 'form' ][] = 'DEVEL STOP';
+//           $data[ 'errors' ][ 'form' ][] = '<pre>'.var_export($aKeyToValue, true).'</pre>';
+//         }
   //       if ($bUserIsLoggedIn) {
   //         $data[ 'errors' ][ 'form' ][] = 'DEVEL STOP';
   //       }

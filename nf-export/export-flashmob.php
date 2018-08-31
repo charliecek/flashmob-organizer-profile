@@ -11265,11 +11265,15 @@ $aFlorpNinjaFormExportData = array (
           array (
           ),
           'max_options' => 0,
-          'label' => 'S',
-          'value' => 'S',
+          'order' => 1,
+          'new' => false,
+          'options' => 
+          array (
+          ),
+          'label' => 'XS',
+          'value' => 'XS',
           'calc' => '0',
           'selected' => 0,
-          'order' => 1,
           'settingModel' => 
           array (
             'settings' => false,
@@ -11339,8 +11343,8 @@ $aFlorpNinjaFormExportData = array (
           array (
           ),
           'max_options' => 0,
-          'label' => 'M',
-          'value' => 'M',
+          'label' => 'S',
+          'value' => 'S',
           'calc' => '0',
           'selected' => 0,
           'order' => 2,
@@ -11413,15 +11417,11 @@ $aFlorpNinjaFormExportData = array (
           array (
           ),
           'max_options' => 0,
-          'order' => 3,
-          'new' => false,
-          'options' => 
-          array (
-          ),
-          'label' => 'L',
-          'value' => 'L',
+          'label' => 'M',
+          'value' => 'M',
           'calc' => '0',
           'selected' => 0,
+          'order' => 3,
           'settingModel' => 
           array (
             'settings' => false,
@@ -11496,8 +11496,164 @@ $aFlorpNinjaFormExportData = array (
           'options' => 
           array (
           ),
+          'label' => 'L',
+          'value' => 'L',
+          'calc' => '0',
+          'selected' => 0,
+          'settingModel' => 
+          array (
+            'settings' => false,
+            'hide_merge_tags' => false,
+            'error' => false,
+            'name' => 'options',
+            'type' => 'option-repeater',
+            'label' => 'Options <a href="#" class="nf-add-new">Add New</a> <a href="#" class="extra nf-open-import-tooltip"><i class="fa fa-sign-in" aria-hidden="true"></i> Import</a>',
+            'width' => 'full',
+            'group' => '',
+            'value' => 
+            array (
+              0 => 
+              array (
+                'label' => 'One',
+                'value' => 'one',
+                'calc' => '',
+                'selected' => 0,
+                'order' => 0,
+              ),
+              1 => 
+              array (
+                'label' => 'Two',
+                'value' => 'two',
+                'calc' => '',
+                'selected' => 0,
+                'order' => 1,
+              ),
+              2 => 
+              array (
+                'label' => 'Three',
+                'value' => 'three',
+                'calc' => '',
+                'selected' => 0,
+                'order' => 2,
+              ),
+            ),
+            'columns' => 
+            array (
+              'label' => 
+              array (
+                'header' => 'Label',
+                'default' => '',
+              ),
+              'value' => 
+              array (
+                'header' => 'Value',
+                'default' => '',
+              ),
+              'calc' => 
+              array (
+                'header' => 'Calc Value',
+                'default' => '',
+              ),
+              'selected' => 
+              array (
+                'header' => '<span class="dashicons dashicons-yes"></span>',
+                'default' => 0,
+              ),
+            ),
+          ),
+          'manual_value' => true,
+        ),
+        5 => 
+        array (
+          'errors' => 
+          array (
+          ),
+          'max_options' => 0,
+          'order' => 5,
+          'new' => false,
+          'options' => 
+          array (
+          ),
           'label' => 'XL',
           'value' => 'XL',
+          'calc' => '0',
+          'selected' => 0,
+          'settingModel' => 
+          array (
+            'settings' => false,
+            'hide_merge_tags' => false,
+            'error' => false,
+            'name' => 'options',
+            'type' => 'option-repeater',
+            'label' => 'Options <a href="#" class="nf-add-new">Add New</a> <a href="#" class="extra nf-open-import-tooltip"><i class="fa fa-sign-in" aria-hidden="true"></i> Import</a>',
+            'width' => 'full',
+            'group' => '',
+            'value' => 
+            array (
+              0 => 
+              array (
+                'label' => 'One',
+                'value' => 'one',
+                'calc' => '',
+                'selected' => 0,
+                'order' => 0,
+              ),
+              1 => 
+              array (
+                'label' => 'Two',
+                'value' => 'two',
+                'calc' => '',
+                'selected' => 0,
+                'order' => 1,
+              ),
+              2 => 
+              array (
+                'label' => 'Three',
+                'value' => 'three',
+                'calc' => '',
+                'selected' => 0,
+                'order' => 2,
+              ),
+            ),
+            'columns' => 
+            array (
+              'label' => 
+              array (
+                'header' => 'Label',
+                'default' => '',
+              ),
+              'value' => 
+              array (
+                'header' => 'Value',
+                'default' => '',
+              ),
+              'calc' => 
+              array (
+                'header' => 'Calc Value',
+                'default' => '',
+              ),
+              'selected' => 
+              array (
+                'header' => '<span class="dashicons dashicons-yes"></span>',
+                'default' => 0,
+              ),
+            ),
+          ),
+          'manual_value' => true,
+        ),
+        6 => 
+        array (
+          'errors' => 
+          array (
+          ),
+          'max_options' => 0,
+          'order' => 6,
+          'new' => false,
+          'options' => 
+          array (
+          ),
+          'label' => 'XXL',
+          'value' => 'XXL',
           'calc' => '0',
           'selected' => 0,
           'settingModel' => 

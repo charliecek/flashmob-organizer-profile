@@ -5,12 +5,12 @@
  * Description: Creates shortcodes for flashmob organizer login / registration / profile editing form and for maps showing cities with videos of flashmobs for each year
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.2.1
+ * Version: 4.3.0
  */
 
 class FLORP{
 
-  private $strVersion = '4.2.1';
+  private $strVersion = '4.3.0';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -2198,24 +2198,33 @@ class FLORP{
     }
 
     $aTshirtImages = array();
-//     $aTshirtImagePaths = array();
-    $aFlashmobOrganizers = $this->getFlashmobSubscribers('flashmob_organizer');
     $strPluginDirPath = WP_CONTENT_DIR . '/plugins/flashmob-organizer-profile';
-    foreach ($aFlashmobOrganizers as $oUser) {
-      $strFlashmobCity = get_user_meta( $oUser->ID, 'flashmob_city', true );
-      if ($strFlashmobCity) {
-        $strTshirtCitySlug = str_replace( " ", "-", strtolower($strFlashmobCity) );
-        $strTshirtCitySlug = preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strTshirtCitySlug );
-        $strTshirtCitySlug = preg_replace( '~__+~', "_", $strTshirtCitySlug );
-        $strWhite = $strPluginDirPath . '/img/t-shirt-white-'.$strTshirtCitySlug.'.png';
-        $strBlack = $strPluginDirPath . '/img/t-shirt-black-'.$strTshirtCitySlug.'.png';
-//         $aTshirtImagePaths[$strWhite] = 1;
-//         $aTshirtImagePaths[$strBlack] = 1;
-        if (file_exists($strWhite) && file_exists($strBlack)) {
-          $aTshirtImages[$strTshirtCitySlug] = 1;
-        } else {
-          $aTshirtImages[$strTshirtCitySlug] = 0;
+    $strImagePath = $strPluginDirPath."/img/";
+    $strImagePathEscaped = preg_quote($strImagePath, "~");
+    $aTshirtImageCouples = array();
+    foreach ( glob($strImagePath . "t-shirt-*.png") as $strImgName) {
+      $aMatches = array();
+      $mixType = false;
+      if (preg_match( '~^('.$strImagePathEscaped.')?t-shirt-white-([a-zA-Z0-9_-]+).png$~', $strImgName, $aMatches )) {
+        $strTshirtCitySlug = $aMatches[2];
+        $strType = "white";
+      } elseif (preg_match( '~^('.$strImagePathEscaped.')?t-shirt-black-([a-zA-Z0-9_-]+).png$~', $strImgName, $aMatches )) {
+        $strTshirtCitySlug = $aMatches[2];
+        $strType = "black";
+      }
+      if ($strType) {
+        if (!isset($aTshirtImageCouples[$strTshirtCitySlug])) {
+          $aTshirtImageCouples[$strTshirtCitySlug] = array(
+            'white' => false,
+            'black' => false,
+          );
         }
+        $aTshirtImageCouples[$strTshirtCitySlug][$strType] = true;
+      }
+    }
+    foreach ($aTshirtImageCouples as $strTshirtCitySlug => $aTypes) {
+      if ($aTypes['white'] && $aTypes['black']) {
+        $aTshirtImages[$strTshirtCitySlug] = 1;
       }
     }
 
@@ -2244,7 +2253,7 @@ class FLORP{
       'img_path'                      => plugins_url( 'flashmob-organizer-profile/img/' ),
       'tshirt_imgs'                   => $aTshirtImages,
       'courses_info_disabled'         => $this->aOptions['bCoursesInfoDisabled'] ? 1 : 0,
-//       'tshirt_paths'                  => $aTshirtImagePaths,
+//       'all_imgs'                      => glob($strImagePath . "t-shirt-*.png"),
     );
     if (is_user_logged_in()) {
       $oCurrentUser = wp_get_current_user();

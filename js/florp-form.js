@@ -1096,6 +1096,45 @@
       }
     });
 
+    // Add preview on hover to t-shirt images //
+    jQuery(document).on('mouseover', 'img.florp-tshirt-color-label-img', function (e) {
+      var vOffset = -20,
+          hOffset = 20,
+          img = jQuery(this),
+          posV = {"left": (e.pageX + hOffset) + "px"},
+          posH = {"top": (e.pageY - vOffset) + "px"},
+          w = jQuery(window).width(),
+          h = jQuery(window).height()
+      jQuery("body").append("<p id='t-shirt-preview'><img src='" + img.attr('src') + "' alt='Image preview' /></p>");
+
+      $preview = jQuery("#t-shirt-preview")
+      $preview.css({
+        'display': 'block',
+      });
+      if (e.clientY > (h / 2)) {
+        var top = (e.pageY + vOffset - $preview.height())
+        if (top < 0) {
+          console.log($preview.height())
+          top = 0
+        }
+        posH = {"top": top + "px"}
+      }
+      var zIndex = {}
+      if (jQuery(".pum-container").length > 0) {
+        var zi = jQuery(".pum-container").css("z-index")
+        zIndex = {"z-index": 1999999999}
+        if ("undefined" !== typeof zi) {
+          zIndex = {"z-index": zi + "9"}
+        }
+      }
+//       if (e.clientX > (w / 2)) {
+//         posV = {"left": (e.pageX - hOffset - $preview.width()) + "px"}
+//       }
+      $preview.css(jQuery.extend({}, posV, posH, zIndex ));
+    }).on('mouseleave', '.florp-tshirt-color-label-img', function (e) {
+      jQuery('#t-shirt-preview').remove();
+    })
+
     if (florp.blog_type === "main") {
       // Toggle fields based on checkboxes //
       fnToggleFields($aTogglableSingleCheckboxCheckboxes, "checkbox");
@@ -1112,16 +1151,42 @@
       var $florpUserCitySelect = jQuery(".florp_user_city");
       var $florpFlashmobCitySelect = jQuery(".florp_flashmob_city");
       var $florpCoursesCitySelect = jQuery(".florp_courses_city");
-      if ($florpUserCitySelect.val() !== "null" && $florpFlashmobCitySelect.val() === "null") {
-        $florpFlashmobCitySelect.val($florpUserCitySelect.val())
+      var $florpNonUserCitySelects = jQuery(".florp_flashmob_city,.florp_courses_city")
+      $florpNonUserCitySelects.each(function () {
+        var $this = jQuery(this)
+        if ($this.val() === "null") {
+          $this.data("setByUser", "0")
+        } else {
+          $this.data("setByUser", "1")
+        }
+      }).change(function() {
+        var $this = jQuery(this)
+        if ($this.val() === "null") {
+          $this.data("setByUser", "0")
+        } else {
+          $this.data("setByUser", "1")
+        }
+      })
+
+      var fnSetCitiesToUserCity = function($u, $fc, bOnChange = false) {
+        if ($u.val() !== "null") {
+          $fc.each(function(index) {
+            var $this = jQuery(this)
+            if ($this.val() === "null" || (bOnChange && $this.data("setByUser") === "0")) {
+              $this.val($u.val()).data("setByUser", "0")
+            }
+          })
+        }
       }
-      if ($florpUserCitySelect.val() !== "null" && $florpCoursesCitySelect.val() === "null") {
-        $florpCoursesCitySelect.val($florpUserCitySelect.val())
-      }
+      fnSetCitiesToUserCity($florpUserCitySelect, $florpNonUserCitySelects)
+      $florpUserCitySelect.change(function() {
+        fnSetCitiesToUserCity($florpUserCitySelect, $florpNonUserCitySelects, true)
+      })
 
       // Replace tshirt color radio buttons with images //
       var fnChangeProfileTshirtImgs = function($city) {
-        var strImgCitySlug = $city.val().toLowerCase().replace(" ", "-").replace(/[^a-zA-Z0-9_-]/g, "_")
+        var strImgCitySlug = $city.val().toLowerCase().replace(/\s+/g, "-").replace(/[^a-zA-Z0-9_-]/g, "_")
+//         console.log(strImgCitySlug)
         if ("undefined" === typeof nfForms || "undefined" === typeof florp || "undefined" === typeof florp.form_id) {
           return;
         }
@@ -1313,7 +1378,7 @@
             if ($flashmobOrganizerCheckbox.is(":checked")) {
               $flashmobOrganizerCheckbox.removeAttr("checked").trigger("change")
             }
-            jQuery(this).val($florpUserCitySelect.val())
+//             jQuery(this).val($florpUserCitySelect.val())
           }
           fnFindLocation()
         }
@@ -1614,7 +1679,7 @@
           iUserID = $this.data("userId"),
           strDivID = $this.data("divId"),
           strFlashmobCity = $this.data("flashmobCity"),
-          strImgCitySlug = strFlashmobCity.toLowerCase().replace(" ", "-").replace(/[^a-zA-Z0-9_-]/g, "_")
+          strImgCitySlug = strFlashmobCity.toLowerCase().replace(/\s+/g, "-").replace(/[^a-zA-Z0-9_-]/g, "_")
       // console.log($this)
       var $form = jQuery("#florp-profile-form-wrapper-div #nf-form-"+florp.form_id+"-cont")
       if ("undefined" === typeof nfForms) {

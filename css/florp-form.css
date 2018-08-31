@@ -353,3 +353,22 @@ nf-field.florp-section-toggler{
 .florp-section-toggler.active h5:after {
     content: "\2212";
 }
+
+#florp-profile-form-wrapper-div input[type=checkbox]:focus {
+  box-shadow: none;
+}
+
+#t-shirt-preview{
+  position:absolute;
+  border:3px solid #ccc;
+  background: #ddd;
+  padding:5px;
+  display:none;
+  color:#fff;
+  box-shadow: 4px 4px 3px rgba(103, 115, 130, 1);
+  height: 40%;
+}
+#t-shirt-preview img {
+  position: relative;
+  max-height: 100%;
+}

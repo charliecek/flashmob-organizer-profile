@@ -10283,7 +10283,7 @@ $aFlorpNinjaFormExportData = array (
       'desc_text' => '<p class="florp-newsletter-banner">
   <img src="/wpsite/wp-content/plugins/flashmob-organizer-profile/img/newsletter-banner.jpg" alt="newsletter" title="newsletter">
 </p>',
-      'label' => 'NL:',
+      'label' => 'Newsletter',
       'key' => 'preference_newsletter',
       'type' => 'listcheckbox',
     ),
@@ -10321,8 +10321,8 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 11,
-      'type' => 'listselect',
+      'order' => 12,
+      'type' => 'listradio',
       'label' => 'Typ trička',
       'key' => 'flashmob_leader_tshirt_gender',
       'label_pos' => 'default',
@@ -10330,84 +10330,6 @@ $aFlorpNinjaFormExportData = array (
       'options' => 
       array (
         0 => 
-        array (
-          'errors' => 
-          array (
-          ),
-          'max_options' => 0,
-          'order' => 0,
-          'new' => false,
-          'options' => 
-          array (
-          ),
-          'label' => 'vyberte typ',
-          'value' => 'null',
-          'calc' => '0',
-          'selected' => 0,
-          'settingModel' => 
-          array (
-            'settings' => false,
-            'hide_merge_tags' => false,
-            'error' => false,
-            'name' => 'options',
-            'type' => 'option-repeater',
-            'label' => 'Options <a href="#" class="nf-add-new">Add New</a> <a href="#" class="extra nf-open-import-tooltip"><i class="fa fa-sign-in" aria-hidden="true"></i> Import</a>',
-            'width' => 'full',
-            'group' => '',
-            'value' => 
-            array (
-              0 => 
-              array (
-                'label' => 'One',
-                'value' => 'one',
-                'calc' => '',
-                'selected' => 0,
-                'order' => 0,
-              ),
-              1 => 
-              array (
-                'label' => 'Two',
-                'value' => 'two',
-                'calc' => '',
-                'selected' => 0,
-                'order' => 1,
-              ),
-              2 => 
-              array (
-                'label' => 'Three',
-                'value' => 'three',
-                'calc' => '',
-                'selected' => 0,
-                'order' => 2,
-              ),
-            ),
-            'columns' => 
-            array (
-              'label' => 
-              array (
-                'header' => 'Label',
-                'default' => '',
-              ),
-              'value' => 
-              array (
-                'header' => 'Value',
-                'default' => '',
-              ),
-              'calc' => 
-              array (
-                'header' => 'Calc Value',
-                'default' => '',
-              ),
-              'selected' => 
-              array (
-                'header' => '<span class="dashicons dashicons-yes"></span>',
-                'default' => 0,
-              ),
-            ),
-          ),
-          'manual_value' => true,
-        ),
-        1 => 
         array (
           'errors' => 
           array (
@@ -10481,7 +10403,7 @@ $aFlorpNinjaFormExportData = array (
           ),
           'manual_value' => true,
         ),
-        2 => 
+        1 => 
         array (
           'errors' => 
           array (
@@ -10556,19 +10478,19 @@ $aFlorpNinjaFormExportData = array (
           'manual_value' => true,
         ),
       ),
-      'container_class' => 'florp-class florp-registration-field florp-left florp-section-base',
+      'container_class' => 'florp-class florp-registration-field florp-left florp-section-base florp-multi-columns',
       'element_class' => 'flashmob_leader_tshirt_gender',
       'admin_label' => '',
       'help_text' => '',
-      'drawerDisabled' => false,
       'manual_key' => true,
+      'drawerDisabled' => false,
     ),
     51 => 
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 12,
+      'order' => 13,
       'type' => 'listradio',
       'label' => 'Webstránka školy / skupiny',
       'key' => 'school_webpage',
@@ -10812,7 +10734,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 13,
+      'order' => 14,
       'type' => 'listselect',
       'label' => 'Veľkosť trička',
       'key' => 'flashmob_leader_tshirt_size',
@@ -10904,11 +10826,15 @@ $aFlorpNinjaFormExportData = array (
           array (
           ),
           'max_options' => 0,
-          'label' => 'S',
-          'value' => 'S',
+          'order' => 1,
+          'new' => false,
+          'options' => 
+          array (
+          ),
+          'label' => 'XS',
+          'value' => 'XS',
           'calc' => '0',
           'selected' => 0,
-          'order' => 1,
           'settingModel' => 
           array (
             'settings' => false,
@@ -10978,8 +10904,8 @@ $aFlorpNinjaFormExportData = array (
           array (
           ),
           'max_options' => 0,
-          'label' => 'M',
-          'value' => 'M',
+          'label' => 'S',
+          'value' => 'S',
           'calc' => '0',
           'selected' => 0,
           'order' => 2,
@@ -11052,8 +10978,8 @@ $aFlorpNinjaFormExportData = array (
           array (
           ),
           'max_options' => 0,
-          'label' => 'L',
-          'value' => 'L',
+          'label' => 'M',
+          'value' => 'M',
           'calc' => '0',
           'selected' => 0,
           'order' => 3,
@@ -11126,13 +11052,165 @@ $aFlorpNinjaFormExportData = array (
           array (
           ),
           'max_options' => 0,
+          'label' => 'L',
+          'value' => 'L',
+          'calc' => '0',
+          'selected' => 0,
           'order' => 4,
+          'settingModel' => 
+          array (
+            'settings' => false,
+            'hide_merge_tags' => false,
+            'error' => false,
+            'name' => 'options',
+            'type' => 'option-repeater',
+            'label' => 'Options <a href="#" class="nf-add-new">Add New</a> <a href="#" class="extra nf-open-import-tooltip"><i class="fa fa-sign-in" aria-hidden="true"></i> Import</a>',
+            'width' => 'full',
+            'group' => '',
+            'value' => 
+            array (
+              0 => 
+              array (
+                'label' => 'One',
+                'value' => 'one',
+                'calc' => '',
+                'selected' => 0,
+                'order' => 0,
+              ),
+              1 => 
+              array (
+                'label' => 'Two',
+                'value' => 'two',
+                'calc' => '',
+                'selected' => 0,
+                'order' => 1,
+              ),
+              2 => 
+              array (
+                'label' => 'Three',
+                'value' => 'three',
+                'calc' => '',
+                'selected' => 0,
+                'order' => 2,
+              ),
+            ),
+            'columns' => 
+            array (
+              'label' => 
+              array (
+                'header' => 'Label',
+                'default' => '',
+              ),
+              'value' => 
+              array (
+                'header' => 'Value',
+                'default' => '',
+              ),
+              'calc' => 
+              array (
+                'header' => 'Calc Value',
+                'default' => '',
+              ),
+              'selected' => 
+              array (
+                'header' => '<span class="dashicons dashicons-yes"></span>',
+                'default' => 0,
+              ),
+            ),
+          ),
+          'manual_value' => true,
+        ),
+        5 => 
+        array (
+          'errors' => 
+          array (
+          ),
+          'max_options' => 0,
+          'order' => 5,
           'new' => false,
           'options' => 
           array (
           ),
           'label' => 'XL',
           'value' => 'XL',
+          'calc' => '0',
+          'selected' => 0,
+          'settingModel' => 
+          array (
+            'settings' => false,
+            'hide_merge_tags' => false,
+            'error' => false,
+            'name' => 'options',
+            'type' => 'option-repeater',
+            'label' => 'Options <a href="#" class="nf-add-new">Add New</a> <a href="#" class="extra nf-open-import-tooltip"><i class="fa fa-sign-in" aria-hidden="true"></i> Import</a>',
+            'width' => 'full',
+            'group' => '',
+            'value' => 
+            array (
+              0 => 
+              array (
+                'label' => 'One',
+                'value' => 'one',
+                'calc' => '',
+                'selected' => 0,
+                'order' => 0,
+              ),
+              1 => 
+              array (
+                'label' => 'Two',
+                'value' => 'two',
+                'calc' => '',
+                'selected' => 0,
+                'order' => 1,
+              ),
+              2 => 
+              array (
+                'label' => 'Three',
+                'value' => 'three',
+                'calc' => '',
+                'selected' => 0,
+                'order' => 2,
+              ),
+            ),
+            'columns' => 
+            array (
+              'label' => 
+              array (
+                'header' => 'Label',
+                'default' => '',
+              ),
+              'value' => 
+              array (
+                'header' => 'Value',
+                'default' => '',
+              ),
+              'calc' => 
+              array (
+                'header' => 'Calc Value',
+                'default' => '',
+              ),
+              'selected' => 
+              array (
+                'header' => '<span class="dashicons dashicons-yes"></span>',
+                'default' => 0,
+              ),
+            ),
+          ),
+          'manual_value' => true,
+        ),
+        6 => 
+        array (
+          'errors' => 
+          array (
+          ),
+          'max_options' => 0,
+          'order' => 6,
+          'new' => false,
+          'options' => 
+          array (
+          ),
+          'label' => 'XXL',
+          'value' => 'XXL',
           'calc' => '0',
           'selected' => 0,
           'settingModel' => 
@@ -11211,7 +11289,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 14,
+      'order' => 15,
       'type' => 'listradio',
       'label' => 'Farba trička',
       'key' => 'flashmob_leader_tshirt_color',
@@ -11380,7 +11458,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 15,
+      'order' => 16,
       'label_pos' => 'left',
       'required' => '0',
       'default' => '{usermeta:custom_school_webpage}',
@@ -11400,7 +11478,7 @@ $aFlorpNinjaFormExportData = array (
       'custom_mask' => '',
       'drawerDisabled' => false,
       'custom_name_attribute' => '',
-      'label' => 'Webstránka',
+      'label' => 'Vlastná webstránka',
       'key' => 'custom_school_webpage',
       'type' => 'textbox',
     ),
@@ -11409,7 +11487,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 16,
+      'order' => 17,
       'default' => '<h5 class="florp-courses-info-h5">Info o kurzoch</h5>',
       'container_class' => 'florp-class florp-profile-field florp-section-toggler florp-section-courses',
       'element_class' => '',
@@ -11423,7 +11501,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 17,
+      'order' => 18,
       'label_pos' => 'default',
       'required' => '0',
       'default' => '{usermeta:school_name}',
@@ -11452,7 +11530,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 18,
+      'order' => 19,
       'type' => 'checkbox',
       'label' => 'Vediem rueda kurzy',
       'key' => 'teacher',
@@ -11475,7 +11553,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 19,
+      'order' => 20,
       'label_pos' => 'above',
       'required' => '',
       'options' => 
@@ -21439,7 +21517,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 20,
+      'order' => 21,
       'default' => '<div class="florp-courses-map-preview-wrapper">
   <div class="florp-map-preview-title florp-left-with-button">
     <h5>Náhľad Vašich kurzov na mape</h5>
@@ -21468,7 +21546,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 21,
+      'order' => 22,
       'type' => 'textarea',
       'label' => 'Informácie o kurzoch zobrazené na mapke',
       'key' => 'courses_info',
@@ -21495,7 +21573,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 22,
+      'order' => 23,
       'type' => 'checkbox',
       'label' => 'Pridať druhé mesto kurzov',
       'key' => 'courses_in_city_2',
@@ -21518,7 +21596,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 23,
+      'order' => 24,
       'type' => 'checkbox',
       'label' => 'Pridať tretie mesto kurzov',
       'key' => 'courses_in_city_3',
@@ -21541,7 +21619,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 24,
+      'order' => 25,
       'label_pos' => 'above',
       'required' => '',
       'options' => 
@@ -31505,7 +31583,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 25,
+      'order' => 26,
       'label_pos' => 'above',
       'required' => '',
       'options' => 
@@ -41469,7 +41547,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 26,
+      'order' => 27,
       'type' => 'textarea',
       'label' => 'Informácie o kurzoch (2) zobrazené na mapke',
       'key' => 'courses_info_2',
@@ -41496,7 +41574,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 27,
+      'order' => 28,
       'type' => 'textarea',
       'label' => 'Informácie o kurzoch (3) zobrazené na mapke',
       'key' => 'courses_info_3',
@@ -41523,7 +41601,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 28,
+      'order' => 29,
       'default' => '<h5 class="florp-flashmob-info-h5">Info o flashmobe</h5>',
       'container_class' => 'florp-class florp-profile-field florp-flashmob florp-section-toggler florp-section-flashmob',
       'element_class' => '',
@@ -41537,7 +41615,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 29,
+      'order' => 30,
       'type' => 'checkbox',
       'label' => 'Zorganizujem rueda flashmob {flashmob_date[j. n. Y]}',
       'key' => 'flashmob_organizer',
@@ -41560,7 +41638,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 30,
+      'order' => 31,
       'label_pos' => 'left',
       'required' => '',
       'options' => 
@@ -51524,7 +51602,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 31,
+      'order' => 32,
       'type' => 'checkbox',
       'label' => 'Informácie Rueda lídra nezobrazovať na mape',
       'key' => 'hide_leader_info',
@@ -51547,7 +51625,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 32,
+      'order' => 33,
       'default' => '<p class="florp-flashmob-info-p">Nasledujúce položky sa budú dať vyplniť po uskutočnení flashmobu.</p>',
       'container_class' => 'florp-class florp-profile-field florp-flashmob florp-before-flashmob florp-section-flashmob',
       'element_class' => '',
@@ -51561,7 +51639,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 33,
+      'order' => 34,
       'label_pos' => 'above',
       'default' => '{usermeta:flashmob_number_of_dancers}',
       'placeholder' => '',
@@ -51586,7 +51664,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 34,
+      'order' => 35,
       'default' => '<div class="florp-map-preview-wrapper">
   <div class="florp-map-preview-title">
     <h5>Náhľad Vášho flashmobu na mape</h5>
@@ -51627,7 +51705,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 35,
+      'order' => 36,
       'label_pos' => 'above',
       'required' => '',
       'default' => '{usermeta:youtube_link}',
@@ -51661,7 +51739,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 36,
+      'order' => 37,
       'label_pos' => 'above',
       'required' => '0',
       'default' => '{usermeta:flashmob_address}',
@@ -51690,7 +51768,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 37,
+      'order' => 38,
       'label_pos' => 'default',
       'required' => '',
       'default' => '{usermeta:latitude}',
@@ -51719,7 +51797,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 38,
+      'order' => 39,
       'label_pos' => 'default',
       'required' => '',
       'default' => '{usermeta:longitude}',
@@ -51748,7 +51826,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 39,
+      'order' => 40,
       'container_class' => 'florp-class florp-antispam florp-registration-field',
       'element_class' => '',
       'size' => 'visible',
@@ -51762,7 +51840,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 40,
+      'order' => 41,
       'processing_label' => 'Processing',
       'container_class' => 'florp-class florp-registration-field florp-button-wrapper',
       'element_class' => 'florp_uloz_profil florp-button button',
