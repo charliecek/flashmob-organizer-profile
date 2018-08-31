@@ -5,12 +5,12 @@
  * Description: Creates shortcodes for flashmob organizer login / registration / profile editing form and for maps showing cities with videos of flashmobs for each year
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.3.0
+ * Version: 4.3.1
  */
 
 class FLORP{
 
-  private $strVersion = '4.3.0';
+  private $strVersion = '4.3.1';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -2367,7 +2367,7 @@ class FLORP{
       if (in_array( $this->strUserRolePending, (array) $oUser->roles )) {
         $strIsPending = " ({$this->strUserRolePendingName})";
       }
-      $strButtons = ""; // TODO https://wordpress.stackexchange.com/a/24308
+      $strButtons = ""; // TODO https://wordpress.stackexchange.com/a/24308 -> but on a separate screen!
       $strEcho .= '<tr>';
       $strEcho .=   '<td>'.$oUser->first_name.' '.$oUser->last_name.$strIsPending.$strButtons.'</td>';
       $strEcho .=   '<td><a name="'.$oUser->ID.'">'.$oUser->user_email.'</a></td>';
@@ -2461,7 +2461,7 @@ class FLORP{
         foreach ($aReplacements as $strKey => $aReplacementArr) {
           $aParticipantData[$strKey] = str_replace( $aReplacementArr['from'], $aReplacementArr['to'], $aParticipantData[$strKey]);
         }
-        $strButtons = ""; // TODO https://wordpress.stackexchange.com/a/24308
+        $strButtons = ""; // TODO https://wordpress.stackexchange.com/a/24308 -> but on a separate screen!
         $strEcho .= '<tr>';
         $strEcho .=   '<td>'.$aParticipantData['first_name'].' '.$aParticipantData['last_name'].$strButtons.'</td>';
         $strEcho .=   '<td><a name="'.$aParticipantData['user_email'].'">'.$aParticipantData['user_email'].'</a></td>';

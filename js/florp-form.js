@@ -893,6 +893,7 @@
     jQuery(".florp_disabled select,.florp_disabled input").prop("disabled", true);
     if (florp.blog_type === "main" && florp.has_participants == 1) {
       jQuery("input.flashmob_organizer").prop("disabled", true)
+      jQuery(".florp_flashmob_city").prop("disabled", true)
     }
 
     // Fix the info circle's position for the newsletter checkbox //
@@ -1374,7 +1375,7 @@
       // Onchange event when flashmob_city is changed //
       $florpFlashmobCitySelect.change(function() {
         if (jQuery.trim(jQuery(".florp-flashmob-address").first().val()) === "") {
-          if (jQuery(this).val() === "null") {
+          if (jQuery(this).val() === "null" && florp.has_participants != 1) {
             if ($flashmobOrganizerCheckbox.is(":checked")) {
               $flashmobOrganizerCheckbox.removeAttr("checked").trigger("change")
             }

@@ -93,7 +93,6 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
               $aSubscriberType = array();
             }
             $aSubscriberType[] = $strKey;
-            break;
           }
         }
         foreach ($data['fields'] as $field_id => $field_value ) {
@@ -142,6 +141,9 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
               break;
             case "flashmob_city":
               if ($strValue === "null") {
+                if (in_array("flashmob_organizer", $aSubscriberType)) {
+                  $data[ 'errors' ][ 'form' ][$strKey] = $strLabel."Zaškrtli ste, že zorganizujete flashmob, takže toto pole je povinné!";
+                }
                 break;
               }
               if (!in_array("flashmob_organizer", $aSubscriberType)) {
