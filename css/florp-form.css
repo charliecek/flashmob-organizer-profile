@@ -115,11 +115,11 @@ nf-field.florp-section-toggler{
 .florp-video .label-left .nf-field-description ul{
   margin-left: 1.5rem;
 }
-.florp-multi-columns.florp-multi-columns-2 .nf-field-element ul>li{
+body.state_default .florp-multi-columns.florp-multi-columns-2 .nf-field-element ul>li{
   width:49%;
   margin-right: 0 !important;
 }
-.florp-multi-columns.florp-multi-columns-max-2 .nf-field-element ul>li{
+body.state_default .florp-multi-columns.florp-multi-columns-max-2 .nf-field-element ul>li{
   max-width: 45%;
   max-width: calc(50% - 2em);
 }
@@ -183,6 +183,7 @@ body.state_default .florp-newsletter-banner.participants img{
 .florp-invisible-label .nf-field-label{
   visibility: hidden;
 }
+/* TODO on small screens, make radiobuttons whole line */
 
 .florp-leader-tshirt-color .nf-field-element ul>li input,
 .florp-participant-tshirt-color .nf-field-element ul>li input{
@@ -312,6 +313,9 @@ body.state_default .florp-newsletter-banner.participants img{
   z-index: 1999999999 !important;
 }
 .jBox-wrapper {
+  max-width: 90% !important;
+}
+body.state_default .jBox-wrapper {
   max-width: 60% !important;
 }
 .florp-leader-participants-table{

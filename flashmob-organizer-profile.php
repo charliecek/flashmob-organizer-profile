@@ -5,12 +5,12 @@
  * Description: Creates shortcodes for flashmob organizer login / registration / profile editing form and for maps showing cities with videos of flashmobs for each year
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.3.4
+ * Version: 4.3.5
  */
 
 class FLORP{
 
-  private $strVersion = '4.3.4';
+  private $strVersion = '4.3.5';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -3437,7 +3437,7 @@ class FLORP{
         $this->aOptions[$strOptionKey] = stripslashes($val);
       }
     }
-    if (defined('FLORP_DEVEL_PURGE_PARTICIPANTS_ON_SAVE') || FLORP_DEVEL_PURGE_PARTICIPANTS_ON_SAVE === true ) {
+    if (defined('FLORP_DEVEL_PURGE_PARTICIPANTS_ON_SAVE') && FLORP_DEVEL_PURGE_PARTICIPANTS_ON_SAVE === true ) {
       $this->aOptions['aParticipants'] = array();
     }
     update_site_option( $this->strOptionKey, $this->aOptions, true );
@@ -3697,7 +3697,24 @@ class FLORP{
     }
     $aSites = wp_get_sites();
     $strCity = $this->removeAccents( strtolower($strCity) );
-    foreach ( $aSites as $i => $aSite ) {
+
+    // Check also other variations: with dash,underscore,"" instead of spaces; initials //
+    $aVariations = array();
+    foreach (array("", "-", "_") as $delimiter) {
+      $aVariations[] = str_replace( " ", $delimiter, $strCity );
+    }
+    $aWords = preg_split( "/\s+/", $strCity );
+    if (is_array($aWords) && count($aWords) > 1) {
+      $strInitials = "";
+      foreach ($aWords as $strWord) {
+        $strInitials .= $strWord[0];
+      }
+      if (strlen($strInitials) > 1) {
+        $aVariations[] = $strInitials;
+      }
+    }
+
+    foreach ($aSites as $i => $aSite) {
       if ($aSite['public'] != 1 || $aSite['deleted'] == 1 || $aSite['archived'] == 1) {
         continue;
       }
@@ -3708,8 +3725,13 @@ class FLORP{
         continue;
       }
       $strSubDomain = $aParts[0];
-      if (strpos($strCity, $strSubDomain) !== false || stripos($strSubDomain, $strCity) !== false) {
+      if (strpos($strCity, $strSubDomain) !== false) {
         return "http://".$strDomain;
+      }
+      foreach ($aVariations as $strVariation) {
+        if ($strVariation === $strSubDomain) {
+          return "http://".$strDomain;
+        }
       }
     }
     return false;

@@ -49,6 +49,24 @@
 //     }
 //   });
 
+  jQuery( document ).on( 'ready', function() {
+    jQuery.fn.jBox = function (type, options){
+      // Variables type and object are required
+      !type && (type = {});
+      !options && (options = {});
+
+      // Return a new instance of jBox with the selector as attached element
+      var jb = new jBox(type, jQuery.extend(options, {
+        attach: this
+      }))
+      if ("undefined" === typeof window['jboxes']) {
+        window['jboxes'] = {}
+      }
+      window['jboxes'][jb.id] = jb
+      return jb
+    }
+  })
+
   function florpObjectLength(a) {
     var count = 0;
     var i;
@@ -884,7 +902,7 @@
       thisObj.closest("nf-field").addClass(strFilteredClasses);
     });
 
-    jQuery(".nf-help").removeClass("nf-help");
+    jQuery(".nf-help").removeClass("nf-help").addClass("nf-help-removed");
 
     // Hide all course related fields if not allowed //
     if (florp.courses_info_disabled == 1) {
@@ -895,7 +913,44 @@
     if (florp.popup_id > 0) {
       jQuery('body').on('DOMNodeInserted', '.jBox-wrapper', function () {
         // console.log("jBox-wrapper div was created")
-        jQuery( this ).addClass("z-index-1999999999")
+        var $this = jQuery( this )
+        $this.addClass("z-index-1999999999")
+        var id = $this.attr("id")
+        if ("undefined" !== typeof window["jboxes"] && "undefined" !== typeof window["jboxes"][id]) {
+          var jb = window["jboxes"][id]
+          jb.options.onOpen = function() {
+            console.log("opening")
+            var $el = this.target
+            if (window[id+"_interval"]) {
+//               console.info("Clearing old interval")
+              clearInterval(window[id+"_interval"]);
+              window[id+"_interval"] = false
+            }
+            window[id+"_intervalCount"] = 0
+            window[id+"_interval"] = setInterval(function (_jb, $target) {
+              window[_jb.id+"_intervalCount"]++
+              if (_jb.isOpen && !_jb.isOpening) {
+                if ($target.length > 0 && "undefined" !== typeof _jb.pos && "undefined" !== typeof _jb.pos.top && "undefined" !== typeof $target.offset().top) {
+                  if (_jb.pos.top < 0) {
+                    _jb.setHeight($target.offset().top - 20)
+                  }
+                  clearInterval(window[_jb.id+"_interval"]);
+                  window[_jb.id+"_interval"] = false
+//                   console.info("clearing interval")
+                }
+                if (window[_jb.id+"_intervalCount"] > 10) {
+                  clearInterval(window[_jb.id+"_interval"]);
+                  window[_jb.id+"_interval"] = false
+                  console.warn("clearing interval - reached limit")
+                }
+              } else {
+//                 console.info("running interval")
+              }
+            }, 200, this, $el);
+          }
+        } else {
+          console.log(window["jboxes"])
+        }
       });
     }
 
