@@ -1140,7 +1140,7 @@
       if (e.clientY > (h / 2)) {
         var top = (e.pageY + vOffset - $preview.height())
         if (top < 0) {
-          console.log($preview.height())
+//           console.log($preview.height())
           top = 0
         }
         posH = {"top": top + "px"}
@@ -1153,9 +1153,13 @@
           zIndex = {"z-index": zi + "9"}
         }
       }
-//       if (e.clientX > (w / 2)) {
-//         posV = {"left": (e.pageX - hOffset - $preview.width()) + "px"}
-//       }
+      if (e.clientX > (w / 2)) {
+        var left = (e.pageX - hOffset - $preview.width())
+        if (left < 0) {
+          left = 0
+        }
+        posV = {"left": left + "px"}
+      }
       $preview.css(jQuery.extend({}, posV, posH, zIndex ));
     }).on('mouseleave', '.florp-tshirt-color-label-img', function (e) {
       jQuery('#t-shirt-preview').remove();
