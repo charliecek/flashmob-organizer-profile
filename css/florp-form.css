@@ -6,6 +6,7 @@ nf-field select[disabled] {
   cursor: not-allowed;
   opacity: 0.5;
 }
+
 body.state_default nf-field.florp-left{
   float: left;
   width: 49%;
@@ -123,20 +124,20 @@ nf-field.florp-section-toggler{
   max-width: calc(50% - 2em);
 }
 
-.florp-multi-columns.florp-columns-like-right-left .nf-field-label{
+body.state_default .florp-multi-columns.florp-columns-like-right-left .nf-field-label{
   clear: both;
   width: 17.15%;
   float: left;
   padding-right: 1em;
 }
-.florp-multi-columns.florp-columns-like-right-left .nf-field-element{
+body.state_default .florp-multi-columns.florp-columns-like-right-left .nf-field-element{
   float: right;
   width: 81.85%;
 }
-.florp-multi-columns.florp-columns-like-right-left.florp-multi-columns-2 .nf-field-element ul>li{
+body.state_default .florp-multi-columns.florp-columns-like-right-left.florp-multi-columns-2 .nf-field-element ul>li{
   margin-right: 13% !important;
 }
-.florp-multi-columns.florp-columns-like-right-left.florp-multi-columns-2 .nf-field-element ul>li:last-of-type{
+body.state_default .florp-multi-columns.florp-columns-like-right-left.florp-multi-columns-2 .nf-field-element ul>li:last-of-type{
   margin-right: 0 !important;
   width: auto;
 }
@@ -155,7 +156,23 @@ nf-field.florp-section-toggler{
 .florp-newsletter-banner img{
   width: 65%;
 }
+.florp-mobile {
+  display: block;
+}
+.florp-desktop {
+  display: none;
+}
+body.state_default .florp-mobile {
+  display: none;
+}
+body.state_default .florp-desktop {
+  display: block;
+}
 .florp-newsletter-banner.participants img{
+  margin-left: 35%;
+
+}
+body.state_default .florp-newsletter-banner.participants img{
   position: absolute;
   right: 0;
   top: -2em;

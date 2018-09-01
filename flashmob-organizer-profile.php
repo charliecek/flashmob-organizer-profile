@@ -5,12 +5,12 @@
  * Description: Creates shortcodes for flashmob organizer login / registration / profile editing form and for maps showing cities with videos of flashmobs for each year
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.3.2
+ * Version: 4.3.3
  */
 
 class FLORP{
 
-  private $strVersion = '4.3.2';
+  private $strVersion = '4.3.3';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -1047,6 +1047,7 @@ class FLORP{
   }
 
   private function is_newsletter_subscriber( $strEmail ) {
+    // TODO: check also LIST //
     $aRow = $this->get_newsletter_subscriber( $strEmail );
     if ($aRow) {
       return isset($aRow["status"]) && $aRow["status"] === "C"; // Confirmed //
@@ -2653,6 +2654,8 @@ class FLORP{
       // echo "<pre>" .var_export($this->get_logs(), true). "</pre>";
       // foreach($this->aOptions['aParticipants'] as $i => $a) {foreach($a as $e => $ap) {$this->aOptions['aParticipants'][$i][$e]['leader_notified']=false;}}; update_site_option( $this->strOptionKey, $this->aOptions, true );
       // echo "<pre>" .var_export($this->aOptions['aParticipants'], true). "</pre>";
+      // echo "<pre>" .var_export(wp_get_sites(), true). "</pre>";
+      // echo "<pre>" .var_export($this->findCityWebpage( "Bánovce nad Bebravou" ), true). "</pre>";
     }
 
     $aBooleanOptionsChecked = array();
@@ -3359,9 +3362,8 @@ class FLORP{
               </th>
               <td>
                 %%wpEditorMarkerInfoWindowTemplateOrganizer%%
-                <span style="width: 100%;">Placeholdre: <code>%%flashmob_city%%</code>, <code>%%organizer%%</code>*, <code>%%signup%%</code>*, <code>%%participant_count%%</code>*, <code>%%year%%</code>*, <code>%%school%%</code>*<sup>+</sup>, <code>%%school_web%%</code>*<sup>+</sup>, <code>%%dancers%%</code>*, <code>%%note%%</code>*, <code>%%embed_code%%</code></span><br>
+                <span style="width: 100%;">Placeholdre: <code>%%flashmob_city%%</code>, <code>%%organizer%%</code>*, <code>%%signup%%</code>*, <code>%%participant_count%%</code>*, <code>%%year%%</code>*, <code>%%school%%</code>*, <code>%%web%%</code>*, <code>%%flashmob%%</code>*, <code>%%dancers%%</code>*, <code>%%note%%</code>*, <code>%%embed_code%%</code></span><br>
                 <span style="width: 100%;">*Pozor: nepridavaj zalomenie riadkov (&lt;br&gt;, &lt;br /&gt;) pred a za placeholdre s hviezdickou - ak sa zamenia za prazdny text, ostane po nich prazdny riadok!</span><br>
-                <span style="width: 100%;"><sup>+</sup> <code>%%school_web%%</code> sa zobrazí len ak nie je povolené zobrazovanie kurzov vo formulári alebo je prázdne meno školy.</span>
               </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
@@ -3650,6 +3652,69 @@ class FLORP{
     return "";
   }
 
+  private function removeAccents($strString) {
+    return strtr( $strString, array(
+      'ľ' => 'l',
+      'Ľ' => 'L',
+      'ĺ' => 'l',
+      'Ĺ' => 'L',
+      'š' => 's',
+      'Š' => 'S',
+      'č' => 'c',
+      'Č' => 'C',
+      'ť' => 't',
+      'Ť' => 'T',
+      'ž' => 'z',
+      'Ž' => 'Z',
+      'ý' => 'y',
+      'Ý' => 'Y',
+      'á' => 'a',
+      'Á' => 'A',
+      'ä' => 'a',
+      'Ä' => 'A',
+      'í' => 'i',
+      'Í' => 'I',
+      'é' => 'e',
+      'É' => 'E',
+      'ú' => 'u',
+      'Ú' => 'U',
+      'ň' => 'n',
+      'Ň' => 'N',
+      'ô' => 'o',
+      'Ô' => 'O',
+      'ó' => 'o',
+      'Ó' => 'O',
+      'ř' => 'r',
+      'Ř' => 'R',
+      'ŕ' => 'r',
+      'Ŕ' => 'R',
+    ));
+  }
+
+  private function findCityWebpage( $strCity ) {
+    if ($strCity === "null") {
+      return false;
+    }
+    $aSites = wp_get_sites();
+    $strCity = $this->removeAccents( strtolower($strCity) );
+    foreach ( $aSites as $i => $aSite ) {
+      if ($aSite['public'] != 1 || $aSite['deleted'] == 1 || $aSite['archived'] == 1) {
+        continue;
+      }
+      $strDomain = $aSite['domain'];
+      $iID = $aSite['blog_id'];
+      $aParts = explode( ".", $strDomain );
+      if (!is_array($aParts) || count($aParts) !== 3) {
+        continue;
+      }
+      $strSubDomain = $aParts[0];
+      if (strpos($strCity, $strSubDomain) !== false || stripos($strSubDomain, $strCity) !== false) {
+        return "http://".$strDomain;
+      }
+    }
+    return false;
+  }
+
   private function getMarkerInfoWindowContent( $aInfoWindowData ) {
     $bHideLeaderInfo = isset($aInfoWindowData['hide_leader_info']) && isset($aInfoWindowData['hide_leader_info']['value']) && $aInfoWindowData['hide_leader_info']['value'] == '1';
     if (empty($aInfoWindowData['user_webpage']['value'])) {
@@ -3660,7 +3725,7 @@ class FLORP{
 
     $strFacebook = '';
     if (!$bHideLeaderInfo && !empty($aInfoWindowData['facebook']['value'])) {
-      $strFacebookLabel = preg_replace( '~^https?://(www\.)?~', "", $aInfoWindowData['facebook']['value'] );
+      $strFacebookLabel = preg_replace( '~^https?://(www\.)?|/$~', "", $aInfoWindowData['facebook']['value'] );
       $strFacebook = $this->getInfoWindowLabel('facebook') . '<a href="'.$aInfoWindowData['facebook']['value'].'" target="_blank">'.$strFacebookLabel.'</a>';
     }
 
@@ -3677,8 +3742,10 @@ class FLORP{
           }
           break;
         case "vytvorit":
-          // TODO make a map of "city" => city_webpage - create dynamically generated options
-          // TODO are there any among archived ones?
+          $strSubDomainPage = $this->findCityWebpage( $aInfoWindowData['user_city']['value'] );
+          if ($strSubDomainPage) {
+            $strSchoolWebpage = $strSubDomainPage;
+          }
         default:
           break;
       }
@@ -3697,21 +3764,24 @@ class FLORP{
           }
           break;
         case "vytvorit":
-          // TODO make a map of "city" => city_webpage - create dynamically generated options
+          $strSubDomainPage = $this->findCityWebpage( $aInfoWindowData['user_city']['value'] );
+          if ($strSubDomainPage) {
+            $strSchoolWebpage = $strSubDomainPage;
+          }
         default:
           break;
       }
     }
     $strWeb = ''; // In new maps - webpage and school name is not connected //
     if (!empty($strWebpage)) {
-      $strWebLabel = preg_replace( '~^https?://(www\.)?~', "", $strWebpage );
+      $strWebLabel = preg_replace( '~^https?://(www\.)?|/$~', "", $strWebpage );
       $strWeb = $this->getInfoWindowLabel('web') . '<a href="'.$strWebpage.'" target="_blank">'.$strWebLabel.'</a>';
     }
 
     $strSchool = '';
     if ($this->aOptions["bCoursesInfoDisabled"] || empty($aInfoWindowData['school_name']['value'])) {
       if (!empty($strSchoolWebpage)) {
-        $strSchoolWebpageLabel = preg_replace( '~^https?://(www\.)?~', "", $strSchoolWebpage );
+        $strSchoolWebpageLabel = preg_replace( '~^https?://(www\.)?|/$~', "", $strSchoolWebpage );
         $strWeb = $this->getInfoWindowLabel('web') . '<a href="'.$strSchoolWebpage.'" target="_blank">'.$strSchoolWebpageLabel.'</a>';
       }
     } else {
