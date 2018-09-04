@@ -199,6 +199,17 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
   //       $data[ 'errors' ][ 'form' ][] = 'DEVEL STOP';
       } elseif ($form_id == florp_get_profile_form_id_flashmob()) {
         $bGenderOK = false;
+        $aKeyToValue = array();
+        $aKeyToLabel = array();
+        foreach ($data['fields'] as $field_id => $field_value ) {
+          $strKey = $field_value['key'];
+          $strValue = $field_value['value'];
+          $aKeyToValue[$strKey] = $strValue;
+          $aKeyToLabel[$strKey] = "";
+          if (!empty($field_value['label'])) {
+            $aKeyToLabel[$strKey] = $field_value['label'];
+          }
+        }
         foreach ($data['fields'] as $field_id => $field_value ) {
           $strKey = $field_value['key'];
           $strValue = $field_value['value'];
@@ -218,12 +229,36 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
           } elseif ($strType === 'listradio' && $field_value['required'] == 1 && !$strValue) {
             $data[ 'errors' ][ 'form' ][$strKey] = '"'.$field_value['label'].'" je povinné pole';
           }
-//           $data[ 'errors' ][ 'form' ][] = '<pre>'.var_export($data['fields'], true).'</pre>';
-//           $data[ 'errors' ][ 'form' ][] = 'DEVEL STOP';
         }
         if (empty($data[ 'errors' ][ 'form' ]) && !$bGenderOK) {
           $data[ 'errors' ][ 'form' ][$strKey] = '"Pohlavie" je povinné pole!';
         }
+//         $data[ 'errors' ][ 'form' ][] = '<pre>'.var_export($aKeyToLabel, true).'</pre>';
+        if (isset($aKeyToValue['preferences']) && is_array($aKeyToValue['preferences']) && in_array("flashmob_participant_tshirt", $aKeyToValue['preferences'])) {
+          $aRequiredFields = array(
+            "flashmob_participant_tshirt_gender" => "notEmpty",
+            "flashmob_participant_tshirt_size" => "notNull",
+            "flashmob_participant_tshirt_color" => "notEmpty",
+          );
+          foreach ($aRequiredFields as $strFieldKey => $strCheckType) {
+            $bError = false;
+            switch ($strCheckType) {
+              case "notNull":
+                $bError = (!isset($aKeyToValue[$strFieldKey]) || empty($aKeyToValue[$strFieldKey]) || $aKeyToValue[$strFieldKey] === 'null');
+                break;
+              case "notEmpty":
+                $bError = (!isset($aKeyToValue[$strFieldKey]) || empty($aKeyToValue[$strFieldKey]));
+                break;
+              default:
+            }
+            if ($bError) {
+              $data[ 'errors' ][ 'form' ][$strFieldKey] = '"'.$aKeyToLabel[$strFieldKey].'" je povinné pole, ak ste zaškrtli pole "Chcem pamätné Flashmob tričko"';
+            }
+          }
+        }
+//         $data[ 'errors' ][ 'form' ][] = '<pre>'.var_export($data['fields'], true).'</pre>';
+//         $data[ 'errors' ][ 'form' ][] = '<pre>'.var_export($aKeyToValue, true).'</pre>';
+//         $data[ 'errors' ][ 'form' ][] = 'DEVEL STOP';
       }
       return $data;
     }
