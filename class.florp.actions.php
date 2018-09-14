@@ -145,7 +145,7 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
               }
               break;
             case "flashmob_city":
-              if ($strValue === "null") {
+              if ($bUserIsLoggedIn && $strValue === "null") {
                 if (in_array("flashmob_organizer", $aSubscriberType)) {
                   $data[ 'errors' ][ 'form' ][$strKey] = $strLabel."Zaškrtli ste, že zorganizujete flashmob, takže toto pole je povinné!";
                 }
@@ -173,7 +173,7 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
             default:
           }
         }
-        if (!empty($aPwdCheck)) {
+        if (!empty($aPwdCheck) || !$bUserIsLoggedIn) {
           if (!empty($aPwdCheck['user_pass']) && empty($aPwdCheck['passwordconfirm'])) {
             $data[ 'errors' ][ 'form' ]['user_pass'] = 'Nezadali ste heslo na potvrdenie';
           } elseif ($aPwdCheck['user_pass'] !== $aPwdCheck['passwordconfirm']) {
@@ -252,7 +252,7 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
               default:
             }
             if ($bError) {
-              $data[ 'errors' ][ 'form' ][$strFieldKey] = '"'.$aKeyToLabel[$strFieldKey].'" je povinné pole, ak ste zaškrtli pole "Chcem pamätné Flashmob tričko"';
+              $data[ 'errors' ][ 'form' ][$strFieldKey] = '"'.$aKeyToLabel[$strFieldKey].'" je povinné pole!';
             }
           }
         }

@@ -1285,10 +1285,10 @@
           $this.prop("src", tshirtImgPath).data( "previewPath", tshirtImgPreviewPath )
         })
       }
-      $florpUserCitySelect.each(function(index) {
+      $florpFlashmobCitySelect.each(function(index) {
         fnChangeProfileTshirtImgs(jQuery(this))
       })
-      $florpUserCitySelect.change(function() {
+      $florpFlashmobCitySelect.change(function() {
         fnChangeProfileTshirtImgs(jQuery(this))
       })
 
