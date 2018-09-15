@@ -5,12 +5,12 @@
  * Description: Creates shortcodes for flashmob organizer login / registration / profile editing form and for maps showing cities with videos of flashmobs for each year
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.4.1
+ * Version: 4.4.2
  */
 
 class FLORP{
 
-  private $strVersion = '4.4.1';
+  private $strVersion = '4.4.2';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -4216,6 +4216,7 @@ class FLORP{
       'webpage' => $aInfoWindowData['webpage']['value'],
       'custom_webpage' => $aInfoWindowData['custom_webpage']['value'],
       'user_city' => $aInfoWindowData['user_city']['value'],
+      'flashmob_city' => $aInfoWindowData['flashmob_city']['value'],
       'school_name' => $aInfoWindowData['school_name']['value'],
       'bHideLeaderInfo' => $bHideLeaderInfo,
       'bReturnAnchor' => true,
