@@ -5,12 +5,12 @@
  * Description: Creates shortcodes for flashmob organizer login / registration / profile editing form and for maps showing cities with videos of flashmobs for each year
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.4.2
+ * Version: 4.4.3
  */
 
 class FLORP{
 
-  private $strVersion = '4.4.2';
+  private $strVersion = '4.4.3';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -4830,6 +4830,14 @@ class FLORP{
     return $this->iProfileFormNinjaFormIDFlashmob;
   }
 
+  public function is_main_blog() {
+    return $this->isMainBlog;
+  }
+
+  public function is_flashmob_blog() {
+    return $this->isFlashmobBlog;
+  }
+
   public function get_message( $strKey = false, $strDefault = "" ) {
     $aMessages = array(
       'login_success' => $this->aOptions['strLoginSuccessfulMessage'],
@@ -4927,6 +4935,14 @@ function florp_get_profile_form_id_main() {
 function florp_get_profile_form_id_flashmob() {
   global $FLORP;
   return $FLORP->get_profile_form_id_flashmob();
+}
+function florp_is_main_blog() {
+  global $FLORP;
+  return $FLORP->is_main_blog();
+}
+function florp_is_flashmob_blog() {
+  global $FLORP;
+  return $FLORP->is_flashmob_blog();
 }
 function florp_profile_form_loader( $aAttributes = array() ) {
   return;

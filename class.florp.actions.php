@@ -59,7 +59,7 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
 //           .'==== $data ===='.PHP_EOL.var_export( $data, true ).PHP_EOL
 //         //, FILE_APPEND | LOCK_EX
 //       );
-      if ($form_id == florp_get_profile_form_id_main()) {
+      if (florp_is_main_blog() && $form_id == florp_get_profile_form_id_main()) {
         setcookie('florp-form-saved', "0", time() + (1 * 24 * 60 * 60), '/');
         $aPwdCheck = array();
         $aVideoTypes= array(
@@ -197,7 +197,7 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
   //         $data[ 'errors' ][ 'form' ][] = '<pre>'.var_export($data['fields'], true).'</pre>';
   //       }
   //       $data[ 'errors' ][ 'form' ][] = 'DEVEL STOP';
-      } elseif ($form_id == florp_get_profile_form_id_flashmob()) {
+      } elseif (florp_is_flashmob_blog() && $form_id == florp_get_profile_form_id_flashmob()) {
         $bGenderOK = false;
         $aKeyToValue = array();
         $aKeyToLabel = array();
