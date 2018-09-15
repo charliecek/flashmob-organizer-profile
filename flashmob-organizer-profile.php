@@ -5,12 +5,12 @@
  * Description: Creates shortcodes for flashmob organizer login / registration / profile editing form and for maps showing cities with videos of flashmobs for each year
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.4.0
+ * Version: 4.4.1
  */
 
 class FLORP{
 
-  private $strVersion = '4.4.0';
+  private $strVersion = '4.4.1';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -2624,7 +2624,7 @@ class FLORP{
     echo '</div><!-- .wrap -->';
   }
 
-  private function get_tshirts($bOnlyUnpaid = false, $bCSV = false) {
+  private function get_tshirts($iPaidFlag = 0, $bCSV = false) { // -1: unpaid, 1: paid, 0: all
     $aLeaders = $this->getFlashmobSubscribers( 'flashmob_organizer' );
     $aTshirtsOption = $this->aOptions["aTshirts"];
 //     echo "<pre>";var_dump($aTshirtsOption);echo "</pre>";
@@ -2646,28 +2646,41 @@ class FLORP{
         },
         get_user_meta( $oUser->ID )
       );
+      $aWebpageArgs = array(
+        'id' => $oUser->ID,
+        'bReturnAnchor' => !$bCSV,
+        'bInfoWindow' => false,
+      );
       $aTshirts[] = array(
         "id" => "leader-".$oUser->ID,
         "name" => $oUser->first_name.' '.$oUser->last_name,
         "user_id" => $oUser->ID,
         "email" => $oUser->user_email,
         "is_leader" => true,
-        "flashmob_city" => $aAllMeta['flashmob_city'], // TODO: if this is OK, then change the JS of tshirt previews
+        "flashmob_city" => $aAllMeta['flashmob_city'],
         "type" => "Líder",
+        "leader" => "-",
         "properties" => array(
+          "webpage" => $this->get_leader_webpage($aWebpageArgs),
           "tshirt_size" => isset($aAllMeta['flashmob_leader_tshirt_size']) ? $aAllMeta['flashmob_leader_tshirt_size'] : "n/a",
           "tshirt_gender" => isset($aAllMeta['flashmob_leader_tshirt_gender']) ? $aAllMeta['flashmob_leader_tshirt_gender'] : "n/a",
           "tshirt_color" => isset($aAllMeta['flashmob_leader_tshirt_color']) ? $aAllMeta['flashmob_leader_tshirt_color'] : "n/a",
         ),
       );
     }
-    $aParticipants = $this->get_flashmob_participants( 0, false, true );
+    $aParticipants = $this->get_flashmob_participants( 0, false, false );
     foreach ($aParticipants as $iLeaderID => $aParticipantsOfLeader) {
       foreach ($aParticipantsOfLeader as $strEmail => $aParticipantData) {
         if (!in_array("flashmob_participant_tshirt", $aParticipantData["preferences"])) {
 //           echo "<pre>";var_dump($aParticipantData);echo "</pre>";
           continue;
         }
+        $aWebpageArgs = array(
+          'id' => $iLeaderID,
+          'bReturnAnchor' => !$bCSV,
+          'bInfoWindow' => false,
+        );
+        $oLeader = get_user_by( 'id', $iLeaderID );
         $aTshirts[] = array(
           "id" => "participant-".$iLeaderID."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail),
           "name" => $aParticipantData['first_name'].' '.$aParticipantData['last_name'],
@@ -2677,7 +2690,9 @@ class FLORP{
           "is_leader" => false,
           "flashmob_city" => $aParticipantData['flashmob_city'],
           "type" => "Účastník",
+          "leader" => "{$oLeader->first_name} {$oLeader->last_name}",
           "properties" => array(
+            "webpage" => $this->get_leader_webpage($aWebpageArgs),
             "tshirt_size" => isset($aParticipantData['flashmob_participant_tshirt_size']) ? $aParticipantData['flashmob_participant_tshirt_size'] : "n/a",
             "tshirt_gender" => isset($aParticipantData['flashmob_participant_tshirt_gender']) ? $aParticipantData['flashmob_participant_tshirt_gender'] : "n/a",
             "tshirt_color" => isset($aParticipantData['flashmob_participant_tshirt_color']) ? $aParticipantData['flashmob_participant_tshirt_color'] : "n/a",
@@ -2688,12 +2703,15 @@ class FLORP{
     foreach ($aTshirts as $key => $aTshirtData) {
       $bPaid = false;
       if ($aTshirtData["is_leader"]) {
-        $bPaid = (isset($aTshirtsOption["leaders"][$aTshirtData["user_id"]]) && isset($aTshirtsOption["leaders"][$aTshirtData["user_id"]]["paid"]) && $aTshirtsOption["leaders"][$aTshirtData["user_id"]]["paid"] === true);
+        $bPaid = true;
+//         $bPaid = (isset($aTshirtsOption["leaders"][$aTshirtData["user_id"]]) && isset($aTshirtsOption["leaders"][$aTshirtData["user_id"]]["paid"]) && $aTshirtsOption["leaders"][$aTshirtData["user_id"]]["paid"] === true);
       } else {
         $bPaid = (isset($aTshirtsOption["participants"][$aTshirtData["email"]]) && isset($aTshirtsOption["participants"][$aTshirtData["email"]]["paid"]) && $aTshirtsOption["participants"][$aTshirtData["email"]]["paid"] === true);
       }
       $aTshirts[$key]["bIsPaid"] = $bPaid;
-      if ($bOnlyUnpaid && $bPaid) {
+      if ($iPaidFlag === -1 && $bPaid) {
+        unset($aTshirts[$key]);
+      } elseif ($iPaidFlag === 1 && !$bPaid) {
         unset($aTshirts[$key]);
       }
     }
@@ -2703,17 +2721,19 @@ class FLORP{
         return array();
       }
       $aReturn = array();
-      $aReturn[] = array("Meno", "Email", "Mesto", "Typ", "Veľkosť trička", "Typ trička", "Farba trička", "Zaplatil");
+      $aReturn[] = array("Meno", "Email", "Mesto", "Typ", "Líder", "Webstránka", "Veľkosť trička", "Typ trička", "Farba trička", "Zaplatil");
       foreach ($aTshirts as $aTshirtData) {
         $aReturn[] = array(
           $aTshirtData["name"],
           $aTshirtData["email"],
           $aTshirtData["flashmob_city"],
           $aTshirtData["type"],
+          $aTshirtData["leader"],
+          $aTshirtData["properties"]["webpage"],
           $aTshirtData["properties"]["tshirt_size"],
           $aTshirtData["properties"]["tshirt_gender"],
           $aTshirtData["properties"]["tshirt_color"],
-          $aTshirtData["bIsPaid"] ? "1" : "0",
+          $aTshirtData["is_leader"] ? "-" : ($aTshirtData["bIsPaid"] ? "1" : "0"),
         );
       }
       return $aReturn;
@@ -2729,7 +2749,7 @@ class FLORP{
       });
       return;
     }
-    if (!isset($_POST["florp-download-tshirt-csv-all"]) && !isset($_POST["florp-download-tshirt-csv-unpaid"])) {
+    if (!isset($_POST["florp-download-tshirt-csv-all"]) && !isset($_POST["florp-download-tshirt-csv-unpaid"]) && !isset($_POST["florp-download-tshirt-csv-paid"])) {
       add_action( 'admin_notices', function() {
         echo '<div class="notice notice-error"><p>Invalid request - unknown button was clicked</p></div>'.PHP_EOL;
       });
@@ -2738,11 +2758,14 @@ class FLORP{
 
     $strFileName = "tshirts-";
     if (isset($_POST["florp-download-tshirt-csv-all"])) {
-      $aTshirts = $this->get_tshirts(false, true);
+      $aTshirts = $this->get_tshirts(0, true);
       $strFileName .= "all";
     } elseif (isset($_POST["florp-download-tshirt-csv-unpaid"])) {
-      $aTshirts = $this->get_tshirts(true, true);
+      $aTshirts = $this->get_tshirts(-1, true);
       $strFileName .= "unpaid";
+    } elseif (isset($_POST["florp-download-tshirt-csv-paid"])) {
+      $aTshirts = $this->get_tshirts(1, true);
+      $strFileName .= "paid";
     }
     if (empty($aTshirts)) {
       add_action( 'admin_notices', function() {
@@ -2779,9 +2802,10 @@ class FLORP{
       return;
     }
 
-    $strEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Typ</th><th>Vlastnosti</th>';
+    $strEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Typ</th><th>Líder</th><th>Vlastnosti</th>';
 
     $iUnpaid = 0;
+    $iPaid = 0;
     foreach ($aTshirts as $aTshirtData) {
       $strButtons = "";
       $strButtonLabelPaid = "zaplatil";
@@ -2802,8 +2826,13 @@ class FLORP{
       $strRowID = "florpRow-".$aTshirtData["id"];
       $strButtonID = "florpButton-".$aTshirtData["id"];
       $strButtons = '<br/>';
-      if ($aTshirtData["bIsPaid"]) {
+      if ($aTshirtData["is_leader"]) {
+        // no button
+        $strButtons = "";
+        $iPaid++;
+      } elseif ($aTshirtData["bIsPaid"]) {
         $strButtons .= '<span class="notice notice-success">Zaplatené</span>';
+        $iPaid++;
       } else {
         $iUnpaid++;
         $strButtons .= '<span class="button double-check" data-text-double-check="Are you sure?" data-text-default="'.$strButtonLabelPaid.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp_tshirt_paid" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelPaid.'</span>';
@@ -2814,6 +2843,7 @@ class FLORP{
       $strEcho .=   '<td><a name="'.$aTshirtData['email'].'">'.$aTshirtData['email'].'</a></td>';
       $strEcho .=   '<td>'.$aTshirtData['flashmob_city'].'</td>';
       $strEcho .=   '<td>'.$aTshirtData['type'].'</td>';
+      $strEcho .=   '<td>'.$aTshirtData['leader'].'</td>';
       $strEcho .=   '<td>';
       foreach ($aTshirtData['properties'] as $strKey => $strValue) {
         $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
@@ -2827,8 +2857,9 @@ class FLORP{
     $strEcho .= '<input type="hidden" name="security" value="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">';
     $strEcho .= '<input type="hidden" name="florp-download-tshirt-csv" value="1">';
     $strEcho .= '<input id="florp-download-tshirt-csv-all" class="button button-primary button-large" name="florp-download-tshirt-csv-all" type="submit" value="Stiahni CSV - všetko" />';
-    if ($iUnpaid > 0) {
+    if ($iUnpaid > 0 && $iPaid > 0) {
       $strEcho .= '<input id="florp-download-tshirt-csv-unpaid" class="button button-primary button-large" name="florp-download-tshirt-csv-unpaid" type="submit" value="Stiahni CSV - nezaplatené" />';
+      $strEcho .= '<input id="florp-download-tshirt-csv-paid" class="button button-primary button-large" name="florp-download-tshirt-csv-paid" type="submit" value="Stiahni CSV - zaplatené" />';
     }
     $strEcho .= '</form>';
 
@@ -4061,6 +4092,89 @@ class FLORP{
     return false;
   }
 
+  private function get_leader_webpage($aData) {
+    if (!isset($aData["bHideLeaderInfo"])) {
+      $aData["bHideLeaderInfo"] = false;
+    }
+    if (!isset($aData["bInfoWindow"])) {
+      $aData["bInfoWindow"] = false;
+    }
+
+    if (isset($aData["id"])) {
+      $aAllMeta = array_map(
+        function( $a ){
+          if (is_string($a) && strpos($a, 'a:') === 0) {
+            return maybe_unserialize( $a );
+          } elseif (is_array($a) && count($a) === 1) {
+            if (is_string($a[0]) && strpos($a[0], 'a:') === 0) {
+              return maybe_unserialize( $a[0] );
+            } else {
+              return $a[0];
+            }
+          } else {
+            return $a;
+          }
+        },
+        get_user_meta( $aData["id"] )
+      );
+      $aData = array_merge($aData, $aAllMeta);
+    } elseif (isset($aData["webpage"])) {
+      // OK //
+    } else {
+      // We need id or webpage //
+      return "";
+    }
+    $aData["bReturnAnchor"] = (isset($aData["bReturnAnchor"]) && $aData["bReturnAnchor"] === true);
+    $strWebpage = '';
+    if (!empty($aData['webpage'])) {
+      switch($aData['webpage']) {
+        case "flashmob":
+          $strWebpage = "http://flashmob.salsarueda.dance";
+          break;
+        case "vlastna":
+          if (!empty($aData['custom_webpage']) && !$aData["bHideLeaderInfo"]) {
+            $strWebpage = $aData['custom_webpage'];
+          }
+          break;
+        case "vytvorit":
+          $strSubDomainPage = $this->findCityWebpage( $aData['flashmob_city'] );
+          if ($strSubDomainPage) {
+            $strSchoolWebpage = $strSubDomainPage;
+          } elseif (!$aData["bInfoWindow"]) {
+            return "(vytvorit)";
+          }
+        default:
+          break;
+      }
+    }
+    $strWeb = ''; // In new maps - webpage and school name is not connected //
+    if (!empty($strWebpage)) {
+      if ($aData["bReturnAnchor"]) {
+        $strWebLabel = preg_replace( '~^https?://(www\.)?|/$~', "", $strWebpage );
+        $strWeb = '<a href="'.$strWebpage.'" target="_blank">'.$strWebLabel.'</a>';
+        if ($aData["bInfoWindow"]) {
+          $strWeb = $this->getInfoWindowLabel('web') . $strWeb;
+        }
+      } else {
+        $strWeb = $strWebpage;
+      }
+    }
+    if ($this->aOptions["bCoursesInfoDisabled"] || empty($aData['school_name'])) {
+      if (!empty($strSchoolWebpage)) {
+        if ($aData["bReturnAnchor"]) {
+          $strSchoolWebpageLabel = preg_replace( '~^https?://(www\.)?|/$~', "", $strSchoolWebpage );
+          $strWeb = '<a href="'.$strSchoolWebpage.'" target="_blank">'.$strSchoolWebpageLabel.'</a>';
+          if ($aData["bInfoWindow"]) {
+            $strWeb = $this->getInfoWindowLabel('web') . $strWeb;
+          }
+        } else {
+          $strWeb = $strSchoolWebpage;
+        }
+      }
+    }
+    return $strWeb;
+  }
+
   private function getMarkerInfoWindowContent( $aInfoWindowData ) {
     $bHideLeaderInfo = isset($aInfoWindowData['hide_leader_info']) && isset($aInfoWindowData['hide_leader_info']['value']) && $aInfoWindowData['hide_leader_info']['value'] == '1';
     if (empty($aInfoWindowData['user_webpage']['value'])) {
@@ -4088,7 +4202,7 @@ class FLORP{
           }
           break;
         case "vytvorit":
-          $strSubDomainPage = $this->findCityWebpage( $aInfoWindowData['user_city']['value'] );
+          $strSubDomainPage = $this->findCityWebpage( $aInfoWindowData['flashmob_city']['value'] );
           if ($strSubDomainPage) {
             $strSchoolWebpage = $strSubDomainPage;
           }
@@ -4098,39 +4212,26 @@ class FLORP{
     }
     // END End of school webpage [it's used in the next part though] //
 
-    $strWebpage = '';
-    if (!empty($aInfoWindowData['webpage']['value'])) {
-      switch($aInfoWindowData['webpage']['value']) {
-        case "flashmob":
-          $strWebpage = "http://flashmob.salsarueda.dance";
-          break;
-        case "vlastna":
-          if (!empty($aInfoWindowData['custom_webpage']['value']) && !$bHideLeaderInfo) {
-            $strWebpage = $aInfoWindowData['custom_webpage']['value'];
-          }
-          break;
-        case "vytvorit":
-          $strSubDomainPage = $this->findCityWebpage( $aInfoWindowData['user_city']['value'] );
-          if ($strSubDomainPage) {
-            $strSchoolWebpage = $strSubDomainPage;
-          }
-        default:
-          break;
+    $aWebpageArgs = array(
+      'webpage' => $aInfoWindowData['webpage']['value'],
+      'custom_webpage' => $aInfoWindowData['custom_webpage']['value'],
+      'user_city' => $aInfoWindowData['user_city']['value'],
+      'school_name' => $aInfoWindowData['school_name']['value'],
+      'bHideLeaderInfo' => $bHideLeaderInfo,
+      'bReturnAnchor' => true,
+      'bInfoWindow' => true,
+    );
+    $strWeb = $this->get_leader_webpage($aWebpageArgs);
+
+    if (!empty($aInfoWindowData['webpage']['value']) && $aInfoWindowData['webpage']['value'] == "vytvorit") {
+      $strSubDomainPage = $this->findCityWebpage( $aInfoWindowData['flashmob_city']['value'] );
+      if ($strSubDomainPage) {
+        $strSchoolWebpage = $strSubDomainPage;
       }
-    }
-    $strWeb = ''; // In new maps - webpage and school name is not connected //
-    if (!empty($strWebpage)) {
-      $strWebLabel = preg_replace( '~^https?://(www\.)?|/$~', "", $strWebpage );
-      $strWeb = $this->getInfoWindowLabel('web') . '<a href="'.$strWebpage.'" target="_blank">'.$strWebLabel.'</a>';
     }
 
     $strSchool = '';
-    if ($this->aOptions["bCoursesInfoDisabled"] || empty($aInfoWindowData['school_name']['value'])) {
-      if (!empty($strSchoolWebpage)) {
-        $strSchoolWebpageLabel = preg_replace( '~^https?://(www\.)?|/$~', "", $strSchoolWebpage );
-        $strWeb = $this->getInfoWindowLabel('web') . '<a href="'.$strSchoolWebpage.'" target="_blank">'.$strSchoolWebpageLabel.'</a>';
-      }
-    } else {
+    if (!$this->aOptions["bCoursesInfoDisabled"] && !empty($aInfoWindowData['school_name']['value'])) {
       $strSchool = $aInfoWindowData['school_name']['value'];
       if (!empty($strSchoolWebpage)) {
         $strSchool = '<a href="'.$strSchoolWebpage.'" target="_blank">'.$strSchool.'</a>';
