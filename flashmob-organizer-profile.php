@@ -136,6 +136,8 @@ class FLORP{
       'strInfoWindowLabel_embed_code'             => '',
       'strInfoWindowLabel_courses_info'           => '',
       'bCoursesInfoDisabled'                      => true,
+      'strTshirtPaymentWarningNotificationSbj'    => 'Chýba nám platba za objednané tričko',
+      'strTshirtPaymentWarningNotificationMsg'    => '<p>Prosíme, pošlite platbu za objednané tričko.</p><p>Váš SalsaRueda.Dance team</p>',
     );
     $this->aOptionFormKeys = array(
       'florp_reload_after_ok_submission_main'     => 'bReloadAfterSuccessfulSubmissionMain',
@@ -197,6 +199,8 @@ class FLORP{
       'florp_infowindow_label_embed_code'         => 'strInfoWindowLabel_embed_code',
       'florp_infowindow_label_courses_info'       => 'strInfoWindowLabel_courses_info',
       'florp_courses_info_disabled'               => 'bCoursesInfoDisabled',
+      'florp_tshirt_payment_warning_notif_sbj'    => 'strTshirtPaymentWarningNotificationSbj',
+      'florp_tshirt_payment_warning_notif_msg'    => 'strTshirtPaymentWarningNotificationMsg',
     );
     $aDeprecatedKeys = array(
       // new => old //
@@ -267,6 +271,8 @@ class FLORP{
         'strInfoWindowLabel_embed_code',
         'strInfoWindowLabel_courses_info',
         'bCoursesInfoDisabled',
+        'strTshirtPaymentWarningNotificationSbj',
+        'strTshirtPaymentWarningNotificationMsg',
       ),
       'flashmob'  => array(
         'iFlashmobBlogID',
@@ -574,6 +580,7 @@ class FLORP{
     add_action( 'wp_ajax_nopriv_get_mapUserInfo', array( $this, 'action__get_mapUserInfo_callback' ));
     add_action( 'wp_ajax_delete_florp_participant', array( $this, 'action__delete_florp_participant_callback' ));
     add_action( 'wp_ajax_florp_tshirt_paid', array( $this, 'action__florp_tshirt_paid_callback' ));
+    add_action( 'wp_ajax_florp_tshirt_send_payment_warning', array( $this, 'action__florp_tshirt_send_payment_warning_callback' ));
     add_action( 'admin_menu', array( $this, "action__remove_admin_menu_items" ), 9999 );
     add_action( 'admin_menu', array( $this, "action__add_options_page" ));
     add_action( 'wp_enqueue_scripts', array( $this, 'action__wp_enqueue_scripts' ), 9999 );
@@ -1350,11 +1357,13 @@ class FLORP{
             $bHide = false;
           } else {
             // Go through subscriber types of user and leave field unhidden if matched //
-            foreach ($aSubscriberTypesOfUser as $strSubscriberType) {
-              if (stripos($aField['settings']['container_class'], 'florp-togglable-field_'.$strSubscriberType) !== false
-                  || stripos($aField['settings']['container_class'], 'florp-togglable-field_any') !== false) {
-                $bHide = false;
-                break;
+            if (isset($aSubscriberTypesOfUser) && is_array($aSubscriberTypesOfUser) && !empty($aSubscriberTypesOfUser)) {
+              foreach ($aSubscriberTypesOfUser as $strSubscriberType) {
+                if (stripos($aField['settings']['container_class'], 'florp-togglable-field_'.$strSubscriberType) !== false
+                    || stripos($aField['settings']['container_class'], 'florp-togglable-field_any') !== false) {
+                  $bHide = false;
+                  break;
+                }
               }
             }
           }
@@ -2646,6 +2655,12 @@ class FLORP{
         },
         get_user_meta( $oUser->ID )
       );
+      $aRequiredTshirtProperties = array( 'flashmob_leader_tshirt_size', 'flashmob_leader_tshirt_gender', 'flashmob_leader_tshirt_color' );
+      foreach ($aRequiredTshirtProperties as $strKey) {
+        if (!isset($aAllMeta[$strKey]) || empty($aAllMeta[$strKey]) || ('null' === $aAllMeta[$strKey])) {
+          continue 2;
+        }
+      }
       $aWebpageArgs = array(
         'id' => $oUser->ID,
         'bReturnAnchor' => !$bCSV,
@@ -2707,8 +2722,16 @@ class FLORP{
 //         $bPaid = (isset($aTshirtsOption["leaders"][$aTshirtData["user_id"]]) && isset($aTshirtsOption["leaders"][$aTshirtData["user_id"]]["paid"]) && $aTshirtsOption["leaders"][$aTshirtData["user_id"]]["paid"] === true);
       } else {
         $bPaid = (isset($aTshirtsOption["participants"][$aTshirtData["email"]]) && isset($aTshirtsOption["participants"][$aTshirtData["email"]]["paid"]) && $aTshirtsOption["participants"][$aTshirtData["email"]]["paid"] === true);
+        if ($bPaid) {
+          $aTshirts[$key]["paid_timestamp"] = $aTshirtsOption["participants"][$aTshirtData["email"]]['paid-timestamp'];
+        }
+        $bPaymentWarningSent = (isset($aTshirtsOption["participants"][$aTshirtData["email"]]) && isset($aTshirtsOption["participants"][$aTshirtData["email"]]["payment_warning_sent"]) && $aTshirtsOption["participants"][$aTshirtData["email"]]["payment_warning_sent"] === true);
+        $aTshirts[$key]["payment_warning_sent"] = $bPaymentWarningSent;
+        if ($bPaymentWarningSent) {
+          $aTshirts[$key]["payment_warning_sent_timestamp"] = $aTshirtsOption["participants"][$aTshirtData["email"]]['payment_warning_sent-timestamp'];
+        }
       }
-      $aTshirts[$key]["bIsPaid"] = $bPaid;
+      $aTshirts[$key]["is_paid"] = $bPaid;
       if ($iPaidFlag === -1 && $bPaid) {
         unset($aTshirts[$key]);
       } elseif ($iPaidFlag === 1 && !$bPaid) {
@@ -2721,7 +2744,7 @@ class FLORP{
         return array();
       }
       $aReturn = array();
-      $aReturn[] = array("Meno", "Email", "Mesto", "Typ", "Líder", "Webstránka", "Veľkosť trička", "Typ trička", "Farba trička", "Zaplatil");
+      $aReturn[] = array("Meno", "Email", "Mesto", "Typ", "Líder", "Webstránka", "Veľkosť trička", "Typ trička", "Farba trička", "Zaplatil", "Čas označenia za zaplatené", "Upozornenie na platbu", "Čas upozornenia na platbu");
       foreach ($aTshirts as $aTshirtData) {
         $aReturn[] = array(
           $aTshirtData["name"],
@@ -2733,7 +2756,10 @@ class FLORP{
           $aTshirtData["properties"]["tshirt_size"],
           $aTshirtData["properties"]["tshirt_gender"],
           $aTshirtData["properties"]["tshirt_color"],
-          $aTshirtData["is_leader"] ? "-" : ($aTshirtData["bIsPaid"] ? "1" : "0"),
+          $aTshirtData["is_leader"] ? "-" : ($aTshirtData["is_paid"] ? "1" : "0"),
+          $aTshirtData["is_leader"] ? "-" : ($aTshirtData["is_paid"] && $aTshirtData["paid_timestamp"] ? date('Y-m-d H:i:s', $aTshirtData["paid_timestamp"] ) : "-"),
+          $aTshirtData["is_leader"] ? "-" : ($aTshirtData["payment_warning_sent"] ? "1" : "0"),
+          $aTshirtData["is_leader"] ? "-" : ($aTshirtData["payment_warning_sent"] && $aTshirtData["payment_warning_sent_timestamp"] ? date('Y-m-d H:i:s', $aTshirtData["payment_warning_sent_timestamp"] ) : "-"),
         );
       }
       return $aReturn;
@@ -2804,11 +2830,16 @@ class FLORP{
 
     $strEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Typ</th><th>Líder</th><th>Vlastnosti</th>';
 
+//     echo "<pre>";var_dump($this->aOptions['aTshirts']);echo "</pre>";
+//     echo "<pre>";var_dump($aTshirts);echo "</pre>";
     $iUnpaid = 0;
     $iPaid = 0;
     foreach ($aTshirts as $aTshirtData) {
       $strButtons = "";
-      $strButtonLabelPaid = "zaplatil";
+      $strDoubleCheckQuestion = "Ste si istý?";
+      $strButtonLabelPaid = "Zaplatil";
+      $strButtonLabelPaymentWarning = "Upozorniť na neskorú platbu";
+      // We collect the data and button attributes/properties //
       $strData = "";
       foreach ($aTshirtData as $strKey => $mixValue) {
         if ($strKey === "properties" || in_array($strKey, array("id"))) {
@@ -2824,18 +2855,38 @@ class FLORP{
         $strData .= " data-{$strKey}='{$strValue}'";
       }
       $strRowID = "florpRow-".$aTshirtData["id"];
-      $strButtonID = "florpButton-".$aTshirtData["id"];
+      $strPaidButtonID = "florpButton-paid-".$aTshirtData["id"];
+      $strPaymentWarningButtonID = "florpButton-paymentWarning-".$aTshirtData["id"];
+
       $strButtons = '<br/>';
       if ($aTshirtData["is_leader"]) {
         // no button
         $strButtons = "";
         $iPaid++;
-      } elseif ($aTshirtData["bIsPaid"]) {
-        $strButtons .= '<span class="notice notice-success">Zaplatené</span>';
+      } elseif ($aTshirtData["is_paid"]) {
+        $strTitle = "";
+        if (isset($aTshirtData["paid_timestamp"])) {
+          $strTitle = ' title="'.date( get_option('date_format')." ".get_option('time_format'), $aTshirtData["paid_timestamp"] ).'"';
+        }
+        $strButtons .= '<span data-button-id="'.$strPaidButtonID.'" class="notice notice-success"'.$strTitle.'>Zaplatené</span>';
         $iPaid++;
       } else {
         $iUnpaid++;
-        $strButtons .= '<span class="button double-check" data-text-double-check="Are you sure?" data-text-default="'.$strButtonLabelPaid.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp_tshirt_paid" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelPaid.'</span>';
+
+        $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelPaid.'" data-button-id="'.$strPaidButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp_tshirt_paid" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelPaid.'</span>';
+
+        if (isset($this->aOptions['strTshirtPaymentWarningNotificationMsg'], $this->aOptions['strTshirtPaymentWarningNotificationSbj']) && !empty($this->aOptions['strTshirtPaymentWarningNotificationMsg']) && !empty($this->aOptions['strTshirtPaymentWarningNotificationSbj'])) {
+          $strButtons .= '<br/>';
+          if ($aTshirtData["payment_warning_sent"]) {
+            $strTitle = "";
+            if (isset($aTshirtData["payment_warning_sent_timestamp"])) {
+              $strTitle = ' title="'.date( get_option('date_format')." ".get_option('time_format'), $aTshirtData["payment_warning_sent_timestamp"] ).'"';
+            }
+            $strButtons .= '<span data-button-id="'.$strPaymentWarningButtonID.'" class="notice notice-success"'.$strTitle.'>Upozornený na neskorú platbu</span>';
+          } else {
+            $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelPaymentWarning.'" data-button-id="'.$strPaymentWarningButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp_tshirt_send_payment_warning" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelPaymentWarning.'</span>';
+          }
+        }
       }
       $strEcho .= '<tr data-row-id="'.$strRowID.'">';
 //       $strEcho .= '<tr>';
@@ -2905,27 +2956,99 @@ class FLORP{
     if (!isset($this->aOptions["aTshirts"]) || empty($this->aOptions["aTshirts"])) {
       $aData["message"] = $strErrorMessage;
     } else {
-      if (true) {
-        $aData["ok"] = true;
-        $aData["removeRowOnSuccess"] = false;
-        $aData["replaceButton"] = true;
-        $aData["replaceButtonHtml"] = '<span class="notice notice-success">Zaplatené</span>';
-        if (false && defined('FLORP_DEVEL') && FLORP_DEVEL === true) {
-          // NOTE No use for this yet //
-          $aData["message"] = "The flashmob participant '{$aData['participantEmail']}' was marked as having paid successfully (NOT: FLORP_DEVEL is on!)";
-        } else {
-          $aOk = array(
-            "paid" => true,
-            "paid-timestamp" => time(),
-          );
-          if ($aData["is_leader"] === "1" || $aData["is_leader"] === 1 || $aData["is_leader"] === true) {
+      $iTimestampNow = (int) current_time( 'timestamp' );
+      $aData["ok"] = true;
+      $aData["removeRowOnSuccess"] = false;
+      $aData["replaceButton"] = true;
+      $strTitle = ' title="'.date( get_option('date_format')." ".get_option('time_format'), $iTimestampNow ).'"';
+      $strPaymentWarningButtonID = str_replace( "-paid-", "-paymentWarning-", $aData['buttonId']);
+      $aData["hideSelector"] = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strPaymentWarningButtonID}]";
+      $aData["replaceButtonHtml"] = '<span data-button-id="'.$aData['buttonId'].'" class="notice notice-success"'.$strTitle.'>Zaplatené</span>';
+      if (false && defined('FLORP_DEVEL') && FLORP_DEVEL === true) {
+        // NOTE No use for this yet //
+        $aData["message"] = "The flashmob participant '{$aData['participantEmail']}' was marked as having paid successfully (NOT: FLORP_DEVEL is on!)";
+      } else {
+        $aOk = array(
+          "paid" => true,
+          "paid-timestamp" => $iTimestampNow,
+        );
+        if ($aData["is_leader"] === "1" || $aData["is_leader"] === 1 || $aData["is_leader"] === true) {
+          if (isset($this->aOptions["aTshirts"]["leaders"][$aData["user_id"]])) {
+            $this->aOptions["aTshirts"]["leaders"][$aData["user_id"]] = array_merge(
+              $this->aOptions["aTshirts"]["leaders"][$aData["user_id"]],
+              $aOk
+            );
+          } else {
             $this->aOptions["aTshirts"]["leaders"][$aData["user_id"]] = $aOk;
+          }
+        } else {
+          if (isset($this->aOptions["aTshirts"]["participants"][$aData["email"]])) {
+            $this->aOptions["aTshirts"]["participants"][$aData["email"]] = array_merge(
+              $this->aOptions["aTshirts"]["participants"][$aData["email"]],
+              $aOk
+            );
           } else {
             $this->aOptions["aTshirts"]["participants"][$aData["email"]] = $aOk;
           }
-          update_site_option( $this->strOptionKey, $this->aOptions, true );
-          $aData["message"] = "The flashmob participant '{$aData['participantEmail']}' was marked as having paid successfully";//." ".var_export($aData, true);
         }
+        update_site_option( $this->strOptionKey, $this->aOptions, true );
+        $aData["message"] = "The flashmob participant '{$aData['participantEmail']}' was marked as having paid successfully";//." ".var_export($aData, true);
+      }
+    }
+//     sleep(3);
+    echo json_encode($aData);
+    wp_die();
+  }
+
+  public function action__florp_tshirt_send_payment_warning_callback() {
+//     wp_die();
+    check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
+
+    $aData = $_POST;
+    $strErrorMessage = "Could not send payment warning to the flashmob participant '{$aData['email']}'";
+    if (!isset($this->aOptions["aTshirts"]) || empty($this->aOptions["aTshirts"]) || !isset($this->aOptions['strTshirtPaymentWarningNotificationMsg'], $this->aOptions['strTshirtPaymentWarningNotificationSbj']) || empty($this->aOptions['strTshirtPaymentWarningNotificationMsg']) || empty($this->aOptions['strTshirtPaymentWarningNotificationSbj'])) {
+      $aData["message"] = $strErrorMessage;
+    } else {
+      $iTimestampNow = (int) current_time( 'timestamp' );
+      $aData["removeRowOnSuccess"] = false;
+      $aData["replaceButton"] = true;
+      $strTitle = ' title="'.date( get_option('date_format')." ".get_option('time_format'), $iTimestampNow ).'"';
+      $aData["replaceButtonHtml"] = '<span data-button-id="'.$aData['buttonId'].'" class="notice notice-success"'.$strTitle.'>Upozornený na neskorú platbu</span>';
+
+      $strMessageContent = $this->aOptions['strTshirtPaymentWarningNotificationMsg'];
+      $strMessageSubject = $this->aOptions['strTshirtPaymentWarningNotificationSbj'];
+      $strBlogname = trim(wp_specialchars_decode(get_option('blogname'), ENT_QUOTES));
+      $aHeaders = array('Content-Type: text/html; charset=UTF-8');
+      $bSendResult = wp_mail($aData["email"], $strMessageSubject, $strMessageContent, $aHeaders);
+
+      if ($bSendResult) {
+        $aData["ok"] = true;
+
+        $aOk = array(
+          "payment_warning_sent" => true,
+          "payment_warning_sent-timestamp" => $iTimestampNow,
+        );
+        if ($aData["is_leader"] === "1" || $aData["is_leader"] === 1 || $aData["is_leader"] === true) {
+          if (isset($this->aOptions["aTshirts"]["leaders"][$aData["user_id"]])) {
+            $this->aOptions["aTshirts"]["leaders"][$aData["user_id"]] = array_merge(
+              $this->aOptions["aTshirts"]["leaders"][$aData["user_id"]],
+              $aOk
+            );
+          } else {
+            $this->aOptions["aTshirts"]["leaders"][$aData["user_id"]] = $aOk;
+          }
+        } else {
+          if (isset($this->aOptions["aTshirts"]["participants"][$aData["email"]])) {
+            $this->aOptions["aTshirts"]["participants"][$aData["email"]] = array_merge(
+              $this->aOptions["aTshirts"]["participants"][$aData["email"]],
+              $aOk
+            );
+          } else {
+            $this->aOptions["aTshirts"]["participants"][$aData["email"]] = $aOk;
+          }
+        }
+        update_site_option( $this->strOptionKey, $this->aOptions, true );
+        $aData["message"] = "A payment warning was sent to the flashmob participant '{$aData['email']}'";//." ".var_export($aData, true);
       } else {
         $aData["message"] = $strErrorMessage;
       }
@@ -3123,6 +3246,7 @@ class FLORP{
     $wpEditorPendingUserPageContentHTML = $this->get_wp_editor( $this->strPendingUserPageContentHTML, 'florp_pending_user_page_content_html' );
     $wpEditorUserApprovedMessage = $this->get_wp_editor( $this->strUserApprovedMessage, 'florp_user_approved_message' );
     $wpEditorLeaderParticipantListNotificationMsg = $this->get_wp_editor( $this->aOptions['strLeaderParticipantListNotificationMsg'], 'florp_leader_participant_list_notif_msg' );
+    $wpEditorTshirtPaymentWarningNotificationMsg = $this->get_wp_editor( $this->aOptions['strTshirtPaymentWarningNotificationMsg'], 'florp_tshirt_payment_warning_notif_msg' );
 
     return str_replace(
       array( '%%reloadCheckedMain%%',
@@ -3134,7 +3258,8 @@ class FLORP{
         '%%approveUsersAutomaticallyChecked%%', '%%wpEditorPendingUserPageContentHTML%%', '%%wpEditorUserApprovedMessage%%',
         '%%strRegistrationSuccessfulMessage%%', '%%strLoginSuccessfulMessage%%', '%%strUserApprovedSubject%%',
         '%%strNewsletterListsMain%%', '%%strLeaderParticipantListNotificationSbj%%', '%%wpEditorLeaderParticipantListNotificationMsg%%',
-        '%%strLoginBarLabelLogin%%', '%%strLoginBarLabelLogout%%', '%%strLoginBarLabelProfile%%' ),
+        '%%strLoginBarLabelLogin%%', '%%strLoginBarLabelLogout%%', '%%strLoginBarLabelProfile%%',
+        '%%strTshirtPaymentWarningNotificationSbj%%', '%%wpEditorTshirtPaymentWarningNotificationMsg%%' ),
       array( $aBooleanOptionsChecked['bReloadAfterSuccessfulSubmissionMain'],
         $optionsNinjaFormsMain,
         $optionsPopupsMain,
@@ -3144,7 +3269,8 @@ class FLORP{
         $aBooleanOptionsChecked['bApproveUsersAutomatically'], $wpEditorPendingUserPageContentHTML, $wpEditorUserApprovedMessage,
         $this->aOptions['strRegistrationSuccessfulMessage'], $this->aOptions['strLoginSuccessfulMessage'], $this->aOptions['strUserApprovedSubject'],
         $this->aOptions['strNewsletterListsMain'], $this->aOptions['strLeaderParticipantListNotificationSbj'], $wpEditorLeaderParticipantListNotificationMsg,
-        $this->aOptions['strLoginBarLabelLogin'], $this->aOptions['strLoginBarLabelLogout'], $this->aOptions['strLoginBarLabelProfile'] ),
+        $this->aOptions['strLoginBarLabelLogin'], $this->aOptions['strLoginBarLabelLogout'], $this->aOptions['strLoginBarLabelProfile'],
+        $this->aOptions['strTshirtPaymentWarningNotificationSbj'], $wpEditorTshirtPaymentWarningNotificationMsg ),
       '
             <tr style="width: 98%; padding:  5px 1%;">
               <th colspan="2"><h3>Hlavná stránka</h3></th>
@@ -3297,6 +3423,22 @@ class FLORP{
               </th>
               <td>
                 <input id="florp_login_bar_label_profile" name="florp_login_bar_label_profile" type="text" value="%%strLoginBarLabelProfile%%" style="width: 100%;" />
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
+                Predmet upozornenia na platbu za tričko
+              </th>
+              <td style="border-top: 1px lightgray dashed;">
+                <input id="florp_tshirt_payment_warning_notif_sbj" name="florp_tshirt_payment_warning_notif_sbj" type="text" value="%%strTshirtPaymentWarningNotificationSbj%%" style="width: 100%;" />
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                Text upozornenia na platbu za tričko
+              </th>
+              <td style="border-top: 1px lightgray dashed;">
+                %%wpEditorTshirtPaymentWarningNotificationMsg%%
               </td>
             </tr>
       '

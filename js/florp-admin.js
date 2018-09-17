@@ -78,7 +78,7 @@ jQuery( document ).ready(function() {
                 if (aResponse.removeRowOnSuccess && aResponse.removeRowOnSuccess === true) {
                   if ($row.length > 0) {
                     if (aResponse.message) {
-                      fnFlorpShowMessage(aResponse.message, strMessageId+"-ok", "success", 1000, $row, true, function() {
+                      fnFlorpShowMessage(aResponse.message, strMessageId+"-ok", "success", 2000, $row, true, function() {
                         $row.fadeOut(800)
                       }, $row.first()[0] && $row.first()[0].cells ? $row.first()[0].cells.length : false)
                     } else {
@@ -86,23 +86,31 @@ jQuery( document ).ready(function() {
                     }
                   } else {
                     if (aResponse.message) {
-                      fnFlorpShowMessage(aResponse.message, strMessageId+"-ok", "success", 1000)
+                      fnFlorpShowMessage(aResponse.message, strMessageId+"-ok", "success", 2000)
                     }
                     console.warn("No row to fade out!")
                   }
                 } else {
                   if (aResponse.message) {
-                    fnFlorpShowMessage(aResponse.message, strMessageId+"-ok", "success", 1000, $row, false, function() {
+                    fnFlorpShowMessage(aResponse.message, strMessageId+"-ok", "success", 2000, $row, false, function() {
                       if (aResponse.replaceButton && aResponse.replaceButtonHtml) {
                         var newButton = jQuery(aResponse.replaceButtonHtml)
                         newButton.insertBefore(button)
                         button.remove()
+                        if (aResponse.hideSelector) {
+                          jQuery( aResponse.hideSelector ).hide()
+                        }
                       }
                     }, $row.first()[0] && $row.first()[0].cells ? $row.first()[0].cells.length : false)
                   } else if (aResponse.replaceButton && aResponse.replaceButtonHtml) {
                     var newButton = jQuery(aResponse.replaceButtonHtml)
                     newButton.insertBefore(button)
                     button.remove()
+                    if (aResponse.hideSelector) {
+                      jQuery( aResponse.hideSelector ).hide()
+                    }
+                  } else if (aResponse.hideSelector) {
+                    jQuery( aResponse.hideSelector ).hide()
                   }
                 }
               } else {
