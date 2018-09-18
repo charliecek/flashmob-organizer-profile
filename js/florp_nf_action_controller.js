@@ -171,9 +171,53 @@ function add_florp_action_controllers() {
         }
 
         if (florp.blog_type === 'main' && ("undefined" !== typeof florp.user_id || florp.user_id > 0)) {
-          console.info("This is not the main blog's registration form");
+          console.info("This is the main blog's profile form");
+
+          // Replace the "flashmobbers" tab //
+          $tableOld = jQuery("."+florp.leader_participant_table_class)
+          if ($tableOld.length > 0) {
+            var data = {
+              action: florp.get_leaderParticipantsTable_action || "",
+              security : florp.security,
+              iUserID: florp.user_id,
+            };
+            window["florpGetLeaderParticipantsTableAjaxRunning"] = true
+            jQuery.ajax({
+              type: "POST",
+              url: florp.ajaxurl,
+              data: data,
+              success: function(response) {
+                // console.log(response);
+                try {
+                  var aResponse = JSON.parse(response);
+                  if (aResponse.tableHtml) {
+                    // console.log(aResponse)
+                    $table = jQuery(aResponse.tableHtml)
+                    jQuery("."+florp.leader_participant_table_class).html($table)
+                  }
+                  window["florpGetLeaderParticipantsTableAjaxRunning"] = false
+                } catch(e) {
+                  console.warn(e);
+                  window["florpGetLeaderParticipantsTableAjaxRunning"] = false
+                }
+              }
+            })
+          } else {
+            console.info("No element with class '"+florp.leader_participant_table_class+"' to replace")
+          }
+          var strMessageSelector = ".florp_success_message", iTimeout = 5000;
+          if (!window["florpSuccessMessageTimeout"]) {
+            window["florpSuccessMessageTimeout"] = setTimeout(function(strMessageSelector) {
+              jQuery(strMessageSelector).fadeOut(800, function() {
+                // jQuery(this).remove()
+              })
+              window["florpSuccessMessageTimeout"] = null
+            }, iTimeout, strMessageSelector)
+          }
           return;
         }
+
+        console.info("This is the main blog's registration form");
 
         // response.data.fields_by_key -> use to login
         var successMessageSpan = jQuery(".florp_success_message");

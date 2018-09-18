@@ -5,12 +5,12 @@
  * Description: Creates shortcodes for flashmob organizer login / registration / profile editing form and for maps showing cities with videos of flashmobs for each year
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.5.2
+ * Version: 4.5.3
  */
 
 class FLORP{
 
-  private $strVersion = '4.5.2';
+  private $strVersion = '4.5.3';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -60,6 +60,7 @@ class FLORP{
     $this->aOptionDefaults = array(
       'bReloadAfterSuccessfulSubmissionMain'      => false,
       'bReloadAfterSuccessfulSubmissionFlashmob'  => false,
+      'strLeaderParticipantsTableClass'           => "florp-leader-participants-table",
       'aYearlyMapOptions'                         => array(),
       'iFlashmobYear'                             => isset($this->aOptions['iCurrentFlashmobYear']) ? $this->aOptions['iCurrentFlashmobYear'] : intval(date( 'Y' )),
       'iFlashmobMonth'                            => 1,
@@ -588,6 +589,8 @@ class FLORP{
     add_action( 'after_setup_theme', array( $this, 'action__remove_admin_bar' ));
     add_action( 'wp_ajax_get_markerInfoHTML', array( $this, 'action__get_markerInfoHTML_callback' ));
     add_action( 'wp_ajax_nopriv_get_markerInfoHTML', array( $this, 'action__get_markerInfoHTML_callback' ));
+    add_action( 'wp_ajax_get_leaderParticipantsTable', array( $this, 'action__get_leaderParticipantsTable_callback' ));
+    add_action( 'wp_ajax_nopriv_get_leaderParticipantsTable', array( $this, 'action__get_leaderParticipantsTable_callback' ));
     add_action( 'wp_ajax_get_mapUserInfo', array( $this, 'action__get_mapUserInfo_callback' ));
     add_action( 'wp_ajax_nopriv_get_mapUserInfo', array( $this, 'action__get_mapUserInfo_callback' ));
     add_action( 'wp_ajax_delete_florp_participant', array( $this, 'action__delete_florp_participant_callback' ));
@@ -1625,18 +1628,19 @@ class FLORP{
       return '';
     }
 
+    $strClass = " class=\"{$this->aOptions['strLeaderParticipantsTableClass']}\"";
     $iUserID = get_current_user_id();
     $bIsFlashmobOrganizer = get_user_meta( $iUserID, 'flashmob_organizer', true ) == '1' ? true : false;
     if (!$bIsFlashmobOrganizer) {
-      return '<p>Neorganizujete flashmob ' .  date( 'j.n.Y', $this->iFlashmobTimestamp ) . '.</p>';
+      return '<p'.$strClass.'>Neorganizujete flashmob ' .  date( 'j.n.Y', $this->iFlashmobTimestamp ) . '.</p>';
     }
     $aParticipants = $this->get_flashmob_participants( $iUserID, false );
     if (empty($aParticipants)) {
-      return '<p>Zatiaľ nemáte prihlásených účastníkov.</p>';
+      return '<p'.$strClass.'>Zatiaľ nemáte prihlásených účastníkov.</p>';
     }
     $aParticipantsOfUser = $aParticipants[$iUserID];
     if (empty($aParticipantsOfUser)) {
-      return '<p>Zatiaľ nemáte prihlásených účastníkov.</p>';
+      return '<p'.$strClass.'>Zatiaľ nemáte prihlásených účastníkov.</p>';
     }
 
     return $this->get_leader_participants_table( $aParticipantsOfUser, false );
@@ -1889,7 +1893,7 @@ class FLORP{
       $sThAtt = ' style="border: 1px solid #ccc;"';
       $sTdAtt = ' style="border: 1px solid #ccc;"';
     } else {
-      $sTblAtt = ' class="florp-leader-participants-table"';
+      $sTblAtt = " class=\"{$this->aOptions['strLeaderParticipantsTableClass']}\"";
       $sThAtt = ' class="florp-leader-participants-hcell"';
       $sTdAtt = ' class="florp-leader-participants-cell"';
     }
@@ -2390,11 +2394,12 @@ class FLORP{
 //       'all_imgs'                      => glob($strImagePath . "t-shirt-*.png"),
     );
     if (is_user_logged_in()) {
-      $oCurrentUser = wp_get_current_user();
-      $aJS['user_id'] = $oCurrentUser->ID;
+      $aJS['user_id'] = $iUserID;
+      $aJS['leader_participant_table_class'] = $this->aOptions['strLeaderParticipantsTableClass'];
+      $aJS['get_leaderParticipantsTable_action'] = 'get_leaderParticipantsTable';
     }
     wp_localize_script( 'florp_form_js', 'florp', $aJS );
-    
+
     wp_enqueue_style( 'florp_form_css', plugins_url('css/florp-form.css', __FILE__), false, $this->strVersion, 'all');
   }
 
@@ -4651,6 +4656,14 @@ class FLORP{
     wp_die();
   }
   
+  public function action__get_leaderParticipantsTable_callback() {
+    check_ajax_referer( 'srd-florp-security-string', 'security' );
+    $aData = $_POST;
+    $aData['tableHtml'] = $this->leader_participants_table_shortcode( array() );
+    echo json_encode($aData);
+    wp_die();
+  }
+
   public function action__get_mapUserInfo_callback() {
     check_ajax_referer( 'srd-florp-security-string', 'security' );
 
