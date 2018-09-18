@@ -61,6 +61,7 @@ class FLORP{
       'bReloadAfterSuccessfulSubmissionMain'      => false,
       'bReloadAfterSuccessfulSubmissionFlashmob'  => false,
       'strLeaderParticipantsTableClass'           => "florp-leader-participants-table",
+      'bParticipantRegistrationProcessed'         => false,
       'aYearlyMapOptions'                         => array(),
       'iFlashmobYear'                             => isset($this->aOptions['iCurrentFlashmobYear']) ? $this->aOptions['iCurrentFlashmobYear'] : intval(date( 'Y' )),
       'iFlashmobMonth'                            => 1,
@@ -891,6 +892,57 @@ class FLORP{
     $strOldExportPath = __DIR__ . '/nf-export/export.php';
     if (file_exists($strOldExportPath)) {
       rename($strOldExportPath, $this->strNinjaFormExportPathFlashmob);
+    }
+
+    if (!$this->aOptions["bParticipantRegistrationProcessed"] && !empty($this->aOptions['aParticipants'])) {
+      $aParticipantRegistrationDates = array(
+        'erika.csicsaiova@skgeodesy.sk' => '17.09.2018',
+        'k.siskova@zoznam.sk' => '17.09.2018',
+        'jarohluch+1@gmail.com' => '17.09.2018',
+        'martinbenkosj@gmail.com' => '17.09.2018',
+        'anikorigoalmasi@gmail.com' => '16.09.2018',
+        'rigoletto@pobox.sk' => '16.09.2018',
+        'alenamachova30@gmail.com' => '16.09.2018',
+        'jdtsikulova@gmail.com' => '16.09.2018',
+        'zuzana.meszaros@gmail.com' => '16.09.2018',
+        'furitimea86@gmail.com' => '15.09.2018',
+        's.gaalova@pobox.sk' => '15.09.2018',
+        'daniela.krasinska@gmail.com' => '15.09.2018',
+        'evasevcova@yahoo.com' => '15.09.2018',
+        'gaal.j@pobox.sk' => '15.09.2018',
+        'iveta.neilinger@gmail.com' => '15.09.2018',
+        'lengyeltibi1@gmail.com' => '15.09.2018',
+        'ivonagreen@gmail.com' => '14.09.2018',
+        'keszike@freemail.hu' => '14.09.2018',
+        'farkasg324@gmail.com' => '14.09.2018',
+        'szabi84@centrum.sk' => '14.09.2018',
+        'jurajsmart@gmail.com' => '14.09.2018',
+        'akatona81@gmail.com' => '13.09.2018',
+        'blahutova.dominika@gmail.com' => '13.09.2018',
+        'kerecsenx@freemail.hu' => '13.09.2018',
+        'pavol.martinca@gmail.com' => '11.09.2018',
+        'iivabla@gmail.com' => '09.09.2018',
+      );
+      $bUpdated = false;
+      foreach ($this->aOptions['aParticipants'] as $iLeaderID => $aParticipants) {
+        foreach ($aParticipants as $strEmail => $aParticipantData) {
+          if (isset($aParticipantRegistrationDates[$strEmail]) && (!isset($this->aOptions['aParticipants'][$iLeaderID][$strEmail]['registered']) || $this->aOptions['aParticipants'][$iLeaderID][$strEmail]['registered'] === 0)) {
+            $strDate = $aParticipantRegistrationDates[$strEmail];
+            $aDateParts = explode( ".", $strDate );
+            // $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
+            $iTime = mktime( 0, 0, 0, $aDateParts[1], $aDateParts[0], $aDateParts[2] );
+            if ($iTime !== false) {
+              $this->aOptions['aParticipants'][$iLeaderID][$strEmail]['registered'] = $iTime;
+              $bUpdated = true;
+            }
+          }
+        }
+      }
+      if ($bUpdated) {
+        update_site_option( $this->strOptionKey, $this->aOptions, true );
+      }
+      $this->aOptions["bParticipantRegistrationProcessed"] = true;
+      update_site_option( $this->strOptionKey, $this->aOptions, true );
     }
   }
 
