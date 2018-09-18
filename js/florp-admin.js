@@ -53,6 +53,27 @@ jQuery( document ).ready(function() {
       console.log(data)
       return
     }
+    if (data.useInputNames) {
+      var strInputNames = data.useInputNames
+      var bError = false
+      jQuery.each(strInputNames.split(","), function(index, value) {
+        var $input = jQuery("[data-row-id="+strRowId+"] [name="+value+"]")
+        if ($input.length > 0) {
+          var val = $input.val()
+          if (val.length === 0) {
+            console.warn("Required input with name = '"+value+"' is empty!")
+            bError = true
+            return false
+          } else {
+            data[value] = val
+          }
+        }
+      })
+      if (bError) {
+        console.log(data)
+        return
+      }
+    }
     if ("undefined" === typeof window[strButtonId]) {
       window[strButtonId] = {}
     }
@@ -74,7 +95,7 @@ jQuery( document ).ready(function() {
                 window[strButtonIdLocal]["interval"] = null
                 var button = jQuery(".button.double-check[data-button-id="+aResponse.buttonId+"]")
                 button.text(aResponse.textDefault).removeClass("button-primary").data("sure", 0)
-                var $row = jQuery("tr[data-row-id="+aResponse.rowId+"]")
+                var $row = jQuery(".row[data-row-id="+aResponse.rowId+"]")
                 if (aResponse.removeRowOnSuccess && aResponse.removeRowOnSuccess === true) {
                   if ($row.length > 0) {
                     if (aResponse.message) {
@@ -97,20 +118,44 @@ jQuery( document ).ready(function() {
                         var newButton = jQuery(aResponse.replaceButtonHtml)
                         newButton.insertBefore(button)
                         button.remove()
-                        if (aResponse.hideSelector) {
-                          jQuery( aResponse.hideSelector ).hide()
-                        }
+                      }
+                      if (aResponse.hideSelector) {
+                        jQuery( aResponse.hideSelector ).hide()
+                      }
+                      if (aResponse.insertAfterSelector && jQuery(aResponse.insertAfterSelector).length > 0 && aResponse.insertHtml) {
+                        jQuery(aResponse.insertHtml).insertAfter(jQuery(aResponse.insertAfterSelector))
+                      }
+                      if (aResponse.useInputNames && aResponse.clearInputNames) {
+                        var strInputNames = data.useInputNames
+                        jQuery.each(strInputNames.split(","), function(index, value) {
+                          var $input = jQuery("[data-row-id="+aResponse.rowId+"] [name="+value+"]")
+                          if ($input.length > 0) {
+                            $input.val("");
+                          }
+                        })
                       }
                     }, $row.first()[0] && $row.first()[0].cells ? $row.first()[0].cells.length : false)
-                  } else if (aResponse.replaceButton && aResponse.replaceButtonHtml) {
-                    var newButton = jQuery(aResponse.replaceButtonHtml)
-                    newButton.insertBefore(button)
-                    button.remove()
+                  } else {
+                    if (aResponse.replaceButton && aResponse.replaceButtonHtml) {
+                      var newButton = jQuery(aResponse.replaceButtonHtml)
+                      newButton.insertBefore(button)
+                      button.remove()
+                    }
                     if (aResponse.hideSelector) {
                       jQuery( aResponse.hideSelector ).hide()
                     }
-                  } else if (aResponse.hideSelector) {
-                    jQuery( aResponse.hideSelector ).hide()
+                    if (aResponse.insertAfterSelector && jQuery(aResponse.insertAfterSelector).length > 0 && aResponse.insertHtml) {
+                      jQuery(aResponse.insertHtml).insertAfter(jQuery(aResponse.insertAfterSelector))
+                    }
+                    if (aResponse.useInputNames && aResponse.clearInputNames) {
+                      var strInputNames = data.useInputNames
+                      jQuery.each(strInputNames.split(","), function(index, value) {
+                        var $input = jQuery("[data-row-id="+aResponse.rowId+"] [name="+value+"]")
+                        if ($input.length > 0) {
+                          $input.val("");
+                        }
+                      })
+                    }
                   }
                 }
               } else {
@@ -119,9 +164,11 @@ jQuery( document ).ready(function() {
                 } else {
                   fnFlorpShowMessage("An error occured", strMessageId+"-error", "error", 5000)
                 }
+                console.log(aResponse)
               }
             } catch (e) {
               console.warn(e)
+              console.log(response)
               fnFlorpShowMessage("An error occured", "exception-error", "error", 5000)
             }
           } else {

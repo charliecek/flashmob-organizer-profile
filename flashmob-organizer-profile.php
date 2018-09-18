@@ -5,12 +5,12 @@
  * Description: Creates shortcodes for flashmob organizer login / registration / profile editing form and for maps showing cities with videos of flashmobs for each year
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.4.3
+ * Version: 4.5.0
  */
 
 class FLORP{
 
-  private $strVersion = '4.4.3';
+  private $strVersion = '4.5.0';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -69,6 +69,7 @@ class FLORP{
       'iFlashmobBlogID'                           => 6,
       'iMainBlogID'                               => 1,
       'iNewsletterBlogID'                         => 0,
+      'iCloneSourceBlogID'                        => 0,
       'iProfileFormNinjaFormIDMain'               => 0,
       'iProfileFormPopupIDMain'                   => 0,
       'iProfileFormNinjaFormIDFlashmob'           => 0,
@@ -150,6 +151,7 @@ class FLORP{
       'florp_flashmob_blog_id'                    => 'iFlashmobBlogID',
       'florp_main_blog_id'                        => 'iMainBlogID',
       'florp_newsletter_blog_id'                  => 'iNewsletterBlogID',
+      'florp_clone_source_blog_id'                => 'iCloneSourceBlogID',
       'florp_profile_form_ninja_form_id_main'     => 'iProfileFormNinjaFormIDMain',
       'florp_profile_form_popup_id_main'          => 'iProfileFormPopupIDMain',
       'florp_profile_form_ninja_form_id_flashmob' => 'iProfileFormNinjaFormIDFlashmob',
@@ -231,6 +233,8 @@ class FLORP{
         'iFlashmobHour',
         'iFlashmobMinute',
         'iMainBlogID',
+        'iNewsletterBlogID',
+        'iCloneSourceBlogID',
         'iProfileFormNinjaFormIDMain',
         'iProfileFormPopupIDMain',
         'bLoadMapsLazy',
@@ -581,6 +585,7 @@ class FLORP{
     add_action( 'wp_ajax_delete_florp_participant', array( $this, 'action__delete_florp_participant_callback' ));
     add_action( 'wp_ajax_florp_tshirt_paid', array( $this, 'action__florp_tshirt_paid_callback' ));
     add_action( 'wp_ajax_florp_tshirt_send_payment_warning', array( $this, 'action__florp_tshirt_send_payment_warning_callback' ));
+    add_action( 'wp_ajax_florp_create_subsite', array( $this, 'action__florp_create_subsite_callback' ));
     add_action( 'admin_menu', array( $this, "action__remove_admin_menu_items" ), 9999 );
     add_action( 'admin_menu', array( $this, "action__add_options_page" ));
     add_action( 'wp_enqueue_scripts', array( $this, 'action__wp_enqueue_scripts' ), 9999 );
@@ -2377,6 +2382,7 @@ class FLORP{
 //       'profil-organizatora-svk-flashmobu_page_florp-leaders',
       'profil-organizatora-svk-flashmobu_page_florp-participants',
       'profil-organizatora-svk-flashmobu_page_florp-tshirts',
+      'profil-organizatora-svk-flashmobu_page_florp-subsites',
 //       'profil-organizatora-svk-flashmobu_page_florp-lwa',
     );
     if (in_array($strHook, $aPermittedHooks)) {
@@ -2466,6 +2472,14 @@ class FLORP{
         'manage_options',
         'florp-tshirts',
         array( $this, 'tshirts_table_admin' )
+      );
+      $page = add_submenu_page(
+        'florp-main',
+        'Podstránky lídrov',
+        'Podstránky lídrov',
+        'manage_options',
+        'florp-subsites',
+        array( $this, 'subsites_table_admin' )
       );
     }
   }
@@ -2593,7 +2607,7 @@ class FLORP{
         $strRowID = "florpRow-".$iLeaderID."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
         $strButtonID = "florpButton-".$iLeaderID."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
         $strButtons = '<br/><span class="button double-check" data-text-double-check="Are you sure?" data-text-default="'.$strButtonLabelDelete.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-leader-id="'.$iLeaderID.'" data-participant-email="'.$strEmail.'" data-sure="0" data-action="delete_florp_participant" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelDelete.'</span>';
-        $strEcho .= '<tr data-row-id="'.$strRowID.'">';
+        $strEcho .= '<tr class="row" data-row-id="'.$strRowID.'">';
         $strEcho .=   '<td>'.$aParticipantData['first_name'].' '.$aParticipantData['last_name'].$strButtons.'</td>';
         $strEcho .=   '<td><a name="'.$aParticipantData['user_email'].'">'.$aParticipantData['user_email'].'</a></td>';
         $strEcho .=   '<td>'.$aParticipantData['flashmob_city'].'</td>';
@@ -2684,6 +2698,7 @@ class FLORP{
       );
     }
     $aParticipants = $this->get_flashmob_participants( 0, false, false );
+//     echo "<pre>";var_dump($aParticipants);echo "</pre>";
     foreach ($aParticipants as $iLeaderID => $aParticipantsOfLeader) {
       foreach ($aParticipantsOfLeader as $strEmail => $aParticipantData) {
         if (!in_array("flashmob_participant_tshirt", $aParticipantData["preferences"])) {
@@ -2706,6 +2721,7 @@ class FLORP{
           "flashmob_city" => $aParticipantData['flashmob_city'],
           "type" => "Účastník",
           "leader" => "{$oLeader->first_name} {$oLeader->last_name}",
+          "registered_timestamp" => isset($aParticipantData["registered"]) ? $aParticipantData["registered"] : 0,
           "properties" => array(
             "webpage" => $this->get_leader_webpage($aWebpageArgs),
             "tshirt_size" => isset($aParticipantData['flashmob_participant_tshirt_size']) ? $aParticipantData['flashmob_participant_tshirt_size'] : "n/a",
@@ -2888,7 +2904,7 @@ class FLORP{
           }
         }
       }
-      $strEcho .= '<tr data-row-id="'.$strRowID.'">';
+      $strEcho .= '<tr class="row" data-row-id="'.$strRowID.'">';
 //       $strEcho .= '<tr>';
       $strEcho .=   '<td>'.$aTshirtData['name'].$strButtons.'</td>';
       $strEcho .=   '<td><a name="'.$aTshirtData['email'].'">'.$aTshirtData['email'].'</a></td>';
@@ -3058,6 +3074,392 @@ class FLORP{
     wp_die();
   }
 
+  public function action__florp_create_subsite_callback() {
+    check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
+
+    $aData = $_POST;
+    $strErrorMessage = "Could not create subsite for subdomain '{$aData['subdomain']}'.";
+    $oUser = wp_get_current_user();
+    $iUserID = get_current_user_id();
+    if (is_super_admin( $iUserID ) || current_user_can( 'manage_sites' )) {
+      $strDomainEnding = "." . $this->get_root_domain();
+      $strSlug = $aData["subdomain"];
+      $strDomain = $strSlug . $strDomainEnding;
+      $iSourceBlogID = $this->aOptions['iCloneSourceBlogID'];
+      $strPath = '/';
+      $aArgs = array(
+        'slug' => $aData["subdomain"],
+        'source' => $this->aOptions['iCloneSourceBlogID'],
+        'email' => $oUser->user_email,
+        'keep_users' => true,
+      );
+      if( class_exists( 'MUCD_Functions' ) ) {
+        $strErrorMessage = "Could not clone subsite for subdomain '{$aData['subdomain']}'.";
+        if (isset($aArgs['source']) && $aArgs['source'] > 0) {
+          $bTest = false; // TODO DEVEL TEST //
+          if ($bTest) {
+            $aData['ok'] = true;
+            $aData['message'] = "ok message";
+          } else {
+            $aResult = $this->mucd_clone_site( $aArgs );
+            $aData = array_merge( $aData, $aResult );
+          }
+        } else {
+          $aData["message"] = $strErrorMessage . "<br/>Source subsite is not set!";
+        }
+      } else {
+        $iID = wpmu_create_blog( $strDomain, $strPath, $aArgs['slug'], $iUserID );
+        if (is_wp_error($iID)) {
+          $aData["message"] = $strErrorMessage . "<br/>".$iID->get_error_message();
+        } else {
+          $aData["ok"] = true;
+          $aData["message"] = "Successfully created subsite: '{$strDomain}'";
+        }
+      }
+    } else {
+      $aData["message"] = "You do not have sufficient rights to create a subsite!";
+    }
+
+    if ($aData['ok']) {
+      $aData["removeRowOnSuccess"] = false;
+      if ($aData["rowId"] === "florpRow-subsite-0") {
+        $aData["insertAfterSelector"] = "table tr:last-of-type";
+        $aData["insertHtml"] = "<tr><td>-</td><td>-</td><td>{$strDomain}</td></tr>";
+        $aData["clearInputNames"] = true;
+      } else {
+        $aData["hideSelector"] = "tr[data-row-id={$aData['rowId']}] span[data-user_id={$aData['user_id']}], tr[data-row-id={$aData['rowId']}] .subsite br";
+        $aData["replaceButton"] = true;
+      }
+      $aData["replaceButtonHtml"] = "<span data-button-id=\"{$aData['buttonId']}\">{$strDomain}</span>";
+    }
+
+    echo json_encode($aData);
+    wp_die();
+  }
+
+  private function mucd_clone_site( $assoc_args ) {
+    /**
+     * Duplicate a site in a multisite install.
+     *
+     * ## OPTIONS
+     *
+     * --slug=<slug>
+     * : Path for the new site. Subdomain on subdomain installs, directory on subdirectory installs.
+     *
+     * --source=<site_id>
+     * : ID of the site to duplicate.
+     *
+     * [--title=<title>]
+     * : Title of the new site. Default: prettified slug.
+     *
+     * [--email=<email>]
+     * : Email for Admin user. User will be created if none exists. Assignement to Super Admin if not included.
+     *
+     * [--network_id=<network-id>]
+     * : Network to associate new site with. Defaults to current network (typically 1).
+     *
+     * [--private]
+     * : If set, the new site will be non-public (not indexed)
+     *
+     * [--porcelain]
+     * : If set, only the site id will be output on success.
+     *
+     * [--v]
+     * : If set, print more details about the new site (Verbose mode). Do not work if --procelain is set.
+     *
+     * [--do_not_copy_files]
+     * : If set, files of the duplicated site will not be copied.
+     *
+     * [--keep_users]
+     * : If set, the new site will have the same users as the duplicated site.
+     *
+     * [--log=<dir_path>]
+     * : If set, a log will be written in this directory (please check this directory is writable).
+     *
+     * @alias clone
+     *
+     * @synopsis --slug=<slug> --source=<site_id> [--title=<title>] [--email=<email>] [--network_id=<network-id>] [--private] [--porcelain] [--v] [--do_not_copy_files] [--keep_users] [--log=<dir_path>]
+     */
+
+    $aOutput = array(
+      'ok' => false
+    );
+    if( !class_exists( 'MUCD_Functions' ) ) {
+      $aOutput['message'] = "MUCD plugin is not active!";
+      return $aOutput;
+    }
+
+    global $wpdb, $current_site;
+
+
+    $base = $assoc_args['slug'];
+    $title = isset( $assoc_args['title'] ) ? $assoc_args['title'] : ucfirst( $base );
+
+    $email = empty( $assoc_args['email'] ) ? '' : $assoc_args['email'];
+
+    // Network
+    if ( !empty( $assoc_args['network_id'] ) ) {
+        $network = MUCD_Functions::get_network( $assoc_args['network_id'] );
+        if ( $network === false ) {
+            $aOutput['message'] = sprintf( 'Network with id %d does not exist.', $assoc_args['network_id'] );
+            return $aOutput;
+        }
+    }
+    else {
+        $network = $current_site;
+    }
+    $network_id = $network->id;
+
+    $public = !isset( $assoc_args['private'] );
+
+    // Sanitize
+    if ( preg_match( '|^([a-zA-Z0-9-])+$|', $base ) ) {
+        $base = strtolower( $base );
+    }
+
+    // If not a subdomain install, make sure the domain isn't a reserved word
+    if ( !is_subdomain_install() ) {
+        $subdirectory_reserved_names = apply_filters( 'subdirectory_reserved_names', array( 'page', 'comments', 'blog', 'files', 'feed' ) );
+        if ( in_array( $base, $subdirectory_reserved_names ) ) {
+            $aOutput['message'] =  'The following words are reserved and cannot be used as blog names: ' . implode( ', ', $subdirectory_reserved_names );
+            return $aOutput;
+        }
+    }
+
+    // Check for valid email, if not, use the first Super Admin found
+    // Probably a more efficient way to do this so we dont query for the
+    // User twice if super admin
+    $email = sanitize_email( $email );
+    if ( empty( $email ) || !is_email( $email ) ) {
+        $super_admins = get_super_admins();
+        $email = '';
+        if ( !empty( $super_admins ) && is_array( $super_admins ) ) {
+            // Just get the first one
+            $super_login = $super_admins[0];
+            $super_user = get_user_by( 'login', $super_login );
+            if ( $super_user ) {
+                $email = $super_user->user_email;
+            }
+        }
+    }
+
+    if ( is_subdomain_install() ) {
+        $newdomain = $base.'.'.preg_replace( '|^www\.|', '', $network->domain );
+        $path = $network->path;
+    }
+    else {
+        $newdomain = $network->domain;
+        $path = $network->path . $base . '/';
+    }
+
+    // Source ?
+    $source = $assoc_args['source'];
+    if(! intval($source) != 0) {
+        $aOutput['message'] = $source . ' is not a valid site ID.';
+        return $aOutput;
+    }
+
+    if (! MUCD_Functions::site_exists($source)) {
+        $aOutput['message'] = 'There is no site with ID=' . $source . '. The site to duplicate must be an existing site of the network.';
+        return $aOutput;
+    }
+
+
+    // Copy files ?
+    $copy_files = isset( $assoc_args['do_not_copy_files'] ) ? 'no' : 'yes';
+
+    // Keep users ?
+    $keep_users = isset( $assoc_args['keep_users'] ) ? 'yes' : 'no';
+
+    // Write log
+    if(isset( $assoc_args['log'] )) {
+        $log = 'yes';
+        $log_path = $assoc_args['log'];
+    }
+    else {
+        $log = 'no';
+        $log_path = '';
+    }
+
+    $data = array (
+        'source' => $source,
+        'domain' => $base,
+        'title' => $title,
+        'email' => $email,
+        'copy_files' => $copy_files,
+        'keep_users' => $keep_users,
+        'log' => $log,
+        'log-path' => $log_path,
+        'from_site_id' => $source,
+        'newdomain' => $newdomain,
+        'path' => $path,
+        'public' => $public,
+        'network_id' => $network_id,
+    );
+
+    $wpdb->hide_errors();
+    $form_message = MUCD_Duplicate::duplicate_site($data);
+    $wpdb->show_errors();
+
+    if(isset($form_message['error']) ) {
+      $aOutput['message'] = $form_message['error'];
+    } else {
+      $aOutput['ok'] = true;
+      if ( isset( $assoc_args['porcelain'] ) ) {
+        $aOutput['new_site_id'] = $form_message['site_id'];
+      } else {
+        switch_to_blog($form_message['site_id']);
+
+        if(! isset( $assoc_args['v'] )) {
+          $aOutput['message'] = 'Site ' . $form_message['site_id'] . ' created: ' . get_site_url();
+          $aOutput['new_site_id'] = $form_message['site_id'];
+        } else { // Verbose mode
+          $aOutput['message'] = $form_message['msg'];
+          $aOutput['new_site_id'] = $form_message['site_id'];
+          $aOutput['new_site_title'] = get_bloginfo('name');
+          $aOutput['new_site_front'] = get_site_url();
+          $aOutput['new_site_dashboard'] = admin_url();
+          $aOutput['new_site_customize'] = admin_url( 'customize.php' );
+        }
+
+        restore_current_blog();
+      }
+    }
+    return $aOutput;
+  }
+
+  private function setup_new_city_subsite( $iSiteID ) {
+    $aAdminArgs = array(
+      'blog_id' => $this->iMainBlogID,
+      'role'    => 'administrator'
+    );
+    $aAdmins = get_users( $aAdminArgs );
+    if (empty($aAdmins) || (defined('FLORP_DEVEL') && FLORP_DEVEL === true)) {
+      $aAdmins = array( wp_get_current_user() );
+    }
+
+    foreach ($aAdmins as $oAdmin) {
+      if ($oAdmin->ID === get_current_user_id()) {
+        continue;
+      }
+      add_user_to_blog( $iSiteID, $oAdmin->ID, 'administrator' );
+    }
+  }
+
+  private function get_root_domain() {
+    $aSites = wp_get_sites();
+    foreach ($aSites as $i => $aSite) {
+      if ($aSite['public'] != 1 || $aSite['deleted'] == 1 || $aSite['archived'] == 1) {
+        continue;
+      }
+      $strDomain = $aSite['domain'];
+      $iID = intval($aSite['blog_id']);
+      if (is_main_site($iID)) {
+        return $strDomain;
+      }
+    }
+    return "salsarueda.dance";
+  }
+
+  public function subsites_table_admin() {
+    echo "<div class=\"wrap\">\n<h1>" . "Podstránky lídrov" . "</h1>\n";
+    $aUsers = $this->getFlashmobSubscribers( 'all', true );
+    $strDoubleCheckQuestion = "Ste si istý?";
+    $strAction = 'florp_create_subsite';
+    $strDomainEnding = "." . $this->get_root_domain();
+    $aUserSubdomains = array();
+    $strEcho = '<table class="widefat striped"><th>Mesto</th><th>Líder</th><th>Podstránka</th>'."\n";
+    foreach ($aUsers as $oUser) {
+      $aAllMeta = array_map(
+        function( $a ){
+          if (is_string($a) && strpos($a, 'a:') === 0) {
+            return maybe_unserialize( $a );
+          } elseif (is_array($a) && count($a) === 1) {
+            if (is_string($a[0]) && strpos($a[0], 'a:') === 0) {
+              return maybe_unserialize( $a[0] );
+            } else {
+              return $a[0];
+            }
+          } else {
+            return $a;
+          }
+        },
+        get_user_meta( $oUser->ID )
+      );
+      $strSubDomainPage = false;
+      if (
+              !empty($aAllMeta['flashmob_city'])
+           && (
+                ($strSubDomainPage = $this->findCityWebpage($aAllMeta['flashmob_city'], false))
+             || (!empty($aAllMeta['webpage']) && $aAllMeta['webpage'] === "vytvorit")
+          )
+      ) {
+        $strCity = $aAllMeta['flashmob_city'];
+        $strRowID = "florpRow-subsite-{$oUser->ID}";
+        if ($strSubDomainPage) {
+          $strSubsite = $strSubDomainPage;
+          $aUserSubdomains[] = $strSubDomainPage;
+        } elseif (!$aData["bInfoWindow"]) {
+          $strSubsite = "<span data-user_id=\"{$oUser->ID}\">Vytvoriť:</span>";
+          $aVariations = $this->getCitySubdomainVariations( $strCity );
+          foreach ($aVariations as $strVariation) {
+            $strButtonLabel = $strVariation . $strDomainEnding;
+            $strButtonID = "florpButton-createSubsite-{$oUser->ID}-{$strVariation}";
+            $aButtonData = array(
+              'user_id' => $oUser->ID,
+              'subdomain' => $strVariation,
+            );
+            $strData = "";
+            foreach ($aButtonData as $strKey => $strValue) {
+              $strData .= " data-{$strKey}=\"{$strValue}\"";
+            }
+            $strSubsite .= '<br><span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'"'.$strData.' data-action="'.$strAction.'" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabel.'</span>';
+          }
+
+//           $strSubsite = implode( ", ", $aVariations );
+        }
+        $strEcho .= "<tr class=\"row\" data-row-id=\"{$strRowID}\">";
+        $strEcho .=   "<td>{$strCity}</td>\n";
+        $strEcho .=   "<td>{$oUser->first_name} {$oUser->last_name}<br>\n{$oUser->user_email}</td>\n";
+        $strEcho .=   "<td class=\"subsite\">{$strSubsite}</td>";
+        $strEcho .= "</tr>\n";
+      } else {
+        continue;
+      }
+    }
+    $aSites = wp_get_sites();
+    $strRootDomain = "";
+    foreach ($aSites as $i => $aSite) {
+      if ($aSite['public'] != 1 || $aSite['deleted'] == 1 || $aSite['archived'] == 1) {
+        continue;
+      }
+      $strDomain = $aSite['domain'];
+      $iID = intval($aSite['blog_id']);
+      $aParts = explode( ".", $strDomain );
+      if (!is_array($aParts) || count($aParts) !== 3) {
+        continue;
+      }
+      $aSkipDomains = array( 'ruedon.salsarueda.dance', 'festivaly.salsarueda.dance' );
+      if ($iID === $this->aOptions['iFlashmobBlogID'] || $iID === $this->aOptions['iMainBlogID'] || in_array($strDomain, $aSkipDomains) || in_array($strDomain, $aUserSubdomains)) {
+        continue;
+      }
+//       var_dump($iID, $this->aOptions['iFlashmobBlogID']);
+      $strEcho .= "<tr><td>-</td><td>-</td><td>{$strDomain}</td></tr>";
+    }
+    $strEcho .= "</table>";
+
+    $strRowID = "florpRow-subsite-0";
+    $strButtonID = "florpButton-createSubsite-0-new";
+    $strButtonLabel = "Vytvoriť";
+    $strData = "";
+    $strEcho .= "<p class=\"row\" data-row-id=\"{$strRowID}\">Vytvoriť inú podstránku: ";
+    $strEcho .= '<input type="text" name="subdomain" value="">'.$strDomainEnding;
+    $strEcho .= ' <span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'"'.$strData.' data-use-input-names="subdomain" data-action="'.$strAction.'" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabel.'</span>';
+    $strEcho .= "</p>";
+    echo $strEcho;
+    echo '</div><!-- .wrap -->';
+  }
+
   public function options_page() {
     // echo "<h1>" . __("Flashmob Organizer Profile Options", "florp" ) . "</h1>";
     echo "<div class=\"wrap\"><h1>" . "Nastavenia profilu organizátora slovenského flashmobu" . "</h1>";
@@ -3072,6 +3474,7 @@ class FLORP{
     $optionsFlashmobSite = '';
     $optionsMainSite = '';
     $optionsNewsletterSite = $optionNoneF;
+    $optionsCloneSourceSite = $optionNoneF;
     $aSites = wp_get_sites();
     $strMainBlogDomain = '';
     $strFlashmobBlogDomain = '';
@@ -3098,9 +3501,15 @@ class FLORP{
       } else {
         $strSelectedNewsletterSite = '';
       }
+      if ($this->aOptions['iCloneSourceBlogID'] == $iID) {
+        $strSelectedCloneSourceSite = 'selected="selected"';
+      } else {
+        $strSelectedCloneSourceSite = '';
+      }
       $optionsFlashmobSite .= '<option value="'.$iID.'" '.$strSelectedFlashmobSite.'>'.$strTitle.'</option>';
       $optionsMainSite .= '<option value="'.$iID.'" '.$strSelectedMainSite.'>'.$strTitle.'</option>';
       $optionsNewsletterSite .= '<option value="'.$iID.'" '.$strSelectedNewsletterSite.'>'.$strTitle.'</option>';
+      $optionsCloneSourceSite .= '<option value="'.$iID.'" '.$strSelectedCloneSourceSite.'>'.$strTitle.'</option>';
     }
 
     if (!$this->isMainBlog && strlen($strMainBlogDomain) > 0) {
@@ -3147,6 +3556,7 @@ class FLORP{
       'optionNone' => $optionNone,
       'optionNoneF' => $optionNoneF,
       'aBooleanOptionsChecked' => $aBooleanOptionsChecked,
+      'optionsCloneSourceSite' => $optionsCloneSourceSite
     );
     $aVariablesFlashmob = array(
       'optionsFlashmobSite' => $optionsFlashmobSite,
@@ -3259,7 +3669,8 @@ class FLORP{
         '%%strRegistrationSuccessfulMessage%%', '%%strLoginSuccessfulMessage%%', '%%strUserApprovedSubject%%',
         '%%strNewsletterListsMain%%', '%%strLeaderParticipantListNotificationSbj%%', '%%wpEditorLeaderParticipantListNotificationMsg%%',
         '%%strLoginBarLabelLogin%%', '%%strLoginBarLabelLogout%%', '%%strLoginBarLabelProfile%%',
-        '%%strTshirtPaymentWarningNotificationSbj%%', '%%wpEditorTshirtPaymentWarningNotificationMsg%%' ),
+        '%%strTshirtPaymentWarningNotificationSbj%%', '%%wpEditorTshirtPaymentWarningNotificationMsg%%',
+        '%%optionsCloneSourceSite%%' ),
       array( $aBooleanOptionsChecked['bReloadAfterSuccessfulSubmissionMain'],
         $optionsNinjaFormsMain,
         $optionsPopupsMain,
@@ -3270,7 +3681,8 @@ class FLORP{
         $this->aOptions['strRegistrationSuccessfulMessage'], $this->aOptions['strLoginSuccessfulMessage'], $this->aOptions['strUserApprovedSubject'],
         $this->aOptions['strNewsletterListsMain'], $this->aOptions['strLeaderParticipantListNotificationSbj'], $wpEditorLeaderParticipantListNotificationMsg,
         $this->aOptions['strLoginBarLabelLogin'], $this->aOptions['strLoginBarLabelLogout'], $this->aOptions['strLoginBarLabelProfile'],
-        $this->aOptions['strTshirtPaymentWarningNotificationSbj'], $wpEditorTshirtPaymentWarningNotificationMsg ),
+        $this->aOptions['strTshirtPaymentWarningNotificationSbj'], $wpEditorTshirtPaymentWarningNotificationMsg,
+        $optionsCloneSourceSite ),
       '
             <tr style="width: 98%; padding:  5px 1%;">
               <th colspan="2"><h3>Hlavná stránka</h3></th>
@@ -3439,6 +3851,12 @@ class FLORP{
               </th>
               <td style="border-top: 1px lightgray dashed;">
                 %%wpEditorTshirtPaymentWarningNotificationMsg%%
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_clone_source_blog_id">Podstránka, ktorá sa má klonovať</label></th>
+              <td>
+                <select id="florp_clone_source_blog_id" name="florp_clone_source_blog_id" style="width: 100%;">%%optionsCloneSourceSite%%</select>
               </td>
             </tr>
       '
@@ -4188,20 +4606,16 @@ class FLORP{
     ));
   }
 
-  private function findCityWebpage( $strCity ) {
-    if ($strCity === "null") {
-      return false;
-    }
-    $aSites = wp_get_sites();
+  private function getCitySubdomainVariations( $strCity ) {
     $strCity = $this->removeAccents( strtolower($strCity) );
 
     // Check also other variations: with dash,underscore,"" instead of spaces; initials //
     $aVariations = array();
-    foreach (array("", "-", "_") as $delimiter) {
-      $aVariations[] = str_replace( " ", $delimiter, $strCity );
-    }
     $aWords = preg_split( "/\s+/", $strCity );
     if (is_array($aWords) && count($aWords) > 1) {
+      foreach (array("", "-", "_") as $delimiter) {
+        $aVariations[] = str_replace( " ", $delimiter, $strCity );
+      }
       $strInitials = "";
       foreach ($aWords as $strWord) {
         $strInitials .= $strWord[0];
@@ -4209,7 +4623,21 @@ class FLORP{
       if (strlen($strInitials) > 1) {
         $aVariations[] = $strInitials;
       }
+    } else {
+      $aVariations[] = $strCity;
     }
+
+    return $aVariations;
+  }
+
+  private function findCityWebpage( $strCity, $bWithProtocol = true ) {
+    if ($strCity === "null") {
+      return false;
+    }
+    $strProtocol = $bWithProtocol ? "http://" : "";
+    $aSites = wp_get_sites();
+    $strCity = $this->removeAccents( strtolower($strCity) );
+    $aVariations = $this->getCitySubdomainVariations( $strCity );
 
     foreach ($aSites as $i => $aSite) {
       if ($aSite['public'] != 1 || $aSite['deleted'] == 1 || $aSite['archived'] == 1) {
@@ -4223,11 +4651,11 @@ class FLORP{
       }
       $strSubDomain = $aParts[0];
       if (strpos($strCity, $strSubDomain) !== false) {
-        return "http://".$strDomain;
+        return $strProtocol.$strDomain;
       }
       foreach ($aVariations as $strVariation) {
         if ($strVariation === $strSubDomain) {
-          return "http://".$strDomain;
+          return $strProtocol.$strDomain;
         }
       }
     }
@@ -4657,6 +5085,7 @@ class FLORP{
         }
         $aFieldData[$aData["key"]] = $aData['value'];
       }
+      $aFieldData["registered"] = (int) current_time( 'timestamp' );
       $iUserID = $aFieldData['leader_user_id'];
       if (!isset($this->aOptions['aParticipants'][$iUserID])) {
         $this->aOptions['aParticipants'][$iUserID] = array();
