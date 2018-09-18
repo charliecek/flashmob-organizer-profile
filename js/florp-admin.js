@@ -95,6 +95,9 @@ jQuery( document ).ready(function() {
                 window[strButtonIdLocal]["interval"] = null
                 var button = jQuery(".button.double-check[data-button-id="+aResponse.buttonId+"]")
                 button.text(aResponse.textDefault).removeClass("button-primary").data("sure", 0)
+                if (button.hasClass("button-warning-removed")) {
+                  button.removeClass("button-warning-removed").addClass("button-warning")
+                }
                 var $row = jQuery(".row[data-row-id="+aResponse.rowId+"]")
                 if (aResponse.removeRowOnSuccess && aResponse.removeRowOnSuccess === true) {
                   if ($row.length > 0) {
@@ -181,6 +184,10 @@ jQuery( document ).ready(function() {
     } else {
       window[strButtonId]["timeLeft"] = 5, window[strButtonId]["wait"] = 0, window[strButtonId]["timeout"] = 10
       $this.text(fnFlorpButtonLabel(textDoubleCheck, window[strButtonId]["timeLeft"])).addClass("button-primary").data("sure", 1).data("wait", 0)
+      if ($this.hasClass("button-warning")) {
+        $this.removeClass("button-warning").addClass("button-warning-removed")
+      }
+
       window[strButtonId]["interval"] = setInterval(function() {
         wait = $this.data("wait")
         if ("undefined" !== typeof wait && wait === 1) {
@@ -189,6 +196,9 @@ jQuery( document ).ready(function() {
             clearInterval(window[strButtonId]["interval"])
             window[strButtonId]["interval"] = null
             $this.text(textDefault).removeClass("button-primary").data("sure", 0)
+            if ($this.hasClass("button-warning-removed")) {
+              $this.removeClass("button-warning-removed").addClass("button-warning")
+            }
             fnFlorpShowMessage("The operation timed out", "timeout-error", "error", 5000)
           }
         } else {
@@ -197,6 +207,9 @@ jQuery( document ).ready(function() {
             clearInterval(window[strButtonId]["interval"])
             window[strButtonId]["interval"] = null
             $this.text(textDefault).removeClass("button-primary").data("sure", 0)
+            if ($this.hasClass("button-warning-removed")) {
+              $this.removeClass("button-warning-removed").addClass("button-warning")
+            }
           } else {
             $this.text(fnFlorpButtonLabel(textDoubleCheck, window[strButtonId]["timeLeft"]))
           }

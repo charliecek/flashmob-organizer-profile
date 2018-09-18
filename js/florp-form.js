@@ -971,7 +971,7 @@
     // Turn .florp_disabled fields into disabled fields //
     jQuery(".florp_disabled select,.florp_disabled input").prop("disabled", true);
     if (florp.blog_type === "main" && florp.has_participants == 1) {
-      jQuery("input.flashmob_organizer").prop("disabled", true)
+      jQuery("input.florp_flashmob_organizer").prop("disabled", true)
       jQuery(".florp_flashmob_city").prop("disabled", true)
     }
 
@@ -1447,7 +1447,9 @@
       fnToggleFlashmobFieldsIfOrganizer = function() {
         var $elementsToDisable = jQuery("input.florp_hide_leader_info, select.florp_flashmob_city, .florp-button-find-location")
         if ($flashmobOrganizerCheckbox.is(":checked")) {
-          $elementsToDisable.removeAttr("disabled")
+          if (florp.has_participants != 1) {
+            $elementsToDisable.removeAttr("disabled")
+          }
         } else {
           $elementsToDisable.attr("disabled", "disabled")
         }
@@ -1659,6 +1661,18 @@
         var $this = jQuery(this)
         fnToggleFields($this, "preference");
       })
+      if (florp.tshirt_ordering_disabled == "1") {
+        $tshirtPreferenceCheckbox = jQuery(".florp_preferences_container input[type=checkbox][value=flashmob_participant_tshirt]")
+        $tshirtPreferenceCheckbox.prop("disabled", true)
+        var bHide = (florp.tshirt_ordering_only_disable != "1")
+        if (bHide) {
+          var id = $tshirtPreferenceCheckbox.attr("id")
+//           $tshirtPreferenceCheckbox.css("visibility", "hidden")
+//           jQuery("label[for="+id+"]").css("visibility", "hidden")
+          $tshirtPreferenceCheckbox.hide()
+          jQuery("label[for="+id+"]").hide()
+        }
+      }
     }
   }
 
