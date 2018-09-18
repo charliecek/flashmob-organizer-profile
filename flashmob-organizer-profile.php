@@ -5,12 +5,12 @@
  * Description: Creates shortcodes for flashmob organizer login / registration / profile editing form and for maps showing cities with videos of flashmobs for each year
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.5.1
+ * Version: 4.5.2
  */
 
 class FLORP{
 
-  private $strVersion = '4.5.1';
+  private $strVersion = '4.5.2';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -593,6 +593,7 @@ class FLORP{
     add_action( 'wp_ajax_delete_florp_participant', array( $this, 'action__delete_florp_participant_callback' ));
     add_action( 'wp_ajax_florp_tshirt_paid', array( $this, 'action__florp_tshirt_paid_callback' ));
     add_action( 'wp_ajax_florp_tshirt_send_payment_warning', array( $this, 'action__florp_tshirt_send_payment_warning_callback' ));
+    add_action( 'wp_ajax_florp_tshirt_cancel_order', array( $this, 'action__florp_tshirt_cancel_order_callback' ));
     add_action( 'wp_ajax_florp_create_subsite', array( $this, 'action__florp_create_subsite_callback' ));
     add_action( 'admin_menu', array( $this, "action__remove_admin_menu_items" ), 9999 );
     add_action( 'admin_menu', array( $this, "action__add_options_page" ));
@@ -2608,6 +2609,7 @@ class FLORP{
 //     $strEcho .= '<th>Pohlavie</th><th>Tanečná úroveň</th>';
     $strEcho .= '<th>Profil</th>';
     $aParticipants = $this->get_flashmob_participants( 0, false, true );
+//     echo "<pre>";var_dump($aParticipants);echo "</pre>";
     $aReplacements = array(
       'gender' => array(
         'from'  => array( 'muz', 'zena', 'par' ),
@@ -2627,10 +2629,11 @@ class FLORP{
         foreach ($aReplacements as $strKey => $aReplacementArr) {
           $aParticipantData[$strKey] = str_replace( $aReplacementArr['from'], $aReplacementArr['to'], $aParticipantData[$strKey]);
         }
-        $strButtonLabelDelete = "delete";
+        $strButtonLabelDelete = "Zmazať";
+        $strDoubleCheckQuestion = "Ste si istý?";
         $strRowID = "florpRow-".$iLeaderID."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
         $strButtonID = "florpButton-".$iLeaderID."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
-        $strButtons = '<br/><span class="button double-check" data-text-double-check="Are you sure?" data-text-default="'.$strButtonLabelDelete.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-leader-id="'.$iLeaderID.'" data-participant-email="'.$strEmail.'" data-sure="0" data-action="delete_florp_participant" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelDelete.'</span>';
+        $strButtons = '<br/><span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelDelete.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-leader-id="'.$iLeaderID.'" data-participant-email="'.$strEmail.'" data-sure="0" data-action="delete_florp_participant" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelDelete.'</span>';
         $strEcho .= '<tr class="row" data-row-id="'.$strRowID.'">';
         $strEcho .=   '<td>'.$aParticipantData['first_name'].' '.$aParticipantData['last_name'].$strButtons.'</td>';
         $strEcho .=   '<td><a name="'.$aParticipantData['user_email'].'">'.$aParticipantData['user_email'].'</a></td>';
@@ -2650,7 +2653,8 @@ class FLORP{
 //         $strEcho .=   '<td>'.$aParticipantData['gender'].'</td>';
 //         $strEcho .=   '<td>'.$aParticipantData['dance_level'].'</td>';
         $strEcho .=   '<td>';
-        $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', 'leader_user_id', 'registered'/*, 'dance_level', 'gender'*/ );
+        $aTimestamps = array( 'registered', 'tshirt_order_cancelled_timestamp' );
+        $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', 'leader_user_id'/*, 'dance_level', 'gender'*/ );
         if (!isset($aParticipantData['leader_notified'])) {
           $aParticipantData['leader_notified'] = false;
         }
@@ -2658,7 +2662,10 @@ class FLORP{
           if (!isset($mixValue) || (!is_bool($mixValue) && !is_numeric($mixValue) && empty($mixValue)) || $mixValue === 'null' || in_array( $strKey, $aSkip )) {
             continue;
           }
-          if (is_array($mixValue)) {
+          if (in_array($strKey, $aTimestamps)) {
+            $strKey = str_replace("_timestamp", "", $strKey);
+            $strValue = date( get_option('date_format')." ".get_option('time_format'), $mixValue );
+          } elseif (is_array($mixValue)) {
             $strValue = implode( ', ', $mixValue);
           } elseif (is_bool($mixValue)) {
             $strValue = $mixValue ? '<input type="checkbox" disabled checked />' : '<input type="checkbox" disabled />';
@@ -2892,6 +2899,7 @@ class FLORP{
       $strDoubleCheckQuestion = "Ste si istý?";
       $strButtonLabelPaid = "Zaplatil";
       $strButtonLabelPaymentWarning = "Upozorniť na neskorú platbu";
+      $strButtonLabelCancelOrder = "Zrušiť objednávku";
       // We collect the data and button attributes/properties //
       $strData = "";
       foreach ($aTshirtData as $strKey => $mixValue) {
@@ -2910,6 +2918,7 @@ class FLORP{
       $strRowID = "florpRow-".$aTshirtData["id"];
       $strPaidButtonID = "florpButton-paid-".$aTshirtData["id"];
       $strPaymentWarningButtonID = "florpButton-paymentWarning-".$aTshirtData["id"];
+      $strCancelOrderButtonID = "florpButton-cancelOrder-".$aTshirtData["id"];
 
       $strButtons = '<br/>';
       if ($aTshirtData["is_leader"]) {
@@ -2926,8 +2935,13 @@ class FLORP{
       } else {
         $iUnpaid++;
 
+        // Paid button //
         $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelPaid.'" data-button-id="'.$strPaidButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp_tshirt_paid" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelPaid.'</span>';
 
+        // Cancel button //
+        $strButtons .= '<br/><span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelCancelOrder.'" data-button-id="'.$strCancelOrderButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp_tshirt_cancel_order" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelCancelOrder.'</span>';
+
+        // Warning button //
         if (isset($this->aOptions['strTshirtPaymentWarningNotificationMsg'], $this->aOptions['strTshirtPaymentWarningNotificationSbj']) && !empty($this->aOptions['strTshirtPaymentWarningNotificationMsg']) && !empty($this->aOptions['strTshirtPaymentWarningNotificationSbj'])) {
           $strWarningClass = "";
           $bShow = true;
@@ -3014,7 +3028,6 @@ class FLORP{
     }
 //     sleep(3);
     echo json_encode($aData);
-//     echo "a";
     wp_die();
   }
 
@@ -3033,7 +3046,8 @@ class FLORP{
       $aData["replaceButton"] = true;
       $strTitle = ' title="'.date( get_option('date_format')." ".get_option('time_format'), $iTimestampNow ).'"';
       $strPaymentWarningButtonID = str_replace( "-paid-", "-paymentWarning-", $aData['buttonId']);
-      $aData["hideSelector"] = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strPaymentWarningButtonID}]";
+      $strCancelOrderButtonID = str_replace( "-paid-", "-cancelOrder-", $aData['buttonId']);
+      $aData["hideSelector"] = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strPaymentWarningButtonID}], tr[data-row-id={$aData['rowId']}] span[data-button-id={$strCancelOrderButtonID}]";
       $aData["replaceButtonHtml"] = '<span data-button-id="'.$aData['buttonId'].'" class="notice notice-success"'.$strTitle.'>Zaplatené</span>';
       if (false && defined('FLORP_DEVEL') && FLORP_DEVEL === true) {
         // NOTE No use for this yet //
@@ -3066,7 +3080,6 @@ class FLORP{
         $aData["message"] = "The flashmob participant '{$aData['participantEmail']}' was marked as having paid successfully";//." ".var_export($aData, true);
       }
     }
-//     sleep(3);
     echo json_encode($aData);
     wp_die();
   }
@@ -3124,7 +3137,39 @@ class FLORP{
         $aData["message"] = $strErrorMessage;
       }
     }
-//     sleep(3);
+    echo json_encode($aData);
+    wp_die();
+  }
+
+  public function action__florp_tshirt_cancel_order_callback() {
+//     wp_die();
+    check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
+
+    $aData = $_POST;
+    $strErrorMessage = "Could not cancel the tshirt order of flashmob participant '{$aData['email']}'";
+    if (!isset($this->aOptions["aParticipants"]) || empty($this->aOptions["aParticipants"])) {
+      $aData["message"] = $strErrorMessage;
+    } else {
+      if (isset($this->aOptions["aParticipants"][$aData["leader_id"]]) && isset($this->aOptions["aParticipants"][$aData["leader_id"]][$aData["email"]])) {
+        $aPreferences = $this->aOptions["aParticipants"][$aData["leader_id"]][$aData["email"]]['preferences'];
+        if (is_array($aPreferences) && ($iKey = array_search("flashmob_participant_tshirt", $aPreferences)) !== false) {
+          $aData["removeRowOnSuccess"] = true;
+          $aData["ok"] = true;
+          if (false && defined('FLORP_DEVEL') && FLORP_DEVEL === true) {
+            $aData["message"] = "The tshirt order of flashmob participant '{$aData['email']}' was cancelled successfully (NOT: FLORP_DEVEL is on!)";
+          } else {
+            unset($this->aOptions["aParticipants"][$aData["leader_id"]][$aData["email"]]['preferences'][$iKey]);
+            $this->aOptions["aParticipants"][$aData["leader_id"]][$aData["email"]]['tshirt_order_cancelled_timestamp'] = (int) current_time( 'timestamp' );
+            update_site_option( $this->strOptionKey, $this->aOptions, true );
+            $aData["message"] = "The tshirt order of flashmob participant '{$aData['email']}' was cancelled successfully";
+          }
+        } else {
+          $aData["message"] = $strErrorMessage . "<br/>\nThe participant didn't order a tshirt.";
+        }
+      } else {
+        $aData["message"] = $strErrorMessage;
+      }
+    }
     echo json_encode($aData);
     wp_die();
   }
@@ -4562,7 +4607,6 @@ class FLORP{
   }
   
   public function action__reset_password_redirect() {
-//     var_dump("haloooo");
     // Check if have submitted
     $confirm = ( isset($_GET['action'] ) && $_GET['action'] == resetpass );
 

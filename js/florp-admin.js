@@ -163,20 +163,20 @@ jQuery( document ).ready(function() {
                 }
               } else {
                 if (aResponse.message) {
-                  fnFlorpShowMessage(aResponse.message, strMessageId+"-error", "error", 5000)
+                  fnFlorpShowMessage(aResponse.message, strMessageId+"-error", "error", 10000)
                 } else {
-                  fnFlorpShowMessage("An error occured", strMessageId+"-error", "error", 5000)
+                  fnFlorpShowMessage("An error occured", strMessageId+"-error", "error", 10000)
                 }
                 console.log(aResponse)
               }
             } catch (e) {
               console.warn(e)
               console.log(response)
-              fnFlorpShowMessage("An error occured", "exception-error", "error", 5000)
+              fnFlorpShowMessage("An error occured", "exception-error", "error", 10000)
             }
           } else {
             console.warn("No response")
-            fnFlorpShowMessage("An error occured", "no-response-error", "error", 5000)
+            fnFlorpShowMessage("An error occured", "no-response-error", "error", 10000)
           }
           $this.data("wait", 0)
         })
@@ -199,7 +199,7 @@ jQuery( document ).ready(function() {
             if ($this.hasClass("button-warning-removed")) {
               $this.removeClass("button-warning-removed").addClass("button-warning")
             }
-            fnFlorpShowMessage("The operation timed out", "timeout-error", "error", 5000)
+            fnFlorpShowMessage("The operation timed out", "timeout-error", "error", 10000)
           }
         } else {
           window[strButtonId]["timeLeft"]--
