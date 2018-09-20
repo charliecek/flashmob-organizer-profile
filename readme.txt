@@ -1,6 +1,6 @@
 === Flashmob Organizer Profile (with login/registration page) ===
 Requires at least: 4.8
-Tested up to: 4.9.6
+Tested up to: 4.9.8
 Requires PHP: 5.6
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl.html
@@ -12,6 +12,10 @@ Creates flashmob shortcodes, forms and maps
 Creates shortcodes for flashmob organizer login / registration / profile editing form and for maps showing cities with videos of flashmobs for each year
 
 **Version history**
+
+= [v4.5.5: admin table filter, readme](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.5.5) =
+- added admin table filter
+- added readme.txt
 
 = [v4.5.4: form export versioning, refactoring](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.5.4) =
 - added participant registration date import
@@ -302,7 +306,4 @@ Added option to decide whether or not to use map image in og metatags.
 
 = [v2.3.2: Overlay close fix](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v2.3.2) =
 - Fixed bug that caused the profile form popup closing on form submit (after upgrade of PUM to the latest version)
-
-= [v2.3.1: Find location button class selector bugfix](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v2.3.1) =
-- Fixed class selector bug for location find button
 

@@ -259,6 +259,8 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
 //         $data[ 'errors' ][ 'form' ][] = '<pre>'.var_export($data['fields'], true).'</pre>';
 //         $data[ 'errors' ][ 'form' ][] = '<pre>'.var_export($aKeyToValue, true).'</pre>';
 //         $data[ 'errors' ][ 'form' ][] = 'DEVEL STOP';
+      } elseif ((florp_has_main_only_florp_profile_ninja_form() && florp_is_main_blog()) || (florp_has_flashmob_only_florp_profile_ninja_form() && florp_is_flashmob_blog())) {
+        $data[ 'errors' ][ 'form' ]['old_form'] = 'Prosíme, obnovte si stránku. Odkedy ste si ju načítali, nastali zmeny, bez ktorých tento formulár nemôžeme odoslať.';
       }
       return $data;
     }

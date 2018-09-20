@@ -505,6 +505,7 @@
         mixMarkerKey: mixMarkerKey,
         strMapType: strMapType,
         iCurrentYear: jQuery("#"+divID).data('isCurrentYear'),
+        iYear: jQuery("#"+divID).data('year'),
         iBeforeFlashmob: florp.hide_flashmob_fields,
         iIsPreview: bIsPreview ? 1 : 0,
       };

@@ -6,9 +6,9 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.5.5
+ * Version: 4.5.6
  * Requires at least: 4.8
- * Tested up to: 4.9.6
+ * Tested up to: 4.9.8
  * Requires PHP: 5.6
  * License: GPLv3
  * License URI: https://www.gnu.org/licenses/gpl.html
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '4.5.5';
+  private $strVersion = '4.5.6';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -69,6 +69,7 @@ class FLORP{
       'bReloadAfterSuccessfulSubmissionFlashmob'  => false,
       'strLeaderParticipantsTableClass'           => "florp-leader-participants-table",
       'bParticipantRegistrationProcessed'         => false,
+      'bLeadersFrom2017Reimported'                => false,
       'aYearlyMapOptions'                         => array(),
       'iFlashmobYear'                             => isset($this->aOptions['iCurrentFlashmobYear']) ? $this->aOptions['iCurrentFlashmobYear'] : intval(date( 'Y' )),
       'iFlashmobMonth'                            => 1,
@@ -152,6 +153,8 @@ class FLORP{
       'strTshirtPaymentWarningNotificationMsg'    => '<p>Prosíme, pošlite platbu za objednané tričko.</p><p>Váš SalsaRueda.Dance team</p>',
       'bTshirtOrderingDisabled'                   => false,
       'bTshirtOrderingDisabledOnlyDisable'        => false,
+      'bOnlyFlorpProfileNinjaFormFlashmob'        => true,
+      'bOnlyFlorpProfileNinjaFormMain'            => true,
     );
     $this->aOptionFormKeys = array(
       'florp_reload_after_ok_submission_main'     => 'bReloadAfterSuccessfulSubmissionMain',
@@ -218,6 +221,8 @@ class FLORP{
       'florp_tshirt_payment_warning_notif_msg'    => 'strTshirtPaymentWarningNotificationMsg',
       'florp_tshirt_ordering_disabled'            => 'bTshirtOrderingDisabled',
       'florp_tshirt_ordering_only_disable'        => 'bTshirtOrderingDisabledOnlyDisable',
+      'florp_only_florp_profile_nf_flashmob'      => 'bOnlyFlorpProfileNinjaFormFlashmob',
+      'florp_only_florp_profile_nf_main'          => 'bOnlyFlorpProfileNinjaFormMain',
     );
     $aDeprecatedKeys = array(
       // new => old //
@@ -237,6 +242,8 @@ class FLORP{
       'bCoursesInfoDisabled',
       'bTshirtOrderingDisabled',
       'bTshirtOrderingDisabledOnlyDisable',
+      'bOnlyFlorpProfileNinjaFormMain',
+      'bOnlyFlorpProfileNinjaFormFlashmob',
     );
     $this->aOptionKeysByBlog = array(
       'main'      => array(
@@ -292,6 +299,7 @@ class FLORP{
         'strInfoWindowLabel_embed_code',
         'strInfoWindowLabel_courses_info',
         'bCoursesInfoDisabled',
+        'bOnlyFlorpProfileNinjaFormMain',
       ),
       'flashmob'  => array(
         'iFlashmobBlogID',
@@ -310,6 +318,7 @@ class FLORP{
         'strTshirtPaymentWarningNotificationMsg',
         'bTshirtOrderingDisabled',
         'bTshirtOrderingDisabledOnlyDisable',
+        'bOnlyFlorpProfileNinjaFormFlashmob',
       ),
     );
 
@@ -366,7 +375,90 @@ class FLORP{
     $this->maybe_add_crons();
 
     // BEGIN archived yearly map options until 2016 //
-    $aYearlyMapOptionsUntil2016 = array(
+    $aYearlyMapOptionsUntil2017 = array(
+      2017 =>
+      array (
+        22 =>
+        array (
+          'first_name' => 'Jaroslav',
+          'flashmob_address' => 'Polus City Center, Bratislava',
+          'flashmob_number_of_dancers' => '54',
+          'last_name' => 'Hluch',
+          'latitude' => '48.16823489999999',
+          'longitude' => '17.13840920000007',
+          'school_city' => 'Bratislava',
+          'flashmob_city' => 'Bratislava',
+          'school_name' => 'Salsa by Norika',
+          'school_webpage' => 'vlastna',
+          'custom_school_webpage' => 'http://www.norika.sk/',
+          'video_link' => 'http://vimeo.com/239140418',
+          'user_webpage' => 'https://www.facebook.com/salsaruedajarohluch/',
+        ),
+        29 =>
+        array(
+          'first_name' => 'Miloš',
+          'last_name' => 'Majtán',
+          'school_city' => 'Trenčín',
+          'flashmob_city' => 'Trenčín',
+          'school_name' => 'Cubano Project',
+          'school_webpage' => 'vlastna',
+          'custom_school_webpage' => 'http://www.cubanoproject.sk/',
+          'video_link' => 'https://vimeo.com/237284082',
+          'user_webpage' => 'http://www.cubanoproject.sk/',
+        ),
+        30 =>
+        array(
+          'first_name' => 'Lucia',
+          'flashmob_address' => 'Caffe Verdon Hlavná 2, Trnava',
+          'flashmob_number_of_dancers' => '12',
+          'last_name' => 'Rumik',
+          'latitude' => '48.376578',
+          'longitude' => '17.58580810000001',
+          'school_city' => 'Trnava',
+          'flashmob_city' => 'Trnava',
+          'video_link' => 'https://m.youtube.com/watch?v=gs9mzJUONE8',
+        ),
+        31 =>
+        array(
+          'video_link' => 'https://www.facebook.com/1889991401237031/videos/2018771095025727/',
+          'first_name' => 'Lucia',
+          'flashmob_address' => 'Bánovce nad Bebravou, Slovakia',
+          'flashmob_number_of_dancers' => '13',
+          'last_name' => 'Šandrik',
+          'latitude' => '48.71894065133083',
+          'longitude' => '18.258365891015615',
+          'flashmob_city' => 'Bánovce nad Bebravou',
+          'school_city' => 'Bánovce nad Bebravou',
+          'school_name' => 'Salsa BN',
+          'school_webpage' => 'vlastna',
+          'custom_school_webpage' => 'https://www.facebook.com/Salsa-BN-1889991401237031/',
+          'user_webpage' => 'https://www.facebook.com/lucia.blazkova.1',
+        ),
+        32 =>
+        array(
+          'first_name' => 'Barbora',
+          'last_name' => 'Boboková',
+          'flashmob_city' => 'Prievidza',
+          'school_city' => 'Prievidza',
+          'school_name' => 'Cubano Project',
+          'school_webpage' => 'vlastna',
+          'custom_school_webpage' => 'http://www.cubanoproject.sk/',
+          'video_link' => 'https://vimeo.com/237284082',
+        ),
+        33 =>
+        array(
+          'first_name' => 'Dáša',
+          'flashmob_address' => 'Zvolen',
+          'flashmob_number_of_dancers' => '24',
+          'last_name' => 'Sásiková',
+          'latitude' => '48.5761806',
+          'longitude' => '19.137115499999936',
+          'school_city' => 'Zvolen',
+          'flashmob_city' => 'Zvolen',
+          'school_name' => 'Salsa Loco Zvolen',
+          'video_link' => 'https://www.youtube.com/watch?v=YZFKkCm0LTs&t=29s',
+        ),
+      ),
       2016 =>
       array(
         22 =>
@@ -559,12 +651,21 @@ class FLORP{
       ),
     );
     if (empty($this->aOptions['aYearlyMapOptions'])) {
-      $this->aOptions['aYearlyMapOptions'] = $aYearlyMapOptionsUntil2016;
+      $this->aOptions['aYearlyMapOptions'] = $aYearlyMapOptionsUntil2017;
+      update_site_option( $this->strOptionKey, $this->aOptions, true );
+    }
+
+    // Reimport users from 2017 (missing flashmob_city) //
+    if (!$this->aOptions['bLeadersFrom2017Reimported'] && isset($this->aOptions['aYearlyMapOptions']) && !empty($this->aOptions['aYearlyMapOptions']) && isset($this->aOptions['aYearlyMapOptions'][2017]) && !empty($this->aOptions['aYearlyMapOptions'][2017])) {
+      foreach ($aYearlyMapOptionsUntil2017[2017] as $iUserID => $aData) {
+        $this->aOptions['aYearlyMapOptions'][2017][$iUserID] = $aData;
+      }
+      $this->aOptions['bLeadersFrom2017Reimported'] = true;
       update_site_option( $this->strOptionKey, $this->aOptions, true );
     }
 //     // NOTE DEVEL TEMP
-//     for ($i = 2013; $i <= 2016; $i++) {
-//       $this->aOptions['aYearlyMapOptions'][$i] = $aYearlyMapOptionsUntil2016[$i];
+//     for ($i = 2013; $i <= 2017; $i++) {
+//       $this->aOptions['aYearlyMapOptions'][$i] = $aYearlyMapOptionsUntil2017[$i];
 //     }
 //     update_site_option( $this->strOptionKey, $this->aOptions, true );
     // END archived yearly map options until 2016 //
@@ -2481,6 +2582,7 @@ class FLORP{
       'profil-organizatora-svk-flashmobu_page_florp-participants',
       'profil-organizatora-svk-flashmobu_page_florp-tshirts',
       'profil-organizatora-svk-flashmobu_page_florp-subsites',
+      'profil-organizatora-svk-flashmobu_page_florp-history',
 //       'profil-organizatora-svk-flashmobu_page_florp-lwa',
     );
     if (in_array($strHook, $aPermittedHooks)) {
@@ -2581,6 +2683,14 @@ class FLORP{
         'manage_options',
         'florp-subsites',
         array( $this, 'subsites_table_admin' )
+      );
+      $page = add_submenu_page(
+        'florp-main',
+        'Predošlé roky',
+        'Predošlé roky',
+        'manage_options',
+        'florp-history',
+        array( $this, 'leaders_history_table_admin' )
       );
     }
   }
@@ -3075,6 +3185,48 @@ class FLORP{
     }
     $strEcho .= '</form>';
 
+    echo $strEcho;
+    echo '</div><!-- .wrap -->';
+  }
+
+  public function leaders_history_table_admin() {
+    echo "<div class=\"wrap\"><h1>" . "Predošlé roky" . "</h1>";
+    $aUsers = $this->getFlashmobSubscribers( 'all', true );
+    $strEcho = '<table class="widefat striped"><th>Rok</th><th>Meno</th><th>M(i)esto Flashmobu</th><th>Profil</th>';
+    foreach ($this->aOptions["aYearlyMapOptions"] as $iYear => $aMapOptionsForYear) {
+      foreach ($aMapOptionsForYear as $iUserID => $aOptions) {
+        $strButtons = "";
+        $strEcho .= '<tr>';
+        $strEcho .=   '<td>'.$iYear.'</td>';
+        $strEcho .=   '<td>'.$aOptions['first_name'].' '.$aOptions['last_name'].$strButtons.'</td>';
+        $strFlashmobLocation = "-";
+        if (isset($aOptions['flashmob_address'])) {
+          $strFlashmobLocation = $aOptions['flashmob_address'];
+        } elseif (isset($aOptions['flashmob_city'])) {
+          $strFlashmobLocation = $aOptions['flashmob_city'];
+        } elseif (isset($aOptions['school_city'])) {
+          $strFlashmobLocation = "({$aOptions['school_city']})";
+        }
+        $strEcho .=   '<td>'.$strFlashmobLocation.'</td>';
+        $strEcho .=   '<td>';
+        $aSkip = array( 'first_name', 'last_name' );
+        foreach ($aOptions as $strKey => $strValue) {
+          if (in_array( $strKey, $aSkip )) {
+            continue;
+          }
+
+          $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
+          if (stripos( $strValue, 'https://' ) === 0 || stripos( $strValue, 'http://' ) === 0) {
+            $strEcho .= '<a href="'.$strValue.'" target="_blank">'.$strFieldName.'</a><br>';
+          } else {
+            $strEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>';
+          }
+        }
+        $strEcho .=   '</td>';
+        $strEcho .= '</tr>';
+      }
+    }
+    $strEcho .= '</table>';
     echo $strEcho;
     echo '</div><!-- .wrap -->';
   }
@@ -3851,7 +4003,8 @@ class FLORP{
         '%%strRegistrationSuccessfulMessage%%', '%%strLoginSuccessfulMessage%%', '%%strUserApprovedSubject%%',
         '%%strNewsletterListsMain%%', '%%strLeaderParticipantListNotificationSbj%%', '%%wpEditorLeaderParticipantListNotificationMsg%%',
         '%%strLoginBarLabelLogin%%', '%%strLoginBarLabelLogout%%', '%%strLoginBarLabelProfile%%',
-        '%%optionsCloneSourceSite%%' ),
+        '%%optionsCloneSourceSite%%',
+        '%%bOnlyFlorpProfileNinjaFormMain%%' ),
       array( $aBooleanOptionsChecked['bReloadAfterSuccessfulSubmissionMain'],
         $optionsNinjaFormsMain,
         $optionsPopupsMain,
@@ -3862,7 +4015,8 @@ class FLORP{
         $this->aOptions['strRegistrationSuccessfulMessage'], $this->aOptions['strLoginSuccessfulMessage'], $this->aOptions['strUserApprovedSubject'],
         $this->aOptions['strNewsletterListsMain'], $this->aOptions['strLeaderParticipantListNotificationSbj'], $wpEditorLeaderParticipantListNotificationMsg,
         $this->aOptions['strLoginBarLabelLogin'], $this->aOptions['strLoginBarLabelLogout'], $this->aOptions['strLoginBarLabelProfile'],
-        $optionsCloneSourceSite ),
+        $optionsCloneSourceSite,
+        $aBooleanOptionsChecked['bOnlyFlorpProfileNinjaFormMain'] ),
         // BEGIN replace template //
       '
             <tr style="width: 98%; padding:  5px 1%;">
@@ -3878,6 +4032,14 @@ class FLORP{
               <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_profile_form_ninja_form_id_main">Registračný / profilový formulár (spomedzi Ninja Form formulárov)</label></th>
               <td>
                 <select id="florp_profile_form_ninja_form_id_main" name="florp_profile_form_ninja_form_id_main" style="width: 100%;">%%optionsNinjaFormsMain%%</select>
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                <label for="florp_only_florp_profile_nf_main">Na hlavnom blogu je jediným ninja form formulárom profilový?</label>
+              </th>
+              <td>
+                <input id="florp_only_florp_profile_nf_main" name="florp_only_florp_profile_nf_main" type="checkbox" %%bOnlyFlorpProfileNinjaFormMain%% value="1"/>
               </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
@@ -4112,7 +4274,8 @@ class FLORP{
         '%%strTshirtPaymentWarningNotificationSbj%%', '%%wpEditorTshirtPaymentWarningNotificationMsg%%',
         '%%wpEditorParticipantRemovedMessage%%',
         '%%strParticipantRemovedSubject%%',
-        '%%tshirtOrderingDisabledChecked%%', '%%tshirtOrderingDisabledOnlyDisableChecked%%' ),
+        '%%tshirtOrderingDisabledChecked%%', '%%tshirtOrderingDisabledOnlyDisableChecked%%',
+        '%%bOnlyFlorpProfileNinjaFormFlashmob%%' ),
       array( $aBooleanOptionsChecked['bReloadAfterSuccessfulSubmissionFlashmob'],
         $aBooleanOptionsChecked['bUseMapImage'],
         $optionsNinjaFormsFlashmob,
@@ -4126,7 +4289,8 @@ class FLORP{
         $this->aOptions['strTshirtPaymentWarningNotificationSbj'], $wpEditorTshirtPaymentWarningNotificationMsg,
         $strParticipantRemovedMessage,
         $this->aOptions['strParticipantRemovedSubject'],
-        $aBooleanOptionsChecked['bTshirtOrderingDisabled'], $aBooleanOptionsChecked['bTshirtOrderingDisabledOnlyDisable'] ),
+        $aBooleanOptionsChecked['bTshirtOrderingDisabled'], $aBooleanOptionsChecked['bTshirtOrderingDisabledOnlyDisable'],
+        $aBooleanOptionsChecked['bOnlyFlorpProfileNinjaFormFlashmob'] ),
         // BEGIN replace template //
       '
             <tr style="width: 98%; padding:  5px 1%;">
@@ -4142,6 +4306,14 @@ class FLORP{
               <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_profile_form_ninja_form_id_flashmob">Registračný / profilový formulár (spomedzi Ninja Form formulárov)</label></th>
               <td>
                 <select id="florp_profile_form_ninja_form_id_flashmob" name="florp_profile_form_ninja_form_id_flashmob" style="width: 100%;">%%optionsNinjaFormsFlashmob%%</select>
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                <label for="florp_only_florp_profile_nf_flashmob">Na flashmob blogu je jediným ninja form formulárom profilový?</label>
+              </th>
+              <td>
+                <input id="florp_only_florp_profile_nf_flashmob" name="florp_only_florp_profile_nf_flashmob" type="checkbox" %%bOnlyFlorpProfileNinjaFormFlashmob%% value="1"/>
               </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
@@ -4519,8 +4691,9 @@ class FLORP{
           // Flashmob year was changed //
           if (defined('FLORP_DEVEL') && FLORP_DEVEL === true && defined('FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION') && FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION === true) {
             // NOT ARCHIVING //
+            $GLOBALS["florpArchivedMapOptions"] = var_export($this->get_flashmob_map_options_array_to_archive(), true);
             add_action( 'florp_options_page_notices', function() {
-              echo '<div class="notice notice-info"><p><code>(FLORP_DEVEL && FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION == true)</code> => nearchivujem flashmobové mapy.</p></div>'.PHP_EOL;
+              echo '<div class="notice notice-info"><p><code>(FLORP_DEVEL && FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION == true)</code> => nearchivujem flashmobové mapy.</p><p>Archivované dáta by však vyzerali nasledovne:</p><pre>' .$GLOBALS["florpArchivedMapOptions"]. '</pre></div>'.PHP_EOL;
             });
           } else {
             $this->archive_current_year_map_options();
@@ -4809,6 +4982,7 @@ class FLORP{
         'iUserID'           => $_POST['iUserID'],
         'strDivID'          => $_POST['divID'],
         'iCurrentYear'      => $_POST['iCurrentYear'],
+        'iYear'             => $_POST['iYear'],
         'iBeforeFlashmob'   => $_POST['iBeforeFlashmob'],
         'iIsPreview'        => $_POST['iIsPreview'],
         'iParticipantCount' => $this->get_flashmob_participant_count( $_POST['iUserID'] ),
@@ -5054,6 +5228,7 @@ class FLORP{
     } else {
       $strOrganizer = $this->getInfoWindowLabel('organizer').'<a href="'.$aInfoWindowData['user_webpage']['value'].'" target="_blank">'.$aInfoWindowData['first_name']['value'] . " " . $aInfoWindowData['last_name']['value'].'</a>';
     }
+    // $strOrganizer .= var_export($aInfoWindowData, true);
 
     $strFacebook = '';
     if (!$bHideLeaderInfo && !empty($aInfoWindowData['facebook']['value'])) {
@@ -5104,7 +5279,8 @@ class FLORP{
     }
 
     $strSchool = '';
-    if (!$this->aOptions["bCoursesInfoDisabled"] && !empty($aInfoWindowData['school_name']['value'])) {
+    $bIsYearUpTo2017 = (isset($aInfoWindowData['iYear']) && !empty($aInfoWindowData['iYear']) && $aInfoWindowData['iYear'] <= 2017);
+    if (($bIsYearUpTo2017 || !$this->aOptions["bCoursesInfoDisabled"]) && !empty($aInfoWindowData['school_name']['value'])) {
       $strSchool = $aInfoWindowData['school_name']['value'];
       if (!empty($strSchoolWebpage)) {
         $strSchool = '<a href="'.$strSchoolWebpage.'" target="_blank">'.$strSchool.'</a>';
@@ -5711,6 +5887,14 @@ class FLORP{
     return $this->isFlashmobBlog;
   }
 
+  public function has_main_only_florp_profile_ninja_form() {
+    return $this->aOptions['bOnlyFlorpProfileNinjaFormMain'];
+  }
+
+  public function has_flashmob_only_florp_profile_ninja_form() {
+    return $this->aOptions['bOnlyFlorpProfileNinjaFormFlashmob'];
+  }
+
   public function get_message( $strKey = false, $strDefault = "" ) {
     $aMessages = array(
       'login_success' => $this->aOptions['strLoginSuccessfulMessage'],
@@ -5816,6 +6000,14 @@ function florp_is_main_blog() {
 function florp_is_flashmob_blog() {
   global $FLORP;
   return $FLORP->is_flashmob_blog();
+}
+function florp_has_main_only_florp_profile_ninja_form() {
+  global $FLORP;
+  return $FLORP->has_main_only_florp_profile_ninja_form();
+}
+function florp_has_flashmob_only_florp_profile_ninja_form() {
+  global $FLORP;
+  return $FLORP->has_flashmob_only_florp_profile_ninja_form();
 }
 function florp_profile_form_loader( $aAttributes = array() ) {
   return;
