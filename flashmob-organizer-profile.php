@@ -3,14 +3,20 @@
  * Plugin Name: Flashmob Organizer Profile (with login/registration page)
  * Plugin URI: https://github.com/charliecek/flashmob-organizer-profile
  * Description: Creates shortcodes for flashmob organizer login / registration / profile editing form and for maps showing cities with videos of flashmobs for each year
+ * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.5.4
+ * Version: 4.5.5
+ * Requires at least: 4.8
+ * Tested up to: 4.9.6
+ * Requires PHP: 5.6
+ * License: GPLv3
+ * License URI: https://www.gnu.org/licenses/gpl.html
  */
 
 class FLORP{
 
-  private $strVersion = '4.5.4';
+  private $strVersion = '4.5.5';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -2471,7 +2477,7 @@ class FLORP{
   public function action__admin_enqueue_scripts( $strHook ) {
     $aPermittedHooks = array(
 //       'toplevel_page_florp-main',
-//       'profil-organizatora-svk-flashmobu_page_florp-leaders',
+      'profil-organizatora-svk-flashmobu_page_florp-leaders',
       'profil-organizatora-svk-flashmobu_page_florp-participants',
       'profil-organizatora-svk-flashmobu_page_florp-tshirts',
       'profil-organizatora-svk-flashmobu_page_florp-subsites',

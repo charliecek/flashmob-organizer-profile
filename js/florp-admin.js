@@ -218,4 +218,109 @@ jQuery( document ).ready(function() {
       }, 1000)
     }
   })
+
+  // Filter for admin tables //
+  var fnRemoveAccents = function( str ) {
+    if ("string" !== typeof str) {
+      return str
+    }
+    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, "")
+  }
+
+  var $tables = jQuery("table")
+  window["florpFilterColumnInputValues"] = {}
+  if ($tables.length > 0) {
+    function fnFlorpFilterRows() {
+      var $this = jQuery( this )
+      var val = fnRemoveAccents($this.val().trim()).toLowerCase()
+      var tableId = $this.data("florpFilterTableId")
+      var columnId = $this.data("florpFilterColumnId")
+      if (window["florpFilterColumnInputValues"][tableId][columnId] === val) {
+        // Don't reevaluate on the same value - mainly the case of multiple events firing for the same field //
+        return
+      }
+      window["florpFilterColumnInputValues"][tableId][columnId] = val
+
+      if (val === "") {
+        // Show all rows hidden by this column //
+        jQuery("tr.florpFilterRow.florpFilterTable"+tableId+".florpFilterHiddenColumn"+columnId).removeClass("florpFilterHiddenColumn"+columnId)
+      } else {
+        // Hide all //
+        jQuery("tr.florpFilterRow.florpFilterTable"+tableId).addClass("florpFilterHiddenColumn"+columnId)
+
+        // Show matching rows //
+        jQuery("tr.florpFilterRow.florpFilterTable"+tableId+".florpFilterHiddenColumn"+columnId).filter(function() {
+          var colHtml = jQuery(this).find("td.florpFilterCell.florpFilterColumn"+columnId).html()
+          var $colClone = jQuery("<div>"+colHtml+"</div>")
+          $colClone.find("br,span.button").remove()
+          var colTxt = $colClone.text()
+          if (!colTxt) {
+            return false
+          }
+          return fnRemoveAccents(colTxt).toLowerCase().indexOf(val) !== -1
+        }).removeClass("florpFilterHiddenColumn"+columnId)
+      }
+
+      jQuery("tr.florpFilterRow").each(function () {
+        if (this.className.indexOf("florpFilterHiddenColumn") !== -1) {
+          jQuery(this).addClass("florpFilterHidden")
+        } else {
+          jQuery(this).removeClass("florpFilterHidden")
+        }
+      })
+    }
+
+    $tables.each(function( it ) {
+      window["florpFilterColumnInputValues"][it] = {}
+      var $table = jQuery(this)
+      var $rows = $table.find("tr")
+      if ($rows.length === 0) {
+        return false
+      }
+
+      var bInsertAfterFirstRow = false
+      var $firstRow = $rows.first()
+      var iColumns = $firstRow.find("th").length
+      if (iColumns > 0) {
+        bInsertAfterFirstRow = true
+      } else {
+        iColumns = $firstRow.find("td").length
+      }
+      if (iColumns === 0) {
+        return false
+      }
+      var filterRowHtml = '<tr class="florpFilterHeaderRow">'
+      for (var i = 0; i < iColumns; i++) {
+        window["florpFilterColumnInputValues"][it][i] = ""
+        var strPlaceholder = ''
+        if (bInsertAfterFirstRow) {
+          strPlaceholder = ' placeholder="Filter: '+jQuery($firstRow.find("th")[i]).text()+'"'
+        }
+        filterRowHtml += '<th class="florpFilterHeaderCell">'
+        filterRowHtml += '<input class="florpFilterInput" type="text" data-florp-filter-table-id="'+it+'" data-florp-filter-column-id="'+i+'"'+strPlaceholder+'/>'
+        filterRowHtml += "</th>"
+      }
+      filterRowHtml += "</tr>"
+      var $filterRow = jQuery(filterRowHtml)
+      if (bInsertAfterFirstRow) {
+        $filterRow.insertAfter($firstRow)
+      } else {
+        $filterRow.insertBefore($firstRow)
+      }
+
+      $rows.each(function( ir ) {
+        var $row = jQuery(this)
+        if (ir !== 0 || !bInsertAfterFirstRow) {
+          $row.addClass("florpFilterRow florpFilterTable"+it)
+        }
+        var $cells = $row.find("td")
+        $cells.each(function( ic ) {
+          var $cell = jQuery(this)
+          $cell.data("florpFilterColumnId", ic).addClass("florpFilterCell florpFilterColumn"+ic+" florpFilterTable"+it)
+        })
+      })
+
+      jQuery( document ).on( "change keyup paste input textInput", "input.florpFilterInput", fnFlorpFilterRows )
+    })
+  }
 })
