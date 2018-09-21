@@ -11,6 +11,12 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 ## Version history
 
+### v4.6.0: tshirt order date send dates
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.0)
+- added tshirt order date send dates (adding, csv)
+- some refactoring
+- JS: admin datetime picker
+
 ### v4.5.7: payment deadlines, missed submissions, fixes
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.5.7)
 - css fix: gap after preferences
@@ -325,10 +331,5 @@ Fixed tab click detection for mobiles and added fallback loading if click was no
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v2.5.1)
 Added option to decide whether or not to use map image in og metatags.
 
-### v2.5.0: Map lazy and async loading, video lazy loading
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v2.5.0)
-- lazy and asynchronous loading for maps (hidden on tabs)
-- lazy loading for videos (hidden on tabs; if the embed doesn't contain `script` tags)
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v2.5.1)

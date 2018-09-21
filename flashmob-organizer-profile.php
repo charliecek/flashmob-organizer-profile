@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.6.0
+ * Version: 4.6.1
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '4.6.0';
+  private $strVersion = '4.6.1';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -2813,9 +2813,15 @@ class FLORP{
           $strEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>';
         }
       }
+      $aParticipants = $this->get_flashmob_participants( $oUser->ID, false, true );
+      if (empty($aParticipants) || empty($aParticipants[$oUser->ID])) {
+        $iParticipantCount = 0;
+      } else {
+        $iParticipantCount = count($aParticipants[$oUser->ID]);
+      }
+      $strEcho .= '<strong>Participant count</strong>: ' . $iParticipantCount .'<br>';
       $strEcho .=   '</td>';
       $strEcho .=   '<td>';
-      $aParticipants = $this->get_flashmob_participants( $oUser->ID, false, true );
       if (!empty($aParticipants)) {
         $aParticipantsOfUser = $aParticipants[$oUser->ID];
         if (!empty($aParticipantsOfUser)) {
@@ -5653,7 +5659,7 @@ class FLORP{
       if (isset($aImportedFormData['version'])) {
         $iNewVersion = $aImportedFormData['version'];
       }
-      if ($iCurrentVersion > 0 && $iNewVersion > 0 && $iCurrentVersion === $aImportedFormData['version']) {
+      if ($iCurrentVersion === $iNewVersion) {
         return;
       }
 

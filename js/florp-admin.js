@@ -293,6 +293,14 @@ jQuery( document ).ready(function() {
           jQuery(this).removeClass("florpFilterHidden")
         }
       })
+      var iCountMax = jQuery("table.florpFilterTable"+tableId).data("rowCount")
+      var iCountHidden = jQuery("table.florpFilterTable"+tableId+" tr.florpFilterHidden").length
+      var $countInfoCount = jQuery("span.tableCountInfo.florpFilterTable"+tableId+" .count")
+      if (iCountHidden === 0) {
+        $countInfoCount.text(iCountMax)
+      } else {
+        $countInfoCount.text((iCountMax-iCountHidden) + " / " + iCountMax)
+      }
     }
 
     $tables.each(function( it ) {
@@ -306,14 +314,25 @@ jQuery( document ).ready(function() {
       var bInsertAfterFirstRow = false
       var $firstRow = $rows.first()
       var iColumns = $firstRow.find("th").length
+      $countInfo = jQuery('<span class="tableCountInfo florpFilterTable'+it+'"></span>')
+      var iRowCount
       if (iColumns > 0) {
         bInsertAfterFirstRow = true
+        $table.data("hasHeader", 1)
+        iRowCount = $rows.length - 1
+        $table.data("rowCount", iRowCount)
       } else {
         iColumns = $firstRow.find("td").length
+        $table.data("hasHeader", 0)
+        var iRowCount = $rows.length
+        $table.data("rowCount", iRowCount)
       }
       if (iColumns === 0) {
         return false
       }
+      $table.addClass("florpFilterTable"+it)
+      $countInfo.insertBefore($table)
+      $countInfo.html("Count: <span class=\"count\">" + iRowCount+"</span>")
       var filterRowHtml = '<tr class="florpFilterHeaderRow">'
       for (var i = 0; i < iColumns; i++) {
         window["florpFilterColumnInputValues"][it][i] = ""
@@ -349,6 +368,7 @@ jQuery( document ).ready(function() {
     })
   }
 
+  // Date/time picker //
   jQuery( "input.jquery-datetimepicker" ).each(function() {
     var $this = jQuery(this)
     var options = {

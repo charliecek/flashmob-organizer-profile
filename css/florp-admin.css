@@ -32,3 +32,9 @@ p.addOrderDateParagraph select{
   padding: 3px 5px;
   vertical-align: middle;
 }
+
+span.tableCountInfo{
+  display: block;
+  text-align: right;
+  padding: 0 5px;
+}
