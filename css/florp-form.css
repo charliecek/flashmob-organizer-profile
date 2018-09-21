@@ -7,6 +7,25 @@ nf-field select[disabled] {
   opacity: 0.5;
 }
 
+.florp-hidden {
+  display: none;
+}
+/*.florp-tshirt-after-flashmob-warning .nf-field-label {
+    width: 35% !important;
+    display: inline-block !important;
+    float: left;
+    visibility: hidden;
+}*/
+.florp-tshirt-after-flashmob-warning .nf-field-element {
+    width: 65% !important;
+    float: right;
+}
+
+/* Fix gap below preferences on flashmob form */
+body.state_default .florp_preferences_container {
+  margin-bottom: 0;
+}
+
 body.state_default nf-field.florp-left{
   float: left;
   width: 49%;
@@ -175,7 +194,7 @@ body.state_default .florp-desktop {
 body.state_default .florp-newsletter-banner.participants img{
   position: absolute;
   right: 0;
-  top: -2em;
+  top: -1em;
 }
 .florp-hide-label .nf-field-label{
   display: none;

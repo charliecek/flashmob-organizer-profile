@@ -25,7 +25,7 @@ jQuery( document ).ready(function() {
       }
       $msg.insertBefore($insertBefore)
     } else {
-      $msg.insertBefore(jQuery(".wrap table"))
+      $msg.insertBefore(jQuery(".wrap table").first())
     }
     if ("undefined" !== typeof iTimeout && false !== iTimeout && iTimeout > 0) {
       window["florpAdminTimeouts"][strMessageId] = setTimeout(function(strMessageId, fadeOutCallbackLoc) {
@@ -89,14 +89,26 @@ jQuery( document ).ready(function() {
               var aResponse = JSON.parse(response)
               // console.log(aResponse)
               var strMessageId = "florpMessage-"+aResponse.buttonId
+              var $button = jQuery(".button.double-check[data-button-id="+aResponse.buttonId+"]")
+              var $container = $button.parents("tr")
+              var iTableCell = false
+              if ($container.length === 0) {
+                $container = $button.parents("table")
+              } else {
+                $container = $container.first()
+                iTableCell = $container[0].cells ? $container[0].cells.length : false
+              }
+              if ($container.length === 0) {
+                $container = false
+              }
               if (aResponse.ok) {
+                console.log(aResponse)
                 var strButtonIdLocal = aResponse.buttonId
                 clearInterval(window[strButtonIdLocal]["interval"])
                 window[strButtonIdLocal]["interval"] = null
-                var button = jQuery(".button.double-check[data-button-id="+aResponse.buttonId+"]")
-                button.text(aResponse.textDefault).removeClass("button-primary").data("sure", 0)
-                if (button.hasClass("button-warning-removed")) {
-                  button.removeClass("button-warning-removed").addClass("button-warning")
+                $button.text(aResponse.textDefault).removeClass("button-primary").data("sure", 0)
+                if ($button.hasClass("button-warning-removed")) {
+                  $button.removeClass("button-warning-removed").addClass("button-warning")
                 }
                 var $row = jQuery(".row[data-row-id="+aResponse.rowId+"]")
                 if (aResponse.removeRowOnSuccess && aResponse.removeRowOnSuccess === true) {
@@ -104,23 +116,33 @@ jQuery( document ).ready(function() {
                     if (aResponse.message) {
                       fnFlorpShowMessage(aResponse.message, strMessageId+"-ok", "success", 2000, $row, true, function() {
                         $row.fadeOut(800)
+                        if (aResponse.hideSelector) {
+                          jQuery( aResponse.hideSelector ).fadeOut(800)
+                        }
                       }, $row.first()[0] && $row.first()[0].cells ? $row.first()[0].cells.length : false)
                     } else {
                       $row.fadeOut(800)
+                      if (aResponse.hideSelector) {
+                        jQuery( aResponse.hideSelector ).fadeOut(800)
+                      }
                     }
                   } else {
                     if (aResponse.message) {
                       fnFlorpShowMessage(aResponse.message, strMessageId+"-ok", "success", 2000)
                     }
+                    if (aResponse.hideSelector) {
+                      jQuery( aResponse.hideSelector ).fadeOut(800)
+                    }
                     console.warn("No row to fade out!")
                   }
                 } else {
+                  console.log(aResponse)
                   if (aResponse.message) {
                     fnFlorpShowMessage(aResponse.message, strMessageId+"-ok", "success", 2000, $row, false, function() {
                       if (aResponse.replaceButton && aResponse.replaceButtonHtml) {
                         var newButton = jQuery(aResponse.replaceButtonHtml)
-                        newButton.insertBefore(button)
-                        button.remove()
+                        newButton.insertBefore($button)
+                        $button.remove()
                       }
                       if (aResponse.hideSelector) {
                         jQuery( aResponse.hideSelector ).hide()
@@ -141,8 +163,8 @@ jQuery( document ).ready(function() {
                   } else {
                     if (aResponse.replaceButton && aResponse.replaceButtonHtml) {
                       var newButton = jQuery(aResponse.replaceButtonHtml)
-                      newButton.insertBefore(button)
-                      button.remove()
+                      newButton.insertBefore($button)
+                      $button.remove()
                     }
                     if (aResponse.hideSelector) {
                       jQuery( aResponse.hideSelector ).hide()
@@ -163,9 +185,9 @@ jQuery( document ).ready(function() {
                 }
               } else {
                 if (aResponse.message) {
-                  fnFlorpShowMessage(aResponse.message, strMessageId+"-error", "error", 10000)
+                  fnFlorpShowMessage(aResponse.message, strMessageId+"-error", "error", 10000, $container, false, undefined, iTableCell)
                 } else {
-                  fnFlorpShowMessage("An error occured", strMessageId+"-error", "error", 10000)
+                  fnFlorpShowMessage("An error occured", strMessageId+"-error", "error", 10000, $container, false, undefined, iTableCell)
                 }
                 console.log(aResponse)
               }

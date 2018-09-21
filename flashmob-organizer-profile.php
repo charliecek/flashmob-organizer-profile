@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.5.6
+ * Version: 4.5.7
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '4.5.6';
+  private $strVersion = '4.5.7';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -155,6 +155,9 @@ class FLORP{
       'bTshirtOrderingDisabledOnlyDisable'        => false,
       'bOnlyFlorpProfileNinjaFormFlashmob'        => true,
       'bOnlyFlorpProfileNinjaFormMain'            => true,
+      'iTshirtPaymentWarningDeadline'             => 14,
+      'iTshirtPaymentWarningButtonDeadline'       => -1,
+      'iTshirtOrderDeliveredBeforeFlashmobDdl'    => 9,
     );
     $this->aOptionFormKeys = array(
       'florp_reload_after_ok_submission_main'     => 'bReloadAfterSuccessfulSubmissionMain',
@@ -223,6 +226,9 @@ class FLORP{
       'florp_tshirt_ordering_only_disable'        => 'bTshirtOrderingDisabledOnlyDisable',
       'florp_only_florp_profile_nf_flashmob'      => 'bOnlyFlorpProfileNinjaFormFlashmob',
       'florp_only_florp_profile_nf_main'          => 'bOnlyFlorpProfileNinjaFormMain',
+      'florp_tshirt_payment_warning_deadline'     => 'iTshirtPaymentWarningDeadline',
+      'florp_tshirt_payment_warning_btn_deadline' => 'iTshirtPaymentWarningButtonDeadline',
+      'florp_tshirt_order_delivered_b4_flash_ddl' => 'iTshirtOrderDeliveredBeforeFlashmobDdl',
     );
     $aDeprecatedKeys = array(
       // new => old //
@@ -319,6 +325,9 @@ class FLORP{
         'bTshirtOrderingDisabled',
         'bTshirtOrderingDisabledOnlyDisable',
         'bOnlyFlorpProfileNinjaFormFlashmob',
+        'iTshirtPaymentWarningDeadline',
+        'iTshirtPaymentWarningButtonDeadline',
+        'iTshirtOrderDeliveredBeforeFlashmobDdl',
       ),
     );
 
@@ -712,6 +721,8 @@ class FLORP{
     add_action( 'wp_ajax_florp_tshirt_send_payment_warning', array( $this, 'action__florp_tshirt_send_payment_warning_callback' ));
     add_action( 'wp_ajax_florp_tshirt_cancel_order', array( $this, 'action__florp_tshirt_cancel_order_callback' ));
     add_action( 'wp_ajax_florp_create_subsite', array( $this, 'action__florp_create_subsite_callback' ));
+    add_action( 'wp_ajax_delete_nf_submission', array( $this, 'action__delete_nf_submission_callback' ));
+    add_action( 'wp_ajax_import_flashmob_nf_submission', array( $this, 'action__import_flashmob_nf_submission_callback' ));
     add_action( 'admin_menu', array( $this, "action__remove_admin_menu_items" ), 9999 );
     add_action( 'admin_menu', array( $this, "action__add_options_page" ));
     add_action( 'wp_enqueue_scripts', array( $this, 'action__wp_enqueue_scripts' ), 9999 );
@@ -1098,6 +1109,25 @@ class FLORP{
       'flashmob_organizer' => $this->aOptions['strMarkerInfoWindowTemplateOrganizer'],
       'teacher' => $this->aOptions['strMarkerInfoWindowTemplateTeacher'],
     );
+
+    // This is from when ordered tshirts are delivered after the flashmob; should be 23:59 on the date iTshirtOrderDeliveredBeforeFlashmobDdl days before flashmob //
+    $this->iTshirtOrderDeliveredBeforeFlashmobDdlTimestamp = intval(mktime( 23 - $iTimeZoneOffset, 59, 59, $this->aOptions['iFlashmobMonth'], $this->aOptions['iFlashmobDay'] - $this->aOptions['iTshirtOrderDeliveredBeforeFlashmobDdl'], $this->aOptions['iFlashmobYear'] ));
+    $this->iTshirtOrderDeliveredBeforeFlashmobDdlTime = date('Y/m/d H:i:s', $this->iTshirtOrderDeliveredBeforeFlashmobDdlTimestamp + $iTimeZoneOffset*3600);
+    $this->iTshirtOrderDeliveredBeforeFlashmobDdlDate = date('d.m.Y', $this->iTshirtOrderDeliveredBeforeFlashmobDdlTimestamp + $iTimeZoneOffset*3600);
+
+    // This is when the warnings are first shown; should be from 00:00 on the date iTshirtPaymentWarningDeadline days before flashmob //
+    $this->iTshirtPaymentWarningDeadlineTimestamp = intval(mktime( 0 - $iTimeZoneOffset, 0, 0, $this->aOptions['iFlashmobMonth'], $this->aOptions['iFlashmobDay'] - $this->aOptions['iTshirtPaymentWarningDeadline'], $this->aOptions['iFlashmobYear'] ));
+    $this->iTshirtPaymentWarningDeadlineTime = date('Y/m/d H:i:s', $this->iTshirtPaymentWarningDeadlineTimestamp + $iTimeZoneOffset*3600);
+
+    // This is when the warning buttons are forced shown; should be from 00:00 on the date iTshirtPaymentWarningButtonDeadline days before flashmob //
+    if ($this->aOptions['iTshirtPaymentWarningButtonDeadline'] > -1) {
+      $this->iTshirtPaymentWarningButtonDeadlineTimestamp = intval(mktime( 0 - $iTimeZoneOffset, 0, 0, $this->aOptions['iFlashmobMonth'], $this->aOptions['iFlashmobDay'] - $this->aOptions['iTshirtPaymentWarningButtonDeadline'], $this->aOptions['iFlashmobYear'] ));
+      $this->iTshirtPaymentWarningButtonDeadlineTime = date('Y/m/d H:i:s', $this->iTshirtPaymentWarningButtonDeadlineTimestamp + $iTimeZoneOffset*3600);
+    } else {
+      $this->iTshirtPaymentWarningButtonDeadlineTime = "-";
+    }
+
+
     $this->set_variables_per_subsite();
   }
 
@@ -1584,6 +1614,14 @@ class FLORP{
             $aField['settings']['options'][$iKey]['selected'] = 0;
             break;
           }
+        }
+      }
+
+      // Hide tshirt payment deadline warning if it's not relevant yet //
+      if ($aField['settings']['type'] === 'html' && isset($aField['settings']['container_class']) && stripos($aField['settings']['container_class'], 'florp-tshirt-after-flashmob-warning') !== false) {
+        $aField['settings']['default'] = str_replace("%%iTshirtOrderDeliveredBeforeFlashmobDdlDate%%", $this->iTshirtOrderDeliveredBeforeFlashmobDdlDate, $aField['settings']['default']);
+        if ($this->iTshirtPaymentWarningDeadlineTimestamp > time()) {
+          $aField['settings']['container_class'] .= " florp-hidden";
         }
       }
 
@@ -2697,23 +2735,12 @@ class FLORP{
 
   public function leaders_table_admin() {
     echo "<div class=\"wrap\"><h1>" . "Zoznam lídrov" . "</h1>";
+
     $aUsers = $this->getFlashmobSubscribers( 'all', true );
     $strEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Preferencie</th><th>Profil</th><th>Účastníci</th>';
     foreach ($aUsers as $oUser) {
       $aAllMeta = array_map(
-        function( $a ){
-          if (is_string($a) && strpos($a, 'a:') === 0) {
-            return maybe_unserialize( $a );
-          } elseif (is_array($a) && count($a) === 1) {
-            if (is_string($a[0]) && strpos($a[0], 'a:') === 0) {
-              return maybe_unserialize( $a[0] );
-            } else {
-              return $a[0];
-            }
-          } else {
-            return $a;
-          }
-        },
+        array($this, 'get_value_maybe_fix_unserialize_array'),
         get_user_meta( $oUser->ID )
       );
       $strIsPending = "";
@@ -2786,16 +2813,18 @@ class FLORP{
     }
     $strEcho .= '</table>';
     echo $strEcho;
+    echo $this->get_missed_submissions_table( $this->iMainBlogID );
     echo '</div><!-- .wrap -->';
   }
 
   public function participants_table_admin() {
     echo "<div class=\"wrap\"><h1>" . "Zoznam účastníkov" . "</h1>";
+
     $strEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Líder</th>';
 //     $strEcho .= '<th>Pohlavie</th><th>Tanečná úroveň</th>';
     $strEcho .= '<th>Profil</th>';
     $aParticipants = $this->get_flashmob_participants( 0, false, true );
-//     echo "<pre>";var_dump($aParticipants);echo "</pre>";
+//     echo "<pre>";var_dump($aParticipants);echo "</pre>"; // NOTE DEVEL
     $aReplacements = array(
       'gender' => array(
         'from'  => array( 'muz', 'zena', 'par' ),
@@ -2867,9 +2896,450 @@ class FLORP{
     }
     $strEcho .= '</table>';
     echo $strEcho;
+    echo $this->get_missed_submissions_table( $this->iFlashmobBlogID );
     echo '</div><!-- .wrap -->';
   }
 
+  public function tshirts_table_admin() {
+    echo "<div class=\"wrap\">\n<h1>" . "Tričká" . "</h1>\n";
+
+    $aTshirts = $this->get_tshirts();
+    if (empty($aTshirts)) {
+      echo "<p>Nie sú objednané žiadne tričká.</p>\n</div><!-- .wrap -->";
+      return;
+    }
+
+    $strEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Typ</th><th>Líder</th><th>Vlastnosti</th>';
+
+    $iUnpaid = 0;
+    $iPaid = 0;
+    foreach ($aTshirts as $aTshirtData) {
+      $strButtons = "";
+      $strDoubleCheckQuestion = "Ste si istý?";
+      $strButtonLabelPaid = "Zaplatil";
+      $strButtonLabelPaymentWarning = "Upozorniť na neskorú platbu";
+      $strButtonLabelCancelOrder = "Zrušiť objednávku";
+      // We collect the data and button attributes/properties //
+      $strData = "";
+      foreach ($aTshirtData as $strKey => $mixValue) {
+        if ($strKey === "properties" || in_array($strKey, array("id"))) {
+          continue;
+        } elseif (is_bool($mixValue)) {
+          $strValue = $mixValue ? '1' : '0';
+        } else {
+          $strValue = $mixValue;
+        }
+        $strData .= " data-{$strKey}='{$strValue}'";
+      }
+      foreach ($aTshirtData['properties'] as $strKey => $strValue) {
+        $strData .= " data-{$strKey}='{$strValue}'";
+      }
+      $strRowID = "florpRow-".$aTshirtData["id"];
+      $strPaidButtonID = "florpButton-paid-".$aTshirtData["id"];
+      $strPaymentWarningButtonID = "florpButton-paymentWarning-".$aTshirtData["id"];
+      $strCancelOrderButtonID = "florpButton-cancelOrder-".$aTshirtData["id"];
+
+      $strButtons = '<br/>';
+      if ($aTshirtData["is_leader"]) {
+        // no button
+        $strButtons = "";
+        $iPaid++;
+      } elseif ($aTshirtData["is_paid"]) {
+        $strTitle = "";
+        if (isset($aTshirtData["paid_timestamp"])) {
+          $strTitle = ' title="'.date( get_option('date_format')." ".get_option('time_format'), $aTshirtData["paid_timestamp"] ).'"';
+        }
+        $strButtons .= '<span data-button-id="'.$strPaidButtonID.'" class="notice notice-success"'.$strTitle.'>Zaplatené</span>';
+        $iPaid++;
+      } else {
+        $iUnpaid++;
+
+        // Paid button //
+        $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelPaid.'" data-button-id="'.$strPaidButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp_tshirt_paid" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelPaid.'</span>';
+
+        // Cancel button //
+        $strButtons .= '<br/><span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelCancelOrder.'" data-button-id="'.$strCancelOrderButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp_tshirt_cancel_order" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelCancelOrder.'</span>';
+
+        // Warning button //
+        if (isset($this->aOptions['strTshirtPaymentWarningNotificationMsg'], $this->aOptions['strTshirtPaymentWarningNotificationSbj']) && !empty($this->aOptions['strTshirtPaymentWarningNotificationMsg']) && !empty($this->aOptions['strTshirtPaymentWarningNotificationSbj'])) {
+          $strWarningClass = "";
+          $bShow = true;
+          if ($this->aOptions['iTshirtPaymentWarningButtonDeadline'] > -1 && $this->iTshirtPaymentWarningButtonDeadlineTimestamp <= time()) {
+            // Show //
+            $strWarningClass = " button-warning";
+          } elseif (isset($aTshirtData["registered_timestamp"]) && $aTshirtData["registered_timestamp"] > 0) {
+            $iTimestampNow = (int) current_time( 'timestamp' );
+            if ($iTimestampNow - $aTshirtData["registered_timestamp"] > (7*24*3600)) {
+              $strWarningClass = " button-warning";
+            } else {
+              $bShow = false;
+            }
+          }
+          if ($bShow) {
+            $strButtons .= '<br/>';
+            if ($aTshirtData["payment_warning_sent"]) {
+              $strTitle = "";
+              if (isset($aTshirtData["payment_warning_sent_timestamp"])) {
+                $strTitle = ' title="'.date( get_option('date_format')." ".get_option('time_format'), $aTshirtData["payment_warning_sent_timestamp"] ).'"';
+              }
+              $strButtons .= '<span data-button-id="'.$strPaymentWarningButtonID.'" class="notice notice-success"'.$strTitle.'>Upozornený na neskorú platbu</span>';
+            } else {
+              $strButtons .= '<span class="button double-check'.$strWarningClass.'" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelPaymentWarning.'" data-button-id="'.$strPaymentWarningButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp_tshirt_send_payment_warning" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelPaymentWarning.'</span>';
+            }
+          }
+        }
+      }
+      $strEcho .= '<tr class="row" data-row-id="'.$strRowID.'">';
+      $strEcho .=   '<td>'.$aTshirtData['name'].$strButtons.'</td>';
+      $strEcho .=   '<td><a name="'.$aTshirtData['email'].'">'.$aTshirtData['email'].'</a></td>';
+
+      $strWarning = "";
+      if (isset($aTshirtData['flashmob_city_at_registration'])) {
+        $strTitle = " title=\"Pozor: pri registrácii účastníka mal líder nastavené mesto flashmobu na  {$aTshirtData['flashmob_city_at_registration']}!\"";
+        $strWarning = ' <span '.$strTitle.' class="dashicons dashicons-warning"></span>';
+      }
+      $strEcho .=   '<td>'.$aTshirtData['flashmob_city'].$strWarning.'</td>';
+      $strEcho .=   '<td>'.$aTshirtData['type'].'</td>';
+      $strEcho .=   '<td>'.$aTshirtData['leader'].'</td>';
+      $strEcho .=   '<td>';
+      foreach ($aTshirtData['properties'] as $strKey => $strValue) {
+        $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
+        $strEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>';
+      }
+      $strEcho .=   '</td>';
+      $strEcho .= '</tr>';
+    }
+    $strEcho .= '</table>';
+    $strEcho .= '<form action="" method="post">';
+    $strEcho .= '<input type="hidden" name="security" value="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">';
+    $strEcho .= '<input type="hidden" name="florp-download-tshirt-csv" value="1">';
+    $strEcho .= '<input id="florp-download-tshirt-csv-all" class="button button-primary button-large" name="florp-download-tshirt-csv-all" type="submit" value="Stiahni CSV - všetko" />';
+    if ($iUnpaid > 0 && $iPaid > 0) {
+      $strEcho .= '<input id="florp-download-tshirt-csv-unpaid" class="button button-primary button-large" name="florp-download-tshirt-csv-unpaid" type="submit" value="Stiahni CSV - nezaplatené" />';
+      $strEcho .= '<input id="florp-download-tshirt-csv-paid" class="button button-primary button-large" name="florp-download-tshirt-csv-paid" type="submit" value="Stiahni CSV - zaplatené" />';
+    }
+    $strEcho .= '</form>';
+
+    echo $strEcho;
+    echo '</div><!-- .wrap -->';
+  }
+
+  public function leaders_history_table_admin() {
+    echo "<div class=\"wrap\"><h1>" . "Predošlé roky" . "</h1>";
+    $aUsers = $this->getFlashmobSubscribers( 'all', true );
+    $strEcho = '<table class="widefat striped"><th>Rok</th><th>Meno</th><th>M(i)esto Flashmobu</th><th>Profil</th>';
+    foreach ($this->aOptions["aYearlyMapOptions"] as $iYear => $aMapOptionsForYear) {
+      foreach ($aMapOptionsForYear as $iUserID => $aOptions) {
+        $strButtons = "";
+        $strEcho .= '<tr>';
+        $strEcho .=   '<td>'.$iYear.'</td>';
+        $strEcho .=   '<td>'.$aOptions['first_name'].' '.$aOptions['last_name'].$strButtons.'</td>';
+        $strFlashmobLocation = "-";
+        if (isset($aOptions['flashmob_address'])) {
+          $strFlashmobLocation = $aOptions['flashmob_address'];
+        } elseif (isset($aOptions['flashmob_city'])) {
+          $strFlashmobLocation = $aOptions['flashmob_city'];
+        } elseif (isset($aOptions['school_city'])) {
+          $strFlashmobLocation = "({$aOptions['school_city']})";
+        }
+        $strEcho .=   '<td>'.$strFlashmobLocation.'</td>';
+        $strEcho .=   '<td>';
+        $aSkip = array( 'first_name', 'last_name' );
+        foreach ($aOptions as $strKey => $strValue) {
+          if (in_array( $strKey, $aSkip )) {
+            continue;
+          }
+
+          $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
+          if (stripos( $strValue, 'https://' ) === 0 || stripos( $strValue, 'http://' ) === 0) {
+            $strEcho .= '<a href="'.$strValue.'" target="_blank">'.$strFieldName.'</a><br>';
+          } else {
+            $strEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>';
+          }
+        }
+        $strEcho .=   '</td>';
+        $strEcho .= '</tr>';
+      }
+    }
+    $strEcho .= '</table>';
+    echo $strEcho;
+    echo '</div><!-- .wrap -->';
+  }
+
+  public function subsites_table_admin() {
+    echo "<div class=\"wrap\">\n<h1>" . "Podstránky lídrov" . "</h1>\n";
+    $aUsers = $this->getFlashmobSubscribers( 'all', true );
+    $strDoubleCheckQuestion = "Ste si istý?";
+    $strAction = 'florp_create_subsite';
+    $strDomainEnding = "." . $this->get_root_domain();
+    $aUserSubdomains = array();
+    $strEcho = '<table class="widefat striped"><th>Mesto</th><th>Líder</th><th>Podstránka</th>'."\n";
+    foreach ($aUsers as $oUser) {
+      $aAllMeta = array_map(
+        array($this, 'get_value_maybe_fix_unserialize_array'),
+        get_user_meta( $oUser->ID )
+      );
+      $strSubDomainPage = false;
+      if (
+              !empty($aAllMeta['flashmob_city'])
+           && (
+                ($strSubDomainPage = $this->findCityWebpage($aAllMeta['flashmob_city'], false))
+             || (!empty($aAllMeta['webpage']) && $aAllMeta['webpage'] === "vytvorit")
+          )
+      ) {
+        $strCity = $aAllMeta['flashmob_city'];
+        $strRowID = "florpRow-subsite-{$oUser->ID}";
+        if ($strSubDomainPage) {
+          $strSubsite = $strSubDomainPage;
+          $aUserSubdomains[] = $strSubDomainPage;
+        } elseif (!$aData["bInfoWindow"]) {
+          $strSubsite = "<span data-user_id=\"{$oUser->ID}\">Vytvoriť:</span>";
+          $aVariations = $this->getCitySubdomainVariations( $strCity );
+          foreach ($aVariations as $strVariation) {
+            $strButtonLabel = $strVariation . $strDomainEnding;
+            $strButtonID = "florpButton-createSubsite-{$oUser->ID}-{$strVariation}";
+            $aButtonData = array(
+              'user_id' => $oUser->ID,
+              'subdomain' => $strVariation,
+            );
+            $strData = "";
+            foreach ($aButtonData as $strKey => $strValue) {
+              $strData .= " data-{$strKey}=\"{$strValue}\"";
+            }
+            $strSubsite .= '<br><span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'"'.$strData.' data-action="'.$strAction.'" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabel.'</span>';
+          }
+        }
+        $strEcho .= "<tr class=\"row\" data-row-id=\"{$strRowID}\">";
+        $strEcho .=   "<td>{$strCity}</td>\n";
+        $strEcho .=   "<td>{$oUser->first_name} {$oUser->last_name}<br>\n{$oUser->user_email}</td>\n";
+        $strEcho .=   "<td class=\"subsite\">{$strSubsite}</td>";
+        $strEcho .= "</tr>\n";
+      } else {
+        continue;
+      }
+    }
+    $aSites = wp_get_sites();
+    $strRootDomain = "";
+    foreach ($aSites as $i => $aSite) {
+      if ($aSite['public'] != 1 || $aSite['deleted'] == 1 || $aSite['archived'] == 1) {
+        continue;
+      }
+      $strDomain = $aSite['domain'];
+      $iID = intval($aSite['blog_id']);
+      $aParts = explode( ".", $strDomain );
+      if (!is_array($aParts) || count($aParts) !== 3) {
+        continue;
+      }
+      $aSkipDomains = array( 'ruedon.salsarueda.dance', 'festivaly.salsarueda.dance' );
+      if ($iID === $this->aOptions['iFlashmobBlogID'] || $iID === $this->aOptions['iMainBlogID'] || in_array($strDomain, $aSkipDomains) || in_array($strDomain, $aUserSubdomains)) {
+        continue;
+      }
+      $strEcho .= "<tr><td>-</td><td>-</td><td>{$strDomain}</td></tr>";
+    }
+    $strEcho .= "</table>";
+
+    $strRowID = "florpRow-subsite-0";
+    $strButtonID = "florpButton-createSubsite-0-new";
+    $strButtonLabel = "Vytvoriť";
+    $strData = "";
+    $strEcho .= "<p class=\"row\" data-row-id=\"{$strRowID}\">Vytvoriť inú podstránku: ";
+    $strEcho .= '<input type="text" name="subdomain" value="">'.$strDomainEnding;
+    $strEcho .= ' <span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'"'.$strData.' data-use-input-names="subdomain" data-action="'.$strAction.'" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabel.'</span>';
+    $strEcho .= "</p>";
+    echo $strEcho;
+    echo '</div><!-- .wrap -->';
+  }
+
+  private function get_missed_submissions( $iBlogID = false ) {
+    $aMissedSubmissions = array();
+
+    $mixChangeBlogID = false;
+    $strBlog = "";
+    if ($iBlogID !== false) {
+      if ($iBlogID !== get_current_blog_id()) {
+        $mixChangeBlogID = $iBlogID;
+      }
+      if ($iBlogID === $this->iMainBlogID) {
+        $iProfileFormNinjaFormID = $this->iProfileFormNinjaFormIDMain;
+        $strBlog = "main";
+      } elseif ($iBlogID === $this->iFlashmobBlogID) {
+        $iProfileFormNinjaFormID = $this->iProfileFormNinjaFormIDFlashmob;
+        $strBlog = "flashmob";
+      } else {
+        return false;
+      }
+    } elseif ($this->isMainBlog) {
+      $iBlogID = $this->iMainBlogID;
+      $iProfileFormNinjaFormID = $this->iProfileFormNinjaFormIDMain;
+      $strBlog = "main";
+    } elseif ($this->isFlashmobBlog) {
+      $iBlogID = $this->iFlashmobBlogID;
+      $iProfileFormNinjaFormID = $this->iProfileFormNinjaFormIDFlashmob;
+      $strBlog = "flashmob";
+    } else {
+      return false;
+    }
+    if (!function_exists('Ninja_Forms')) {
+      return false;
+    }
+
+    if (false !== $mixChangeBlogID) {
+      switch_to_blog($mixChangeBlogID);
+    }
+    $objProfileForm = Ninja_Forms()->form( $iProfileFormNinjaFormID )->get();
+    $strProfileFormTitle = $objProfileForm->get_setting( 'title' );
+    $aForms = Ninja_Forms()->form()->get_forms();
+    foreach( $aForms as $objForm ){
+      $iFormID = $objForm->get_id();
+      $strTitle = $objForm->get_setting( 'title' );
+      if (strpos($strTitle, $strProfileFormTitle) === false || strpos($strProfileFormTitle, $strTitle) === false) {
+        continue;
+      }
+      $aFields = Ninja_Forms()->form( $iFormID )->get_fields();
+      $aKeyToType = array();
+      foreach ($aFields as $oField) {
+        $aKeyToType[$oField->get_setting('key')] = $oField->get_setting('type');
+      }
+      $aSubmissions = Ninja_Forms()->form( $iFormID )->get_subs();
+      foreach ($aSubmissions as $oSubmission) {
+        $iSubmissionID = $oSubmission->get_id();
+        $aFieldValues = array_map(
+          array($this, 'get_value_maybe_fix_unserialize_array'),
+          $oSubmission->get_field_values()
+        );
+        if (!isset($aFieldValues["user_email"]) || empty($aFieldValues["user_email"])) {
+          // Invalid submission //
+          continue;
+        }
+        if ($strBlog === "main" && email_exists($aFieldValues["user_email"])) {
+          continue;
+        } elseif ($strBlog === "flashmob" && $this->flashmob_participant_exists($aFieldValues["user_email"])) {
+          continue;
+        }
+        $aFieldValues['_submission_date'] = $oSubmission->get_sub_date( 'Y-m-d H:i:s' );
+        $aFieldValues['_submission_timestamp'] = $oSubmission->get_sub_date( 'U' );
+        $aFieldValues['_form_id'] = $iFormID;
+        $aFieldValues['_submission_id'] = $iSubmissionID;
+        $aFieldValues['_blog_id'] = $iBlogID;
+        $aFieldValues['_field_types'] = $aKeyToType;
+        if (!isset($aMissedSubmissions[$aFieldValues["user_email"]])) {
+          $aMissedSubmissions[$aFieldValues["user_email"]] = array();
+        }
+        $aMissedSubmissions[$aFieldValues["user_email"]][] = array_filter($aFieldValues, function($key) {
+          $aPermittedKeys = array('_submission_date', '_submission_timestamp', '_form_id', '_submission_id', '_blog_id', '_field_types');
+          return in_array($key, $aPermittedKeys) || strpos($key, "_") !== 0;
+        }, ARRAY_FILTER_USE_KEY);
+      }
+    }
+    if (false !== $mixChangeBlogID) {
+      restore_current_blog();
+    }
+
+    //echo "<pre>".var_export($aMissedSubmissions, true)."</pre>"; // NOTE DEVEL
+    return $aMissedSubmissions;
+  }
+
+  private function get_missed_submissions_table( $iBlogID = false ) {
+    $aMissedSubmissions = $this->get_missed_submissions( $iBlogID );
+    if (false === $aMissedSubmissions || empty($aMissedSubmissions)) {
+      return "";
+    }
+    $oUser = wp_get_current_user();
+    if ($oUser->user_email !== 'charliecek@gmail.com' && $oUser->user_email !== get_option('admin_email')) {
+      return "";
+    }
+
+    $strEcho = "<h1>" . "Chýbajúce dáta (možno)" . "</h1>";
+
+    $strEcho .= '<table class="widefat striped"><th>Email</th><th>Dátum</th><th>Meno</th><th>Dáta</th>';
+    $aReplacements = array(
+      'gender' => array(
+        'from'  => array( 'muz', 'zena', 'par' ),
+        'to'    => array( 'muž', 'žena', 'pár' )
+      ),
+      'dance_level' => array(
+        'from'  => array( 'zaciatocnik', 'pokrocily', 'ucitel' ),
+        'to'    => array( 'začiatočník', 'pokročilý', 'učiteľ' )
+      ),
+      'preferences' => array(
+        'from'  => array( 'flashmob_participant_tshirt', 'newsletter_subscribe' ),
+        'to'    => array( 'Chcem pamätné Flashmob tričko', 'Chcem dostávať newsletter' )
+      )
+    );
+    foreach ($aMissedSubmissions as $strEmail => $aMissedSubmissionsOfUser) {
+      foreach ($aMissedSubmissionsOfUser as $aSubmissionData) {
+        foreach ($aReplacements as $strKey => $aReplacementArr) {
+          $aSubmissionData[$strKey] = str_replace( $aReplacementArr['from'], $aReplacementArr['to'], $aSubmissionData[$strKey]);
+        }
+        $strButtonLabelDelete = "Zmazať riadok z NF";
+        $strButtonLabelImport = "Importovať riadok z NF";
+        $strDoubleCheckQuestion = "Ste si istý?";
+        $strCommonIDPart = "missedSubmission-".$iBlogID."-".$aSubmissionData['_form_id']."-".$aSubmissionData['_submission_id']."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
+        $strRowID = "florpRow-{$strCommonIDPart}";
+        $strButtonID = "florpButton-{$strCommonIDPart}-delete";
+        $strButtons = '<br/><span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelDelete.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-blog-id="'.$iBlogID.'" data-form-id="'.$aSubmissionData['_form_id'].'" data-submission-id="'.$aSubmissionData['_submission_id'].'" data-email="'.$strEmail.'" data-sure="0" data-action="delete_nf_submission" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelDelete.'</span>';
+        if ($iBlogID === $this->iFlashmobBlogID) {
+          $strButtonID = "florpButton-{$strCommonIDPart}-import";
+          $strButtons .= '<br/><span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelImport.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-blog-id="'.$iBlogID.'" data-form-id="'.$aSubmissionData['_form_id'].'" data-submission-id="'.$aSubmissionData['_submission_id'].'" data-email="'.$strEmail.'" data-sure="0" data-action="import_flashmob_nf_submission" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelImport.'</span>';
+        }
+        $strEcho .= '<tr class="row missedSubmissionRow" data-row-id="'.$strRowID.'" data-email="'.$aSubmissionData['user_email'].'">';
+        $strEcho .=   '<td><a name="'.$aSubmissionData['user_email'].'">'.$aSubmissionData['user_email'].'</a></td>';
+        $strEcho .=   '<td>'.$aSubmissionData['_submission_date'].'</td>';
+        $strEcho .=   '<td>'.$aSubmissionData['first_name'].' '.$aSubmissionData['last_name'].$strButtons.'</td>';
+        $aSingleCheckboxes = array( 'courses_in_city_2', 'courses_in_city_3', 'preference_newsletter', 'hide_leader_info' );
+        $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', '_submission_date', '_submission_timestamp', '_submission_id', '_form_id', '_blog_id', '_field_types' );
+        $strEcho .= "<td>";
+        foreach ($aSubmissionData as $strKey => $mixValue) {
+          if (!isset($mixValue) || (!is_bool($mixValue) && !is_numeric($mixValue) && empty($mixValue)) || $mixValue === 'null' || in_array( $strKey, $aSkip )) {
+            continue;
+          }
+          if ($strKey === 'leader_user_id') {
+            $strKey = 'leader';
+            $oLeader = get_user_by( 'id', $mixValue );
+            $strValue = "{$mixValue}: ";
+            if (false === $oLeader) {
+              $strValue .= "[deleted]";
+            } else {
+              $strValue .= "{$oLeader->first_name} {$oLeader->last_name}";
+              if (in_array( $this->strUserRolePending, (array) $oLeader->roles )) {
+                $strValue .= " ({$strUserRolePendingName})";
+              }
+            }
+          } elseif (is_array($mixValue)) {
+            $strValue = implode( ', ', $mixValue);
+          } elseif (in_array($strMetaKey, $aSingleCheckboxes) || is_bool($mixValue)) {
+            $strValue = $mixValue ? '<input type="checkbox" disabled checked />' : '<input type="checkbox" disabled />';
+          } else {
+            $strValue = $mixValue;
+          }
+          $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
+          if (stripos( $strValue, 'https://' ) === 0 || stripos( $strValue, 'http://' ) === 0) {
+            $strEcho .= '<a href="'.$strValue.'" target="_blank">'.$strFieldName.'</a><br>';
+          } else {
+            $strEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>';
+          }
+        }
+        $strEcho .=   '</td>';
+        $strEcho .= '</tr>';
+      }
+    }
+    $strEcho .= '</table>';
+    return $strEcho;
+  }
+
+  private function get_value_maybe_fix_unserialize_array( $a ) {
+    if (is_string($a) && strpos($a, 'a:') === 0) {
+      return maybe_unserialize( $a );
+    } elseif (is_array($a) && count($a) === 1) {
+      if (is_string($a[0]) && strpos($a[0], 'a:') === 0) {
+        return maybe_unserialize( $a[0] );
+      } else {
+        return $a[0];
+      }
+    } else {
+      return $a;
+    }
+  }
   private function get_tshirts($iPaidFlag = 0, $bCSV = false) { // -1: unpaid, 1: paid, 0: all
     $aLeaders = $this->getFlashmobSubscribers( 'flashmob_organizer' );
     $aTshirtsOption = $this->aOptions["aTshirts"];
@@ -2877,19 +3347,7 @@ class FLORP{
     $aTshirts = array();
     foreach ($aLeaders as $oUser) {
       $aAllMeta = array_map(
-        function( $a ){
-          if (is_string($a) && strpos($a, 'a:') === 0) {
-            return maybe_unserialize( $a );
-          } elseif (is_array($a) && count($a) === 1) {
-            if (is_string($a[0]) && strpos($a[0], 'a:') === 0) {
-              return maybe_unserialize( $a[0] );
-            } else {
-              return $a[0];
-            }
-          } else {
-            return $a;
-          }
-        },
+        array($this, 'get_value_maybe_fix_unserialize_array'),
         get_user_meta( $oUser->ID )
       );
       $aRequiredTshirtProperties = array( 'flashmob_leader_tshirt_size', 'flashmob_leader_tshirt_gender', 'flashmob_leader_tshirt_color' );
@@ -3065,172 +3523,6 @@ class FLORP{
     exit();
   }
 
-  public function tshirts_table_admin() {
-    echo "<div class=\"wrap\">\n<h1>" . "Tričká" . "</h1>\n";
-
-    $aTshirts = $this->get_tshirts();
-    if (empty($aTshirts)) {
-      echo "<p>Nie sú objednané žiadne tričká.</p>\n</div><!-- .wrap -->";
-      return;
-    }
-
-    $strEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Typ</th><th>Líder</th><th>Vlastnosti</th>';
-
-//     echo "<pre>";var_dump($this->aOptions['aTshirts']);echo "</pre>";
-//     echo "<pre>";var_dump($aTshirts);echo "</pre>";
-    $iUnpaid = 0;
-    $iPaid = 0;
-    foreach ($aTshirts as $aTshirtData) {
-      $strButtons = "";
-      $strDoubleCheckQuestion = "Ste si istý?";
-      $strButtonLabelPaid = "Zaplatil";
-      $strButtonLabelPaymentWarning = "Upozorniť na neskorú platbu";
-      $strButtonLabelCancelOrder = "Zrušiť objednávku";
-      // We collect the data and button attributes/properties //
-      $strData = "";
-      foreach ($aTshirtData as $strKey => $mixValue) {
-        if ($strKey === "properties" || in_array($strKey, array("id"))) {
-          continue;
-        } elseif (is_bool($mixValue)) {
-          $strValue = $mixValue ? '1' : '0';
-        } else {
-          $strValue = $mixValue;
-        }
-        $strData .= " data-{$strKey}='{$strValue}'";
-      }
-      foreach ($aTshirtData['properties'] as $strKey => $strValue) {
-        $strData .= " data-{$strKey}='{$strValue}'";
-      }
-      $strRowID = "florpRow-".$aTshirtData["id"];
-      $strPaidButtonID = "florpButton-paid-".$aTshirtData["id"];
-      $strPaymentWarningButtonID = "florpButton-paymentWarning-".$aTshirtData["id"];
-      $strCancelOrderButtonID = "florpButton-cancelOrder-".$aTshirtData["id"];
-
-      $strButtons = '<br/>';
-      if ($aTshirtData["is_leader"]) {
-        // no button
-        $strButtons = "";
-        $iPaid++;
-      } elseif ($aTshirtData["is_paid"]) {
-        $strTitle = "";
-        if (isset($aTshirtData["paid_timestamp"])) {
-          $strTitle = ' title="'.date( get_option('date_format')." ".get_option('time_format'), $aTshirtData["paid_timestamp"] ).'"';
-        }
-        $strButtons .= '<span data-button-id="'.$strPaidButtonID.'" class="notice notice-success"'.$strTitle.'>Zaplatené</span>';
-        $iPaid++;
-      } else {
-        $iUnpaid++;
-
-        // Paid button //
-        $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelPaid.'" data-button-id="'.$strPaidButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp_tshirt_paid" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelPaid.'</span>';
-
-        // Cancel button //
-        $strButtons .= '<br/><span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelCancelOrder.'" data-button-id="'.$strCancelOrderButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp_tshirt_cancel_order" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelCancelOrder.'</span>';
-
-        // Warning button //
-        if (isset($this->aOptions['strTshirtPaymentWarningNotificationMsg'], $this->aOptions['strTshirtPaymentWarningNotificationSbj']) && !empty($this->aOptions['strTshirtPaymentWarningNotificationMsg']) && !empty($this->aOptions['strTshirtPaymentWarningNotificationSbj'])) {
-          $strWarningClass = "";
-          $bShow = true;
-          if (isset($aTshirtData["registered_timestamp"]) && $aTshirtData["registered_timestamp"] > 0) {
-            $iTimestampNow = (int) current_time( 'timestamp' );
-            if ($iTimestampNow - $aTshirtData["registered_timestamp"] > (7*24*3600)) {
-              $strWarningClass = " button-warning";
-            } else {
-              $bShow = false;
-            }
-          }
-          if ($bShow) {
-            $strButtons .= '<br/>';
-            if ($aTshirtData["payment_warning_sent"]) {
-              $strTitle = "";
-              if (isset($aTshirtData["payment_warning_sent_timestamp"])) {
-                $strTitle = ' title="'.date( get_option('date_format')." ".get_option('time_format'), $aTshirtData["payment_warning_sent_timestamp"] ).'"';
-              }
-              $strButtons .= '<span data-button-id="'.$strPaymentWarningButtonID.'" class="notice notice-success"'.$strTitle.'>Upozornený na neskorú platbu</span>';
-            } else {
-              $strButtons .= '<span class="button double-check'.$strWarningClass.'" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelPaymentWarning.'" data-button-id="'.$strPaymentWarningButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp_tshirt_send_payment_warning" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelPaymentWarning.'</span>';
-            }
-          }
-        }
-      }
-      $strEcho .= '<tr class="row" data-row-id="'.$strRowID.'">';
-//       $strEcho .= '<tr>';
-      $strEcho .=   '<td>'.$aTshirtData['name'].$strButtons.'</td>';
-      $strEcho .=   '<td><a name="'.$aTshirtData['email'].'">'.$aTshirtData['email'].'</a></td>';
-
-      $strWarning = "";
-      if (isset($aTshirtData['flashmob_city_at_registration'])) {
-        $strTitle = " title=\"Pozor: pri registrácii účastníka mal líder nastavené mesto flashmobu na  {$aTshirtData['flashmob_city_at_registration']}!\"";
-        $strWarning = ' <span '.$strTitle.' class="dashicons dashicons-warning"></span>';
-      }
-      $strEcho .=   '<td>'.$aTshirtData['flashmob_city'].$strWarning.'</td>';
-      $strEcho .=   '<td>'.$aTshirtData['type'].'</td>';
-      $strEcho .=   '<td>'.$aTshirtData['leader'].'</td>';
-      $strEcho .=   '<td>';
-      foreach ($aTshirtData['properties'] as $strKey => $strValue) {
-        $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
-        $strEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>';
-      }
-      $strEcho .=   '</td>';
-      $strEcho .= '</tr>';
-    }
-    $strEcho .= '</table>';
-    $strEcho .= '<form action="" method="post">';
-    $strEcho .= '<input type="hidden" name="security" value="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">';
-    $strEcho .= '<input type="hidden" name="florp-download-tshirt-csv" value="1">';
-    $strEcho .= '<input id="florp-download-tshirt-csv-all" class="button button-primary button-large" name="florp-download-tshirt-csv-all" type="submit" value="Stiahni CSV - všetko" />';
-    if ($iUnpaid > 0 && $iPaid > 0) {
-      $strEcho .= '<input id="florp-download-tshirt-csv-unpaid" class="button button-primary button-large" name="florp-download-tshirt-csv-unpaid" type="submit" value="Stiahni CSV - nezaplatené" />';
-      $strEcho .= '<input id="florp-download-tshirt-csv-paid" class="button button-primary button-large" name="florp-download-tshirt-csv-paid" type="submit" value="Stiahni CSV - zaplatené" />';
-    }
-    $strEcho .= '</form>';
-
-    echo $strEcho;
-    echo '</div><!-- .wrap -->';
-  }
-
-  public function leaders_history_table_admin() {
-    echo "<div class=\"wrap\"><h1>" . "Predošlé roky" . "</h1>";
-    $aUsers = $this->getFlashmobSubscribers( 'all', true );
-    $strEcho = '<table class="widefat striped"><th>Rok</th><th>Meno</th><th>M(i)esto Flashmobu</th><th>Profil</th>';
-    foreach ($this->aOptions["aYearlyMapOptions"] as $iYear => $aMapOptionsForYear) {
-      foreach ($aMapOptionsForYear as $iUserID => $aOptions) {
-        $strButtons = "";
-        $strEcho .= '<tr>';
-        $strEcho .=   '<td>'.$iYear.'</td>';
-        $strEcho .=   '<td>'.$aOptions['first_name'].' '.$aOptions['last_name'].$strButtons.'</td>';
-        $strFlashmobLocation = "-";
-        if (isset($aOptions['flashmob_address'])) {
-          $strFlashmobLocation = $aOptions['flashmob_address'];
-        } elseif (isset($aOptions['flashmob_city'])) {
-          $strFlashmobLocation = $aOptions['flashmob_city'];
-        } elseif (isset($aOptions['school_city'])) {
-          $strFlashmobLocation = "({$aOptions['school_city']})";
-        }
-        $strEcho .=   '<td>'.$strFlashmobLocation.'</td>';
-        $strEcho .=   '<td>';
-        $aSkip = array( 'first_name', 'last_name' );
-        foreach ($aOptions as $strKey => $strValue) {
-          if (in_array( $strKey, $aSkip )) {
-            continue;
-          }
-
-          $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
-          if (stripos( $strValue, 'https://' ) === 0 || stripos( $strValue, 'http://' ) === 0) {
-            $strEcho .= '<a href="'.$strValue.'" target="_blank">'.$strFieldName.'</a><br>';
-          } else {
-            $strEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>';
-          }
-        }
-        $strEcho .=   '</td>';
-        $strEcho .= '</tr>';
-      }
-    }
-    $strEcho .= '</table>';
-    echo $strEcho;
-    echo '</div><!-- .wrap -->';
-  }
-
   public function action__delete_florp_participant_callback() {
 //     wp_die();
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
@@ -3243,7 +3535,7 @@ class FLORP{
       if (isset($this->aOptions["aParticipants"][$aData["leaderId"]]) && isset($this->aOptions["aParticipants"][$aData["leaderId"]][$aData["participantEmail"]])) {
         $aData["removeRowOnSuccess"] = true;
         $aData["ok"] = true;
-        if (defined('FLORP_DEVEL') && FLORP_DEVEL === true) {
+        if (false && defined('FLORP_DEVEL') && FLORP_DEVEL === true) {
           $aData["message"] = "The flashmob participant '{$aData['participantEmail']}' was deleted successfully (NOT: FLORP_DEVEL is on!)";
         } else {
           unset($this->aOptions["aParticipants"][$aData["leaderId"]][$aData["participantEmail"]]);
@@ -3424,7 +3716,7 @@ class FLORP{
       if( class_exists( 'MUCD_Functions' ) ) {
         $strErrorMessage = "Could not clone subsite for subdomain '{$aData['subdomain']}'.";
         if (isset($aArgs['source']) && $aArgs['source'] > 0) {
-          $bTest = false; // TODO DEVEL TEST //
+          $bTest = false; // NOTE DEVEL TEST //
           if ($bTest) {
             $aData['ok'] = true;
             $aData['message'] = "ok message";
@@ -3459,6 +3751,144 @@ class FLORP{
         $aData["replaceButton"] = true;
       }
       $aData["replaceButtonHtml"] = "<span data-button-id=\"{$aData['buttonId']}\">{$strDomain}</span>";
+    }
+
+    echo json_encode($aData);
+    wp_die();
+  }
+
+  public function action__delete_nf_submission_callback() {
+    check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
+
+    $aData = $_POST;
+    $strErrorMessage = "Could not delete form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'";
+    $strOkMessage = "Successfully deleted form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'";
+    $aData["removeRowOnSuccess"] = true;
+
+    $mixChangeBlogID = false;
+    $aData['blogId'] = intval($aData['blogId']);
+    if ($aData['blogId'] !== intval(get_current_blog_id())) {
+      $mixChangeBlogID = $aData['blogId'];
+    }
+    if (false !== $mixChangeBlogID) {
+      switch_to_blog($mixChangeBlogID);
+    }
+
+    $oSubmission = Ninja_Forms()->form( $aData['formId'] )->get_sub( $aData['submissionId'] );
+    $oSubmission->delete();
+
+    if (false !== $mixChangeBlogID) {
+      restore_current_blog();
+    }
+
+    $aMissedSubmissions = $this->get_missed_submissions( $aData['blogId'] );
+    if (isset($aMissedSubmissions[$aData['email']])) {
+      foreach ($aMissedSubmissions[$aData['email']] as $aSubmissionData) {
+        if ($aSubmissionData['_form_id'] === $aData['formId'] && $aSubmissionData['_submission_id'] === $aData['submissionId'] && $aSubmissionData['_blog_id'] === $aData['blogId'] ) {
+          $aData['message'] = $strErrorMessage;
+          break;
+        }
+      }
+      if (!isset($aData['message'])) {
+        $aData['ok'] = true;
+        $aData['message'] = $strOkMessage;
+      }
+    } else {
+      $aData['ok'] = true;
+      $aData['message'] = $strOkMessage;
+    }
+
+    echo json_encode($aData);
+    wp_die();
+  }
+
+  public function action__import_flashmob_nf_submission_callback() {
+    check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
+
+    $aData = $_POST;
+    $strErrorMessage = "Could not import form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'";
+    $strOkMessage = "Successfully imported form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'";
+    $aData["removeRowOnSuccess"] = true;
+    $aData["hideSelector"] = "tr.missedSubmissionRow[data-email='{$aData['email']}']";
+    $aData['blogId'] = intval($aData['blogId']);
+
+    if ($aData['blogId'] === $this->iFlashmobBlogID) {
+      $aMissedSubmissions = $this->get_missed_submissions( $aData['blogId'] );
+      $aSubmission = false;
+      if (isset($aMissedSubmissions[$aData['email']])) {
+        foreach ($aMissedSubmissions[$aData['email']] as $aSubmissionData) {
+          if ($aSubmissionData['_form_id'] == $aData['formId'] && $aSubmissionData['_submission_id'] == $aData['submissionId'] && $aSubmissionData['_blog_id'] == $aData['blogId'] ) {
+            $aSubmission = $aSubmissionData;
+            break;
+          }
+        }
+        if ($aSubmission) {
+          $oLeader = get_user_by( 'id', $aSubmission['leader_user_id'] );
+          if (false === $oLeader) {
+            // Leader doesn't exist (any more) //
+            $aData['message'] = $strErrorMessage . "\nLeader doesn't exist";
+          } elseif (in_array( $this->strUserRolePending, (array) $oLeader->roles )) {
+            // Leader is pending //
+            $aData['message'] = $strErrorMessage . "\nLeader is pending approval";
+          } else {
+            $aFields = array();
+            $aSkipKeys = array('_submission_date', '_submission_timestamp', '_form_id', '_submission_id', '_blog_id', '_field_types');
+            foreach ($aSubmission as $key => $val) {
+              if (in_array($key, $aSkipKeys)) {
+                continue;
+              }
+              if (!isset($aSubmission['_field_types'][$key])) {
+                continue;
+              }
+              $aFields[] = array(
+                'type'  => $aSubmission['_field_types'][$key],
+                'key'   => $key,
+                'value' => $val
+              );
+            }
+            $aFormData = array(
+              'form_id' => $this->iProfileFormNinjaFormIDFlashmob,
+              'fields' => $aFields
+            );
+            $bIsFlashmobBlogBak =  $this->isFlashmobBlog;
+            $bIsMainBlogBak =  $this->isMainBlog;
+            $this->isFlashmobBlog = true;
+            $this->isMainBlog = false;
+            $res = $this->action__update_user_profile( $aFormData );
+            $this->isFlashmobBlog = $bIsFlashmobBlogBak;
+            $this->isMainBlog = $bIsMainBlogBak;
+            // $aData['res'] = var_export($res, true); // NOTE DEVEL
+
+            $aMissedSubmissionsAfterSave = $this->get_missed_submissions( $aData['blogId'] );
+            if (isset($aMissedSubmissionsAfterSave[$aData['email']])) {
+              foreach ($aMissedSubmissionsAfterSave[$aData['email']] as $aSubmissionData) {
+                if ($aSubmissionData['_form_id'] == $aData['formId'] && $aSubmissionData['_submission_id'] == $aData['submissionId'] && $aSubmissionData['_blog_id'] == $aData['blogId'] ) {
+                  $aData['message'] = $strErrorMessage;
+                  break;
+                }
+              }
+              if (!isset($aData['message'])) {
+                // Submission no longer exists //
+                $aData['ok'] = true;
+                $aData['message'] = $strOkMessage;
+              }
+            } else {
+              // No submission of given email exists any longer //
+              $aData['ok'] = true;
+              $aData['message'] = $strOkMessage;
+            }
+          }
+        } else {
+          // Submission was not found //
+          $aData['message'] = $strErrorMessage . "\nSubmission couldn't be found";
+        }
+      } else {
+        // No such submission //
+        $aData['message'] = $strErrorMessage . "\nThere is no such submission";
+      }
+    } else {
+      $aData['message'] = "This button is only for flashmob submissions!";
+      // $aData['iFlashmobBlogID'] = $this->iFlashmobBlogID;
     }
 
     echo json_encode($aData);
@@ -3687,105 +4117,6 @@ class FLORP{
       }
     }
     return "salsarueda.dance";
-  }
-
-  public function subsites_table_admin() {
-    echo "<div class=\"wrap\">\n<h1>" . "Podstránky lídrov" . "</h1>\n";
-    $aUsers = $this->getFlashmobSubscribers( 'all', true );
-    $strDoubleCheckQuestion = "Ste si istý?";
-    $strAction = 'florp_create_subsite';
-    $strDomainEnding = "." . $this->get_root_domain();
-    $aUserSubdomains = array();
-    $strEcho = '<table class="widefat striped"><th>Mesto</th><th>Líder</th><th>Podstránka</th>'."\n";
-    foreach ($aUsers as $oUser) {
-      $aAllMeta = array_map(
-        function( $a ){
-          if (is_string($a) && strpos($a, 'a:') === 0) {
-            return maybe_unserialize( $a );
-          } elseif (is_array($a) && count($a) === 1) {
-            if (is_string($a[0]) && strpos($a[0], 'a:') === 0) {
-              return maybe_unserialize( $a[0] );
-            } else {
-              return $a[0];
-            }
-          } else {
-            return $a;
-          }
-        },
-        get_user_meta( $oUser->ID )
-      );
-      $strSubDomainPage = false;
-      if (
-              !empty($aAllMeta['flashmob_city'])
-           && (
-                ($strSubDomainPage = $this->findCityWebpage($aAllMeta['flashmob_city'], false))
-             || (!empty($aAllMeta['webpage']) && $aAllMeta['webpage'] === "vytvorit")
-          )
-      ) {
-        $strCity = $aAllMeta['flashmob_city'];
-        $strRowID = "florpRow-subsite-{$oUser->ID}";
-        if ($strSubDomainPage) {
-          $strSubsite = $strSubDomainPage;
-          $aUserSubdomains[] = $strSubDomainPage;
-        } elseif (!$aData["bInfoWindow"]) {
-          $strSubsite = "<span data-user_id=\"{$oUser->ID}\">Vytvoriť:</span>";
-          $aVariations = $this->getCitySubdomainVariations( $strCity );
-          foreach ($aVariations as $strVariation) {
-            $strButtonLabel = $strVariation . $strDomainEnding;
-            $strButtonID = "florpButton-createSubsite-{$oUser->ID}-{$strVariation}";
-            $aButtonData = array(
-              'user_id' => $oUser->ID,
-              'subdomain' => $strVariation,
-            );
-            $strData = "";
-            foreach ($aButtonData as $strKey => $strValue) {
-              $strData .= " data-{$strKey}=\"{$strValue}\"";
-            }
-            $strSubsite .= '<br><span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'"'.$strData.' data-action="'.$strAction.'" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabel.'</span>';
-          }
-
-//           $strSubsite = implode( ", ", $aVariations );
-        }
-        $strEcho .= "<tr class=\"row\" data-row-id=\"{$strRowID}\">";
-        $strEcho .=   "<td>{$strCity}</td>\n";
-        $strEcho .=   "<td>{$oUser->first_name} {$oUser->last_name}<br>\n{$oUser->user_email}</td>\n";
-        $strEcho .=   "<td class=\"subsite\">{$strSubsite}</td>";
-        $strEcho .= "</tr>\n";
-      } else {
-        continue;
-      }
-    }
-    $aSites = wp_get_sites();
-    $strRootDomain = "";
-    foreach ($aSites as $i => $aSite) {
-      if ($aSite['public'] != 1 || $aSite['deleted'] == 1 || $aSite['archived'] == 1) {
-        continue;
-      }
-      $strDomain = $aSite['domain'];
-      $iID = intval($aSite['blog_id']);
-      $aParts = explode( ".", $strDomain );
-      if (!is_array($aParts) || count($aParts) !== 3) {
-        continue;
-      }
-      $aSkipDomains = array( 'ruedon.salsarueda.dance', 'festivaly.salsarueda.dance' );
-      if ($iID === $this->aOptions['iFlashmobBlogID'] || $iID === $this->aOptions['iMainBlogID'] || in_array($strDomain, $aSkipDomains) || in_array($strDomain, $aUserSubdomains)) {
-        continue;
-      }
-//       var_dump($iID, $this->aOptions['iFlashmobBlogID']);
-      $strEcho .= "<tr><td>-</td><td>-</td><td>{$strDomain}</td></tr>";
-    }
-    $strEcho .= "</table>";
-
-    $strRowID = "florpRow-subsite-0";
-    $strButtonID = "florpButton-createSubsite-0-new";
-    $strButtonLabel = "Vytvoriť";
-    $strData = "";
-    $strEcho .= "<p class=\"row\" data-row-id=\"{$strRowID}\">Vytvoriť inú podstránku: ";
-    $strEcho .= '<input type="text" name="subdomain" value="">'.$strDomainEnding;
-    $strEcho .= ' <span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'"'.$strData.' data-use-input-names="subdomain" data-action="'.$strAction.'" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabel.'</span>';
-    $strEcho .= "</p>";
-    echo $strEcho;
-    echo '</div><!-- .wrap -->';
   }
 
   public function options_page() {
@@ -4082,7 +4413,7 @@ class FLORP{
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
-                Správa zobrazená po úspešnej registrácii (pred prihlásením)
+                <label for="florp_registration_successful_message">Správa zobrazená po úspešnej registrácii (pred prihlásením)</label>
               </th>
               <td style="border-top: 1px lightgray dashed;">
                 <input id="florp_registration_successful_message" name="florp_registration_successful_message" type="text" value="%%strRegistrationSuccessfulMessage%%" style="width: 100%;" />
@@ -4090,7 +4421,7 @@ class FLORP{
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;">
-                Správa zobrazená po úspešnom prihlásení
+                <label for="florp_login_successful_message">Správa zobrazená po úspešnom prihlásení</label>
               </th>
               <td>
                 <input id="florp_login_successful_message" name="florp_login_successful_message" type="text" value="%%strLoginSuccessfulMessage%%" style="width: 100%;" />
@@ -4114,7 +4445,7 @@ class FLORP{
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;">
-                Predmet správy poslanej užívateľom po schválení
+                <label for="florp_user_approved_subject">Predmet správy poslanej užívateľom po schválení</label>
               </th>
               <td style="border-top: 1px lightgray dashed;">
                 <input id="florp_user_approved_subject" name="florp_user_approved_subject" type="text" value="%%strUserApprovedSubject%%" style="width: 100%;" />
@@ -4132,7 +4463,7 @@ class FLORP{
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
-                Newsletter zoznamy (oddelené čiarkou)
+                <label for="florp_newsletter_lists_main">Newsletter zoznamy (oddelené čiarkou)</label>
               </th>
               <td style="border-top: 1px lightgray dashed;">
                 <input id="florp_newsletter_lists_main" name="florp_newsletter_lists_main" type="text" value="%%strNewsletterListsMain%%" style="width: 100%;" />
@@ -4140,7 +4471,7 @@ class FLORP{
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
-                Predmet správy poslanej lídrom raz za deň o prihlásených účastníkoch flashmobu
+                <label for="florp_leader_participant_list_notif_sbj">Predmet správy poslanej lídrom raz za deň o prihlásených účastníkoch flashmobu</label>
               </th>
               <td style="border-top: 1px lightgray dashed;">
                 <input id="florp_leader_participant_list_notif_sbj" name="florp_leader_participant_list_notif_sbj" type="text" value="%%strLeaderParticipantListNotificationSbj%%" style="width: 100%;" />
@@ -4158,7 +4489,7 @@ class FLORP{
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
-                Text linky prihlasovacieho formulára
+                <label for="florp_login_bar_label_login">Text linky prihlasovacieho formulára</label>
               </th>
               <td style="border-top: 1px lightgray dashed;">
                 <input id="florp_login_bar_label_login" name="florp_login_bar_label_login" type="text" value="%%strLoginBarLabelLogin%%" style="width: 100%;" />
@@ -4166,7 +4497,7 @@ class FLORP{
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;">
-                Text linky na odhlásenie
+                <label for="florp_login_bar_label_logout">Text linky na odhlásenie</label>
               </th>
               <td>
                 <input id="florp_login_bar_label_logout" name="florp_login_bar_label_logout" type="text" value="%%strLoginBarLabelLogout%%" style="width: 100%;" />
@@ -4174,7 +4505,7 @@ class FLORP{
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;">
-                Text linky profilu (keď je líder prihlásený)
+                <label for="florp_login_bar_label_profile">Text linky profilu (keď je líder prihlásený)</label>
               </th>
               <td>
                 <input id="florp_login_bar_label_profile" name="florp_login_bar_label_profile" type="text" value="%%strLoginBarLabelProfile%%" style="width: 100%;" />
@@ -4275,7 +4606,10 @@ class FLORP{
         '%%wpEditorParticipantRemovedMessage%%',
         '%%strParticipantRemovedSubject%%',
         '%%tshirtOrderingDisabledChecked%%', '%%tshirtOrderingDisabledOnlyDisableChecked%%',
-        '%%bOnlyFlorpProfileNinjaFormFlashmob%%' ),
+        '%%bOnlyFlorpProfileNinjaFormFlashmob%%',
+        '%%iTshirtPaymentWarningDeadline%%', '%%iTshirtPaymentWarningDeadlineTime%%',
+        '%%iTshirtPaymentWarningButtonDeadline%%', '%%iTshirtPaymentWarningButtonDeadlineTime%%',
+        '%%iTshirtOrderDeliveredBeforeFlashmobDdl%%', '%%iTshirtOrderDeliveredBeforeFlashmobDdlTime%%' ),
       array( $aBooleanOptionsChecked['bReloadAfterSuccessfulSubmissionFlashmob'],
         $aBooleanOptionsChecked['bUseMapImage'],
         $optionsNinjaFormsFlashmob,
@@ -4290,7 +4624,10 @@ class FLORP{
         $strParticipantRemovedMessage,
         $this->aOptions['strParticipantRemovedSubject'],
         $aBooleanOptionsChecked['bTshirtOrderingDisabled'], $aBooleanOptionsChecked['bTshirtOrderingDisabledOnlyDisable'],
-        $aBooleanOptionsChecked['bOnlyFlorpProfileNinjaFormFlashmob'] ),
+        $aBooleanOptionsChecked['bOnlyFlorpProfileNinjaFormFlashmob'],
+        $this->aOptions['iTshirtPaymentWarningDeadline'], $this->iTshirtPaymentWarningDeadlineTime,
+        $this->aOptions['iTshirtPaymentWarningButtonDeadline'], $this->iTshirtPaymentWarningButtonDeadlineTime,
+        $this->aOptions['iTshirtOrderDeliveredBeforeFlashmobDdl'], $this->iTshirtOrderDeliveredBeforeFlashmobDdlTime ),
         // BEGIN replace template //
       '
             <tr style="width: 98%; padding:  5px 1%;">
@@ -4364,7 +4701,7 @@ class FLORP{
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
-                Newsletter zoznamy (oddelené čiarkou)
+                <label for="florp_newsletter_lists_flashmob">Newsletter zoznamy (oddelené čiarkou)</label>
               </th>
               <td style="border-top: 1px lightgray dashed;">
                 <input id="florp_newsletter_lists_flashmob" name="florp_newsletter_lists_flashmob" type="text" value="%%strNewsletterListsFlashmob%%" style="width: 100%;" />
@@ -4372,7 +4709,7 @@ class FLORP{
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
-                Predmet správy poslanej prihláseným účastníkom flashmobu
+                <label for="florp_participant_registered_subject">Predmet správy poslanej prihláseným účastníkom flashmobu</label>
               </th>
               <td style="border-top: 1px lightgray dashed;">
                 <input id="florp_participant_registered_subject" name="florp_participant_registered_subject" type="text" value="%%strParticipantRegisteredSubject%%" style="width: 100%;" />
@@ -4390,7 +4727,7 @@ class FLORP{
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
-                Predmet správy poslanej odstráneným účastníkom flashmobu
+                <label for="florp_participant_removed_subject">Predmet správy poslanej odstráneným účastníkom flashmobu</label>
               </th>
               <td style="border-top: 1px lightgray dashed;">
                 <input id="florp_participant_removed_subject" name="florp_participant_removed_subject" type="text" value="%%strParticipantRemovedSubject%%" style="width: 100%;" />
@@ -4408,7 +4745,7 @@ class FLORP{
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
-                Predmet upozornenia na platbu za tričko
+                <label for="florp_tshirt_payment_warning_notif_sbj">Predmet upozornenia na platbu za tričko</label>
               </th>
               <td style="border-top: 1px lightgray dashed;">
                 <input id="florp_tshirt_payment_warning_notif_sbj" name="florp_tshirt_payment_warning_notif_sbj" type="text" value="%%strTshirtPaymentWarningNotificationSbj%%" style="width: 100%;" />
@@ -4436,6 +4773,30 @@ class FLORP{
               </th>
               <td>
                 <input id="florp_tshirt_ordering_only_disable" name="florp_tshirt_ordering_only_disable" type="checkbox" %%tshirtOrderingDisabledOnlyDisableChecked%% value="1"/>
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
+                <label for="florp_tshirt_payment_warning_deadline">Deadline na zobrazovanie upozornenia na dátum, po ktorom už tričká nebudú doručené pred flashmobom [počet dní pred flashmobom]</label>
+              </th>
+              <td style="border-top: 1px lightgray dashed;">
+                <input id="florp_tshirt_payment_warning_deadline" name="florp_tshirt_payment_warning_deadline" type="number" value="%%iTshirtPaymentWarningDeadline%%" style="width: 100%;" min="0" max="21" title="Current: %%iTshirtPaymentWarningDeadline%% => %%iTshirtPaymentWarningDeadlineTime%%" />
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                <label for="florp_tshirt_payment_warning_btn_deadline">Deadline na zobrazovanie nútené tlačítka na odoslanie upozornenia na neskorú platbu za tričko [počet dní pred flashmobom]</label>
+              </th>
+              <td>
+                <input id="florp_tshirt_payment_warning_btn_deadline" name="florp_tshirt_payment_warning_btn_deadline" type="number" value="%%iTshirtPaymentWarningButtonDeadline%%" style="width: 100%;" min="-1" max="21" title="Current: %%iTshirtPaymentWarningButtonDeadline%% => %%iTshirtPaymentWarningButtonDeadlineTime%%" />
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                <label for="florp_tshirt_order_delivered_b4_flash_ddl">Deadline, po ktorom už tričká nebudú doručené pred flashmobom [počet dní pred flashmobom]</label>
+              </th>
+              <td>
+                <input id="florp_tshirt_order_delivered_b4_flash_ddl" name="florp_tshirt_order_delivered_b4_flash_ddl" type="number" value="%%iTshirtOrderDeliveredBeforeFlashmobDdl%%" style="width: 100%;" min="0" max="21" title="Current: %%iTshirtOrderDeliveredBeforeFlashmobDdl%% => %%iTshirtOrderDeliveredBeforeFlashmobDdlTime%%" />
               </td>
             </tr>
       '
@@ -4513,7 +4874,7 @@ class FLORP{
 //         $strNote = '<span style="width: 100%;">Táto položka sa zobrazí len ak nie je povolené zobrazovanie kurzov vo formulári alebo je prázdne meno školy.</span>';
 //       }
       $strInfoWindowLabels .= '<th style="width: 47%; padding: 0 1%; text-align: right;">
-                Nadpis pre položku "'.$strSlug.'"
+                <label for="'.$strElementID.'">Nadpis pre položku "'.$strSlug.'"</label>
               </th>
               <td>
                 <input id="'.$strElementID.'" name="'.$strElementID.'" type="text" value="'.$strOptionValue.'" style="width: 100%;" />'.$strNote.'
@@ -4553,7 +4914,7 @@ class FLORP{
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;">
-                Newsletter API kľúč
+                <label for="florp_newsletter_api_key">Newsletter API kľúč</label>
               </th>
               <td>
                 <input id="florp_newsletter_api_key" name="florp_newsletter_api_key" type="text" value="%%strNewsletterAPIKey%%" style="width: 100%;" />
@@ -4600,7 +4961,7 @@ class FLORP{
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;">
-                Google Maps API Key
+                <label for="florp_google_maps_key">Google Maps API Key</label>
               </th>
               <td>
                 <input id="florp_google_maps_key" name="florp_google_maps_key" type="text" value="%%strGoogleMapsKey%%" style="width: 100%;" />
@@ -4608,7 +4969,7 @@ class FLORP{
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;">
-                Google Maps Static API Key
+                <label for="florp_google_maps_key_static">Google Maps Static API Key</label>
               </th>
               <td>
                 <input id="florp_google_maps_key_static" name="florp_google_maps_key_static" type="text" value="%%strGoogleMapsKeyStatic%%" style="width: 100%;" />
@@ -4616,7 +4977,7 @@ class FLORP{
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;">
-                Facebook app ID
+                <label for="florp_fb_app_id">Facebook app ID</label>
               </th>
               <td>
                 <input id="florp_fb_app_id" name="florp_fb_app_id" type="text" value="%%strFbAppID%%" style="width: 100%;" />
@@ -4632,7 +4993,7 @@ class FLORP{
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
-                Text linky na prihlásenie na Flashmob
+                <label for="florp_signup_link_label">Text linky na prihlásenie na Flashmob</label>
               </th>
               <td style="border-top: 1px lightgray dashed;">
                 <input id="florp_signup_link_label" name="florp_signup_link_label" type="text" value="%%strSignupLinkLabel%%" style="width: 100%;" />
@@ -5148,19 +5509,7 @@ class FLORP{
 
     if (isset($aData["id"])) {
       $aAllMeta = array_map(
-        function( $a ){
-          if (is_string($a) && strpos($a, 'a:') === 0) {
-            return maybe_unserialize( $a );
-          } elseif (is_array($a) && count($a) === 1) {
-            if (is_string($a[0]) && strpos($a[0], 'a:') === 0) {
-              return maybe_unserialize( $a[0] );
-            } else {
-              return $a[0];
-            }
-          } else {
-            return $a;
-          }
-        },
+        array($this, 'get_value_maybe_fix_unserialize_array'),
         get_user_meta( $aData["id"] )
       );
       $aData = array_merge($aData, $aAllMeta);
@@ -5623,12 +5972,13 @@ class FLORP{
         $aHeaders = array('Content-Type: text/html; charset=UTF-8');
         $this->new_user_notification( $aFieldData['user_email'], '', $aFieldData['user_email'], $strBlogname, $strMessageContent, $this->aOptions['strParticipantRegisteredSubject'], $aHeaders );
       }
-      return;
+      return 1;
+      // return array($aFormData, $aFieldData, $iUserID, $this->aOptions['aParticipants'][$iUserID]); // NOTE DEVEL
     }
 
     if (!$this->isMainBlog || intval($aFormData['form_id']) !== $this->iProfileFormNinjaFormIDMain) {
       // Not the profile form (or the main site at all) //
-      return;
+      return 2;
     }
 
     if (is_user_logged_in()) {
@@ -5646,7 +5996,7 @@ class FLORP{
       $mixResult = wp_create_user( $strUsername, $aFieldData['user_pass'], $aFieldData['user_email'] );
       if ( is_wp_error($mixResult) ) {
         file_put_contents( __DIR__ . "/kk-debug-after-submission-create-error.log", var_export( array( $aFieldData, $aFormData ), true ) );
-        return;
+        return 3;
       } else {
         // Success
         $iUserID = $mixResult;
@@ -5812,6 +6162,7 @@ class FLORP{
       }
     }
     setcookie('florp-form-saved', "1", time() + (1 * 24 * 60 * 60), '/');
+    return 4;
   }
 
   public function action__set_user_role( $iUserID, $strNewRole, $aOldRoles ) {

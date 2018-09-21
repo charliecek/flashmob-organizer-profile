@@ -13,11 +13,19 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
-= [v4.5.5: admin table filter, readme](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.5.5) =
+= v4.5.6: Form check, 2017 reimport, leader history admin table =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.5.6)
+- added check to prevent submission to archived forms (main, flashmob)
+- reimport users from 2017 correctly
+- added history view in admin for yearly map options (leaders)
+
+= v4.5.5: admin table filter, readme =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.5.5)
 - added admin table filter
 - added readme.txt
 
-= [v4.5.4: form export versioning, refactoring](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.5.4) =
+= v4.5.4: form export versioning, refactoring =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.5.4)
 - added participant registration date import
 - added form export/import versioning
 - added ninja form export on form save
@@ -25,14 +33,17 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 - BEGIN/END blocks for better code folding
 - added page/form/popup/site IDs to admin dropdowns
 
-= [v4.5.3: replacement of flashmobbers tab, profile success msg fadeOut](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.5.3) =
+= v4.5.3: replacement of flashmobbers tab, profile success msg fadeOut =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.5.3)
 - added replacement of flashmobbers tab (ajax)
 - added fadeOut on profile success message
 
-= [v4.5.2: added tshirt order cancelling](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.5.2) =
+= v4.5.2: added tshirt order cancelling =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.5.2)
 - added tshirt order cancelling
 
-= [v4.5.1: tshirt ordering disable, timed tshirt payment warning, bugfix](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.5.1) =
+= v4.5.1: tshirt ordering disable, timed tshirt payment warning, bugfix =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.5.1)
 - added admin css (and .button-warning)
 - added disabling of tshirt ordering
   - posibility to hide or only disable the checkbox
@@ -42,19 +53,23 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
   - added warning icon for it in list of participants, tshirts
 - added participant registration time to CSV
 
-= [v4.5.0: tshirt payment notifications, site cloning](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.5.0) =
+= v4.5.0: tshirt payment notifications, site cloning =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.5.0)
 - site cloning: simple and with external plugin (MUCD)
 - site cloning admin screen
 - tshirt payment notifications
 - admin ajax: added more possibilities, success actions
 
-= [v4.4.3: bugfix](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.4.3) =
+= v4.4.3: bugfix =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.4.3)
 - fixed bug with forms when both forms have the same ID
 
-= [v4.4.2: map (pre)view bugfix](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.4.2) =
+= v4.4.2: map (pre)view bugfix =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.4.2)
 - bugfix: map (pre)view didn't use flashmob_city for "vytvorit"
 
-= [v4.4.1: fixes, improvements](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.4.1) =
+= v4.4.1: fixes, improvements =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.4.1)
 - better get_tshirt logic (paid/unpaid/all)
 - added leader and webpage to tshirt data
 - fixed bug: tshirts only for non-pending participants
@@ -62,7 +77,8 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 - refactored get_leader_webpage for multiple use
 - fix: city webpage based on flashmob city, not user city
 
-= [v4.4.0: tshirt page with csv download, admin ajax, fixes](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.4.0) =
+= v4.4.0: tshirt page with csv download, admin ajax, fixes =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.4.0)
 - fixed validation on registration form
 - added admin view for ordered tshirts
   - with button "paid"
@@ -73,57 +89,69 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 - fixed leader tshirt preview change to flashmob city
   - instead of user city
 
-= [v4.3.6: Added check for participant t-shirt related fields](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.3.6) =
+= v4.3.6: Added check for participant t-shirt related fields =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.3.6)
 Added check for participant t-shirt related fields
 
-= [v4.3.5: Fixes, improvements](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.3.5) =
+= v4.3.5: Fixes, improvements =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.3.5)
 - extended jQuery jBox function to remember all instantiated jBoxes
 - fixed jBox position on mobiles
 - fixde multicolumn fields on mobiles
 - added variations to site matching
 
-= [v4.3.4: fixed preview when shown on the right half of screen](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.3.4) =
+= v4.3.4: fixed preview when shown on the right half of screen =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.3.4)
 fixed preview when shown on the right half of screen
 
-= [v4.3.3: Responsive mobile css fixed, Matching own city website](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.3.3) =
+= v4.3.3: Responsive mobile css fixed, Matching own city website =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.3.3)
 - Responsive mobile css fixed
 - Matching own city website
 - Trimming ending slash from website info labels
 - Minor flashmob form change
 
-= [v4.3.2: Added possibility of different tshirt preview image, fixes](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.3.2) =
+= v4.3.2: Added possibility of different tshirt preview image, fixes =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.3.2)
 - Added possibility of different tshirt preview image
 - changes to profile form, info windows, fields
 - checking if email is subscribed to newsletter (via DB)
 - fixed bug with radiobutton clearing on submit
 
-= [v4.3.1: Bugfixes](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.3.1) =
+= v4.3.1: Bugfixes =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.3.1)
 Bugfixes
 
-= [v4.3.0: T-shirt image preview, fixes](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.3.0) =
+= v4.3.0: T-shirt image preview, fixes =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.3.0)
 - tshirt image preview
 - field checking, error messages with field label
 - new tshirt images
 - new form exports
 - other fixes
 
-= [v4.2.1: Bugfix - rewriting of version to old value](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.2.1) =
+= v4.2.1: Bugfix - rewriting of version to old value =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.2.1)
 Bugfix - rewriting of version to old value
 
-= [v4.2.0: New registration forms and related changes](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.2.0) =
+= v4.2.0: New registration forms and related changes =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.2.0)
 New registration forms and related changes
 
-= [Map info window templates as options](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.1.0) =
+= Map info window templates as options =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.1.0)
 - added map info window templates as options
   - improved separation of optional placeholders by line breaks
 - added styling for form trigger link
 
-= [v4.0.3: LWA default template evaluation fix, Admin leaders table fix](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.0.3) =
+= v4.0.3: LWA default template evaluation fix, Admin leaders table fix =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.0.3)
 - LWA: default template evaluation fix
 - Fixed leaders table in admin
   - table was missing participants if leader was pending
 
-= [v4.0.2: LWA: new FLORP template, template path fix; login links](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.0.2) =
+= v4.0.2: LWA: new FLORP template, template path fix; login links =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.0.2)
 - LWA
   - new FLORP template (SVK)
   - template path fix
@@ -131,12 +159,14 @@ New registration forms and related changes
 - Added separate option for GM Static Key
 - Fixed saving of 'use static map' option (flashmob)
 
-= [v4.0.1: Fixes for pending leaders - shown in admin](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.0.1) =
+= v4.0.1: Fixes for pending leaders - shown in admin =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.0.1)
 - Fixed bug with static activation/deactivation methods
 - Pending leaders shown in admin
 - Removed users' participants are deleted
 
-= [v4.0.0: New profile](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.0.0) =
+= v4.0.0: New profile =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.0.0)
 - separated options for main and flashmob site + related refactoring
 - improved deprecated keys removal
 
@@ -228,7 +258,8 @@ New registration forms and related changes
 - Admin leader and participant list tables
 - Refactoring
 
-= [v3.0.0: Registration form (shorter than profile form) for non-organizers, NF import, own Recaptcha, other improvements and fixes](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v3.0.0) =
+= v3.0.0: Registration form (shorter than profile form) for non-organizers, NF import, own Recaptcha, other improvements and fixes =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v3.0.0)
 Registration form not only for organizers
 - Automatic generation of user name
 - Login via email after registration
@@ -279,17 +310,21 @@ Other
 - settings page fix: added wrapper div
 - fixing/improving toggling logic for warnings
 
-= [v2.5.2: Fixed tab click detection for mobiles](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v2.5.2) =
+= v2.5.2: Fixed tab click detection for mobiles =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v2.5.2)
 Fixed tab click detection for mobiles and added fallback loading if click was not detected correctly.
 
-= [v2.5.1: option not to use map image in og metatags](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v2.5.1) =
+= v2.5.1: option not to use map image in og metatags =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v2.5.1)
 Added option to decide whether or not to use map image in og metatags.
 
-= [v2.5.0: Map lazy and async loading, video lazy loading](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v2.5.0) =
+= v2.5.0: Map lazy and async loading, video lazy loading =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v2.5.0)
 - lazy and asynchronous loading for maps (hidden on tabs)
 - lazy loading for videos (hidden on tabs; if the embed doesn't contain `script` tags)
 
-= [v2.4.0: Profile form used for registration](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v2.4.0) =
+= v2.4.0: Profile form used for registration =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v2.4.0)
 - registration via profile form
   - checking of form data changed to reflect this
 - new meta tag for user_login
@@ -303,7 +338,4 @@ Added option to decide whether or not to use map image in og metatags.
   - success message if logged in
   - success message if logged out
 - CSS improvements
-
-= [v2.3.2: Overlay close fix](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v2.3.2) =
-- Fixed bug that caused the profile form popup closing on form submit (after upgrade of PUM to the latest version)
 

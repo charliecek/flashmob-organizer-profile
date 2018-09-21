@@ -20,13 +20,14 @@ $aFlorpNinjaFormExportData = array (
       6 => 'flashmob_city',
       7 => 'preferences',
       8 => 'html_-_newsletter_banner_mobile_1535795671381',
-      9 => 'flashmob_participant_tshirt_gender',
+      9 => 'upozornenie_1537461842330',
       10 => 'html_-_newsletter_banner_1533390855929',
-      11 => 'flashmob_participant_tshirt_size',
-      12 => 'flashmob_participant_tshirt_color',
-      13 => 'leader_user_id',
-      14 => 'antispamova_ochrana_1528848098448',
-      15 => 'save_button',
+      11 => 'flashmob_participant_tshirt_gender',
+      12 => 'flashmob_participant_tshirt_size',
+      13 => 'flashmob_participant_tshirt_color',
+      14 => 'leader_user_id',
+      15 => 'antispamova_ochrana_1528848098448',
+      16 => 'save_button',
     ),
     'fieldsMarkedRequired' => 'Polia označené <span class="ninja-forms-req-symbol">*</span> sú povinné',
     'currency' => '',
@@ -11007,12 +11008,42 @@ $aFlorpNinjaFormExportData = array (
       'key' => 'html_-_newsletter_banner_mobile_1535795671381',
       'drawerDisabled' => false,
     ),
-    241 => 
+    267 => 
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
       'order' => 10,
+      'type' => 'html',
+      'label' => 'Upozornenie',
+      'default' => '<p><b>Upozornenie!</b> Tričká objednané po %%iTshirtOrderDeliveredBeforeFlashmobDdlDate%% budú dodané po flashmobe.</p>',
+      'container_class' => 'florp-class florp-left florp-preference-field_flashmob_participant_tshirt florp-tshirt-after-flashmob-warning',
+      'element_class' => '',
+      'key' => 'upozornenie_1537461842330',
+      'drawerDisabled' => false,
+    ),
+    249 => 
+    array (
+      'objectType' => 'Field',
+      'objectDomain' => 'fields',
+      'editActive' => false,
+      'order' => 11,
+      'type' => 'html',
+      'label' => 'HTML - newsletter banner',
+      'default' => '<p class="florp-newsletter-banner participants">
+  <img src="/wpsite/wp-content/plugins/flashmob-organizer-profile/img/newsletter-banner.jpg" alt="newsletter" title="newsletter">
+</p>',
+      'container_class' => 'florp-class florp-right florp-registration-field florp-desktop',
+      'element_class' => '',
+      'key' => 'html_-_newsletter_banner_1533390855929',
+      'drawerDisabled' => false,
+    ),
+    241 => 
+    array (
+      'objectType' => 'Field',
+      'objectDomain' => 'fields',
+      'editActive' => false,
+      'order' => 12,
       'label_pos' => 'default',
       'required' => '',
       'options' => 
@@ -11176,28 +11207,12 @@ $aFlorpNinjaFormExportData = array (
       'key' => 'flashmob_participant_tshirt_gender',
       'type' => 'listradio',
     ),
-    249 => 
-    array (
-      'objectType' => 'Field',
-      'objectDomain' => 'fields',
-      'editActive' => false,
-      'order' => 11,
-      'type' => 'html',
-      'label' => 'HTML - newsletter banner',
-      'default' => '<p class="florp-newsletter-banner participants">
-  <img src="/wpsite/wp-content/plugins/flashmob-organizer-profile/img/newsletter-banner.jpg" alt="newsletter" title="newsletter">
-</p>',
-      'container_class' => 'florp-class florp-right florp-registration-field florp-desktop',
-      'element_class' => '',
-      'key' => 'html_-_newsletter_banner_1533390855929',
-      'drawerDisabled' => false,
-    ),
     240 => 
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 12,
+      'order' => 13,
       'label_pos' => 'left',
       'required' => '',
       'options' => 
@@ -11752,7 +11767,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 13,
+      'order' => 14,
       'label_pos' => 'left',
       'required' => '',
       'options' => 
@@ -11921,7 +11936,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 14,
+      'order' => 15,
       'type' => 'hidden',
       'label' => 'User ID',
       'key' => 'leader_user_id',
@@ -11935,7 +11950,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 15,
+      'order' => 16,
       'container_class' => 'florp-class florp-antispam florp-registration-field',
       'element_class' => '',
       'size' => 'visible',
@@ -11949,7 +11964,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 16,
+      'order' => 17,
       'processing_label' => 'Processing',
       'container_class' => 'florp-class florp-registration-field florp-button-wrapper',
       'element_class' => 'florp_uloz_profil florp-button button',
@@ -12167,4 +12182,6 @@ $aFlorpNinjaFormExportData = array (
       'payment_total_type' => '',
     ),
   ),
+  'version' => 4005006,
+  'timestamp' => 1537485136,
 ); ?>
