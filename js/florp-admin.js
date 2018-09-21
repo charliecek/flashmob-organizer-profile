@@ -94,6 +94,9 @@ jQuery( document ).ready(function() {
               var iTableCell = false
               if ($container.length === 0) {
                 $container = $button.parents("table")
+                if ($container.length === 0) {
+                  $container = $button.parents("p")
+                }
               } else {
                 $container = $container.first()
                 iTableCell = $container[0].cells ? $container[0].cells.length : false
@@ -153,7 +156,7 @@ jQuery( document ).ready(function() {
                       if (aResponse.useInputNames && aResponse.clearInputNames) {
                         var strInputNames = data.useInputNames
                         jQuery.each(strInputNames.split(","), function(index, value) {
-                          var $input = jQuery("[data-row-id="+aResponse.rowId+"] [name="+value+"]")
+                          var $input = jQuery("[data-row-id="+aResponse.rowId+"] input[name="+value+"]")
                           if ($input.length > 0) {
                             $input.val("");
                           }
@@ -175,7 +178,7 @@ jQuery( document ).ready(function() {
                     if (aResponse.useInputNames && aResponse.clearInputNames) {
                       var strInputNames = data.useInputNames
                       jQuery.each(strInputNames.split(","), function(index, value) {
-                        var $input = jQuery("[data-row-id="+aResponse.rowId+"] [name="+value+"]")
+                        var $input = jQuery("[data-row-id="+aResponse.rowId+"] input[name="+value+"]")
                         if ($input.length > 0) {
                           $input.val("");
                         }
@@ -345,4 +348,36 @@ jQuery( document ).ready(function() {
       jQuery( document ).on( "change keyup paste input textInput", "input.florpFilterInput", fnFlorpFilterRows )
     })
   }
+
+  jQuery( "input.jquery-datetimepicker" ).each(function() {
+    var $this = jQuery(this)
+    var options = {
+      controlType: 'select',
+      oneLine: true,
+      timeInput: false,
+      timeFormat: 'HH:mm:ss',
+      currentText: "Teraz",
+      closeText: "Hotovo",
+    }
+    if ($this.data("altField")) {
+      $altField = jQuery($this.data("altField"))
+      if ($altField.length > 0) {
+        options["onSelect"] = function( dateTimeText, datePickerInstance ) {
+          var $input = datePickerInstance['$input'] || datePickerInstance['input'] || false
+          if (typeof $input !== 'undefined') {
+            // console.log(datePickerInstance);
+            var date = $input.datepicker("getDate");
+            var timestamp = Math.round(new Date(date).getTime()/1000);
+            console.log(timestamp);
+//             console.log(datePickerInstance)
+            $altField.val(timestamp);
+          } else {
+            console.log(dateTimeText)
+            console.log(datePickerInstance)
+          }
+        }
+      }
+    }
+    $this.datetimepicker(options)
+  })
 })

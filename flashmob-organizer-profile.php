@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.5.7
+ * Version: 4.6.0
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '4.5.7';
+  private $strVersion = '4.6.0';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -114,6 +114,7 @@ class FLORP{
       'strNewsletterListsFlashmob'                => '',
       'aParticipants'                             => array(),
       'aTshirts'                                  => array( "leaders" => array(), "participants" => array() ),
+      'aOrderDates'                               => array(),
       'strParticipantRegisteredSubject'           => 'Boli ste prihásený na flashmob',
       'strParticipantRegisteredMessage'           => '<p>Ďakujeme, že ste sa prihlásili na flashmob!</p>
 <p>Váš SalsaRueda.Dance team</p>',
@@ -721,6 +722,7 @@ class FLORP{
     add_action( 'wp_ajax_florp_tshirt_send_payment_warning', array( $this, 'action__florp_tshirt_send_payment_warning_callback' ));
     add_action( 'wp_ajax_florp_tshirt_cancel_order', array( $this, 'action__florp_tshirt_cancel_order_callback' ));
     add_action( 'wp_ajax_florp_create_subsite', array( $this, 'action__florp_create_subsite_callback' ));
+    add_action( 'wp_ajax_add_order_date', array( $this, 'action__add_order_date_callback' ));
     add_action( 'wp_ajax_delete_nf_submission', array( $this, 'action__delete_nf_submission_callback' ));
     add_action( 'wp_ajax_import_flashmob_nf_submission', array( $this, 'action__import_flashmob_nf_submission_callback' ));
     add_action( 'admin_menu', array( $this, "action__remove_admin_menu_items" ), 9999 );
@@ -2628,6 +2630,20 @@ class FLORP{
 
       wp_register_style( 'florp_admin_css', plugins_url('css/florp-admin.css', __FILE__), false, $this->strVersion );
       wp_enqueue_style( 'florp_admin_css' );
+
+      // jQuery timepicker plugin //
+      wp_register_script( 'jQueryTimepickerJs', 'https://cdnjs.cloudflare.com/ajax/libs/jquery-ui-timepicker-addon/1.6.3/jquery-ui-timepicker-addon.min.js', array('jquery', 'jquery-ui-core', 'jquery-ui-datepicker'), null, true );
+      wp_enqueue_script('jQueryTimepickerJs');
+      wp_register_style( 'jQueryTimepickerCss', 'https://cdnjs.cloudflare.com/ajax/libs/jquery-ui-timepicker-addon/1.6.3/jquery-ui-timepicker-addon.min.css' );
+      $wp_scripts = wp_scripts();
+      wp_enqueue_style(
+        'jquery-ui-theme-smoothness',
+        sprintf(
+          '//ajax.googleapis.com/ajax/libs/jqueryui/%s/themes/smoothness/jquery-ui.css', // working for https as well now
+          $wp_scripts->registered['jquery-ui-core']->ver
+        )
+      );
+      wp_enqueue_style('jQueryTimepickerCss');
     }
   }
 
@@ -2911,6 +2927,8 @@ class FLORP{
 
     $strEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Typ</th><th>Líder</th><th>Vlastnosti</th>';
 
+    $aOrderDates = $this->get_tshirt_order_dates();
+
     $iUnpaid = 0;
     $iPaid = 0;
     foreach ($aTshirts as $aTshirtData) {
@@ -2989,6 +3007,7 @@ class FLORP{
           }
         }
       }
+
       $strEcho .= '<tr class="row" data-row-id="'.$strRowID.'">';
       $strEcho .=   '<td>'.$aTshirtData['name'].$strButtons.'</td>';
       $strEcho .=   '<td><a name="'.$aTshirtData['email'].'">'.$aTshirtData['email'].'</a></td>';
@@ -3013,13 +3032,41 @@ class FLORP{
     $strEcho .= '<form action="" method="post">';
     $strEcho .= '<input type="hidden" name="security" value="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">';
     $strEcho .= '<input type="hidden" name="florp-download-tshirt-csv" value="1">';
-    $strEcho .= '<input id="florp-download-tshirt-csv-all" class="button button-primary button-large" name="florp-download-tshirt-csv-all" type="submit" value="Stiahni CSV - všetko" />';
     if ($iUnpaid > 0 && $iPaid > 0) {
+      $strEcho .= '<input id="florp-download-tshirt-csv-all" class="button button-primary button-large" name="florp-download-tshirt-csv-all" type="submit" value="Stiahni CSV - všetko" />';
       $strEcho .= '<input id="florp-download-tshirt-csv-unpaid" class="button button-primary button-large" name="florp-download-tshirt-csv-unpaid" type="submit" value="Stiahni CSV - nezaplatené" />';
       $strEcho .= '<input id="florp-download-tshirt-csv-paid" class="button button-primary button-large" name="florp-download-tshirt-csv-paid" type="submit" value="Stiahni CSV - zaplatené" />';
+    } elseif ($iUnpaid > 0) {
+      $strEcho .= '<input id="florp-download-tshirt-csv-unpaid" class="button button-primary button-large" name="florp-download-tshirt-csv-unpaid" type="submit" value="Stiahni CSV - nezaplatené (všetko)" />';
+    } elseif ($iPaid > 0) {
+      $strEcho .= '<input id="florp-download-tshirt-csv-paid" class="button button-primary button-large" name="florp-download-tshirt-csv-paid" type="submit" value="Stiahni CSV - zaplatené (všetko)" />';
     }
+
+    // Order date table //
+    $strEcho .= "<p></p>\n<h1>Dátumy objednávok</h1>";
+    $strEcho .= '<table class="widefat striped florpTshirtOrderTable"><th>Dátum</th><th>Typ</th><th>Stiahnuť zahrnuté objednávky (CSV)</th><th>Stiahnuť objednávky po tomto dátume (CSV)</th>';
+    if (!empty($aOrderDates)) {
+      foreach ($aOrderDates as $iTimestamp => $aOrderData) {
+        $aOrderData['id'] = $iTimestamp;
+        $strEcho .= $this->get_tshirt_order_dates_row( $aOrderData );
+      }
+    }
+    $strEcho .= '</table>';
     $strEcho .= '</form>';
 
+    // 'Add order' button with select - all / paid / unpaid
+    $strRowID = "florpRow-addOrderDate-0";
+    $strButtonID = "florpButton-addOrderDate-0-new";
+    $strButtonLabel = "Pridaj";
+    $strAction = "add_order_date";
+    $strDoubleCheckQuestion = "Ste si istý?";
+    $strData = "";
+    $strEcho .= "<p class=\"row addOrderDateParagraph\" data-row-id=\"{$strRowID}\">Pridať dátum objednávky: ";
+    $strEcho .= '<input type="hidden" id="orderdate_timestamp_field" name="orderdate_timestamp" value="0">';
+    $strEcho .= '<input type="text" name="orderdate" data-alt-field="#orderdate_timestamp_field" class="jquery-datetimepicker" autocomplete="off" value="">';
+    $strEcho .= '<select name="ordertype"><option value="all">Všetko (ešte neobjednané)</option><option value="paid">Zaplatené (ešte neobjednané)</option><option value="unpaid">Nezaplatené (ešte neobjednané)</option></select>';
+    $strEcho .= ' <span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'"'.$strData.' data-use-input-names="orderdate,orderdate_timestamp,ordertype" data-action="'.$strAction.'" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabel.'</span>';
+    $strEcho .= "</p>";
     echo $strEcho;
     echo '</div><!-- .wrap -->';
   }
@@ -3148,6 +3195,212 @@ class FLORP{
     $strEcho .= "</p>";
     echo $strEcho;
     echo '</div><!-- .wrap -->';
+  }
+
+  private function get_tshirt_order_date_data( $iTshirtID ) {
+    $aOrderDates = $this->aOptions['aOrderDates'];
+    if (empty($aOrderDates)) {
+      return false;
+    }
+    foreach ($aOrderDates as $iKey => $aOrderData) {
+      if (in_array($iTshirtID, $aOrderData['orders'])) {
+        $aReturn = $aOrderData;
+        $aReturn['id'] = $iKey;
+        if (!isset($aReturn['datetime'])) {
+          $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
+          $aReturn['datetime'] = date(get_option('date_format')." ".get_option('time_format'), $iKey + $iTimeZoneOffset*3600);
+        }
+        return $aReturn;
+      }
+    }
+    return false;
+  }
+
+  private function get_tshirt_order_dates( $iTimestamp = false ) {
+    $aTshirts = $this->get_tshirts();
+    if (empty($aTshirts)) {
+      return $aTshirts;
+    }
+
+    $aOrderDates = $this->aOptions['aOrderDates'];
+    if (empty($aOrderDates)) {
+      return $aOrderDates;
+    }
+    ksort($aOrderDates);
+
+    foreach ($aOrderDates as $iKey => $aOrderData) {
+      $aOrderDates[$iKey]['aPaid'] = array();
+      $aOrderDates[$iKey]['aUnpaid'] = array();
+      $aOrderDates[$iKey]['aPaidAfter'] = array();
+      $aOrderDates[$iKey]['aUnpaidAfter'] = array();
+    }
+
+    foreach ($aTshirts as $aTshirtData) {
+      $bIsPaid = false;
+      if ($aTshirtData["is_leader"]) {
+        $bIsPaid = true;
+      } elseif ($aTshirtData["is_paid"]) {
+        $bIsPaid = true;
+      }
+
+      $iOrderKey = false;
+      $aMatchingOrderDate = $this->get_tshirt_order_date_data($aTshirtData["id"]);
+      if ($aMatchingOrderDate) {
+        $iOrderKey = $aMatchingOrderDate['id'];
+      }
+
+      if ($iOrderKey !== false) {
+        if ($bIsPaid) {
+          $aOrderDates[$iOrderKey]['aPaid'][] = $aTshirtData["id"];
+        } else {
+          $aOrderDates[$iOrderKey]['aUnpaid'][] = $aTshirtData["id"];
+        }
+      }
+      foreach ($aOrderDates as $iKey => $aOrderData) {
+        if ($iOrderKey === false) {
+          if ($aTshirtData["is_leader"]) {
+            // Doesn't go anywhere //
+          } elseif (isset($aTshirtData['registered_timestamp']) && $aTshirtData['registered_timestamp'] > $iKey) {
+            if ($bIsPaid) {
+              $aOrderDates[$iKey]['aPaidAfter'][] = $aTshirtData["id"];
+            } else {
+              $aOrderDates[$iKey]['aUnpaidAfter'][] = $aTshirtData["id"];
+            }
+          }
+        } elseif ($iKey < $iOrderKey) {
+          if ($bIsPaid) {
+            $aOrderDates[$iKey]['aPaidAfter'][] = $aTshirtData["id"];
+          } else {
+            $aOrderDates[$iKey]['aUnpaidAfter'][] = $aTshirtData["id"];
+          }
+        }
+      }
+    }
+
+    if ($iTimestamp === false) {
+      return $aOrderDates;
+    } elseif (isset($aOrderDates[$iTimestamp])) {
+      return $aOrderDates[$iTimestamp];
+    } else {
+      return array();
+    }
+  }
+
+  private function get_tshirt_orders_in_sent_order( $iKey, $strType = 'all' ) {
+    $aOrderDates = $this->aOptions['aOrderDates'];
+    if (empty($aOrderDates)) {
+      return "No order dates";
+    }
+
+    if (!isset($aOrderDates[$iKey]) || empty($aOrderDates[$iKey]['orders'])) {
+      return "Order doesn't exist";
+    }
+
+    $aTshirts = $this->get_tshirts($strType);
+    if (empty($aTshirts)) {
+      return "No tshirt orders";
+    }
+    $aReturn = array();
+    foreach ($aOrderDates[$iKey]['orders'] as $strTshirtOrderID) {
+      if (isset($aTshirts[$strTshirtOrderID])) {
+        $aReturn[$strTshirtOrderID] = $aTshirts[$strTshirtOrderID];
+      }
+    }
+
+    return $aReturn;
+  }
+
+  private function get_tshirt_orders_by_timestamp( $iTimestamp, $strType, $bBefore = true, $bIncludeSentOrders = true ) {
+    $aOrderDates = $this->aOptions['aOrderDates'];
+    $aUsedTshirtIDs = array();
+    if ($bIncludeSentOrders) {
+      foreach ($aOrderDates as $iKey => $aOrderData) {
+        if ($bBefore && $iKey >= $iTimestamp) {
+          $aUsedTshirtIDs = array_merge($aUsedTshirtIDs, $aOrderData['orders']);
+        } elseif (!$bBefore && $iKey <= $iTimestamp) {
+          $aUsedTshirtIDs = array_merge($aUsedTshirtIDs, $aOrderData['orders']);
+        }
+      }
+    } else {
+      foreach ($aOrderDates as $iKey => $aOrderData) {
+        $aUsedTshirtIDs = array_merge($aUsedTshirtIDs, $aOrderData['orders']);
+      }
+    }
+
+    $aTshirts = $this->get_tshirts( $strType );
+    if (empty($aTshirts)) {
+      return $aTshirts;
+    }
+
+    $aReturn = array();
+    foreach ($aTshirts as $key => $aTshirtData) {
+      if (in_array($aTshirtData['id'], $aUsedTshirtIDs)) {
+        continue;
+      }
+      if ($bBefore) {
+        if (!$aTshirtData["is_leader"] && $aTshirtData["registered_timestamp"] > 0 && $aTshirtData["registered_timestamp"] > $iTimestamp) {
+          continue;
+        }
+      } else {
+        if (!$aTshirtData["is_leader"] && $aTshirtData["registered_timestamp"] > 0 && $aTshirtData["registered_timestamp"] <= $iTimestamp) {
+          continue;
+        }
+      }
+      $aReturn[$key] = $aTshirtData;
+    }
+
+    return $aReturn;
+  }
+
+  private function get_tshirt_order_dates_row( $mixOrder ) {
+    if (is_array($mixOrder)) {
+      $aOrderData = $mixOrder;
+      if (isset($aOrderData['id'])) {
+        $iTimestamp = $aOrderData['id'];
+      } else {
+        return "";
+      }
+    } elseif (isset($this->aOptions['aOrderDates'][$mixOrder])) {
+      $aOrderData = $this->get_tshirt_order_dates( $mixOrder );
+      $iTimestamp = $mixOrder;
+    } else {
+      return "";
+    }
+    $strEcho = '<tr class="florpTshirtOrderTableRow-'.$iTimestamp.'">';
+    if (isset($aOrderData['datetime']) && !empty($aOrderData['datetime'])) {
+      $strDate = $aOrderData['datetime'];
+    } else {
+      $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
+      $strDate = date(get_option('date_format')." ".get_option('time_format'), $iTimestamp + $iTimeZoneOffset*3600);
+    }
+    $strEcho .= '<td><span title="ID: '.$iTimestamp.'">'.$strDate.'</span></td>';
+    $strEcho .= '<td>'.$aOrderData['type'].'</td>';
+    $strEcho .= '<td>';
+    if (count($aOrderData['aPaid']) > 0 && count($aOrderData['aUnpaid']) > 0) {
+      $strEcho .= '<input id="florp-download-tshirt-csv-order-'.$iTimestamp.'-all" class="button button-primary button-large" name="florp-download-tshirt-csv-order-'.$iTimestamp.'-all" type="submit" value="Všetko" />';
+      $strEcho .= '<input id="florp-download-tshirt-csv-order-'.$iTimestamp.'-unpaid" class="button button-primary button-large" name="florp-download-tshirt-csv-order-'.$iTimestamp.'-unpaid" type="submit" value="Nezaplatené" />';
+      $strEcho .= '<input id="florp-download-tshirt-csv-order-'.$iTimestamp.'-paid" class="button button-primary button-large" name="florp-download-tshirt-csv-order-'.$iTimestamp.'-paid" type="submit" value="Zaplatené" />';
+    } elseif (count($aOrderData['aPaid']) > 0) {
+      $strEcho .= '<input id="florp-download-tshirt-csv-order-'.$iTimestamp.'-paid" class="button button-primary button-large" name="florp-download-tshirt-csv-order-'.$iTimestamp.'-paid" type="submit" value="Všetko - Zaplatené" />';
+    } elseif (count($aOrderData['aUnpaid']) > 0) {
+      $strEcho .= '<input id="florp-download-tshirt-csv-order-'.$iTimestamp.'-unpaid" class="button button-primary button-large" name="florp-download-tshirt-csv-order-'.$iTimestamp.'-unpaid" type="submit" value="Všetko - Nezaplatené" />';
+    }
+    $strEcho .= '</td>';
+    $strEcho .= '<td>';
+    if (count($aOrderData['aPaidAfter']) > 0 || count($aOrderData['aUnpaidAfter']) > 0) {
+      if (count($aOrderData['aPaidAfter']) > 0 && count($aOrderData['aUnpaidAfter']) > 0) {
+        $strEcho .= '<input id="florp-download-tshirt-csv-after-order-'.$iTimestamp.'-all" class="button button-primary button-large" name="florp-download-tshirt-csv-after-order-'.$iTimestamp.'-all" type="submit" value="Všetko" />';
+        $strEcho .= '<input id="florp-download-tshirt-csv-after-order-'.$iTimestamp.'-unpaid" class="button button-primary button-large" name="florp-download-tshirt-csv-after-order-'.$iTimestamp.'-unpaid" type="submit" value="Nezaplatené" />';
+        $strEcho .= '<input id="florp-download-tshirt-csv-after-order-'.$iTimestamp.'-paid" class="button button-primary button-large" name="florp-download-tshirt-csv-after-order-'.$iTimestamp.'-paid" type="submit" value="Zaplatené" />';
+      } elseif (count($aOrderData['aPaidAfter']) > 0) {
+        $strEcho .= '<input id="florp-download-tshirt-csv-after-order-'.$iTimestamp.'-paid" class="button button-primary button-large" name="florp-download-tshirt-csv-after-order-'.$iTimestamp.'-paid" type="submit" value="Všetko - Zaplatené" />';
+      } elseif (count($aOrderData['aUnpaidAfter']) > 0) {
+        $strEcho .= '<input id="florp-download-tshirt-csv-after-order-'.$iTimestamp.'-unpaid" class="button button-primary button-large" name="florp-download-tshirt-csv-after-order-'.$iTimestamp.'-unpaid" type="submit" value="Všetko - Nezaplatené" />';
+      }
+    }
+    $strEcho .= '</td>';
+    $strEcho .= '</tr>';
+    return $strEcho;
   }
 
   private function get_missed_submissions( $iBlogID = false ) {
@@ -3340,7 +3593,36 @@ class FLORP{
       return $a;
     }
   }
-  private function get_tshirts($iPaidFlag = 0, $bCSV = false) { // -1: unpaid, 1: paid, 0: all
+
+  private function get_tshirts_csv( $aTshirts ) {
+    $aReturn = array();
+    $aReturn[] = array("Meno", "Email", "Mesto", "Typ", "Líder", "Webstránka", "Veľkosť trička", "Typ trička", "Farba trička", "Čas registrácie (účastník)", "Zaplatil", "Čas označenia za zaplatené", "Upozornenie na platbu", "Čas upozornenia na platbu", "Čas odoslania objednávky");
+    if ($bCSVHeaderOnly) {
+      return $aReturn;
+    }
+    foreach ($aTshirts as $aTshirtData) {
+      $aReturn[] = array(
+        $aTshirtData["name"],
+        $aTshirtData["email"],
+        $aTshirtData["flashmob_city"],
+        $aTshirtData["type"],
+        $aTshirtData["leader"],
+        $aTshirtData["properties"]["webpage"],
+        $aTshirtData["properties"]["tshirt_size"],
+        $aTshirtData["properties"]["tshirt_gender"],
+        $aTshirtData["properties"]["tshirt_color"],
+        $aTshirtData["is_leader"] ? "-" : (isset($aTshirtData["registered_timestamp"]) && $aTshirtData["registered_timestamp"] > 0 ? date('Y-m-d H:i:s', $aTshirtData["registered_timestamp"] ) : "-"),
+        $aTshirtData["is_leader"] ? "-" : ($aTshirtData["is_paid"] ? "1" : "0"),
+        $aTshirtData["is_leader"] ? "-" : ($aTshirtData["is_paid"] && $aTshirtData["paid_timestamp"] ? date('Y-m-d H:i:s', $aTshirtData["paid_timestamp"] ) : "-"),
+        $aTshirtData["is_leader"] ? "-" : ($aTshirtData["payment_warning_sent"] ? "1" : "0"),
+        $aTshirtData["is_leader"] ? "-" : ($aTshirtData["payment_warning_sent"] && $aTshirtData["payment_warning_sent_timestamp"] ? date('Y-m-d H:i:s', $aTshirtData["payment_warning_sent_timestamp"] ) : "-"),
+        $aTshirtData["properties"]["order_sent"],
+      );
+    }
+    return $aReturn;
+  }
+
+  private function get_tshirts($strPaidFlag = 'all', $bCSV = false ) {
     $aLeaders = $this->getFlashmobSubscribers( 'flashmob_organizer' );
     $aTshirtsOption = $this->aOptions["aTshirts"];
 //     echo "<pre>";var_dump($aTshirtsOption);echo "</pre>";
@@ -3361,8 +3643,9 @@ class FLORP{
         'bReturnAnchor' => !$bCSV,
         'bInfoWindow' => false,
       );
-      $aTshirts[] = array(
-        "id" => "leader-".$oUser->ID,
+      $strID = "leader-".$oUser->ID;
+      $aTshirts[$strID] = array(
+        "id" => $strID,
         "name" => $oUser->first_name.' '.$oUser->last_name,
         "user_id" => $oUser->ID,
         "email" => $oUser->user_email,
@@ -3383,7 +3666,7 @@ class FLORP{
     foreach ($aParticipants as $iLeaderID => $aParticipantsOfLeader) {
       foreach ($aParticipantsOfLeader as $strEmail => $aParticipantData) {
         if (!in_array("flashmob_participant_tshirt", $aParticipantData["preferences"])) {
-//           echo "<pre>";var_dump($aParticipantData);echo "</pre>";
+//           echo "<pre>";var_dump($aParticipantData);echo "</pre>"; // NOTE DEVEL
           continue;
         }
         $aWebpageArgs = array(
@@ -3398,8 +3681,9 @@ class FLORP{
           $aToMerge['flashmob_city_at_registration'] = $aParticipantData['flashmob_city'];
           $aToMerge['flashmob_city'] = $strLeadersFlashmobCity;
         }
-        $aTshirts[] = array_merge(array(
-          "id" => "participant-".$iLeaderID."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail),
+        $strID = "participant-".$iLeaderID."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
+        $aTshirts[$strID] = array_merge(array(
+          "id" => $strID,
           "name" => $aParticipantData['first_name'].' '.$aParticipantData['last_name'],
           "user_id" => false,
           "leader_id" => $iLeaderID,
@@ -3414,6 +3698,7 @@ class FLORP{
             "tshirt_size" => isset($aParticipantData['flashmob_participant_tshirt_size']) ? $aParticipantData['flashmob_participant_tshirt_size'] : "n/a",
             "tshirt_gender" => isset($aParticipantData['flashmob_participant_tshirt_gender']) ? $aParticipantData['flashmob_participant_tshirt_gender'] : "n/a",
             "tshirt_color" => isset($aParticipantData['flashmob_participant_tshirt_color']) ? $aParticipantData['flashmob_participant_tshirt_color'] : "n/a",
+            "ordered" => isset($aParticipantData["registered"]) ? date(get_option('date_format')." ".get_option('time_format'), $aParticipantData["registered"]) : "n/a",
           ),
         ), $aToMerge );
       }
@@ -3435,40 +3720,48 @@ class FLORP{
         }
       }
       $aTshirts[$key]["is_paid"] = $bPaid;
-      if ($iPaidFlag === -1 && $bPaid) {
+
+      $aTshirts[$key]['order_sent_timestamp'] = 0;
+      $aTshirts[$key]['properties']['order_sent'] = "n/a";
+      $aMatchingOrderDate = $this->get_tshirt_order_date_data( $aTshirtData['id'] );
+      if ($aMatchingOrderDate) {
+        $aTshirts[$key]['order_sent_timestamp'] = $aMatchingOrderDate["id"];
+        $aTshirts[$key]['properties']['order_sent'] = $aMatchingOrderDate['datetime'];
+      }
+
+      if ($strPaidFlag === 'unpaid' && $bPaid) {
         unset($aTshirts[$key]);
-      } elseif ($iPaidFlag === 1 && !$bPaid) {
+      } elseif ($strPaidFlag === 'paid' && !$bPaid) {
         unset($aTshirts[$key]);
       }
     }
+    uasort($aTshirts, array($this, "tshirt_sort"));
 //     echo "<pre>";var_dump($aTshirts);echo "</pre>";
     if ($bCSV) {
       if (empty($aTshirts)) {
         return array();
       }
-      $aReturn = array();
-      $aReturn[] = array("Meno", "Email", "Mesto", "Typ", "Líder", "Webstránka", "Veľkosť trička", "Typ trička", "Farba trička", "Čas registrácie (účastník)", "Zaplatil", "Čas označenia za zaplatené", "Upozornenie na platbu", "Čas upozornenia na platbu");
-      foreach ($aTshirts as $aTshirtData) {
-        $aReturn[] = array(
-          $aTshirtData["name"],
-          $aTshirtData["email"],
-          $aTshirtData["flashmob_city"],
-          $aTshirtData["type"],
-          $aTshirtData["leader"],
-          $aTshirtData["properties"]["webpage"],
-          $aTshirtData["properties"]["tshirt_size"],
-          $aTshirtData["properties"]["tshirt_gender"],
-          $aTshirtData["properties"]["tshirt_color"],
-          $aTshirtData["is_leader"] ? "-" : (isset($aTshirtData["registered_timestamp"]) && $aTshirtData["registered_timestamp"] > 0 ? date('Y-m-d H:i:s', $aTshirtData["registered_timestamp"] ) : "-"),
-          $aTshirtData["is_leader"] ? "-" : ($aTshirtData["is_paid"] ? "1" : "0"),
-          $aTshirtData["is_leader"] ? "-" : ($aTshirtData["is_paid"] && $aTshirtData["paid_timestamp"] ? date('Y-m-d H:i:s', $aTshirtData["paid_timestamp"] ) : "-"),
-          $aTshirtData["is_leader"] ? "-" : ($aTshirtData["payment_warning_sent"] ? "1" : "0"),
-          $aTshirtData["is_leader"] ? "-" : ($aTshirtData["payment_warning_sent"] && $aTshirtData["payment_warning_sent_timestamp"] ? date('Y-m-d H:i:s', $aTshirtData["payment_warning_sent_timestamp"] ) : "-"),
-        );
-      }
-      return $aReturn;
+      return $this->get_tshirts_csv( $aTshirts );
     }
     return $aTshirts;
+  }
+
+  private function tshirt_sort($a, $b) {
+    if ($a["is_leader"] && $b["is_leader"]) {
+      return 0;
+    } elseif ($a["is_leader"]) {
+      return -1;
+    } elseif ($b["is_leader"]) {
+      return 1;
+    } elseif (isset($a['registered_timestamp'], $b['registered_timestamp'])) {
+      return $a['registered_timestamp'] < $b['registered_timestamp'] ? -1 : 1;
+    } elseif (!isset($a['registered_timestamp'])) {
+      return -1;
+    } elseif (!isset($b['registered_timestamp'])) {
+      return 1;
+    } else {
+      return 0;
+    }
   }
 
   private function serveTshirtCSV() {
@@ -3479,27 +3772,66 @@ class FLORP{
       });
       return;
     }
+    $bOrderDateBased = false;
+    $strFileNamePart = "";
     if (!isset($_POST["florp-download-tshirt-csv-all"]) && !isset($_POST["florp-download-tshirt-csv-unpaid"]) && !isset($_POST["florp-download-tshirt-csv-paid"])) {
-      add_action( 'admin_notices', function() {
-        echo '<div class="notice notice-error"><p>Invalid request - unknown button was clicked</p></div>'.PHP_EOL;
-      });
-      return;
+      $bFound = false;
+      $aMatches = array();
+      foreach ($_POST as $key => $val) {
+        if (preg_match('~^florp-download-tshirt-csv-(after-)?order-(\d+)-(all|unpaid|paid)$~', $key, $aMatches)) {
+          $bFound = true;
+          $bOrderDateBased = true;
+          $bIncluded = empty($aMatches[1]) || strlen($aMatches[1]) === 0;
+          $iTimestamp = intval($aMatches[2]);
+          $strType = $aMatches[3];
+          if (!$bIncluded) {
+            $bBefore = false;
+            $bIncludeSentOrders = true;
+          }
+          $strFileNamePart = $aMatches[1]."order-".$aMatches[2]."-".$aMatches[3];
+          break;
+        }
+      }
+      if (!$bFound) {
+        add_action( 'admin_notices', function() {
+          echo '<div class="notice notice-error"><p>Invalid request - unknown button was clicked</p></div>'.PHP_EOL;
+        });
+        return;
+      }
     }
 
     $strFileName = "tshirts-";
     if (isset($_POST["florp-download-tshirt-csv-all"])) {
-      $aTshirts = $this->get_tshirts(0, true);
+      $aTshirts = $this->get_tshirts('all', true);
       $strFileName .= "all";
     } elseif (isset($_POST["florp-download-tshirt-csv-unpaid"])) {
-      $aTshirts = $this->get_tshirts(-1, true);
+      $aTshirts = $this->get_tshirts('unpaid', true);
       $strFileName .= "unpaid";
     } elseif (isset($_POST["florp-download-tshirt-csv-paid"])) {
-      $aTshirts = $this->get_tshirts(1, true);
+      $aTshirts = $this->get_tshirts('paid', true);
       $strFileName .= "paid";
+    } elseif ($bOrderDateBased) {
+      if ($bIncluded) {
+        $aTshirts = $this->get_tshirt_orders_in_sent_order( $iTimestamp, $strType );
+      } else {
+        $aTshirts = $this->get_tshirt_orders_by_timestamp( $iTimestamp, $strType, $bBefore, $bIncludeSentOrders );
+      }
+      $aTshirts = $this->get_tshirts_csv( $aTshirts );
+      $strFileName .= $strFileNamePart;
     }
-    if (empty($aTshirts)) {
+    if (!is_array($aTshirts) || empty($aTshirts) || count($aTshirts) === 1) {
+      $aOrderDates = $this->aOptions['aOrderDates'];
+      $GLOBALS['florpInfo'] = "";
+//       $GLOBALS['florpInfo'] = var_export($aOrderDates[$iTimestamp]['orders'], true);
+//       $aTshirtsAll = $this->get_tshirts();
+//       $GLOBALS['florpInfo'] = '<pre>'.var_export($aTshirtsAll, true).'</pre>'; // NOTE DEVEL
+
+      $GLOBALS['florpWarningReason'] = '';
+      if (is_string($aTshirts)) {
+        $GLOBALS['florpWarningReason'] = '<p>'.$aTshirts.'</p>';
+      }
       add_action( 'admin_notices', function() {
-        echo '<div class="notice notice-warning"><p>No thirts to build CSV from</p></div>'.PHP_EOL;
+        echo '<div class="notice notice-warning"><p>No tshirts to build CSV from</p>'.$GLOBALS['florpWarningReason'].$GLOBALS['florpInfo'].'</div>'.PHP_EOL;
       });
       return;
     }
@@ -3599,6 +3931,67 @@ class FLORP{
         update_site_option( $this->strOptionKey, $this->aOptions, true );
         $aData["message"] = "The flashmob participant '{$aData['participantEmail']}' was marked as having paid successfully";//." ".var_export($aData, true);
       }
+    }
+    echo json_encode($aData);
+    wp_die();
+  }
+
+  public function action__add_order_date_callback() {
+//     wp_die();
+    check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
+
+    $aData = $_POST;
+    $strErrorMessage = "Could not add order date";
+    $strOkMessage = "Successfully added order date";
+    $aOrderTypes = array('all','paid','unpaid');
+    if (isset($aData['orderdate'],$aData['orderdate_timestamp'],$aData['ordertype']) && in_array($aData['ordertype'], $aOrderTypes) && intval($aData['orderdate_timestamp']) > 0) {
+      $iTimestamp = intval($aData['orderdate_timestamp']);
+      $iTimestampMax = 0;
+      $bTest = false; // NOTE DEVEL
+      if ($bTest) {
+        $this->aOptions['aOrderDates'] = array();
+      }
+      if (!empty($this->aOptions['aOrderDates'])) {
+        $iTimestampMax = max(array_keys($this->aOptions['aOrderDates']));
+      }
+      if ($iTimestamp > time()) {
+        $aData['message'] = $strErrorMessage . ". Order date cannot be in future!";
+      } elseif ($iTimestamp <= $iTimestampMax) {
+        $aData['message'] = $strErrorMessage . ". Order date must be after last existing order date!";
+      } elseif (isset($this->aOptions['aOrderDates'][$iTimestamp])) {
+        $aData['message'] = $strErrorMessage . ". This order date exists already!";
+      } else {
+        $aOrders = $this->get_tshirt_orders_by_timestamp( $iTimestamp, $aData['ordertype'], true, false );
+        $aOrderIDs = array();
+        foreach ($aOrders as $aTshirtData) {
+          $aOrderIDs[] = $aTshirtData['id'];
+        }
+        $aNewOrder = array(
+          'type' => $aData['ordertype'],
+          'datetime' => $aData['orderdate'],
+          'orders' => $aOrderIDs,
+        );
+        if (empty($aNewOrder['orders'])) {
+          $aData['message'] = $strErrorMessage . ". There are no tshirts for this order!";
+        } else {
+          $this->aOptions['aOrderDates'][$iTimestamp] = $aNewOrder;
+          update_site_option( $this->strOptionKey, $this->aOptions, true );
+
+          $aNewOrder['id'] = $iTimestamp;
+          $strOrderRowHtml = $this->get_tshirt_order_dates_row( $iTimestamp );
+
+          if (strlen($strOrderRowHtml) > 0) {
+            $aData["insertAfterSelector"] = "table.florpTshirtOrderTable tr:last-of-type";
+            $aData["insertHtml"] = $strOrderRowHtml;
+          }
+          $aData["clearInputNames"] = true;
+          // $aData["tshirt_order_dates_row"] = $strOrderRowHtml;
+          $aData['message'] = $strOkMessage;
+          $aData['ok'] = true;
+        }
+      }
+    } else {
+      $aData['message'] = $strErrorMessage;
     }
     echo json_encode($aData);
     wp_die();

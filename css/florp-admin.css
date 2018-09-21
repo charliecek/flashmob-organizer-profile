@@ -20,3 +20,15 @@ input.florpFilterInput{
 tr.florpFilterHidden{
   display: none;
 }
+
+p.addOrderDateParagraph span.button{
+  vertical-align: middle;
+}
+
+p.addOrderDateParagraph input,
+p.addOrderDateParagraph select{
+  height: 28px;
+  margin: 1px;
+  padding: 3px 5px;
+  vertical-align: middle;
+}
