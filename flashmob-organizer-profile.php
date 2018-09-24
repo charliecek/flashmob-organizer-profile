@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.6.1
+ * Version: 4.6.2
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '4.6.1';
+  private $strVersion = '4.6.2';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -62,311 +62,7 @@ class FLORP{
   private $aSubscriberTypes = array("flashmob_organizer", "teacher");
 
   public function __construct() {
-    // BEGIN options //
-    $this->aOptions = get_site_option( $this->strOptionKey, array() );
-    $this->aOptionDefaults = array(
-      'bReloadAfterSuccessfulSubmissionMain'      => false,
-      'bReloadAfterSuccessfulSubmissionFlashmob'  => false,
-      'strLeaderParticipantsTableClass'           => "florp-leader-participants-table",
-      'bParticipantRegistrationProcessed'         => false,
-      'bLeadersFrom2017Reimported'                => false,
-      'aYearlyMapOptions'                         => array(),
-      'iFlashmobYear'                             => isset($this->aOptions['iCurrentFlashmobYear']) ? $this->aOptions['iCurrentFlashmobYear'] : intval(date( 'Y' )),
-      'iFlashmobMonth'                            => 1,
-      'iFlashmobDay'                              => 1,
-      'iFlashmobHour'                             => 0,
-      'iFlashmobMinute'                           => 0,
-      'iFlashmobBlogID'                           => 6,
-      'iMainBlogID'                               => 1,
-      'iNewsletterBlogID'                         => 0,
-      'iCloneSourceBlogID'                        => 0,
-      'iProfileFormNinjaFormIDMain'               => 0,
-      'iProfileFormNinjaFormImportVersionMain'    => 0,
-      'iProfileFormPopupIDMain'                   => 0,
-      'iProfileFormNinjaFormIDFlashmob'           => 0,
-      'iProfileFormNinjaFormImportVersionFlashmob'=> 0,
-      'iProfileFormPopupIDFlashmob'               => 0,
-      'bLoadMapsLazy'                             => true,
-      'bLoadMapsAsync'                            => true,
-      'bLoadVideosLazy'                           => true,
-      'bUseMapImage'                              => true,
-      'strVersion'                                => '0',
-      'iProfileFormPageIDMain'                    => 0,
-      'iProfileFormPageIDFlashmob'                => 0,
-      'bApproveUsersAutomatically'                => false,
-      'strPendingUserPageContentHTML'             => '<p>Ďakujeme, že ste sa registrovali.</p>
-<p>Vaša registrácia čaká na schválenie. Akonáhle Vás schválime, dostanete o tom notifikáciu na emailovú adresu, ktorú ste zadali pri registrácii.</p>
-<p>Váš SalsaRueda.Dance team</p>',
-      'strUserApprovedMessage'                    => '<p>Vaša registrácia bola schválená!</p>
-<p><a href="%PROFILE_URL%">Prihláste sa</a> emailovou adresou a heslom, ktoré ste zadali pri registrácii.</p>
-<p>Váš SalsaRueda.Dance team</p>',
-      'strUserApprovedSubject'                    => 'Vaša registrácia na %BLOGURL% bola schválená',
-      'strBeforeLoginFormHtmlMain'                => '',
-      'strBeforeLoginFormHtmlFlashmob'            => '',
-      'strGoogleMapsKeyStatic'                    => 'AIzaSyC_g9bY9qgW7mA0L1EupZ4SDYrBQWWi-V0',
-      'strGoogleMapsKey'                          => 'AIzaSyBaPowbVdIBpJqo_yhEfLn1v60EWbow6ZY',
-      'strFbAppID'                                => '768253436664320',
-      'strRegistrationSuccessfulMessage'          => "Prihlasujeme Vás... Prosíme, počkajte, kým sa stránka znovu načíta.",
-      'strLoginSuccessfulMessage'                 => "Prihlásenie prebehlo úspešne, prosíme, počkajte, kým sa stránka znovu načíta.",
-      'bPreventDirectMediaDownloads'              => false,
-      'strNewsletterAPIKey'                       => '',
-      'strNewsletterListsMain'                    => '',
-      'strNewsletterListsFlashmob'                => '',
-      'aParticipants'                             => array(),
-      'aTshirts'                                  => array( "leaders" => array(), "participants" => array() ),
-      'aOrderDates'                               => array(),
-      'strParticipantRegisteredSubject'           => 'Boli ste prihásený na flashmob',
-      'strParticipantRegisteredMessage'           => '<p>Ďakujeme, že ste sa prihlásili na flashmob!</p>
-<p>Váš SalsaRueda.Dance team</p>',
-      'strParticipantRemovedSubject'              => 'Váš flashmob bol zrušený',
-      'strParticipantRemovedMessage'              => '<p>Žiaľ, flashmob, na ktorý ste sa prihlásili, bol zrušený.</p>
-<p>Nezúfajte však! Pozrite si <a href="http://flashmob.salsarueda.dance" target="blank">mapku flashmobov na našej stránke</a> a ak máte niektorý flashmob po ruke, prihláste sa na ten!</p>
-<p>Váš SalsaRueda.Dance team</p>',
-      'strLeaderParticipantListNotificationMsg'   => '<p>Tu sú Vaši noví účastníci:</p><p>%PARTICIPANT_LIST%</p><p>Celý zoznam si môžete pozrieť <a href="%PROFILE_URL%">vo Vašom profile</a>.</p><p>Váš SalsaRueda.Dance team</p>',
-      'strLeaderParticipantListNotificationSbj'   => 'Máte nových účastníkov prihlásených na flashmob',
-      'logs'                                      => array(),
-      'strLoginBarLabelLogin'                     => 'Prihlásiť sa',
-      'strLoginBarLabelLogout'                    => 'Odhlásiť sa',
-      'strLoginBarLabelProfile'                   => 'Môj profil',
-      'strMarkerInfoWindowTemplateOrganizer'      => '<div class="florp-marker-infowindow-wrapper">
-<h5 class="florp-flashmob-location">%%flashmob_city%%</h5>
-<p>%%signup%% <strong>Organizátor</strong>: %%organizer%% %%year%% %%school%% %%facebook%% %%web%% %%dancers%% %%note%%</p>
-%%embed_code%%</div>',
-      'strMarkerInfoWindowTemplateTeacher'        => '<div class="florp-marker-infowindow-wrapper">
-<h5 class="florp-course-location">%%courses_city%%</h5>
-<p><strong>Líder</strong>: %%organizer%% %%school%%</p>
-<div class="florp-course-info">%%courses_info%%</div>
-</div>',
-      'strSignupLinkLabel'                        => 'Prihlásiť na Flashmob',
-      'strInfoWindowLabel_organizer'              => '<strong>Organizátor</strong>',
-      'strInfoWindowLabel_signup'                 => '',
-      'strInfoWindowLabel_participant_count'      => 'Prihlásených účastníkov',
-      'strInfoWindowLabel_year'                   => '<strong>Rok</strong>',
-      'strInfoWindowLabel_school'                 => 'Škola / skupina',
-      'strInfoWindowLabel_web'                    => '<strong>Web</strong>',
-      'strInfoWindowLabel_facebook'               => '<strong>Facebook</strong>',
-      'strInfoWindowLabel_dancers'                => 'Počet tancujúcich',
-      'strInfoWindowLabel_note'                   => 'Poznámka',
-      'strInfoWindowLabel_embed_code'             => '',
-      'strInfoWindowLabel_courses_info'           => '',
-      'bCoursesInfoDisabled'                      => true,
-      'strTshirtPaymentWarningNotificationSbj'    => 'Chýba nám platba za objednané tričko',
-      'strTshirtPaymentWarningNotificationMsg'    => '<p>Prosíme, pošlite platbu za objednané tričko.</p><p>Váš SalsaRueda.Dance team</p>',
-      'bTshirtOrderingDisabled'                   => false,
-      'bTshirtOrderingDisabledOnlyDisable'        => false,
-      'bOnlyFlorpProfileNinjaFormFlashmob'        => true,
-      'bOnlyFlorpProfileNinjaFormMain'            => true,
-      'iTshirtPaymentWarningDeadline'             => 14,
-      'iTshirtPaymentWarningButtonDeadline'       => -1,
-      'iTshirtOrderDeliveredBeforeFlashmobDdl'    => 9,
-    );
-    $this->aOptionFormKeys = array(
-      'florp_reload_after_ok_submission_main'     => 'bReloadAfterSuccessfulSubmissionMain',
-      'florp_reload_after_ok_submission_flashmob' => 'bReloadAfterSuccessfulSubmissionFlashmob',
-      'florp_flashmob_year'                       => 'iFlashmobYear',
-      'florp_flashmob_month'                      => 'iFlashmobMonth',
-      'florp_flashmob_day'                        => 'iFlashmobDay',
-      'florp_flashmob_hour'                       => 'iFlashmobHour',
-      'florp_flashmob_minute'                     => 'iFlashmobMinute',
-      'florp_flashmob_blog_id'                    => 'iFlashmobBlogID',
-      'florp_main_blog_id'                        => 'iMainBlogID',
-      'florp_newsletter_blog_id'                  => 'iNewsletterBlogID',
-      'florp_clone_source_blog_id'                => 'iCloneSourceBlogID',
-      'florp_profile_form_ninja_form_id_main'     => 'iProfileFormNinjaFormIDMain',
-      'florp_profile_form_popup_id_main'          => 'iProfileFormPopupIDMain',
-      'florp_profile_form_ninja_form_id_flashmob' => 'iProfileFormNinjaFormIDFlashmob',
-      'florp_profile_form_popup_id_flashmob'      => 'iProfileFormPopupIDFlashmob',
-      'florp_load_maps_lazy'                      => 'bLoadMapsLazy',
-      'florp_load_maps_async'                     => 'bLoadMapsAsync',
-      'florp_load_videos_lazy'                    => 'bLoadVideosLazy',
-      'florp_use_map_image'                       => 'bUseMapImage',
-      'florp_profile_form_page_id_main'           => 'iProfileFormPageIDMain',
-      'florp_profile_form_page_id_flashmob'       => 'iProfileFormPageIDFlashmob',
-      'florp_pending_user_page_content_html'      => 'strPendingUserPageContentHTML',
-      'florp_user_approved_message'               => 'strUserApprovedMessage',
-      'florp_user_approved_subject'               => 'strUserApprovedSubject',
-      'florp_approve_users_automatically'         => 'bApproveUsersAutomatically',
-      'florp_before_login_form_html_main'         => 'strBeforeLoginFormHtmlMain',
-      'florp_before_login_form_html_flashmob'     => 'strBeforeLoginFormHtmlFlashmob',
-      'florp_google_maps_key'                     => 'strGoogleMapsKey',
-      'florp_google_maps_key_static'              => 'strGoogleMapsKeyStatic',
-      'florp_fb_app_id'                           => 'strFbAppID',
-      'florp_registration_successful_message'     => 'strRegistrationSuccessfulMessage',
-      'florp_login_successful_message'            => 'strLoginSuccessfulMessage',
-      'florp_prevent_direct_media_downloads'      => 'bPreventDirectMediaDownloads',
-      'florp_newsletter_api_key'                  => 'strNewsletterAPIKey',
-      'florp_newsletter_lists_main'               => 'strNewsletterListsMain',
-      'florp_newsletter_lists_flashmob'           => 'strNewsletterListsFlashmob',
-      'florp_participant_registered_subject'      => 'strParticipantRegisteredSubject',
-      'florp_participant_registered_message'      => 'strParticipantRegisteredMessage',
-      'florp_participant_removed_subject'         => 'strParticipantRemovedSubject',
-      'florp_participant_removed_message'         => 'strParticipantRemovedMessage',
-      'florp_leader_participant_list_notif_msg'   => 'strLeaderParticipantListNotificationMsg',
-      'florp_leader_participant_list_notif_sbj'   => 'strLeaderParticipantListNotificationSbj',
-      'florp_login_bar_label_login'               => 'strLoginBarLabelLogin',
-      'florp_login_bar_label_logout'              => 'strLoginBarLabelLogout',
-      'florp_login_bar_label_profile'             => 'strLoginBarLabelProfile',
-      'florp_infowindow_template_organizer'       => 'strMarkerInfoWindowTemplateOrganizer',
-      'florp_infowindow_template_teacher'         => 'strMarkerInfoWindowTemplateTeacher',
-      'florp_signup_link_label'                   => 'strSignupLinkLabel',
-      'florp_infowindow_label_organizer'          => 'strInfoWindowLabel_organizer',
-      'florp_infowindow_label_signup'             => 'strInfoWindowLabel_signup',
-      'florp_infowindow_label_participant_count'  => 'strInfoWindowLabel_participant_count',
-      'florp_infowindow_label_year'               => 'strInfoWindowLabel_year',
-      'florp_infowindow_label_dancers'            => 'strInfoWindowLabel_dancers',
-      'florp_infowindow_label_school'             => 'strInfoWindowLabel_school',
-      'florp_infowindow_label_web'                => 'strInfoWindowLabel_web',
-      'florp_infowindow_label_facebook'           => 'strInfoWindowLabel_facebook',
-      'florp_infowindow_label_note'               => 'strInfoWindowLabel_note',
-      'florp_infowindow_label_embed_code'         => 'strInfoWindowLabel_embed_code',
-      'florp_infowindow_label_courses_info'       => 'strInfoWindowLabel_courses_info',
-      'florp_courses_info_disabled'               => 'bCoursesInfoDisabled',
-      'florp_tshirt_payment_warning_notif_sbj'    => 'strTshirtPaymentWarningNotificationSbj',
-      'florp_tshirt_payment_warning_notif_msg'    => 'strTshirtPaymentWarningNotificationMsg',
-      'florp_tshirt_ordering_disabled'            => 'bTshirtOrderingDisabled',
-      'florp_tshirt_ordering_only_disable'        => 'bTshirtOrderingDisabledOnlyDisable',
-      'florp_only_florp_profile_nf_flashmob'      => 'bOnlyFlorpProfileNinjaFormFlashmob',
-      'florp_only_florp_profile_nf_main'          => 'bOnlyFlorpProfileNinjaFormMain',
-      'florp_tshirt_payment_warning_deadline'     => 'iTshirtPaymentWarningDeadline',
-      'florp_tshirt_payment_warning_btn_deadline' => 'iTshirtPaymentWarningButtonDeadline',
-      'florp_tshirt_order_delivered_b4_flash_ddl' => 'iTshirtOrderDeliveredBeforeFlashmobDdl',
-    );
-    $aDeprecatedKeys = array(
-      // new => old //
-      // OR: old //
-      'iCurrentFlashmobYear',
-      'bHideFlashmobFields',
-      'bReloadAfterSuccessfulSubmissionMain,bReloadAfterSuccessfulSubmissionFlashmob' => 'bReloadAfterSuccessfulSubmission',
-      'iProfileFormNinjaFormIDFlashmob' => 'iProfileFormNinjaFormID',
-      'iProfileFormPopupIDFlashmob' => 'iProfileFormPopupID',
-      'strGoogleMapsKey' => 'strGoogleMapKey',
-    );
-    $this->aBooleanOptions = array(
-      'bReloadAfterSuccessfulSubmissionMain', 'bReloadAfterSuccessfulSubmissionFlashmob',
-      'bLoadMapsAsync', 'bLoadMapsLazy', 'bLoadVideosLazy', 'bUseMapImage',
-      'bApproveUsersAutomatically',
-      'bPreventDirectMediaDownloads',
-      'bCoursesInfoDisabled',
-      'bTshirtOrderingDisabled',
-      'bTshirtOrderingDisabledOnlyDisable',
-      'bOnlyFlorpProfileNinjaFormMain',
-      'bOnlyFlorpProfileNinjaFormFlashmob',
-    );
-    $this->aOptionKeysByBlog = array(
-      'main'      => array(
-        'aYearlyMapOptions',
-        'aParticipants',
-        'aTshirts',
-        'bReloadAfterSuccessfulSubmissionMain',
-        'iFlashmobYear',
-        'iFlashmobMonth',
-        'iFlashmobDay',
-        'iFlashmobHour',
-        'iFlashmobMinute',
-        'iMainBlogID',
-        'iNewsletterBlogID',
-        'iCloneSourceBlogID',
-        'iProfileFormNinjaFormIDMain',
-        'iProfileFormPopupIDMain',
-        'bLoadMapsLazy',
-        'bLoadMapsAsync',
-        'bLoadVideosLazy',
-        'strVersion',
-        'iProfileFormPageIDMain',
-        'bApproveUsersAutomatically',
-        'strPendingUserPageContentHTML',
-        'strUserApprovedMessage',
-        'strUserApprovedSubject',
-        'strBeforeLoginFormHtmlMain',
-        'strGoogleMapsKey',
-        'strGoogleMapsKeyStatic',
-        'strFbAppID',
-        'strRegistrationSuccessfulMessage',
-        'strLoginSuccessfulMessage',
-        'bPreventDirectMediaDownloads',
-        'strNewsletterAPIKey',
-        'strNewsletterListsMain',
-        'strLeaderParticipantListNotificationMsg',
-        'strLeaderParticipantListNotificationSbj',
-        'strLoginBarLabelLogin',
-        'strLoginBarLabelLogout',
-        'strLoginBarLabelProfile',
-        'strMarkerInfoWindowTemplateOrganizer',
-        'strMarkerInfoWindowTemplateTeacher',
-        'strSignupLinkLabel',
-        'strInfoWindowLabel_organizer',
-        'strInfoWindowLabel_signup',
-        'strInfoWindowLabel_participant_count',
-        'strInfoWindowLabel_year',
-        'strInfoWindowLabel_dancers',
-        'strInfoWindowLabel_school',
-        'strInfoWindowLabel_web',
-        'strInfoWindowLabel_facebook',
-        'strInfoWindowLabel_note',
-        'strInfoWindowLabel_embed_code',
-        'strInfoWindowLabel_courses_info',
-        'bCoursesInfoDisabled',
-        'bOnlyFlorpProfileNinjaFormMain',
-      ),
-      'flashmob'  => array(
-        'iFlashmobBlogID',
-        'bReloadAfterSuccessfulSubmissionFlashmob',
-        'iProfileFormNinjaFormIDFlashmob',
-        'iProfileFormPopupIDFlashmob',
-        'bUseMapImage',
-        'iProfileFormPageIDFlashmob',
-        'strBeforeLoginFormHtmlFlashmob',
-        'strNewsletterListsFlashmob',
-        'strParticipantRegisteredMessage',
-        'strParticipantRegisteredSubject',
-        'strParticipantRemovedMessage',
-        'strParticipantRemovedSubject',
-        'strTshirtPaymentWarningNotificationSbj',
-        'strTshirtPaymentWarningNotificationMsg',
-        'bTshirtOrderingDisabled',
-        'bTshirtOrderingDisabledOnlyDisable',
-        'bOnlyFlorpProfileNinjaFormFlashmob',
-        'iTshirtPaymentWarningDeadline',
-        'iTshirtPaymentWarningButtonDeadline',
-        'iTshirtOrderDeliveredBeforeFlashmobDdl',
-      ),
-    );
-
-    // Get options and set defaults //
-    if (empty($this->aOptions)) {
-      // no options, set to defaults //
-      $this->aOptions = $this->aOptionDefaults;
-      update_site_option( $this->strOptionKey, $this->aOptions, true );
-    } else {
-      // add missing options //
-      $bUpdate = false;
-      foreach ($this->aOptionDefaults as $key => $val) {
-        if (!isset($this->aOptions[$key])) {
-          $this->aOptions[$key] = $val;
-          $bUpdate = true;
-        }
-      }
-      // remove old options //
-      foreach ($aDeprecatedKeys as $strNewKey => $strOldKey) {
-        if (isset($this->aOptions[$strOldKey])) {
-          if (!is_numeric($strNewKey)) {
-            $aNewOptionKeys = explode( ',', $strNewKey );
-            foreach( $aNewOptionKeys as $strNewKey1 ) {
-              $this->aOptions[$strNewKey1] = $this->aOptions[$strOldKey];
-            }
-          } elseif (isset($this->aOptions[$strNewKey])) {
-            $this->aOptions[$strNewKey] = $this->aOptions[$strOldKey];
-          }
-          unset($this->aOptions[$strOldKey]);
-          $bUpdate = true;
-        }
-      }
-      // update if necessary //
-      if ($bUpdate) {
-        update_site_option( $this->strOptionKey, $this->aOptions, true );
-      }
-    }
-    // END options //
+    $this->load_options();
 
     $this->set_variables();
 
@@ -662,7 +358,7 @@ class FLORP{
     );
     if (empty($this->aOptions['aYearlyMapOptions'])) {
       $this->aOptions['aYearlyMapOptions'] = $aYearlyMapOptionsUntil2017;
-      update_site_option( $this->strOptionKey, $this->aOptions, true );
+      $this->save_options();
     }
 
     // Reimport users from 2017 (missing flashmob_city) //
@@ -671,13 +367,13 @@ class FLORP{
         $this->aOptions['aYearlyMapOptions'][2017][$iUserID] = $aData;
       }
       $this->aOptions['bLeadersFrom2017Reimported'] = true;
-      update_site_option( $this->strOptionKey, $this->aOptions, true );
+      $this->save_options();
     }
 //     // NOTE DEVEL TEMP
 //     for ($i = 2013; $i <= 2017; $i++) {
 //       $this->aOptions['aYearlyMapOptions'][$i] = $aYearlyMapOptionsUntil2017[$i];
 //     }
-//     update_site_option( $this->strOptionKey, $this->aOptions, true );
+//     $this->save_options();
     // END archived yearly map options until 2016 //
 
     // BEGIN SHORTCODES //
@@ -797,6 +493,359 @@ class FLORP{
     );
   }
 
+  private function get_default_options() {
+    return array(
+      'bReloadAfterSuccessfulSubmissionMain'      => false,
+      'bReloadAfterSuccessfulSubmissionFlashmob'  => false,
+      'strLeaderParticipantsTableClass'           => "florp-leader-participants-table",
+      'bParticipantRegistrationProcessed'         => false,
+      'bLeadersFrom2017Reimported'                => false,
+      'aYearlyMapOptions'                         => array(),
+      'aOptionChanges'                            => array(),
+      'iFlashmobYear'                             => isset($this->aOptions['iCurrentFlashmobYear']) ? $this->aOptions['iCurrentFlashmobYear'] : intval(date( 'Y' )),
+      'iFlashmobMonth'                            => 1,
+      'iFlashmobDay'                              => 1,
+      'iFlashmobHour'                             => 0,
+      'iFlashmobMinute'                           => 0,
+      'iFlashmobBlogID'                           => 6,
+      'iMainBlogID'                               => 1,
+      'iNewsletterBlogID'                         => 0,
+      'iCloneSourceBlogID'                        => 0,
+      'iProfileFormNinjaFormIDMain'               => 0,
+      'iProfileFormNinjaFormImportVersionMain'    => 0,
+      'iProfileFormPopupIDMain'                   => 0,
+      'iProfileFormNinjaFormIDFlashmob'           => 0,
+      'iProfileFormNinjaFormImportVersionFlashmob'=> 0,
+      'iProfileFormPopupIDFlashmob'               => 0,
+      'bLoadMapsLazy'                             => true,
+      'bLoadMapsAsync'                            => true,
+      'bLoadVideosLazy'                           => true,
+      'bUseMapImage'                              => true,
+      'strVersion'                                => '0',
+      'iProfileFormPageIDMain'                    => 0,
+      'iProfileFormPageIDFlashmob'                => 0,
+      'bApproveUsersAutomatically'                => false,
+      'strPendingUserPageContentHTML'             => '<p>Ďakujeme, že ste sa registrovali.</p>
+<p>Vaša registrácia čaká na schválenie. Akonáhle Vás schválime, dostanete o tom notifikáciu na emailovú adresu, ktorú ste zadali pri registrácii.</p>
+<p>Váš SalsaRueda.Dance team</p>',
+      'strUserApprovedMessage'                    => '<p>Vaša registrácia bola schválená!</p>
+<p><a href="%PROFILE_URL%">Prihláste sa</a> emailovou adresou a heslom, ktoré ste zadali pri registrácii.</p>
+<p>Váš SalsaRueda.Dance team</p>',
+      'strUserApprovedSubject'                    => 'Vaša registrácia na %BLOGURL% bola schválená',
+      'strBeforeLoginFormHtmlMain'                => '',
+      'strBeforeLoginFormHtmlFlashmob'            => '',
+      'strGoogleMapsKeyStatic'                    => 'AIzaSyC_g9bY9qgW7mA0L1EupZ4SDYrBQWWi-V0',
+      'strGoogleMapsKey'                          => 'AIzaSyBaPowbVdIBpJqo_yhEfLn1v60EWbow6ZY',
+      'strFbAppID'                                => '768253436664320',
+      'strRegistrationSuccessfulMessage'          => "Prihlasujeme Vás... Prosíme, počkajte, kým sa stránka znovu načíta.",
+      'strLoginSuccessfulMessage'                 => "Prihlásenie prebehlo úspešne, prosíme, počkajte, kým sa stránka znovu načíta.",
+      'bPreventDirectMediaDownloads'              => false,
+      'strNewsletterAPIKey'                       => '',
+      'strNewsletterListsMain'                    => '',
+      'strNewsletterListsFlashmob'                => '',
+      'aParticipants'                             => array(),
+      'aTshirts'                                  => array( "leaders" => array(), "participants" => array() ),
+      'aOrderDates'                               => array(),
+      'strParticipantRegisteredSubject'           => 'Boli ste prihásený na flashmob',
+      'strParticipantRegisteredMessage'           => '<p>Ďakujeme, že ste sa prihlásili na flashmob!</p>
+<p>Váš SalsaRueda.Dance team</p>',
+      'strParticipantRemovedSubject'              => 'Váš flashmob bol zrušený',
+      'strParticipantRemovedMessage'              => '<p>Žiaľ, flashmob, na ktorý ste sa prihlásili, bol zrušený.</p>
+<p>Nezúfajte však! Pozrite si <a href="http://flashmob.salsarueda.dance" target="blank">mapku flashmobov na našej stránke</a> a ak máte niektorý flashmob po ruke, prihláste sa na ten!</p>
+<p>Váš SalsaRueda.Dance team</p>',
+      'strLeaderParticipantListNotificationMsg'   => '<p>Tu sú Vaši noví účastníci:</p><p>%PARTICIPANT_LIST%</p><p>Celý zoznam si môžete pozrieť <a href="%PROFILE_URL%">vo Vašom profile</a>.</p><p>Váš SalsaRueda.Dance team</p>',
+      'strLeaderParticipantListNotificationSbj'   => 'Máte nových účastníkov prihlásených na flashmob',
+      'logs'                                      => array(),
+      'strLoginBarLabelLogin'                     => 'Prihlásiť sa',
+      'strLoginBarLabelLogout'                    => 'Odhlásiť sa',
+      'strLoginBarLabelProfile'                   => 'Môj profil',
+      'strMarkerInfoWindowTemplateOrganizer'      => '<div class="florp-marker-infowindow-wrapper">
+<h5 class="florp-flashmob-location">%%flashmob_city%%</h5>
+<p>%%signup%% <strong>Organizátor</strong>: %%organizer%% %%year%% %%school%% %%facebook%% %%web%% %%dancers%% %%note%%</p>
+%%embed_code%%</div>',
+      'strMarkerInfoWindowTemplateTeacher'        => '<div class="florp-marker-infowindow-wrapper">
+<h5 class="florp-course-location">%%courses_city%%</h5>
+<p><strong>Líder</strong>: %%organizer%% %%school%%</p>
+<div class="florp-course-info">%%courses_info%%</div>
+</div>',
+      'strSignupLinkLabel'                        => 'Prihlásiť na Flashmob',
+      'strInfoWindowLabel_organizer'              => '<strong>Organizátor</strong>',
+      'strInfoWindowLabel_signup'                 => '',
+      'strInfoWindowLabel_participant_count'      => 'Prihlásených účastníkov',
+      'strInfoWindowLabel_year'                   => '<strong>Rok</strong>',
+      'strInfoWindowLabel_school'                 => 'Škola / skupina',
+      'strInfoWindowLabel_web'                    => '<strong>Web</strong>',
+      'strInfoWindowLabel_facebook'               => '<strong>Facebook</strong>',
+      'strInfoWindowLabel_dancers'                => 'Počet tancujúcich',
+      'strInfoWindowLabel_note'                   => 'Poznámka',
+      'strInfoWindowLabel_embed_code'             => '',
+      'strInfoWindowLabel_courses_info'           => '',
+      'bCoursesInfoDisabled'                      => true,
+      'strTshirtPaymentWarningNotificationSbj'    => 'Chýba nám platba za objednané tričko',
+      'strTshirtPaymentWarningNotificationMsg'    => '<p>Prosíme, pošlite platbu za objednané tričko.</p><p>Váš SalsaRueda.Dance team</p>',
+      'bTshirtOrderingDisabled'                   => false,
+      'bTshirtOrderingDisabledOnlyDisable'        => false,
+      'bOnlyFlorpProfileNinjaFormFlashmob'        => true,
+      'bOnlyFlorpProfileNinjaFormMain'            => true,
+      'iTshirtPaymentWarningDeadline'             => 14,
+      'iTshirtPaymentWarningButtonDeadline'       => -1,
+      'iTshirtOrderDeliveredBeforeFlashmobDdl'    => 9,
+    );
+  }
+
+  private function load_options() {
+    // BEGIN options //
+    $this->aOptions = get_site_option( $this->strOptionKey, array() );
+    $this->aOptionDefaults = $this->get_default_options();
+    $this->aOptionFormKeys = array(
+      'florp_reload_after_ok_submission_main'     => 'bReloadAfterSuccessfulSubmissionMain',
+      'florp_reload_after_ok_submission_flashmob' => 'bReloadAfterSuccessfulSubmissionFlashmob',
+      'florp_flashmob_year'                       => 'iFlashmobYear',
+      'florp_flashmob_month'                      => 'iFlashmobMonth',
+      'florp_flashmob_day'                        => 'iFlashmobDay',
+      'florp_flashmob_hour'                       => 'iFlashmobHour',
+      'florp_flashmob_minute'                     => 'iFlashmobMinute',
+      'florp_flashmob_blog_id'                    => 'iFlashmobBlogID',
+      'florp_main_blog_id'                        => 'iMainBlogID',
+      'florp_newsletter_blog_id'                  => 'iNewsletterBlogID',
+      'florp_clone_source_blog_id'                => 'iCloneSourceBlogID',
+      'florp_profile_form_ninja_form_id_main'     => 'iProfileFormNinjaFormIDMain',
+      'florp_profile_form_popup_id_main'          => 'iProfileFormPopupIDMain',
+      'florp_profile_form_ninja_form_id_flashmob' => 'iProfileFormNinjaFormIDFlashmob',
+      'florp_profile_form_popup_id_flashmob'      => 'iProfileFormPopupIDFlashmob',
+      'florp_load_maps_lazy'                      => 'bLoadMapsLazy',
+      'florp_load_maps_async'                     => 'bLoadMapsAsync',
+      'florp_load_videos_lazy'                    => 'bLoadVideosLazy',
+      'florp_use_map_image'                       => 'bUseMapImage',
+      'florp_profile_form_page_id_main'           => 'iProfileFormPageIDMain',
+      'florp_profile_form_page_id_flashmob'       => 'iProfileFormPageIDFlashmob',
+      'florp_pending_user_page_content_html'      => 'strPendingUserPageContentHTML',
+      'florp_user_approved_message'               => 'strUserApprovedMessage',
+      'florp_user_approved_subject'               => 'strUserApprovedSubject',
+      'florp_approve_users_automatically'         => 'bApproveUsersAutomatically',
+      'florp_before_login_form_html_main'         => 'strBeforeLoginFormHtmlMain',
+      'florp_before_login_form_html_flashmob'     => 'strBeforeLoginFormHtmlFlashmob',
+      'florp_google_maps_key'                     => 'strGoogleMapsKey',
+      'florp_google_maps_key_static'              => 'strGoogleMapsKeyStatic',
+      'florp_fb_app_id'                           => 'strFbAppID',
+      'florp_registration_successful_message'     => 'strRegistrationSuccessfulMessage',
+      'florp_login_successful_message'            => 'strLoginSuccessfulMessage',
+      'florp_prevent_direct_media_downloads'      => 'bPreventDirectMediaDownloads',
+      'florp_newsletter_api_key'                  => 'strNewsletterAPIKey',
+      'florp_newsletter_lists_main'               => 'strNewsletterListsMain',
+      'florp_newsletter_lists_flashmob'           => 'strNewsletterListsFlashmob',
+      'florp_participant_registered_subject'      => 'strParticipantRegisteredSubject',
+      'florp_participant_registered_message'      => 'strParticipantRegisteredMessage',
+      'florp_participant_removed_subject'         => 'strParticipantRemovedSubject',
+      'florp_participant_removed_message'         => 'strParticipantRemovedMessage',
+      'florp_leader_participant_list_notif_msg'   => 'strLeaderParticipantListNotificationMsg',
+      'florp_leader_participant_list_notif_sbj'   => 'strLeaderParticipantListNotificationSbj',
+      'florp_login_bar_label_login'               => 'strLoginBarLabelLogin',
+      'florp_login_bar_label_logout'              => 'strLoginBarLabelLogout',
+      'florp_login_bar_label_profile'             => 'strLoginBarLabelProfile',
+      'florp_infowindow_template_organizer'       => 'strMarkerInfoWindowTemplateOrganizer',
+      'florp_infowindow_template_teacher'         => 'strMarkerInfoWindowTemplateTeacher',
+      'florp_signup_link_label'                   => 'strSignupLinkLabel',
+      'florp_infowindow_label_organizer'          => 'strInfoWindowLabel_organizer',
+      'florp_infowindow_label_signup'             => 'strInfoWindowLabel_signup',
+      'florp_infowindow_label_participant_count'  => 'strInfoWindowLabel_participant_count',
+      'florp_infowindow_label_year'               => 'strInfoWindowLabel_year',
+      'florp_infowindow_label_dancers'            => 'strInfoWindowLabel_dancers',
+      'florp_infowindow_label_school'             => 'strInfoWindowLabel_school',
+      'florp_infowindow_label_web'                => 'strInfoWindowLabel_web',
+      'florp_infowindow_label_facebook'           => 'strInfoWindowLabel_facebook',
+      'florp_infowindow_label_note'               => 'strInfoWindowLabel_note',
+      'florp_infowindow_label_embed_code'         => 'strInfoWindowLabel_embed_code',
+      'florp_infowindow_label_courses_info'       => 'strInfoWindowLabel_courses_info',
+      'florp_courses_info_disabled'               => 'bCoursesInfoDisabled',
+      'florp_tshirt_payment_warning_notif_sbj'    => 'strTshirtPaymentWarningNotificationSbj',
+      'florp_tshirt_payment_warning_notif_msg'    => 'strTshirtPaymentWarningNotificationMsg',
+      'florp_tshirt_ordering_disabled'            => 'bTshirtOrderingDisabled',
+      'florp_tshirt_ordering_only_disable'        => 'bTshirtOrderingDisabledOnlyDisable',
+      'florp_only_florp_profile_nf_flashmob'      => 'bOnlyFlorpProfileNinjaFormFlashmob',
+      'florp_only_florp_profile_nf_main'          => 'bOnlyFlorpProfileNinjaFormMain',
+      'florp_tshirt_payment_warning_deadline'     => 'iTshirtPaymentWarningDeadline',
+      'florp_tshirt_payment_warning_btn_deadline' => 'iTshirtPaymentWarningButtonDeadline',
+      'florp_tshirt_order_delivered_b4_flash_ddl' => 'iTshirtOrderDeliveredBeforeFlashmobDdl',
+    );
+    $aDeprecatedKeys = array(
+      // new => old //
+      // OR: old //
+      'iCurrentFlashmobYear',
+      'bHideFlashmobFields',
+      'bReloadAfterSuccessfulSubmissionMain,bReloadAfterSuccessfulSubmissionFlashmob' => 'bReloadAfterSuccessfulSubmission',
+      'iProfileFormNinjaFormIDFlashmob' => 'iProfileFormNinjaFormID',
+      'iProfileFormPopupIDFlashmob' => 'iProfileFormPopupID',
+      'strGoogleMapsKey' => 'strGoogleMapKey',
+    );
+    $this->aBooleanOptions = array(
+      'bReloadAfterSuccessfulSubmissionMain', 'bReloadAfterSuccessfulSubmissionFlashmob',
+      'bLoadMapsAsync', 'bLoadMapsLazy', 'bLoadVideosLazy', 'bUseMapImage',
+      'bApproveUsersAutomatically',
+      'bPreventDirectMediaDownloads',
+      'bCoursesInfoDisabled',
+      'bTshirtOrderingDisabled',
+      'bTshirtOrderingDisabledOnlyDisable',
+      'bOnlyFlorpProfileNinjaFormMain',
+      'bOnlyFlorpProfileNinjaFormFlashmob',
+    );
+    $this->aOptionKeysByBlog = array(
+      'main'      => array(
+        'aYearlyMapOptions',
+        'aParticipants',
+        'aTshirts',
+        'bReloadAfterSuccessfulSubmissionMain',
+        'iFlashmobYear',
+        'iFlashmobMonth',
+        'iFlashmobDay',
+        'iFlashmobHour',
+        'iFlashmobMinute',
+        'iMainBlogID',
+        'iNewsletterBlogID',
+        'iCloneSourceBlogID',
+        'iProfileFormNinjaFormIDMain',
+        'iProfileFormPopupIDMain',
+        'bLoadMapsLazy',
+        'bLoadMapsAsync',
+        'bLoadVideosLazy',
+        'strVersion',
+        'iProfileFormPageIDMain',
+        'bApproveUsersAutomatically',
+        'strPendingUserPageContentHTML',
+        'strUserApprovedMessage',
+        'strUserApprovedSubject',
+        'strBeforeLoginFormHtmlMain',
+        'strGoogleMapsKey',
+        'strGoogleMapsKeyStatic',
+        'strFbAppID',
+        'strRegistrationSuccessfulMessage',
+        'strLoginSuccessfulMessage',
+        'bPreventDirectMediaDownloads',
+        'strNewsletterAPIKey',
+        'strNewsletterListsMain',
+        'strLeaderParticipantListNotificationMsg',
+        'strLeaderParticipantListNotificationSbj',
+        'strLoginBarLabelLogin',
+        'strLoginBarLabelLogout',
+        'strLoginBarLabelProfile',
+        'strMarkerInfoWindowTemplateOrganizer',
+        'strMarkerInfoWindowTemplateTeacher',
+        'strSignupLinkLabel',
+        'strInfoWindowLabel_organizer',
+        'strInfoWindowLabel_signup',
+        'strInfoWindowLabel_participant_count',
+        'strInfoWindowLabel_year',
+        'strInfoWindowLabel_dancers',
+        'strInfoWindowLabel_school',
+        'strInfoWindowLabel_web',
+        'strInfoWindowLabel_facebook',
+        'strInfoWindowLabel_note',
+        'strInfoWindowLabel_embed_code',
+        'strInfoWindowLabel_courses_info',
+        'bCoursesInfoDisabled',
+        'bOnlyFlorpProfileNinjaFormMain',
+      ),
+      'flashmob'  => array(
+        'iFlashmobBlogID',
+        'bReloadAfterSuccessfulSubmissionFlashmob',
+        'iProfileFormNinjaFormIDFlashmob',
+        'iProfileFormPopupIDFlashmob',
+        'bUseMapImage',
+        'iProfileFormPageIDFlashmob',
+        'strBeforeLoginFormHtmlFlashmob',
+        'strNewsletterListsFlashmob',
+        'strParticipantRegisteredMessage',
+        'strParticipantRegisteredSubject',
+        'strParticipantRemovedMessage',
+        'strParticipantRemovedSubject',
+        'strTshirtPaymentWarningNotificationSbj',
+        'strTshirtPaymentWarningNotificationMsg',
+        'bTshirtOrderingDisabled',
+        'bTshirtOrderingDisabledOnlyDisable',
+        'bOnlyFlorpProfileNinjaFormFlashmob',
+        'iTshirtPaymentWarningDeadline',
+        'iTshirtPaymentWarningButtonDeadline',
+        'iTshirtOrderDeliveredBeforeFlashmobDdl',
+      ),
+    );
+    $this->aSeparateOptionKeys = array( 'logs', 'aParticipants', 'aTshirts', 'aYearlyMapOptions', 'aOrderDates', 'aOptionChanges' );
+
+    // Get options and set defaults //
+    if (empty($this->aOptions)) {
+      // no options, set to defaults //
+      $this->aOptions = $this->aOptionDefaults;
+      $this->save_options();
+    } else {
+      // add missing options //
+      $bUpdate = false;
+      foreach($this->aSeparateOptionKeys as $strOptionKey) {
+        $mixOptionValue = get_site_option( $this->strOptionKey . "-" . $strOptionKey, array() );
+        if (empty($mixOptionValue)) {
+          // This will use the value from $this->aOptions or set the default one //
+          $bUpdate = true;
+        } else {
+          $this->aOptions[$strOptionKey] = $mixOptionValue;
+        }
+      }
+
+      foreach ($this->aOptionDefaults as $key => $val) {
+        if (!isset($this->aOptions[$key])) {
+          $this->aOptions[$key] = $val;
+          $bUpdate = true;
+        }
+      }
+      // remove old options //
+      foreach ($aDeprecatedKeys as $strNewKey => $strOldKey) {
+        if (isset($this->aOptions[$strOldKey])) {
+          if (!is_numeric($strNewKey)) {
+            $aNewOptionKeys = explode( ',', $strNewKey );
+            foreach( $aNewOptionKeys as $strNewKey1 ) {
+              $this->aOptions[$strNewKey1] = $this->aOptions[$strOldKey];
+            }
+          } elseif (isset($this->aOptions[$strNewKey])) {
+            $this->aOptions[$strNewKey] = $this->aOptions[$strOldKey];
+          }
+          unset($this->aOptions[$strOldKey]);
+          $bUpdate = true;
+        }
+      }
+      // update if necessary //
+      if ($bUpdate) {
+        $this->save_options();
+      }
+    }
+    // END options //
+  }
+
+  private function get_options() {
+    return $this->aOptions;
+  }
+
+  private function get_option( $strOptionKey ) {
+    if (isset($this->aOptions[$strOptionKey])) {
+      return $this->aOptions[$strOptionKey];
+    }
+    return false;
+  }
+
+  private function save_options() {
+    $aOptionsRest = array();
+    foreach ($this->aOptionDefaults as $strOptionKey => $mixDefaultValue) {
+      $mixValue = $this->aOptions[$strOptionKey];
+      if (in_array($strOptionKey, $this->aSeparateOptionKeys)) {
+        update_site_option( $this->strOptionKey . "-" . $strOptionKey, $mixValue, true );
+      } else {
+        $aOptionsRest[$strOptionKey] = $mixValue;
+      }
+    }
+    update_site_option( $this->strOptionKey, $aOptionsRest, true );
+  }
+
+  private function save_option( $strOptionKey, $strOptionValue ) {
+    $this->aOptions[$strOptionKey] = $strOptionValue;
+    $this->save_options();
+  }
+
   private function migrate_subscribers( $iBlogFrom, $iBlogTo ) {
     $aArgsFlashmobBlogSubscribers = array(
       'blog_id' => $iBlogFrom,
@@ -811,7 +860,7 @@ class FLORP{
 
   public function run_upgrades() {
 //     $this->aOptions['strVersion'] = '0'; // NOTE DEVEL TEMP
-//     update_site_option( $this->strOptionKey, $this->aOptions, true ); // NOTE DEVEL TEMP
+//     $this->save_options(); // NOTE DEVEL TEMP
 
 //     // NOTE DEVEL TEMP
 //     $this->aOptions['aYearlyMapOptions'][2013][22] = array (
@@ -998,7 +1047,7 @@ class FLORP{
       }
     }
     if ($bSaveOptions) {
-      update_site_option( $this->strOptionKey, $this->aOptions, true );
+      $this->save_options();
     }
 
     // Version based upgrades //
@@ -1017,7 +1066,7 @@ class FLORP{
 
     if (version_compare( $strVersionInOptions, $strCurrentVersion, '<' )) {
       $this->aOptions['strVersion'] = $strCurrentVersion;
-      update_site_option( $this->strOptionKey, $this->aOptions, true );
+      $this->save_options();
     }
 
     $strOldExportPath = __DIR__ . '/nf-export/export.php';
@@ -1071,10 +1120,10 @@ class FLORP{
         }
       }
       if ($bUpdated) {
-        update_site_option( $this->strOptionKey, $this->aOptions, true );
+        $this->save_options();
       }
       $this->aOptions["bParticipantRegistrationProcessed"] = true;
-      update_site_option( $this->strOptionKey, $this->aOptions, true );
+      $this->save_options();
     }
     // END participant registration date import //
   }
@@ -1281,7 +1330,7 @@ class FLORP{
   }
 
   private function is_newsletter_subscriber( $strEmail ) {
-    // TODO: check also LIST //
+    // TODO: check also LISTs of the subscriber  //
     $aRow = $this->get_newsletter_subscriber( $strEmail );
     if ($aRow) {
       return isset($aRow["status"]) && $aRow["status"] === "C"; // Confirmed //
@@ -2045,7 +2094,7 @@ class FLORP{
       if ( false === $oLeader ) {
         unset($aParticipantsReturned[$iLeaderID]);
         unset($this->aOptions['aParticipants'][$iLeaderID]);
-        update_site_option( $this->strOptionKey, $this->aOptions, true );
+        $this->save_options();
       } elseif ( !$bPending && in_array( $this->strUserRolePending, (array) $oLeader->roles ) ) {
         unset($aParticipantsReturned[$iLeaderID]);
       }
@@ -2093,7 +2142,7 @@ class FLORP{
       $aHeaders = array('Content-Type: text/html; charset=UTF-8');
       $this->new_user_notification( $oLeader->user_login, '', $oLeader->user_email, $strBlogname, $strMessage, $this->aOptions['strLeaderParticipantListNotificationSbj'], $aHeaders );
     }
-    update_site_option( $this->strOptionKey, $this->aOptions, true );
+    $this->save_options();
   }
 
   private function get_leader_participants_table( $aParticipants, $bEmail = false ) {
@@ -2399,7 +2448,7 @@ class FLORP{
     $iFlashmobYear = $this->aOptions['iFlashmobYear'];
     $this->aOptions['aYearlyMapOptions'][$iFlashmobYear] = $this->get_flashmob_map_options_array_to_archive();
     $this->aOptions['aParticipants'] = array();
-    update_site_option( $this->strOptionKey, $this->aOptions, true );
+    $this->save_options();
 
     // clean user meta //
     $aUsers = $this->getFlashmobSubscribers('flashmob_organizer');
@@ -2746,6 +2795,17 @@ class FLORP{
         'florp-history',
         array( $this, 'leaders_history_table_admin' )
       );
+      $oUser = wp_get_current_user();
+      if ($oUser->user_email === 'charliecek@gmail.com' || $oUser->user_email === get_option('admin_email')) {
+        $page = add_submenu_page(
+          'florp-main',
+          'Option changes',
+          'Option changes',
+          'manage_options',
+          'florp-option-changes',
+          array( $this, 'option_changes_table_admin' )
+        );
+      }
     }
   }
 
@@ -3201,6 +3261,52 @@ class FLORP{
     $strEcho .= "</p>";
     echo $strEcho;
     echo '</div><!-- .wrap -->';
+  }
+
+  public function option_changes_table_admin() {
+    echo "<div class=\"wrap\">\n<h1>" . "Option changes" . "</h1>\n";
+    $strEcho = '<table class="widefat striped"><th>Date</th><th>User</th><th>Changed option key</th><th>From</th><th>To</th>'."\n";
+    // echo "<pre>"; var_dump($this->aOptions['aOptionChanges']); echo "</pre>"; // NOTE DEVEL
+    foreach ($this->aOptions['aOptionChanges'] as $iTimestamp => $aChanges) {
+      $iUserID = $aChanges['_user_id'];
+      $oUser = get_user_by( 'id', $iUserID );
+      $iChangeCount = count($aChanges) - 1;
+      if ($iChangeCount <= 0) {
+        continue;
+      }
+      $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
+      $strDate = date( get_option('date_format')." ".get_option('time_format'), $iTimestamp + $iTimeZoneOffset*3600 );
+
+      $strEcho .= "<tr class=\"row\">";
+      $strEcho .=   "<td rowspan=\"{$iChangeCount}\">{$strDate}</td>\n";
+      $strEcho .=   "<td rowspan=\"{$iChangeCount}\">{$iUserID}: {$oUser->first_name} {$oUser->last_name}</td>\n";
+      foreach ($aChanges as $strKey => $aChange) {
+        if ($strKey === '_user_id') {
+          continue;
+        }
+        if (in_array($strKey, $this->aBooleanOptions)) {
+          $from = $aChange['from'] ? "True" : "False";
+          $to = $aChange['to'] ? "True" : "False";
+        } else {
+          $from = $aChange['from'];
+          $to = $aChange['to'];
+        }
+        if (strpos($strKey, "ajax__") === 0) {
+          $from_type = "";
+          $to_type = "";
+        } else {
+          $from_type = " (".gettype($aChange['from']).")";
+          $to_type = " (".gettype($aChange['to']).")";
+        }
+        $strEcho .=   "<td>{$strKey}</td><td>{$from}{$from_type}</td><td>{$to}{$to_type}</td>";
+        $strEcho .= "</tr>\n";
+      }
+    }
+    $strEcho .= "</table>";
+
+    echo $strEcho;
+    echo '</div><!-- .wrap -->';
+    // $this->aOptions['aOptionChanges'] = array(); $this->save_options(); // NOTE DEVEL
   }
 
   private function get_tshirt_order_date_data( $iTshirtID ) {
@@ -3861,6 +3967,19 @@ class FLORP{
     exit();
   }
 
+  private function add_option_change($strOptionKey, $from, $to, $bSave = true) {
+    $aChangedOptions[$strOptionKey] = array(
+      'from'  => $from,
+      'to'    => $to
+    );
+    $iCurrentUserID = get_current_user_id();
+    $aChangedOptions['_user_id'] = $iCurrentUserID;
+    $this->aOptions['aOptionChanges'][time()] = $aChangedOptions;
+    if ($bSave) {
+      $this->save_options();
+    }
+  }
+
   public function action__delete_florp_participant_callback() {
 //     wp_die();
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
@@ -3877,7 +3996,8 @@ class FLORP{
           $aData["message"] = "The flashmob participant '{$aData['participantEmail']}' was deleted successfully (NOT: FLORP_DEVEL is on!)";
         } else {
           unset($this->aOptions["aParticipants"][$aData["leaderId"]][$aData["participantEmail"]]);
-          update_site_option( $this->strOptionKey, $this->aOptions, true );
+          $this->add_option_change("ajax__delete_florp_participant", "", $aData["leaderId"].": ".$aData["participantEmail"], false);
+          $this->save_options();
           $aData["message"] = "The flashmob participant '{$aData['participantEmail']}' was deleted successfully";
         }
       } else {
@@ -3934,7 +4054,8 @@ class FLORP{
             $this->aOptions["aTshirts"]["participants"][$aData["email"]] = $aOk;
           }
         }
-        update_site_option( $this->strOptionKey, $this->aOptions, true );
+        $this->add_option_change("ajax__florp_tshirt_paid", "", $aData["email"], false);
+        $this->save_options();
         $aData["message"] = "The flashmob participant '{$aData['participantEmail']}' was marked as having paid successfully";//." ".var_export($aData, true);
       }
     }
@@ -3981,7 +4102,8 @@ class FLORP{
           $aData['message'] = $strErrorMessage . ". There are no tshirts for this order!";
         } else {
           $this->aOptions['aOrderDates'][$iTimestamp] = $aNewOrder;
-          update_site_option( $this->strOptionKey, $this->aOptions, true );
+          $this->add_option_change("ajax__add_order_date", "", $iTimestamp, false);
+          $this->save_options();
 
           $aNewOrder['id'] = $iTimestamp;
           $strOrderRowHtml = $this->get_tshirt_order_dates_row( $iTimestamp );
@@ -4050,7 +4172,8 @@ class FLORP{
             $this->aOptions["aTshirts"]["participants"][$aData["email"]] = $aOk;
           }
         }
-        update_site_option( $this->strOptionKey, $this->aOptions, true );
+        $this->save_options();
+        $this->add_option_change("ajax__florp_tshirt_send_payment_warning", "", $aData["email"], false);
         $aData["message"] = "A payment warning was sent to the flashmob participant '{$aData['email']}'";//." ".var_export($aData, true);
       } else {
         $aData["message"] = $strErrorMessage;
@@ -4079,7 +4202,8 @@ class FLORP{
           } else {
             unset($this->aOptions["aParticipants"][$aData["leader_id"]][$aData["email"]]['preferences'][$iKey]);
             $this->aOptions["aParticipants"][$aData["leader_id"]][$aData["email"]]['tshirt_order_cancelled_timestamp'] = (int) current_time( 'timestamp' );
-            update_site_option( $this->strOptionKey, $this->aOptions, true );
+            $this->add_option_change("ajax__florp_tshirt_cancel_order", "", $aData["email"], false);
+            $this->save_options();
             $aData["message"] = "The tshirt order of flashmob participant '{$aData['email']}' was cancelled successfully";
           }
         } else {
@@ -4150,6 +4274,7 @@ class FLORP{
         $aData["replaceButton"] = true;
       }
       $aData["replaceButtonHtml"] = "<span data-button-id=\"{$aData['buttonId']}\">{$strDomain}</span>";
+      $this->add_option_change("ajax__florp_create_subsite", "", $aData['subdomain']);
     }
 
     echo json_encode($aData);
@@ -4191,10 +4316,12 @@ class FLORP{
       if (!isset($aData['message'])) {
         $aData['ok'] = true;
         $aData['message'] = $strOkMessage;
+        $this->add_option_change("ajax__delete_nf_submission", "", "form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'");
       }
     } else {
       $aData['ok'] = true;
       $aData['message'] = $strOkMessage;
+      $this->add_option_change("ajax__delete_nf_submission", "", "form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'");
     }
 
     echo json_encode($aData);
@@ -4270,11 +4397,13 @@ class FLORP{
                 // Submission no longer exists //
                 $aData['ok'] = true;
                 $aData['message'] = $strOkMessage;
+                $this->add_option_change("ajax__import_flashmob_nf_submission", "", "form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'");
               }
             } else {
               // No submission of given email exists any longer //
               $aData['ok'] = true;
               $aData['message'] = $strOkMessage;
+              $this->add_option_change("ajax__import_flashmob_nf_submission", "", "form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'");
             }
           }
         } else {
@@ -4595,7 +4724,7 @@ class FLORP{
       // echo "<pre>" .var_export($this->get_flashmob_map_options_array_to_archive(), true). "</pre>";
       // $this->delete_logs();
       // echo "<pre>" .var_export($this->get_logs(), true). "</pre>";
-      // foreach($this->aOptions['aParticipants'] as $i => $a) {foreach($a as $e => $ap) {$this->aOptions['aParticipants'][$i][$e]['leader_notified']=false;}}; update_site_option( $this->strOptionKey, $this->aOptions, true );
+      // foreach($this->aOptions['aParticipants'] as $i => $a) {foreach($a as $e => $ap) {$this->aOptions['aParticipants'][$i][$e]['leader_notified']=false;}}; $this->save_options();
       // echo "<pre>" .var_export($this->aOptions['aParticipants'], true). "</pre>";
       // echo "<pre>" .var_export(wp_get_sites(), true). "</pre>";
       // echo "<pre>" .var_export($this->findCityWebpage( "Bánovce nad Bebravou" ), true). "</pre>";
@@ -5476,10 +5605,19 @@ class FLORP{
       return;
     }
 
+    $aOptionsOld = $this->aOptions;
+    $aChangedOptions = array();
 
     foreach ($this->aBooleanOptions as $strOptionKey) {
       if (in_array( $strOptionKey, $aKeysToSave )) {
         $this->aOptions[$strOptionKey] = false;
+        $strPostKey = array_search($strOptionKey, $this->aOptionFormKeys);
+        if ($strPostKey !== false && !isset($aPostedOptions[$strPostKey]) && $aOptionsOld[$strOptionKey] !== $this->aOptions[$strOptionKey]) {
+          $aChangedOptions[$strOptionKey] = array(
+            'from'  => $aOptionsOld[$strOptionKey],
+            'to'    => $this->aOptions[$strOptionKey]
+          );
+        }
       }
     }
     foreach ($aPostedOptions as $key => $val) {
@@ -5491,19 +5629,32 @@ class FLORP{
       if (in_array( $strOptionKey, $this->aBooleanOptions )) {
         // Boolean //
         $this->aOptions[$strOptionKey] = ($val == '1');
-      } elseif (strpos($key, 'i') === 0) {
-        $this->aOptions[$strOptionKey] = $val;
+      } elseif (strpos($strOptionKey, 'i') === 0) {
+        $this->aOptions[$strOptionKey] = intval($val);
       } else {
         $this->aOptions[$strOptionKey] = stripslashes($val);
       }
+      if ($aOptionsOld[$strOptionKey] !== $this->aOptions[$strOptionKey]) {
+        $aChangedOptions[$strOptionKey] = array(
+          'from'  => $aOptionsOld[$strOptionKey],
+          'to'    => $this->aOptions[$strOptionKey]
+        );
+      }
     }
+
+    if (!empty($aChangedOptions)) {
+      $iCurrentUserID = get_current_user_id();
+      $aChangedOptions['_user_id'] = $iCurrentUserID;
+      $this->aOptions['aOptionChanges'][time()] = $aChangedOptions;
+    }
+
     if (defined('FLORP_DEVEL_PURGE_PARTICIPANTS_ON_SAVE') && FLORP_DEVEL_PURGE_PARTICIPANTS_ON_SAVE === true ) {
       $this->aOptions['aParticipants'] = $this->aOptionDefaults["aParticipants"];
     }
     if (defined('FLORP_DEVEL_PURGE_TSHIRTS_ON_SAVE') && FLORP_DEVEL_PURGE_TSHIRTS_ON_SAVE === true ) {
       $this->aOptions['aTshirts'] = $this->aOptionDefaults["aTshirts"];
     }
-    update_site_option( $this->strOptionKey, $this->aOptions, true );
+    $this->save_options();
 
     $this->set_variables();
 
@@ -5700,7 +5851,7 @@ class FLORP{
         $this->aOptions['iProfileFormNinjaFormIDFlashmob'] = $this->iProfileFormNinjaFormIDFlashmob;
         $this->aOptions['iProfileFormNinjaFormImportVersionFlashmob'] = $iNewVersion;
       }
-      update_site_option( $this->strOptionKey, $this->aOptions, true );
+      $this->save_options();
     }
   }
 
@@ -6238,7 +6389,7 @@ class FLORP{
       $this->aOptions['logs'][$strKey] = array();
     }
     $this->aOptions['logs'][$strKey] = array_merge( $this->aOptions['logs'][$strKey], (array) $mixContent );
-    update_site_option( $this->strOptionKey, $this->aOptions, true );
+    $this->save_options();
   }
 
   private function get_log( $strKey ) {
@@ -6253,7 +6404,7 @@ class FLORP{
     if (isset($this->aOptions['logs'][$strKey])) {
       unset($this->aOptions['logs'][$strKey]);
     }
-    update_site_option( $this->strOptionKey, $this->aOptions, true );
+    $this->save_options();
   }
 
   private function get_logs() {
@@ -6262,7 +6413,7 @@ class FLORP{
 
   private function delete_logs() {
     $this->aOptions['logs'] = array();
-    update_site_option( $this->strOptionKey, $this->aOptions, true );
+    $this->save_options();
   }
 
   private function new_user_notification( $user_login, $password, $user_email, $blogname, $message = false, $subject = false, $mixHeaders = '' ){
@@ -6363,7 +6514,7 @@ class FLORP{
       $this->aOptions['aParticipants'][$iUserID] = array_merge($this->aOptions['aParticipants'][$iUserID], array(
         $aFieldData['user_email'] => $aFieldData,
       ));
-      update_site_option( $this->strOptionKey, $this->aOptions, true );
+      $this->save_options();
 
       if (strlen(trim($this->aOptions['strParticipantRegisteredMessage'])) > 0) {
         $strMessageContent = $this->aOptions['strParticipantRegisteredMessage'];
@@ -6488,7 +6639,7 @@ class FLORP{
 
         // Remove participants //
         $this->aOptions['aParticipants'][$iUserID] = array();
-        update_site_option( $this->strOptionKey, $this->aOptions, true );
+        $this->save_options();
       }
 
       // Subscribe or unsubscribe to/from newsletter via REST API //
