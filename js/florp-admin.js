@@ -162,6 +162,9 @@ jQuery( document ).ready(function() {
                           }
                         })
                       }
+                      if (aResponse.reload_page) {
+                        location.reload();
+                      }
                     }, $row.first()[0] && $row.first()[0].cells ? $row.first()[0].cells.length : false)
                   } else {
                     if (aResponse.replaceButton && aResponse.replaceButtonHtml) {
@@ -183,6 +186,9 @@ jQuery( document ).ready(function() {
                           $input.val("");
                         }
                       })
+                    }
+                    if (aResponse.reload_page) {
+                      location.reload();
                     }
                   }
                 }

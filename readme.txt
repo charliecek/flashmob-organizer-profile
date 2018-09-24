@@ -13,6 +13,18 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v4.6.2: option refactoring, logging =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.2)
+- done some option refactoring
+- added option change logging
+
+= v4.6.1: form import bugfix, admin view improvements =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.1)
+- small admin view improvements:
+  - table filter count
+  - participant count on leaders list
+- bugfix: forms without version were imported in spite of no change
+
 = v4.6.0: tshirt order date send dates =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.0)
 - added tshirt order date send dates (adding, csv)
@@ -325,13 +337,5 @@ Other
 - settings page fix: added wrapper div
 - fixing/improving toggling logic for warnings
 
-= v2.5.2: Fixed tab click detection for mobiles =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v2.5.2)
-Fixed tab click detection for mobiles and added fallback loading if click was not detected correctly.
 
-= v2.5.1: option not to use map image in og metatags =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v2.5.1)
-Added option to decide whether or not to use map image in og metatags.
-
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v2.5.1)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v3.0.0)

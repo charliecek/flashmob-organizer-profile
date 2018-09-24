@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.6.2
+ * Version: 4.6.3
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '4.6.2';
+  private $strVersion = '4.6.3';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -421,6 +421,8 @@ class FLORP{
     add_action( 'wp_ajax_add_order_date', array( $this, 'action__add_order_date_callback' ));
     add_action( 'wp_ajax_delete_nf_submission', array( $this, 'action__delete_nf_submission_callback' ));
     add_action( 'wp_ajax_import_flashmob_nf_submission', array( $this, 'action__import_flashmob_nf_submission_callback' ));
+    add_action( 'wp_ajax_cancel_flashmob', array( $this, 'action__cancel_flashmob_callback' ));
+    add_action( 'wp_ajax_move_flashmob_participants', array( $this, 'action__move_flashmob_participants_callback' ));
     add_action( 'admin_menu', array( $this, "action__remove_admin_menu_items" ), 9999 );
     add_action( 'admin_menu', array( $this, "action__add_options_page" ));
     add_action( 'wp_enqueue_scripts', array( $this, 'action__wp_enqueue_scripts' ), 9999 );
@@ -1658,7 +1660,7 @@ class FLORP{
     } elseif ($this->isFlashmobBlog) {
       // Settings specific to the NF on the Flashmob Blog //
 
-      // Set default value of tshirt preference to unchecked and disabled if ordering is disabled //
+      // Set default value of tshirt preference to unchecked if ordering is disabled //
       if ($this->aOptions['bTshirtOrderingDisabled'] && $aField['settings']['type'] === 'listcheckbox' && $aField['settings']['key'] === 'preferences') {
         foreach ($aField['settings']['options'] as $iKey => $aOption) {
           if ($aOption['value'] === 'flashmob_participant_tshirt') {
@@ -2672,6 +2674,7 @@ class FLORP{
       'profil-organizatora-svk-flashmobu_page_florp-tshirts',
       'profil-organizatora-svk-flashmobu_page_florp-subsites',
       'profil-organizatora-svk-flashmobu_page_florp-history',
+      'profil-organizatora-svk-flashmobu_page_florp-option-changes',
 //       'profil-organizatora-svk-flashmobu_page_florp-lwa',
     );
     if (in_array($strHook, $aPermittedHooks)) {
@@ -2812,21 +2815,124 @@ class FLORP{
   public function leaders_table_admin() {
     echo "<div class=\"wrap\"><h1>" . "Zoznam lídrov" . "</h1>";
 
+    if (defined('FLORP_DEVEL') && FLORP_DEVEL === true) {
+//       echo "<pre>";var_dump($this->aOptions['aParticipants']);echo "</pre>"; // NOTE DEVEL
+//       echo "<pre>";var_dump($this->aOptions['aParticipants'][55]);echo "</pre>"; // NOTE DEVEL
+//       for ($i = 40; $i <= 44; $i++) {
+//         $iLeaderID = 55;
+//         $strEmail = 'kosar.karol+'.$i.'@gmail.com';
+//         $this->aOptions['aParticipants'][$iLeaderID][$strEmail] = $this->aOptions['aParticipants'][54]['kosar.karol+1@gmail.com'];
+//         $this->aOptions['aParticipants'][$iLeaderID][$strEmail]['user_email'] = $strEmail;
+//         $this->aOptions['aParticipants'][$iLeaderID][$strEmail]['flashmob_city'] = 'Brezová pod Bradlom';
+//       }
+//       $this->save_options();
+//       update_user_meta(54, 'flashmob_organizer', '0');
+//       update_user_meta(55, 'flashmob_organizer', '1');
+//       update_user_meta(56, 'flashmob_organizer', '1');
+    }
+
     $aUsers = $this->getFlashmobSubscribers( 'all', true );
-    $strEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Preferencie</th><th>Profil</th><th>Účastníci</th>';
-    foreach ($aUsers as $oUser) {
+    $aCancelFlashmobProperties = array(
+      'buttonLabels' => array(),
+      'userDropdowns' => array(),
+      'userDropdownNames' => array(),
+      'actions' => array(),
+    );
+    foreach ($aUsers as $oLeader) {
+      $iLeaderID = $oLeader->ID;
+      $aCancelFlashmobProperties['buttonLabels'][$iLeaderID] = "Zrušiť flashmob";
+      $aCancelFlashmobProperties['userDropdowns'][$iLeaderID] = "<br/>\n<select name=\"florp_cancel_flashmob_reassign_participants-{$iLeaderID}\"><option value=\"0\">[nikoho, zmazať]</option>";
+      $aCancelFlashmobProperties['userDropdownNames'][$iLeaderID] = "florp_cancel_flashmob_reassign_participants-{$iLeaderID}";
+      foreach ($aUsers as $oUser) {
+        $iUserID = $oUser->ID;
+        $aAllMeta = array_map(
+          array($this, 'get_value_maybe_fix_unserialize_array'),
+          get_user_meta( $iUserID )
+        );
+        $bIsOrganizer = false;
+        foreach( $this->aSubscriberTypes as $strSubscriberType) {
+          if (!in_array($strSubscriberType, $this->aMetaFieldsFlashmobToArchive)) {
+            continue;
+          }
+          $bIsOrganizer = isset($aAllMeta[$strSubscriberType]) && $aAllMeta[$strSubscriberType];
+          break;
+        }
+        if (!$bIsOrganizer) {
+          continue;
+        }
+        $strSelected = "";
+        if ($iUserID === $iLeaderID) {
+          $strSelected = ' selected="selected"';
+        }
+        $aCancelFlashmobProperties['userDropdowns'][$iLeaderID] .= "<option value=\"{$iUserID}\"{$strSelected}>{$iUserID}: {$oUser->first_name} {$oUser->last_name}</option>";
+      }
+
+      $aCancelFlashmobProperties['userDropdowns'][$iLeaderID] .= "</select>";
+      $bIsOrganizer = false;
+
       $aAllMeta = array_map(
         array($this, 'get_value_maybe_fix_unserialize_array'),
-        get_user_meta( $oUser->ID )
+        get_user_meta( $iLeaderID )
+      );
+      foreach( $this->aSubscriberTypes as $strSubscriberType) {
+        if (!in_array($strSubscriberType, $this->aMetaFieldsFlashmobToArchive)) {
+          continue;
+        }
+        $bIsOrganizer = isset($aAllMeta[$strSubscriberType]) && $aAllMeta[$strSubscriberType];
+        break;
+      }
+      $aParticipants = $this->get_flashmob_participants( $iLeaderID, false, true );
+      $bHasParticipants = (count($aParticipants) > 0);
+
+      if (!$bHasParticipants) {
+        $aCancelFlashmobProperties['userDropdowns'][$iLeaderID] = "";
+        $aCancelFlashmobProperties['userDropdownNames'][$iLeaderID] = false;
+      }
+
+      if ($bIsOrganizer) {
+        $aCancelFlashmobProperties['actions'][$iLeaderID] = "cancel_flashmob";
+        if ($bHasParticipants) {
+          $aCancelFlashmobProperties['buttonLabels'][$iLeaderID] .= " a presunúť účastníkov na:";
+        }
+      } elseif ($bHasParticipants) {
+        $aCancelFlashmobProperties['actions'][$iLeaderID] = "move_flashmob_participants";
+        $aCancelFlashmobProperties['buttonLabels'][$iLeaderID] = "Presunúť účastníkov: ";
+      } else {
+        $aCancelFlashmobProperties['actions'][$iLeaderID] = false;
+        $aCancelFlashmobProperties['buttonLabels'][$iLeaderID] = false;
+      }
+    }
+    // echo "<pre>";var_dump($aCancelFlashmobProperties);echo "</pre>"; // NOTE DEVEL
+
+    $strEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Preferencie</th><th>Profil</th><th>Účastníci</th>';
+    foreach ($aUsers as $oUser) {
+      $iUserID = $oUser->ID;
+      $aAllMeta = array_map(
+        array($this, 'get_value_maybe_fix_unserialize_array'),
+        get_user_meta( $iUserID )
       );
       $strIsPending = "";
       if (in_array( $this->strUserRolePending, (array) $oUser->roles )) {
         $strIsPending = " ({$this->strUserRolePendingName})";
       }
       $strButtons = "";
-      $strEcho .= '<tr>';
-      $strEcho .=   '<td>'.$oUser->first_name.' '.$oUser->last_name.$strIsPending.$strButtons.'</td>';
-      $strEcho .=   '<td><a name="'.$oUser->ID.'">'.$oUser->user_email.'</a></td>';
+      $strRowID = "florpRow-".$iUserID;
+      if ($aCancelFlashmobProperties['buttonLabels'][$iUserID] && $aCancelFlashmobProperties['actions'][$iUserID]) {
+        $strDoubleCheckQuestion = "Ste si istý?";
+        $strButtonLabel = $aCancelFlashmobProperties['buttonLabels'][$iUserID];
+        $strButtonID = "florpButton-cancelFlashmob-".$iUserID;
+        $strDataUseInputNames = '';
+        if ($aCancelFlashmobProperties['userDropdownNames'][$iUserID]) {
+          $strDataUseInputNames = ' data-use-input-names="'.$aCancelFlashmobProperties['userDropdownNames'][$iUserID].'"';
+        }
+        $strButtons = '<br/><span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-user-id="'.$iUserID.'"'.$strDataUseInputNames.' data-sure="0" data-action="'.$aCancelFlashmobProperties['actions'][$iUserID].'" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabel.'</span>';
+        if ($aCancelFlashmobProperties['userDropdowns'][$iUserID]) {
+          $strButtons .= " ".$aCancelFlashmobProperties['userDropdowns'][$iUserID];
+        }
+      }
+      $strEcho .= '<tr class="row" data-row-id="'.$strRowID.'">';
+      $strEcho .=   '<td><span title="ID: '.$iUserID.'">'.$oUser->first_name.' '.$oUser->last_name.$strIsPending.'</span>'.$strButtons.'</td>';
+      $strEcho .=   '<td><a name="'.$iUserID.'">'.$oUser->user_email.'</a></td>';
       $strEcho .=   '<td>'.$aAllMeta['flashmob_city'].'</td>';
       $strEcho .=   '<td>';
       foreach( $this->aSubscriberTypes as $strSubscriberType) {
@@ -2873,17 +2979,17 @@ class FLORP{
           $strEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>';
         }
       }
-      $aParticipants = $this->get_flashmob_participants( $oUser->ID, false, true );
-      if (empty($aParticipants) || empty($aParticipants[$oUser->ID])) {
+      $aParticipants = $this->get_flashmob_participants( $iUserID, false, true );
+      if (empty($aParticipants) || empty($aParticipants[$iUserID])) {
         $iParticipantCount = 0;
       } else {
-        $iParticipantCount = count($aParticipants[$oUser->ID]);
+        $iParticipantCount = count($aParticipants[$iUserID]);
       }
       $strEcho .= '<strong>Participant count</strong>: ' . $iParticipantCount .'<br>';
       $strEcho .=   '</td>';
       $strEcho .=   '<td>';
       if (!empty($aParticipants)) {
-        $aParticipantsOfUser = $aParticipants[$oUser->ID];
+        $aParticipantsOfUser = $aParticipants[$iUserID];
         if (!empty($aParticipantsOfUser)) {
           foreach ($aParticipantsOfUser as $strEmail => $aParticipantData) {
             $strEcho .= "<a href=\"".admin_url('admin.php?page=florp-participants')."#{$aParticipantData['user_email']}\">{$aParticipantData['first_name']} {$aParticipantData['last_name']}</a><br>";
@@ -4421,6 +4527,107 @@ class FLORP{
 
     echo json_encode($aData);
     wp_die();
+  }
+
+  public function action__cancel_flashmob_callback($bCancelFlashmob = true) {
+    check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
+
+    $aData = $_POST;
+    $bCancelFlashmob = !($bCancelFlashmob === false);
+    if ($bCancelFlashmob) {
+      $strErrorMessage = "Could not cancel flashmob";
+      $strOkMessage = "Successfully cancelled flashmob";
+    } else {
+      $strErrorMessage = "Could not move participants";
+      $strOkMessage = "Successfully moved participants";
+    }
+
+    $iUserID = $aData['userId'];
+    if (isset($iUserID) && $iUserID !== "") {
+      $iUserID = intval($iUserID);
+      if ($iUserID > 0) {
+        $strErrorMessage .= " of user #{$iUserID}";
+        $strOkMessage .= " of user #{$iUserID}";
+        if (isset($aData['florp_cancel_flashmob_reassign_participants-'.$iUserID]) && $aData['florp_cancel_flashmob_reassign_participants-'.$iUserID] !== "") {
+          $iReassignTo = intval($aData['florp_cancel_flashmob_reassign_participants-'.$iUserID]);
+        } else {
+          $iReassignTo = 0;
+        }
+        $bHasParticipants = (isset($this->aOptions['aParticipants'][$iUserID]) && is_array($this->aOptions['aParticipants'][$iUserID]) && count($this->aOptions['aParticipants'][$iUserID]) > 0);
+        if ($bHasParticipants) {
+          if ($iReassignTo > 0) {
+            if ($iReassignTo === $iUserID) {
+              $aData['message'] = $strErrorMessage . ". You cannot reassign participants of a user to themselves!";
+            } else {
+              if ($bCancelFlashmob) {
+                $strOkMessage .= " and moved their participants to user #{$iReassignTo}";
+              } else {
+                $strOkMessage .= " to user #{$iReassignTo}";
+              }
+              if (!isset($this->aOptions['aParticipants'][$iReassignTo]) || !is_array($this->aOptions['aParticipants'][$iReassignTo])) {
+                $this->aOptions['aParticipants'][$iReassignTo] = array();
+              }
+              foreach ($this->aOptions['aParticipants'][$iUserID] as $strEmail => $aParticipantData) {
+                $this->aOptions['aParticipants'][$iUserID][$strEmail]['moved_from_user_id'] = $iReassignTo;
+              }
+              $this->aOptions['aParticipants'][$iReassignTo] = array_merge($this->aOptions['aParticipants'][$iReassignTo], $this->aOptions['aParticipants'][$iUserID]);
+              unset($this->aOptions['aParticipants'][$iUserID]);
+            }
+          } elseif ($iReassignTo === 0) {
+            // Send notification to participants and remove them //
+            if (strlen(trim($this->aOptions['strParticipantRemovedMessage'])) > 0 && $this->aOptions['strParticipantRemovedSubject']) {
+              if ($bCancelFlashmob) {
+                $strOkMessage .= ", removed their participants and notified them";
+              } else {
+                $strOkMessage = "Successfully removed participants of user #{$iUserID} and notified them";
+              }
+              foreach ($this->aOptions['aParticipants'][$iUserID] as $strEmail => $aParticipantData) {
+                $strMessageContent = $this->aOptions['strParticipantRemovedMessage'];
+                $strBlogname = trim(wp_specialchars_decode(get_option('blogname'), ENT_QUOTES));
+                $aHeaders = array('Content-Type: text/html; charset=UTF-8');
+                $this->new_user_notification( $strEmail, '', $strEmail, $strBlogname, $strMessageContent, $this->aOptions['strParticipantRemovedSubject'], $aHeaders );
+              }
+              unset($this->aOptions['aParticipants'][$iUserID]);
+            } else {
+              $aData['message'] = $strErrorMessage . ". No flashmob cancelling notification message is set";
+            }
+          } else {
+            $aData['message'] = $strErrorMessage . ". Invalid user to reassign to";
+          }
+        } elseif ($bCancelFlashmob) {
+          // No participants - OK, just cancel the flashmob //
+        } elseif ($iReassignTo > 0) {
+          // No participants and action was to move participants //
+          $aData['message'] = $strErrorMessage . ". No participants to reassign";
+        } else {
+          // No participants and action was to remove participants //
+          $aData['message'] = $strErrorMessage . ". No participants to remove";
+        }
+
+        if (!isset($aData['message'])) {
+          $this->save_options();
+          if ($bCancelFlashmob) {
+            update_user_meta($iUserID, 'flashmob_organizer', '0');
+          }
+          $aData['ok'] = true;
+          $strOkMessage .= ". <strong>Please wait for the page to reload</strong>";
+          $aData['message'] = $strOkMessage;
+          $aData['reload_page'] = true;
+          $this->add_option_change("ajax__cancel_flashmob", "", $aData['message']);
+        }
+      } else {
+        $aData['message'] = $strErrorMessage . ". Invalid user ID: {$_POST['userId']}";
+      }
+    } else {
+      $aData['message'] = $strErrorMessage . ". Invalid user ID: {$_POST['userId']}";
+    }
+
+    echo json_encode($aData);
+    wp_die();
+  }
+
+  public function action__move_flashmob_participants_callback() {
+    $this->action__cancel_flashmob_callback(false);
   }
 
   private function mucd_clone_site( $assoc_args ) {
@@ -6788,6 +6995,10 @@ class FLORP{
     return $this->isFlashmobBlog;
   }
 
+  public function is_tshirt_ordering_disabled() {
+    return $this->aOptions['bTshirtOrderingDisabled'];
+  }
+
   public function has_main_only_florp_profile_ninja_form() {
     return $this->aOptions['bOnlyFlorpProfileNinjaFormMain'];
   }
@@ -6901,6 +7112,10 @@ function florp_is_main_blog() {
 function florp_is_flashmob_blog() {
   global $FLORP;
   return $FLORP->is_flashmob_blog();
+}
+function florp_is_tshirt_ordering_disabled() {
+  global $FLORP;
+  return $FLORP->is_tshirt_ordering_disabled();
 }
 function florp_has_main_only_florp_profile_ninja_form() {
   global $FLORP;

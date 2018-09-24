@@ -124,7 +124,7 @@ function add_florp_action_controllers() {
                 if ($this.val() !== "flashmob_participant_tshirt") {
                   $this.prop("checked", false).trigger('change')
                 }
-              } else if ($this.val() === "flashmob_participant_tshirt") {
+              } else if ($this.val() === "flashmob_participant_tshirt" && florp.tshirt_ordering_disabled !== "1") {
                 $this.prop("checked", true).trigger('change')
               }
             } else if ($this.is("input") && $this.prop("type") !== "radio") {

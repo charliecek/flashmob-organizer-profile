@@ -235,24 +235,28 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
         }
 //         $data[ 'errors' ][ 'form' ][] = '<pre>'.var_export($aKeyToLabel, true).'</pre>';
         if (isset($aKeyToValue['preferences']) && is_array($aKeyToValue['preferences']) && in_array("flashmob_participant_tshirt", $aKeyToValue['preferences'])) {
-          $aRequiredFields = array(
-            "flashmob_participant_tshirt_gender" => "notEmpty",
-            "flashmob_participant_tshirt_size" => "notNull",
-            "flashmob_participant_tshirt_color" => "notEmpty",
-          );
-          foreach ($aRequiredFields as $strFieldKey => $strCheckType) {
-            $bError = false;
-            switch ($strCheckType) {
-              case "notNull":
-                $bError = (!isset($aKeyToValue[$strFieldKey]) || empty($aKeyToValue[$strFieldKey]) || $aKeyToValue[$strFieldKey] === 'null');
-                break;
-              case "notEmpty":
-                $bError = (!isset($aKeyToValue[$strFieldKey]) || empty($aKeyToValue[$strFieldKey]));
-                break;
-              default:
-            }
-            if ($bError) {
-              $data[ 'errors' ][ 'form' ][$strFieldKey] = '"'.$aKeyToLabel[$strFieldKey].'" je povinné pole!';
+          if (florp_is_tshirt_ordering_disabled()) {
+            $data[ 'errors' ][ 'form' ]['tshirt_ordering_disabled'] = 'Objednávanie tričiek je zastavené. Žiaľ, nejaká chyba Vám umožnila si vybrať tričko. Prosíme, zrušte si objednávku trička, aby ste mohli dokončiť prihlásenie. Ak sa objednávka trička nedá zrušiť, prosíme, obnovte si stránku.';
+          } else {
+            $aRequiredFields = array(
+              "flashmob_participant_tshirt_gender" => "notEmpty",
+              "flashmob_participant_tshirt_size" => "notNull",
+              "flashmob_participant_tshirt_color" => "notEmpty",
+            );
+            foreach ($aRequiredFields as $strFieldKey => $strCheckType) {
+              $bError = false;
+              switch ($strCheckType) {
+                case "notNull":
+                  $bError = (!isset($aKeyToValue[$strFieldKey]) || empty($aKeyToValue[$strFieldKey]) || $aKeyToValue[$strFieldKey] === 'null');
+                  break;
+                case "notEmpty":
+                  $bError = (!isset($aKeyToValue[$strFieldKey]) || empty($aKeyToValue[$strFieldKey]));
+                  break;
+                default:
+              }
+              if ($bError) {
+                $data[ 'errors' ][ 'form' ][$strFieldKey] = '"'.$aKeyToLabel[$strFieldKey].'" je povinné pole!';
+              }
             }
           }
         }
