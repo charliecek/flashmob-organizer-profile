@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.6.4
+ * Version: 4.6.5
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '4.6.4';
+  private $strVersion = '4.6.5';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -2016,13 +2016,7 @@ class FLORP{
       $iCnt = 0;
       foreach ($aUsers as $key => $oUser) {
         $aAllMeta = array_map(
-          function( $a ){
-            if (is_array($a) && count($a) === 1) {
-              return $a[0];
-            } else {
-              return $a;
-            }
-          },
+          array($this, 'get_value_maybe_fix_unserialize_array'),
           get_user_meta( $oUser->ID )
         );
         $strFlashmobCity = trim($aAllMeta['flashmob_city']);
@@ -2429,13 +2423,7 @@ class FLORP{
       }
     }
     $aAllMeta = array_map(
-      function( $a ){
-        if (is_array($a) && count($a) === 1) {
-          return $a[0];
-        } else {
-          return $a;
-        }
-      },
+      array($this, 'get_value_maybe_fix_unserialize_array'),
       get_user_meta( $oUser->ID )
     );
     foreach ($this->aMetaFields as $keyVal) {

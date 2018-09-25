@@ -11,6 +11,18 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 ## Version history
 
+### v4.6.4: individual flashmob hide/unhide, bugfixes
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.4)
+- added possibility to hide/unhide individual users' flashmob fields
+  - fix: do not show before-flashmob fields before flashmob if present
+- raised admin ajax timeout
+- fix: video link regex check
+- form fix: video_link usermeta default
+- form map js fixes:
+  - draggable callback wasn't assigned correctly
+  - lat, lng present caused address to be ignored
+  - preview map refresh on organizer checkbox change
+
 ### v4.6.3: flashmob cancel, tshirt_disabled check, fixes
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.3)
 - added submission check for tshirt_disabled option
@@ -198,98 +210,5 @@ New registration forms and related changes
 - Pending leaders shown in admin
 - Removed users' participants are deleted
 
-### v4.0.0: New profile
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.0.0)
-- separated options for main and flashmob site + related refactoring
-- improved deprecated keys removal
 
-- migrate subscribers to main blog
-
-- JS: use the right main/flashmob variables
-  - bReloadAfterSuccessfulSubmission
-  - iProfileFormPopupID
-  - iProfileFormNinjaFormIDMain
-
-- added lwa option to hide floating info box
-- added setting for profile page (both main and flashmob)
-- created stub for teachers map
-- created shortcode for profile (on main blog) with blog check
-- fixed loading of NF based on blog we're on
-
-
-- content filter for dedicated profile page
-  - only on the dedicated page(s)
-    - if user is not logged in, the [florp-profile] shortcode is used
-    - elseif there is no shortcode, the whole content is replaced
-    - else the original content is used
-- added PLL language to page dropdown (if available)
-
-- florp scroll ID added
-- marking popupLinks as deprecated
-- fixing bug with NF localize field filter
-- CSS changes to accomodate form without PUM Popup
-- duplicate lang ID fix in LWA
-
-- Pending user role and approval settings
-- LWA fixes, approval messages, HTML text before login form
-- Teacher map preview, JS refactoring, form changes
-
-- More profile form changes
-  - added placeholder to course info fields
-  - flashmob date/time replacement
-  - localize fields: show/hide, default values for new fields
-- Teacher map generation from shortcode
-- New settings: google maps key, fb app id, successful login msg
-- Added possibility to cleanup only specific values in list fields
-- Fixed showing/hiding of 'courses_city_2'
-
-- Preparing NF submit check for flashmob profile
-- Added header links for profile
-- Fixed login after successful registration
-
-- Login message fixes
-- Email notification fixes
-
-- Option to prevent direct media downloads via .htaccess
-- Admin notices - refactoring
-- Other small changes
-
-- API subscribing/unsubscribing newsletter subscribers
-
-- Flashmob form, validation, participant signup
-
-- Fixed map reloading on pum close for both main and flashmob
-- Started clearing of form on Flashmob blog
-
-- Marker reload on successful form submission
-- Clearing flashmob form on successful form submission
-- Fixed togglable events for flashmob form
-- attr() -> prop()
-- iHasParticipants florp js var
-- flashmob form changes
-
-- Improved flashmob map archivation
-  - only archiving flashmob related fields
-  - purging participants when archiving
-  - improved logic on when to archive
-
-- Fixed help NF jBox tooltips on popups
-- Messages to participants (registered, removed)
-- Added DB logging
-- Added new_user_notification fallback function
-- Change of new user admin emails in case approval is needed
-- Removed password and email change emails when updating via NF
-- Added placeholder info to setting screens
-- Fixed JS bug when getting tab divID
-- Disabled Flashmob Organizer checkbox if leader has participants
-- Reviewed and fixed logged_in logic in JS and PHP
-  - a user is shown as logged in even if they have no role on site
-- GDPR info tooltips in NF forms
-
-- Leader notification cron
-- Leader profile list of participants
-- Admin leader and participant list tables
-- Refactoring
-
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.0.0)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.0.1)
