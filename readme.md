@@ -11,6 +11,14 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 ## Version history
 
+### v4.6.3: flashmob cancel, tshirt_disabled check, fixes
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.3)
+- added submission check for tshirt_disabled option
+- added ajax call to cancel flashmob and/or move or delete participants
+- added admin js to florp-option-changes screen
+- added admin ajax button option to reload page
+- fixed default field value setting on successful submission
+
 ### v4.6.2: option refactoring, logging
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.2)
 - done some option refactoring
@@ -283,57 +291,5 @@ New registration forms and related changes
 - Admin leader and participant list tables
 - Refactoring
 
-### v3.0.0: Registration form (shorter than profile form) for non-organizers, NF import, own Recaptcha, other improvements and fixes
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v3.0.0)
-Registration form not only for organizers
-- Automatic generation of user name
-- Login via email after registration
-- introducing subscriber types
-- fix: only flashmob organizers' city should be checked
 
-Registering custom recaptcha field (only for logged out users)
-- enqueuing JS for Recaptcha_logged-out-only
-- hiding Recaptcha_logged-out-only field if logged in
-- cleaning up: class.florp.actions and Recaptcha_logged-out-only
-- recaptcha JS callback - without this the form couldn't be sent
-
-Ninja Forms
-- unifying NF form field manipupation (preview, real)
-- import/export functionality (for easy upgrades)
-- NF form:
-  - empty calc values on list checkboxes caused warnings
-  - Organizator -> Instruktor
-  - adding warning about checking flashmob_organizer
-  - adding class to distinguish the map preview wrapper div
-
-Maps
-- show map preview:
-  - on form load based on location if location is present
-  - on form load based on city if location is not present
-  - on city change based on city if location is not present
-  - based on city if location is removed
-  - when location is not present, coordinates are not updated
-  - when location is not present, marker is not draggable
-- version bump to 3.0.0
-- for logged in users, always showing their own marker(s) on load
-- fixing marker positioning bug (when updating with no coordinates)
-- fixing bug: mapInfo call returned non-organizer info with city
-  - this caused their info to show up on the map without a marker
-
-Imported LWA into plugin, added hook to disable original LWA
-
-Devel exceptions
-- FLORP_DEVEL: exception on mail sending, admin notice when on
-- FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION constant
-
-Other
-- adding plugin uri
-- introducing upgrade method
-  - upgrade routine for subscribers->organizers prior to v3.0.0
-- hiding/unhiding fields based on subscriber type (PHP and JS)
-- hide/unhide JS animation
-- settings page fix: added wrapper div
-- fixing/improving toggling logic for warnings
-
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v3.0.0)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.0.0)

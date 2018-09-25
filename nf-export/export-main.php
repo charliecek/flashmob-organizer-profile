@@ -51708,7 +51708,7 @@ $aFlorpNinjaFormExportData = array (
       'order' => 36,
       'label_pos' => 'above',
       'required' => '',
-      'default' => '{usermeta:youtube_link}',
+      'default' => '{usermeta:video_link}',
       'placeholder' => 'https://www.youtube.com/watch?v=',
       'container_class' => 'florp-class florp-profile-field florp-left florp-no-clear florp-3-col-1 florp-flashmob florp-video florp-section-flashmob',
       'element_class' => 'florp_video_link',
@@ -52000,4 +52000,6 @@ $aFlorpNinjaFormExportData = array (
       'payment_total_type' => '',
     ),
   ),
+  'version' => 4006003,
+  'timestamp' => 1537833918,
 ); ?>

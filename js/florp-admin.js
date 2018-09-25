@@ -213,7 +213,7 @@ jQuery( document ).ready(function() {
         })
       }
     } else {
-      window[strButtonId]["timeLeft"] = 5, window[strButtonId]["wait"] = 0, window[strButtonId]["timeout"] = 10
+      window[strButtonId]["timeLeft"] = 5, window[strButtonId]["wait"] = 0, window[strButtonId]["timeout"] = 30
       $this.text(fnFlorpButtonLabel(textDoubleCheck, window[strButtonId]["timeLeft"])).addClass("button-primary").data("sure", 1).data("wait", 0)
       if ($this.hasClass("button-warning")) {
         $this.removeClass("button-warning").addClass("button-warning-removed")

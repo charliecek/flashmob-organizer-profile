@@ -121,8 +121,8 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
                   $data[ 'errors' ][ 'form' ][$strKey] = $strLabel.'Zadaná hodnota "'.$strValue.'" nie je validným linkom webovej stránky!';
                 } elseif ($strKey === "video_link") {
                   $strVideoLinkType = false;
-                  foreach($aVideoTypes as $strType => $strRegex) {
-                    if (preg_match( $strRegex, $strValue )) {
+                  foreach($aVideoTypes as $strType => $aRegex) {
+                    if (preg_match( $aRegex['regex'], $strValue )) {
                       $strVideoLinkType = $strType;
                       break;
                     }

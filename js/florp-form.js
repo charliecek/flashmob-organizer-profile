@@ -494,6 +494,7 @@
       florpRemoveUserMarker(iUserID, map, divID, mixMarkerKey)
     } else {
       // Get the marker HTML //
+      var bBeforeFlashmob = ("undefined" === typeof florp.hide_flashmob_fields[iUserID]) ? florp.hide_flashmob_fields : florp.hide_flashmob_fields[iUserID]
       var data = {
         action: florp.get_markerInfoHTML_action,
         security : florp.security,
@@ -506,9 +507,10 @@
         strMapType: strMapType,
         iCurrentYear: jQuery("#"+divID).data('isCurrentYear'),
         iYear: jQuery("#"+divID).data('year'),
-        iBeforeFlashmob: florp.hide_flashmob_fields,
+        iBeforeFlashmob: bBeforeFlashmob ? 1 : 0,
         iIsPreview: bIsPreview ? 1 : 0,
       };
+      // console.log(data)
       window["florpSetUserMarkerAjaxRunning"] = true
       jQuery.ajax({
         type: "POST",
@@ -605,9 +607,11 @@
                   'address': location
                 }, function(results, status) {
                   if (status == google.maps.GeocoderStatus.OK) {
-    //                     console.log(results);
-    //                     console.log(status);
+                    // console.log(results);
+                    // console.log(status);
                     var addressLocation = results[0].geometry.location;
+                    jQuery(".florp_longitude").first().val(addressLocation.lng());
+                    jQuery(".florp_latitude").first().val(addressLocation.lat());
 
                     if ("undefined" === typeof florp.maps.markers[divID][iUserID] || "undefined" === typeof florp.maps.markers[divID][iUserID][mixMarkerKey]) {
                       // Creating new marker - no coordinates //
@@ -1022,7 +1026,8 @@
         $flashmobOrganizerWarningsAlways.each(function() {
           fnToggle(this, bChecked, animate)
         })
-        if (florp.hide_flashmob_fields == 1) {
+        var hideFlashmobFields = ("undefined" === typeof florp.hide_flashmob_fields[florp.user_id]) ? florp.hide_flashmob_fields : florp.hide_flashmob_fields[florp.user_id]
+        if (hideFlashmobFields == 1 || hideFlashmobFields == true) {
           // Toggling warnings before flashmob //
           var $flashmobOrganizerWarningsBeforeFlashmob = jQuery('.school_city_warning')
           $flashmobOrganizerWarningsBeforeFlashmob.each(function() {
@@ -1412,11 +1417,11 @@
                     // console.log(results);
                     if (results[1]) { // city
                       // florp.markerLocation = newLocation;
-                      jQuery(".florp_longitude").first().val(newLocation.lng);
-                      jQuery(".florp_latitude").first().val(newLocation.lat);
                       var newAddress = results[1].formatted_address;
                       marker.setTitle(newAddress);
                       jQuery(".florp-flashmob-address").first().val(newAddress);
+                      jQuery(".florp_longitude").first().val(newLocation.lng);
+                      jQuery(".florp_latitude").first().val(newLocation.lat);
                       var infoWindow = florp.maps.markers[divID][iUserID][0].info_window_object
                       if (typeof infoWindow === "object" && florp.info_window !== null) {
                         var content = jQuery(infoWindow.getContent());
@@ -1435,7 +1440,8 @@
                 });
               });
             }
-            oAdditionalMarkerOptions["draggableCallback"] = fnDraggableCallback
+            oAdditionalMarkerOptions[florp.user_id]["draggableCallback"] = fnDraggableCallback
+            // console.log(oAdditionalMarkerOptions)
 
             florpGenerateMap( $previewContainer, divID, oMapOptions, oAdditionalMarkerOptions, 'flashmob_organizer', true )
           }
@@ -1481,7 +1487,8 @@
         }
       })
 
-      if (florp.hide_flashmob_fields == 1) {
+      var hideFlashmobFields = ("undefined" === typeof florp.hide_flashmob_fields[florp.user_id]) ? florp.hide_flashmob_fields : florp.hide_flashmob_fields[florp.user_id]
+      if (hideFlashmobFields == 1 || hideFlashmobFields == true) {
         // Disable after-flashmob fields //
         jQuery(".florp-flashmob input, .florp-flashmob select, .florp-flashmob text").attr("disabled", "disabled");
       } else {
@@ -1491,8 +1498,25 @@
 
         // Onclick event when location finder button is clicked //
       }
+
+      var fnClearLatLngFields = function() {
+        jQuery(".florp_longitude").first().val("");
+        jQuery(".florp_latitude").first().val("");
+      }
+
+      jQuery("input.florp-flashmob-address").on("change keyup paste input textInput", function() {
+        var $this = jQuery( this ), val = $this.val().trim()
+        if (window["florpFlashmobAddressValue"] === val) {
+          // Don't reevaluate on the same value - mainly the case of multiple events firing for the same field //
+          return
+        }
+        window["florpFlashmobAddressValue"] = val
+        fnClearLatLngFields()
+      })
+
       $findLocationButton.on('click', function() {
         if (typeof $findLocationButton.attr("disabled") === "undefined") {
+          fnClearLatLngFields()
           fnFindLocation()
         }
       });

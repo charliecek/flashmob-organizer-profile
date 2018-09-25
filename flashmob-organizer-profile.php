@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.6.3
+ * Version: 4.6.4
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '4.6.3';
+  private $strVersion = '4.6.4';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -28,6 +28,7 @@ class FLORP{
   private $aOptionDefaults = array();
   private $aOptionFormKeys = array();
   private $aBooleanOptions = array();
+  private $aArrayOptions = array();
   private $aUserFields;
   private $aUserFieldsMap;
   private $aMetaFields;
@@ -63,6 +64,7 @@ class FLORP{
 
   public function __construct() {
     $this->load_options();
+    // $this->aOptions['aUnhideFlashmobFieldsForUsers'][] = 56; // NOTE DEVEL
 
     $this->set_variables();
 
@@ -592,6 +594,8 @@ class FLORP{
       'iTshirtPaymentWarningDeadline'             => 14,
       'iTshirtPaymentWarningButtonDeadline'       => -1,
       'iTshirtOrderDeliveredBeforeFlashmobDdl'    => 9,
+      'aUnhideFlashmobFieldsForUsers'             => array(),
+      'aHideFlashmobFieldsForUsers'               => array(),
     );
   }
 
@@ -669,6 +673,8 @@ class FLORP{
       'florp_tshirt_payment_warning_deadline'     => 'iTshirtPaymentWarningDeadline',
       'florp_tshirt_payment_warning_btn_deadline' => 'iTshirtPaymentWarningButtonDeadline',
       'florp_tshirt_order_delivered_b4_flash_ddl' => 'iTshirtOrderDeliveredBeforeFlashmobDdl',
+      'florp_hide_flashmob_fields_individual'     => 'aHideFlashmobFieldsForUsers',
+      'florp_unhide_flashmob_fields_individual'   => 'aUnhideFlashmobFieldsForUsers',
     );
     $aDeprecatedKeys = array(
       // new => old //
@@ -690,6 +696,10 @@ class FLORP{
       'bTshirtOrderingDisabledOnlyDisable',
       'bOnlyFlorpProfileNinjaFormMain',
       'bOnlyFlorpProfileNinjaFormFlashmob',
+    );
+    $this->aArrayOptions = array(
+      'aHideFlashmobFieldsForUsers',
+      'aUnhideFlashmobFieldsForUsers',
     );
     $this->aOptionKeysByBlog = array(
       'main'      => array(
@@ -746,6 +756,8 @@ class FLORP{
         'strInfoWindowLabel_courses_info',
         'bCoursesInfoDisabled',
         'bOnlyFlorpProfileNinjaFormMain',
+        'aHideFlashmobFieldsForUsers',
+        'aUnhideFlashmobFieldsForUsers',
       ),
       'flashmob'  => array(
         'iFlashmobBlogID',
@@ -2626,8 +2638,32 @@ class FLORP{
       }
     }
 
+    $aHideFlashmobFields = array();
+    $aLeaders = $this->getFlashmobSubscribers( 'all', true );
+    foreach ($aLeaders as $oLeader) {
+      $iLeaderID = $oLeader->ID;
+      $aHideFlashmobFields[$iLeaderID] = $this->bHideFlashmobFields;
+      if (in_array($iLeaderID, $this->aOptions['aHideFlashmobFieldsForUsers'])) {
+        $aHideFlashmobFields[$iLeaderID] = true;
+      } elseif (in_array($iLeaderID, $this->aOptions['aUnhideFlashmobFieldsForUsers'])) {
+        $aHideFlashmobFields[$iLeaderID] = false;
+      }
+    }
+    $mixHideFlashmobFields = $this->bHideFlashmobFields ? 1 : 0;
+    if ($this->isMainBlog) {
+      if (is_user_logged_in() && isset($aHideFlashmobFields[$iUserID])) {
+        // Use the user's option //
+        $mixHideFlashmobFields = $aHideFlashmobFields[$iUserID];
+      } else {
+        // Nothing //
+      }
+    } elseif ($this->isFlashmobBlog) {
+      // Use the whole array of who should have flashmob fields disabled and who shouldn't //
+      $mixHideFlashmobFields = $aHideFlashmobFields;
+    }
+
     $aJS = array(
-      'hide_flashmob_fields'          => $this->bHideFlashmobFields ? 1 : 0,
+      'hide_flashmob_fields'          => $mixHideFlashmobFields,
       'reload_ok_submission'          => $bReloadAfterSuccessfulSubmission ? 1 : 0,
       'using_og_map_image'            => $this->aOptions['bUseMapImage'] ? 1 : 0,
       'blog_type'                     => $strBlogType,
@@ -2829,6 +2865,8 @@ class FLORP{
 //       update_user_meta(54, 'flashmob_organizer', '0');
 //       update_user_meta(55, 'flashmob_organizer', '1');
 //       update_user_meta(56, 'flashmob_organizer', '1');
+//       update_user_meta(29, 'flashmob_organizer', '0');
+//       update_user_meta(32, 'flashmob_organizer', '0');
     }
 
     $aUsers = $this->getFlashmobSubscribers( 'all', true );
@@ -2896,7 +2934,7 @@ class FLORP{
         }
       } elseif ($bHasParticipants) {
         $aCancelFlashmobProperties['actions'][$iLeaderID] = "move_flashmob_participants";
-        $aCancelFlashmobProperties['buttonLabels'][$iLeaderID] = "Presunúť účastníkov: ";
+        $aCancelFlashmobProperties['buttonLabels'][$iLeaderID] = "Presunúť účastníkov na:";
       } else {
         $aCancelFlashmobProperties['actions'][$iLeaderID] = false;
         $aCancelFlashmobProperties['buttonLabels'][$iLeaderID] = false;
@@ -3394,8 +3432,16 @@ class FLORP{
           $from = $aChange['from'] ? "True" : "False";
           $to = $aChange['to'] ? "True" : "False";
         } else {
-          $from = $aChange['from'];
-          $to = $aChange['to'];
+          if (is_array($aChange['from'])) {
+            $from = implode(', ', $aChange['from']);
+          } else {
+            $from = $aChange['from'];
+          }
+          if (is_array($aChange['to'])) {
+            $to = implode(', ', $aChange['to']);
+          } else {
+            $to = $aChange['to'];
+          }
         }
         if (strpos($strKey, "ajax__") === 0) {
           $from_type = "";
@@ -5617,6 +5663,23 @@ class FLORP{
             </tr>';
     }
 
+    $strHideFlashmobFieldsForUsers = "";
+    $strUnhideFlashmobFieldsForUsers = "";
+    $aLeaders = $this->getFlashmobSubscribers( 'all', true );
+    foreach ($aLeaders as $oLeader) {
+      $iLeaderID = $oLeader->ID;
+      $strCheckedHide = "";
+      $strCheckedUnhide = "";
+      if (in_array($iLeaderID, $this->aOptions['aHideFlashmobFieldsForUsers'])) {
+        $strCheckedHide = ' checked="checked"';
+      }
+      if (in_array($iLeaderID, $this->aOptions['aUnhideFlashmobFieldsForUsers'])) {
+        $strCheckedUnhide = ' checked="checked"';
+      }
+      $strHideFlashmobFieldsForUsers .= '<input id="florp_hide_flashmob_fields_individual-'.$iLeaderID.'" name="florp_hide_flashmob_fields_individual[]" type="checkbox" value="'.$iLeaderID.'"'.$strCheckedHide.'/> <label for="florp_hide_flashmob_fields_individual-'.$iLeaderID.'">'.$iLeaderID.': '.$oLeader->first_name.' '.$oLeader->last_name.'</label> ';
+      $strUnhideFlashmobFieldsForUsers .= '<input id="florp_unhide_flashmob_fields_individual-'.$iLeaderID.'" name="florp_unhide_flashmob_fields_individual[]" type="checkbox" value="'.$iLeaderID.'"'.$strCheckedUnhide.'/> <label for="florp_unhide_flashmob_fields_individual-'.$iLeaderID.'">'.$iLeaderID.': '.$oLeader->first_name.' '.$oLeader->last_name.'</label> ';
+    }
+
     return str_replace(
       array( '%%optionsNewsletterSite%%',
         '%%loadMapsAsyncChecked%%',
@@ -5626,7 +5689,8 @@ class FLORP{
         '%%optionsYears%%', '%%optionsMonths%%', '%%optionsDays%%', '%%optionsHours%%', '%%optionsMinutes%%',
         '%%strGoogleMapsKey%%', '%%strGoogleMapsKeyStatic%%', '%%strFbAppID%%', '%%preventDirectMediaDownloadsChecked%%', '%%strNewsletterAPIKey%%',
         '%%strSignupLinkLabel%%', '%%strInfoWindowLabels%%',
-        '%%wpEditorMarkerInfoWindowTemplateOrganizer%%', '%%wpEditorMarkerInfoWindowTemplateTeacher%%' ),
+        '%%wpEditorMarkerInfoWindowTemplateOrganizer%%', '%%wpEditorMarkerInfoWindowTemplateTeacher%%',
+        '%%aHideFlashmobFieldsForUsers%%', '%%aUnhideFlashmobFieldsForUsers%%' ),
       array( $optionsNewsletterSite,
         $aBooleanOptionsChecked['bLoadMapsAsync'],
         $aBooleanOptionsChecked['bLoadMapsLazy'],
@@ -5635,7 +5699,8 @@ class FLORP{
         $aNumOptions['optionsYears'], $optionsMonths, $aNumOptions['optionsDays'], $aNumOptions['optionsHours'], $aNumOptions['optionsMinutes'],
         $this->aOptions['strGoogleMapsKey'], $this->aOptions['strGoogleMapsKeyStatic'], $this->aOptions['strFbAppID'], $aBooleanOptionsChecked['bPreventDirectMediaDownloads'], $this->aOptions['strNewsletterAPIKey'],
         $this->aOptions['strSignupLinkLabel'], $strInfoWindowLabels,
-        $strMarkerInfoWindowTemplateOrganizer, $strMarkerInfoWindowTemplateTeacher ),
+        $strMarkerInfoWindowTemplateOrganizer, $strMarkerInfoWindowTemplateTeacher,
+        $strHideFlashmobFieldsForUsers, $strUnhideFlashmobFieldsForUsers ),
         // BEGIN replace template //
       '
             <tr style="width: 98%; padding:  5px 1%;">
@@ -5669,6 +5734,22 @@ class FLORP{
               <th colspan="2">
                 <span style="font-size: smaller;">Pozor: Ak zmeníte rok flashmobu, aktuálny rok sa archivuje a položky týkajúce sa presného miesta a videa sa u každého registrovaného účastníka vymažú.</span>
               </th>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                Flashmob sa ešte neodohral pre užívateľov:
+              </th>
+              <td>
+                %%aHideFlashmobFieldsForUsers%%
+              </td>
+            </tr>
+            <tr style="width: 98%; padding:  5px 1%;">
+              <th style="width: 47%; padding: 0 1%; text-align: right;">
+                Flashmob sa už odohral pre užívateľov:
+              </th>
+              <td>
+                %%aUnhideFlashmobFieldsForUsers%%
+              </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;">
@@ -5827,6 +5908,20 @@ class FLORP{
         }
       }
     }
+    foreach ($this->aArrayOptions as $strOptionKey) {
+      if (in_array( $strOptionKey, $aKeysToSave )) {
+        $strPostKey = array_search($strOptionKey, $this->aOptionFormKeys);
+        if ($strPostKey !== false && !isset($aPostedOptions[$strPostKey])) {
+          $this->aOptions[$strOptionKey] = array();
+          if ($aOptionsOld[$strOptionKey] !== $this->aOptions[$strOptionKey]) {
+            $aChangedOptions[$strOptionKey] = array(
+              'from'  => $aOptionsOld[$strOptionKey],
+              'to'    => $this->aOptions[$strOptionKey]
+            );
+          }
+        }
+      }
+    }
     foreach ($aPostedOptions as $key => $val) {
       if (isset($this->aOptionFormKeys[$key])) {
         $strOptionKey = $this->aOptionFormKeys[$key];
@@ -5836,6 +5931,8 @@ class FLORP{
       if (in_array( $strOptionKey, $this->aBooleanOptions )) {
         // Boolean //
         $this->aOptions[$strOptionKey] = ($val == '1');
+      } elseif (in_array( $strOptionKey, $this->aArrayOptions )) {
+        $this->aOptions[$strOptionKey] = $val;
       } elseif (strpos($strOptionKey, 'i') === 0) {
         $this->aOptions[$strOptionKey] = intval($val);
       } else {
@@ -5846,6 +5943,12 @@ class FLORP{
           'from'  => $aOptionsOld[$strOptionKey],
           'to'    => $this->aOptions[$strOptionKey]
         );
+      }
+    }
+    foreach ($this->aOptions['aUnhideFlashmobFieldsForUsers'] as $iKey => $iUserID) {
+      $iFoundKey = array_search($iUserID, $this->aOptions['aHideFlashmobFieldsForUsers']);
+      if (false !== $iFoundKey) {
+        unset($this->aOptions['aHideFlashmobFieldsForUsers'][$iFoundKey]);
       }
     }
 
@@ -5861,6 +5964,7 @@ class FLORP{
     if (defined('FLORP_DEVEL_PURGE_TSHIRTS_ON_SAVE') && FLORP_DEVEL_PURGE_TSHIRTS_ON_SAVE === true ) {
       $this->aOptions['aTshirts'] = $this->aOptionDefaults["aTshirts"];
     }
+
     $this->save_options();
 
     $this->set_variables();
@@ -6329,6 +6433,7 @@ class FLORP{
 
   private function getMarkerInfoWindowContent( $aInfoWindowData ) {
     $bHideLeaderInfo = isset($aInfoWindowData['hide_leader_info']) && isset($aInfoWindowData['hide_leader_info']['value']) && $aInfoWindowData['hide_leader_info']['value'] == '1';
+    $bIsBeforeFlashmob = ($aInfoWindowData['strMapType'] === 'flashmob_organizer' && ($aInfoWindowData['iCurrentYear'] == '1' || (isset($aInfoWindowData['iIsPreview']) && $aInfoWindowData['iIsPreview'] == '1')) && $aInfoWindowData['iBeforeFlashmob'] == '1');
     if (empty($aInfoWindowData['user_webpage']['value'])) {
       $strOrganizer = $this->getInfoWindowLabel('organizer').$aInfoWindowData['first_name']['value'] . " " . $aInfoWindowData['last_name']['value'];
     } else {
@@ -6467,7 +6572,12 @@ class FLORP{
       $strDancers = $this->getInfoWindowLabel('dancers').$aInfoWindowData['flashmob_number_of_dancers']['value'];
     }
     $mixMarkerKey = $aInfoWindowData['mixMarkerKey'];
-    if (isset($mixMarkerKey) && !is_numeric($mixMarkerKey)) {
+    if ($bIsBeforeFlashmob) {
+      $strLocation = trim($aInfoWindowData['flashmob_city']['value']);
+      if ($strLocation === "null") {
+        $strLocation = "";
+      }
+    } elseif (isset($mixMarkerKey) && !is_numeric($mixMarkerKey)) {
       $strLocation = trim($aInfoWindowData[$mixMarkerKey]['value']);
       if ($strLocation === "null") {
         $strLocation = "";
@@ -6492,10 +6602,15 @@ class FLORP{
       $strNote = "";
     }
 
-    if ($aInfoWindowData['strMapType'] === 'flashmob_organizer' && ($aInfoWindowData['iCurrentYear'] == '1' || (isset($aInfoWindowData['iIsPreview']) && $aInfoWindowData['iIsPreview'] == '1')) && $aInfoWindowData['iBeforeFlashmob'] == '1') {
+    if ($bIsBeforeFlashmob) {
+      // Before Flashmob //
       $strSignupLink = $this->getInfoWindowLabel('signup').'<span class="florp-click-trigger florp-click-participant-trigger pum-trigger" data-user-id="'.$aInfoWindowData['iUserID'].'" data-flashmob-city="'.$aInfoWindowData['flashmob_city']['value'].'" data-marker-key="'.$aInfoWindowData['mixMarkerKey'].'" data-div-id="'.$aInfoWindowData['strDivID'].'" style="cursor: pointer;">'.$this->aOptions['strSignupLinkLabel'].'</span>';
       $strParticipantCount = $this->getInfoWindowLabel('participant_count').$aInfoWindowData['iParticipantCount'];
+
+      $strDancers = "";
+      $strEmbedCode = "";
     } else {
+      // After Flashmob //
       $strSignupLink = "";
       $strParticipantCount = "";
     }
