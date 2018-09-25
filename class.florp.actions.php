@@ -170,6 +170,11 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
                 $data[ 'errors' ][ 'form' ][$strKey] = $strLabel."V databáze už existuje líder, ktorý organizuje flashmob v meste '$strValue'!";
               }
               break;
+            case "flashmob_number_of_dancers":
+              if (!preg_match( '~^\d*$~', $strValue )) {
+                $data[ 'errors' ][ 'form' ][$strKey] = $strLabel."Zadaná hodnota '{$strValue}' nie je validným číslom!";
+              }
+              break;
             default:
           }
         }

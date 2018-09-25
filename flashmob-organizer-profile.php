@@ -2180,8 +2180,8 @@ class FLORP{
         'to'    => array( 'muž', 'žena', 'pár' )
       ),
       'dance_level' => array(
-        'from'  => array( 'zaciatocnik', 'pokrocily', 'ucitel' ),
-        'to'    => array( 'začiatočník', 'pokročilý', 'učiteľ' )
+        'from'  => array( '_', 'zaciatocnik', 'pokrocily', 'ucitel' ),
+        'to'    => array( ' ', 'začiatočník', 'pokročilý', 'učiteľ' )
       )
     );
     $strTable = "<table{$sTblAtt}><tr><th{$sThAtt}>Meno</th><th{$sThAtt}>Priezvisko</th><th{$sThAtt}>Pohlavie</th><th{$sThAtt}>Tanečná úroveň</th></tr>";
@@ -2655,7 +2655,7 @@ class FLORP{
     if ($this->isMainBlog) {
       if (is_user_logged_in() && isset($aHideFlashmobFields[$iUserID])) {
         // Use the user's option //
-        $mixHideFlashmobFields = $aHideFlashmobFields[$iUserID];
+        $mixHideFlashmobFields = $aHideFlashmobFields[$iUserID] ? 1 : 0;
       } else {
         // Nothing //
       }
@@ -3059,8 +3059,8 @@ class FLORP{
         'to'    => array( 'muž', 'žena', 'pár' )
       ),
       'dance_level' => array(
-        'from'  => array( 'zaciatocnik', 'pokrocily', 'ucitel' ),
-        'to'    => array( 'začiatočník', 'pokročilý', 'učiteľ' )
+        'from'  => array( '_', 'zaciatocnik', 'pokrocily', 'ucitel' ),
+        'to'    => array( ' ', 'začiatočník', 'pokročilý', 'učiteľ' )
       ),
       'preferences' => array(
         'from'  => array( 'flashmob_participant_tshirt', 'newsletter_subscribe' ),
@@ -3777,8 +3777,8 @@ class FLORP{
         'to'    => array( 'muž', 'žena', 'pár' )
       ),
       'dance_level' => array(
-        'from'  => array( 'zaciatocnik', 'pokrocily', 'ucitel' ),
-        'to'    => array( 'začiatočník', 'pokročilý', 'učiteľ' )
+        'from'  => array( '_', 'zaciatocnik', 'pokrocily', 'ucitel' ),
+        'to'    => array( ' ', 'začiatočník', 'pokročilý', 'učiteľ' )
       ),
       'preferences' => array(
         'from'  => array( 'flashmob_participant_tshirt', 'newsletter_subscribe' ),
@@ -6569,7 +6569,7 @@ class FLORP{
       // Should not happen //
       $strEmbedCode = "";
     }
-    if (empty($aInfoWindowData['flashmob_number_of_dancers']['value'])) {
+    if (empty($aInfoWindowData['flashmob_number_of_dancers']['value']) || !preg_match( '~^\d+$~', $aInfoWindowData['flashmob_number_of_dancers']['value'])) {
       $strDancers = "";
     } else {
       $strDancers = $this->getInfoWindowLabel('dancers').$aInfoWindowData['flashmob_number_of_dancers']['value'];

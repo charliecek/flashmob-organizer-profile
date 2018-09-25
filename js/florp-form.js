@@ -494,7 +494,7 @@
       florpRemoveUserMarker(iUserID, map, divID, mixMarkerKey)
     } else {
       // Get the marker HTML //
-      var bBeforeFlashmob = ("undefined" === typeof florp.hide_flashmob_fields[iUserID]) ? florp.hide_flashmob_fields : florp.hide_flashmob_fields[iUserID]
+      var bBeforeFlashmob = ("object" !== typeof florp.hide_flashmob_fields || "undefined" === typeof florp.hide_flashmob_fields[iUserID]) ? florp.hide_flashmob_fields : florp.hide_flashmob_fields[iUserID]
       var data = {
         action: florp.get_markerInfoHTML_action,
         security : florp.security,
@@ -507,7 +507,7 @@
         strMapType: strMapType,
         iCurrentYear: jQuery("#"+divID).data('isCurrentYear'),
         iYear: jQuery("#"+divID).data('year'),
-        iBeforeFlashmob: bBeforeFlashmob ? 1 : 0,
+        iBeforeFlashmob: bBeforeFlashmob == 1 ? 1 : 0,
         iIsPreview: bIsPreview ? 1 : 0,
       };
       // console.log(data)
@@ -604,10 +604,21 @@
                 }
                 window["florpSetUserMarkerGeocoderRunning"] = true
                 florp.geocoder.geocode({
-                  'address': location
+                  'address': location,
+                  'region': 'sk'
                 }, function(results, status) {
                   if (status == google.maps.GeocoderStatus.OK) {
                     // console.log(results);
+                    var bInSlovakia = false
+                    jQuery.each(results[0].address_components, function(index, item) {
+                      if (item.long_name.indexOf("Slovakia") > -1) {
+                        bInSlovakia = true
+                      }
+                    })
+                    if (!bInSlovakia) {
+                      console.warn("Found address is not in Slovakia!")
+                      console.log(results[0])
+                    }
                     // console.log(status);
                     var addressLocation = results[0].geometry.location;
                     jQuery(".florp_longitude").first().val(addressLocation.lng());
@@ -1026,7 +1037,7 @@
         $flashmobOrganizerWarningsAlways.each(function() {
           fnToggle(this, bChecked, animate)
         })
-        var hideFlashmobFields = ("undefined" === typeof florp.hide_flashmob_fields[florp.user_id]) ? florp.hide_flashmob_fields : florp.hide_flashmob_fields[florp.user_id]
+        var hideFlashmobFields = ("object" !== typeof florp.hide_flashmob_fields || "undefined" === typeof florp.hide_flashmob_fields[florp.user_id]) ? florp.hide_flashmob_fields : florp.hide_flashmob_fields[florp.user_id]
         if (hideFlashmobFields == 1 || hideFlashmobFields == true) {
           // Toggling warnings before flashmob //
           var $flashmobOrganizerWarningsBeforeFlashmob = jQuery('.school_city_warning')
@@ -1483,16 +1494,14 @@
         fnFindLocation()
       })
 
-      var hideFlashmobFields = ("undefined" === typeof florp.hide_flashmob_fields[florp.user_id]) ? florp.hide_flashmob_fields : florp.hide_flashmob_fields[florp.user_id]
+      var hideFlashmobFields = ("object" !== typeof florp.hide_flashmob_fields || "undefined" === typeof florp.hide_flashmob_fields[florp.user_id]) ? florp.hide_flashmob_fields : florp.hide_flashmob_fields[florp.user_id]
       if (hideFlashmobFields == 1 || hideFlashmobFields == true) {
         // Disable after-flashmob fields //
         jQuery(".florp-flashmob input, .florp-flashmob select, .florp-flashmob text").attr("disabled", "disabled");
       } else {
         // Hide before-flashmob fields //
-        jQuery(".florp-before-flashmob").hide();
+        jQuery(".florp-before-flashmob .nf-field-container").hide();
         jQuery(".school_city_warning").hide();
-
-        // Onclick event when location finder button is clicked //
       }
 
       var fnClearLatLngFields = function() {
