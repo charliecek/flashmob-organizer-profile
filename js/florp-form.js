@@ -1476,15 +1476,11 @@
         }
       })
       $flashmobOrganizerCheckbox.change(function() {
-        if (jQuery.trim(jQuery(".florp-flashmob-address").first().val()) === "") {
-          fnFindLocation()
-        }
+        fnFindLocation()
         fnToggleFlashmobFieldsIfOrganizer()
       })
       jQuery("input.florp_hide_leader_info").change(function() {
-        if (jQuery.trim(jQuery(".florp-flashmob-address").first().val()) === "") {
-          fnFindLocation()
-        }
+        fnFindLocation()
       })
 
       var hideFlashmobFields = ("undefined" === typeof florp.hide_flashmob_fields[florp.user_id]) ? florp.hide_flashmob_fields : florp.hide_flashmob_fields[florp.user_id]
