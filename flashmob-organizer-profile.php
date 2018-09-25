@@ -565,15 +565,17 @@ class FLORP{
       'strLoginBarLabelProfile'                   => 'Môj profil',
       'strMarkerInfoWindowTemplateOrganizer'      => '<div class="florp-marker-infowindow-wrapper">
 <h5 class="florp-flashmob-location">%%flashmob_city%%</h5>
-<p>%%signup%% <strong>Organizátor</strong>: %%organizer%% %%year%% %%school%% %%facebook%% %%web%% %%dancers%% %%note%%</p>
+<p>%%signup%% %%organizer%% %%year%% %%school%% %%facebook%% %%web%% %%dancers%% %%note%%</p>
 %%embed_code%%</div>',
       'strMarkerInfoWindowTemplateTeacher'        => '<div class="florp-marker-infowindow-wrapper">
 <h5 class="florp-course-location">%%courses_city%%</h5>
-<p><strong>Líder</strong>: %%organizer%% %%school%%</p>
+<p>%%organizer%% %%school%%</p>
 <div class="florp-course-info">%%courses_info%%</div>
 </div>',
+      // TODO %%organizer%% => %%teacher%%
       'strSignupLinkLabel'                        => 'Prihlásiť na Flashmob',
       'strInfoWindowLabel_organizer'              => '<strong>Organizátor</strong>',
+      // TODO: add 'strInfoWindowLabel_teacher' - in case of courses!
       'strInfoWindowLabel_signup'                 => '',
       'strInfoWindowLabel_participant_count'      => 'Prihlásených účastníkov',
       'strInfoWindowLabel_year'                   => '<strong>Rok</strong>',
@@ -5830,8 +5832,9 @@ class FLORP{
               </th>
               <td>
                 %%wpEditorMarkerInfoWindowTemplateOrganizer%%
-                <span style="width: 100%;">Placeholdre: <code>%%flashmob_city%%</code>, <code>%%organizer%%</code>*, <code>%%signup%%</code>*, <code>%%participant_count%%</code>*, <code>%%year%%</code>*, <code>%%school%%</code>*, <code>%%web%%</code>*, <code>%%flashmob%%</code>*, <code>%%dancers%%</code>*, <code>%%note%%</code>*, <code>%%embed_code%%</code></span><br>
-                <span style="width: 100%;">*Pozor: nepridávaj zalomenie riadkov (&lt;br&gt;, &lt;br /&gt;) pred a za placeholdre s hviezdičkou - ak sa zamenia za prázdny text, ostane po nich prázdny riadok!</span><br>
+                <span style="width: 100%;">Placeholdre: <code>%%flashmob_city%%</code>, <code>%%organizer%%</code>*, <code>%%signup%%</code>**, <code>%%participant_count%%</code>*, <code>%%year%%</code>*, <code>%%school%%</code>*, <code>%%web%%</code>*, <code>%%flashmob%%</code>*, <code>%%dancers%%</code>*, <code>%%note%%</code>*, <code>%%embed_code%%</code></span><br>
+                <span style="width: 100%;">*,**: Pozor: nepridávaj zalomenie riadkov (&lt;br&gt;, &lt;br /&gt;) pred a za placeholdre s hviezdičkou - ak sa zamenia za prázdny text, ostane po nich prázdny riadok!</span><br>
+                <span style="width: 100%;">**: Za placeholdre s 2 hviezdičkami sa pridáva automaticky ešte jedno zalomenie riadku (&lt;br&gt;, &lt;br /&gt;).</span><br>
               </td>
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
@@ -6604,7 +6607,7 @@ class FLORP{
 
     if ($bIsBeforeFlashmob) {
       // Before Flashmob //
-      $strSignupLink = $this->getInfoWindowLabel('signup').'<span class="florp-click-trigger florp-click-participant-trigger pum-trigger" data-user-id="'.$aInfoWindowData['iUserID'].'" data-flashmob-city="'.$aInfoWindowData['flashmob_city']['value'].'" data-marker-key="'.$aInfoWindowData['mixMarkerKey'].'" data-div-id="'.$aInfoWindowData['strDivID'].'" style="cursor: pointer;">'.$this->aOptions['strSignupLinkLabel'].'</span>';
+      $strSignupLink = $this->getInfoWindowLabel('signup').'<span class="florp-click-trigger florp-click-participant-trigger pum-trigger" data-user-id="'.$aInfoWindowData['iUserID'].'" data-flashmob-city="'.$aInfoWindowData['flashmob_city']['value'].'" data-marker-key="'.$aInfoWindowData['mixMarkerKey'].'" data-div-id="'.$aInfoWindowData['strDivID'].'" style="cursor: pointer;">'.$this->aOptions['strSignupLinkLabel'].'</span><br/>';
       $strParticipantCount = $this->getInfoWindowLabel('participant_count').$aInfoWindowData['iParticipantCount'];
 
       $strDancers = "";
