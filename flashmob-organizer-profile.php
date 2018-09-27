@@ -1224,6 +1224,9 @@ class FLORP{
       case 'htaccess_rename_failed':
         $aNotices[] = array( 'warning' => 'Could not prevent media files download: could not rename HTACCESS file.');
         break;
+      case 'htaccess_renamed':
+        $aNotices[] = array( 'info' => 'There was a HTACCESS in WP_CONTENT_DIR. It was renamed and replaced by a media download preventing HTACCESS file (by FLORP).');
+        break;
       case 'htaccess_save_failed':
         $aNotices[] = array( 'warning' => 'Could not prevent media files download: could not save HTACCESS file.');
         break;
@@ -1253,13 +1256,14 @@ class FLORP{
     return $strNotices;
   }
 
-  private function prevent_direct_media_downloads() {
+  private function prevent_direct_media_downloads($bForce = false) {
     if (!current_user_can('administrator') || !is_admin()) {
       return;
     }
 
     $strHtaccessPath = WP_CONTENT_DIR . "/.htaccess";
     if (!$this->aOptions['bPreventDirectMediaDownloads']) {
+      // Remove htaccess file if present //
       if (file_exists($strHtaccessPath)) {
         $bRes = unlink( $strHtaccessPath );
         if (!$bRes || file_exists($strHtaccessPath)) {
@@ -1282,16 +1286,23 @@ class FLORP{
       return;
     }
 
+    $bHtaccessExists = false;
     $strComment = '# FLORP: Prevent direct download of media files';
     if (file_exists($strHtaccessPath)) {
+      if (!$bForce && filemtime($strHtaccessPath) <= (time() - 24*3600)) {
+        $bForce = true;
+      }
       $strContents = file_get_contents( $strHtaccessPath );
       if (false !== strpos( $strContents, $strComment )) {
-        // OK //
-        return;
+        // OK - comment is in the file that is present //
+        $bHtaccessExists = true;
       } else {
         $bRes = rename( $strHtaccessPath, $strHtaccessPath.'.old-'.date('Ymd-His'));
-        if (!$bRes) {
-          // Show error message
+        if ($bRes) {
+          // Show info message //
+          add_action( 'admin_notices', array( $this, 'action__admin_notices__htaccess_renamed' ));
+        } else {
+          // Show error message and finish //
           add_action( 'admin_notices', array( $this, 'action__admin_notices__htaccess_rename_failed' ));
           return;
         }
@@ -1304,6 +1315,7 @@ class FLORP{
       "  RewriteEngine On",
       "  RewriteCond %{REQUEST_URI} \.(mp4|mp3|avi)$ [NC]",
     );
+    $bSiteMissing = false;
     $aSites = wp_get_sites();
     $strProtocol = is_ssl() ? 'https' : 'http';
     foreach ( $aSites as $i => $aSite ) {
@@ -1312,18 +1324,28 @@ class FLORP{
       }
       $aMediaDlPreventionRuleLines[] = "  RewriteCond %{HTTP_REFERER} !^{$strProtocol}://{$aSite['domain']}$ [NC]";
       $aMediaDlPreventionRuleLines[] = "  RewriteCond %{HTTP_REFERER} !^{$strProtocol}://{$aSite['domain']}/.*$ [NC]";
+      if ($bHtaccessExists && false === strpos( $strContents, $aSite['domain'] )) {
+        $bSiteMissing = true;
+      }
     }
+    
     $aMediaDlPreventionRuleLines = array_merge($aMediaDlPreventionRuleLines, array(
       "  RewriteRule ^.* - [F,L]",
       "</IfModule>",
     ));
     $strMediaDlPreventionRules = implode( PHP_EOL, $aMediaDlPreventionRuleLines );
 
-    $bRes = file_put_contents( $strHtaccessPath, $strMediaDlPreventionRules );
-    if (false === $bRes || !file_exists($strHtaccessPath)) {
-      // Show error message
-      add_action( 'admin_notices', array( $this, 'action__admin_notices__htaccess_save_failed' ));
-      return;
+    if ($bForce || !$bHtaccessExists || $bSiteMissing) {
+      // Do write //
+      $bRes = file_put_contents( $strHtaccessPath, $strMediaDlPreventionRules );
+      if (false === $bRes || !file_exists($strHtaccessPath)) {
+        // Show error message
+        add_action( 'admin_notices', array( $this, 'action__admin_notices__htaccess_save_failed' ));
+        return;
+      }
+    } elseif (!$bForce) {
+      // Touch //
+      touch( $strHtaccessPath );
     }
 
     return;
@@ -1526,6 +1548,13 @@ class FLORP{
       return;
     }
     echo $this->get_admin_notices('htaccess_rename_failed');
+  }
+
+  public function action__admin_notices__htaccess_renamed() {
+    if (!current_user_can('administrator') || !is_admin()) {
+      return;
+    }
+    echo $this->get_admin_notices('htaccess_renamed');
   }
 
   public function action__admin_notices__htaccess_revert_failed() {
@@ -3055,60 +3084,71 @@ class FLORP{
         'to'    => array( 'Chcem pamätné Flashmob tričko', 'Chcem dostávať newsletter' )
       )
     );
+    
+    $aParticipantsFlat = array();
     foreach ($aParticipants as $iLeaderID => $aParticipantsOfLeader) {
       foreach ($aParticipantsOfLeader as $strEmail => $aParticipantData) {
-        foreach ($aReplacements as $strKey => $aReplacementArr) {
-          $aParticipantData[$strKey] = str_replace( $aReplacementArr['from'], $aReplacementArr['to'], $aParticipantData[$strKey]);
+        $aParticipantsFlat[$strEmail] = $aParticipantData;
+        if (!isset($aParticipantsFlat['leader_user_id'])) {
+          $aParticipantsFlat['leader_user_id'] = $iLeaderID;
         }
-        $strButtonLabelDelete = "Zmazať";
-        $strDoubleCheckQuestion = "Ste si istý?";
-        $strRowID = "florpRow-".$iLeaderID."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
-        $strButtonID = "florpButton-".$iLeaderID."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
-        $strButtons = '<br/><span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelDelete.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-leader-id="'.$iLeaderID.'" data-participant-email="'.$strEmail.'" data-sure="0" data-action="delete_florp_participant" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelDelete.'</span>';
-        $strEcho .= '<tr class="row" data-row-id="'.$strRowID.'">';
-        $strEcho .=   '<td>'.$aParticipantData['first_name'].' '.$aParticipantData['last_name'].$strButtons.'</td>';
-        $strEcho .=   '<td><a name="'.$aParticipantData['user_email'].'">'.$aParticipantData['user_email'].'</a></td>';
-        $oLeader = get_user_by( 'id', $iLeaderID );
-        $strLeadersFlashmobCity = get_user_meta( $iLeaderID, 'flashmob_city', true );
-        $strWarning = "";
-        if ($strLeadersFlashmobCity !== $aParticipantData['flashmob_city']) {
-          $strTitle = " title=\"Pozor: pri registrácii účastníka mal líder nastavené mesto flashmobu na  {$aParticipantData['flashmob_city']}!\"";
-          $strWarning = ' <span '.$strTitle.' class="dashicons dashicons-warning"></span>';
-        }
-        $strEcho .=   '<td>'.$strLeadersFlashmobCity.$strWarning.'</td>';
-        $strIsPending = "";
-        if (in_array( $this->strUserRolePending, (array) $oLeader->roles )) {
-          $strIsPending = " ({$this->strUserRolePendingName})";
-        }
-        $strEcho .=   '<td><a href="'.admin_url('admin.php?page=florp-leaders')."#{$iLeaderID}\">{$oLeader->first_name} {$oLeader->last_name}</a>{$strIsPending}</td>";
+      }
+    }
+    uasort($aParticipantsFlat, array($this, "participant_sort"));
+    
+    foreach ($aParticipantsFlat as $strEmail => $aParticipantData) {
+      $iLeaderID = $aParticipantData['leader_user_id'];
+      foreach ($aReplacements as $strKey => $aReplacementArr) {
+        $aParticipantData[$strKey] = str_replace( $aReplacementArr['from'], $aReplacementArr['to'], $aParticipantData[$strKey]);
+      }
+      $strButtonLabelDelete = "Zmazať";
+      $strDoubleCheckQuestion = "Ste si istý?";
+      $strRowID = "florpRow-".$iLeaderID."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
+      $strButtonID = "florpButton-".$iLeaderID."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
+      $strButtons = '<br/><span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelDelete.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-leader-id="'.$iLeaderID.'" data-participant-email="'.$strEmail.'" data-sure="0" data-action="delete_florp_participant" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelDelete.'</span>';
+      $strEcho .= '<tr class="row" data-row-id="'.$strRowID.'">';
+      $strEcho .=   '<td>'.$aParticipantData['first_name'].' '.$aParticipantData['last_name'].$strButtons.'</td>';
+      $strEcho .=   '<td><a name="'.$aParticipantData['user_email'].'">'.$aParticipantData['user_email'].'</a></td>';
+      $oLeader = get_user_by( 'id', $iLeaderID );
+      $strLeadersFlashmobCity = get_user_meta( $iLeaderID, 'flashmob_city', true );
+      $strWarning = "";
+      if ($strLeadersFlashmobCity !== $aParticipantData['flashmob_city']) {
+        $strTitle = " title=\"Pozor: pri registrácii účastníka mal líder nastavené mesto flashmobu na  {$aParticipantData['flashmob_city']}!\"";
+        $strWarning = ' <span '.$strTitle.' class="dashicons dashicons-warning"></span>';
+      }
+      $strEcho .=   '<td>'.$strLeadersFlashmobCity.$strWarning.'</td>';
+      $strIsPending = "";
+      if (in_array( $this->strUserRolePending, (array) $oLeader->roles )) {
+        $strIsPending = " ({$this->strUserRolePendingName})";
+      }
+      $strEcho .=   '<td><a href="'.admin_url('admin.php?page=florp-leaders')."#{$iLeaderID}\">{$oLeader->first_name} {$oLeader->last_name}</a>{$strIsPending}</td>";
 //         $strEcho .=   '<td>'.$aParticipantData['gender'].'</td>';
 //         $strEcho .=   '<td>'.$aParticipantData['dance_level'].'</td>';
-        $strEcho .=   '<td>';
-        $aTimestamps = array( 'registered', 'tshirt_order_cancelled_timestamp' );
-        $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', 'leader_user_id'/*, 'dance_level', 'gender'*/ );
-        if (!isset($aParticipantData['leader_notified'])) {
-          $aParticipantData['leader_notified'] = false;
-        }
-        foreach ($aParticipantData as $strKey => $mixValue) {
-          if (!isset($mixValue) || (!is_bool($mixValue) && !is_numeric($mixValue) && empty($mixValue)) || $mixValue === 'null' || in_array( $strKey, $aSkip )) {
-            continue;
-          }
-          if (in_array($strKey, $aTimestamps)) {
-            $strKey = str_replace("_timestamp", "", $strKey);
-            $strValue = date( get_option('date_format')." ".get_option('time_format'), $mixValue );
-          } elseif (is_array($mixValue)) {
-            $strValue = implode( ', ', $mixValue);
-          } elseif (is_bool($mixValue)) {
-            $strValue = $mixValue ? '<input type="checkbox" disabled checked />' : '<input type="checkbox" disabled />';
-          } else {
-            $strValue = $mixValue;
-          }
-          $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
-          $strEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>';
-        }
-        $strEcho .=   '</td>';
-        $strEcho .= '</tr>';
+      $strEcho .=   '<td>';
+      $aTimestamps = array( 'registered', 'tshirt_order_cancelled_timestamp' );
+      $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', 'leader_user_id'/*, 'dance_level', 'gender'*/ );
+      if (!isset($aParticipantData['leader_notified'])) {
+        $aParticipantData['leader_notified'] = false;
       }
+      foreach ($aParticipantData as $strKey => $mixValue) {
+        if (!isset($mixValue) || (!is_bool($mixValue) && !is_numeric($mixValue) && empty($mixValue)) || $mixValue === 'null' || in_array( $strKey, $aSkip )) {
+          continue;
+        }
+        if (in_array($strKey, $aTimestamps)) {
+          $strKey = str_replace("_timestamp", "", $strKey);
+          $strValue = date( get_option('date_format')." ".get_option('time_format'), $mixValue );
+        } elseif (is_array($mixValue)) {
+          $strValue = implode( ', ', $mixValue);
+        } elseif (is_bool($mixValue)) {
+          $strValue = $mixValue ? '<input type="checkbox" disabled checked />' : '<input type="checkbox" disabled />';
+        } else {
+          $strValue = $mixValue;
+        }
+        $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
+        $strEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>';
+      }
+      $strEcho .=   '</td>';
+      $strEcho .= '</tr>';
     }
     $strEcho .= '</table>';
     echo $strEcho;
@@ -4018,6 +4058,29 @@ class FLORP{
     }
   }
 
+  private function participant_sort($a, $b) {
+    if (isset($a['registered']) && isset($b['registered'])) {
+      // Both have registration timestamp //
+      $a['registered'] < $b['registered'] ? -1 : 1;
+    } elseif (!isset($a['registered']) && !isset($b['registered'])) {
+      // None have registration timestamp //
+      if (isset($a['leader_user_id']) && isset($b['leader_user_id'])) {
+        // Sort by leader ID //
+        $a['leader_user_id'] < $b['leader_user_id'] ? -1 : 1;
+      } elseif (isset($a['leader_user_id']) || isset($b['leader_user_id'])) {
+        // The one without leader ID goes to top //
+        return 1;
+      } else {
+        return 0;
+      }
+    } elseif (isset($a['registered']) || isset($b['registered'])) {
+      // The on without registration timestamp goes to TOP //
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+
   private function serveTshirtCSV() {
     $bPassed = check_ajax_referer( 'srd-florp-admin-security-string', 'security', false );
     if (!$bPassed) {
@@ -4406,6 +4469,7 @@ class FLORP{
     }
 
     if ($aData['ok']) {
+      $this->prevent_direct_media_downloads(true);
       $aData["removeRowOnSuccess"] = false;
       if ($aData["rowId"] === "florpRow-subsite-0") {
         $aData["insertAfterSelector"] = "table tr:last-of-type";
@@ -4604,7 +4668,7 @@ class FLORP{
                 $this->aOptions['aParticipants'][$iReassignTo] = array();
               }
               foreach ($this->aOptions['aParticipants'][$iUserID] as $strEmail => $aParticipantData) {
-                $this->aOptions['aParticipants'][$iUserID][$strEmail]['moved_from_user_id'] = $iReassignTo;
+                $this->aOptions['aParticipants'][$iUserID][$strEmail]['moved_from_user_id'] = $iUserID;
               }
               $this->aOptions['aParticipants'][$iReassignTo] = array_merge($this->aOptions['aParticipants'][$iReassignTo], $this->aOptions['aParticipants'][$iUserID]);
               unset($this->aOptions['aParticipants'][$iUserID]);

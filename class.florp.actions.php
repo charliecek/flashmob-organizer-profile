@@ -144,6 +144,11 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
                 $aPwdCheck[$strKey] = $strValue;
               }
               break;
+            case "webpage":
+              if (empty($strValue)) {
+                data[ 'errors' ][ 'form' ][$strKey] = $strLabel."Toto pole je povinné!";
+              }
+              break;
             case "flashmob_city":
               if ($bUserIsLoggedIn && $strValue === "null") {
                 if (in_array("flashmob_organizer", $aSubscriberType)) {
