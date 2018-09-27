@@ -491,6 +491,7 @@ class FLORP{
         'center'    => '48.72,19.7',
         'size'      => '640x320',
         'key'       => $this->aOptions['strGoogleMapsKeyStatic'],
+        'region'    => 'sk',
       ),
       'og_map_image_alt'  => "Mapka registrovaných organizátorov rueda flashmobu na Slovensku",
       'fb_app_id'         => $this->aOptions['strFbAppID'],
