@@ -13,6 +13,17 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v4.6.5: dancer num check, geocoder region, fixes =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.5)
+- added dancer number check
+  - form won't submit
+  - marker won't show the field
+- added region to geocoder so Slovak cities are preferred
+- fixed hiding of before-flashmob fields
+- fixed evaluating whether user is before flashmob
+- fix: double line break when signup link is empty (after flashmob)
+- fix: default value of organizer marker template
+
 = v4.6.4: individual flashmob hide/unhide, bugfixes =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.4)
 - added possibility to hide/unhide individual users' flashmob fields
@@ -206,11 +217,5 @@ New registration forms and related changes
 - Added separate option for GM Static Key
 - Fixed saving of 'use static map' option (flashmob)
 
-= v4.0.1: Fixes for pending leaders - shown in admin =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.0.1)
-- Fixed bug with static activation/deactivation methods
-- Pending leaders shown in admin
-- Removed users' participants are deleted
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.0.1)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.0.2)
