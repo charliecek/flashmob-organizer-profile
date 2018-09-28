@@ -10495,7 +10495,7 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Webstránka',
       'key' => 'webpage',
       'label_pos' => 'left',
-      'required' => false,
+      'required' => 1,
       'options' => 
       array (
         0 => 
@@ -52000,6 +52000,6 @@ $aFlorpNinjaFormExportData = array (
       'payment_total_type' => '',
     ),
   ),
-  'version' => 4006003,
-  'timestamp' => 1537833918,
+  'version' => 4006005,
+  'timestamp' => 1538118399,
 ); ?>

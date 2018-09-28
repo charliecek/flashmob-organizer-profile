@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.6.5
+ * Version: 4.6.6
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '4.6.5';
+  private $strVersion = '4.6.6';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -1290,8 +1290,12 @@ class FLORP{
     $bHtaccessExists = false;
     $strComment = '# FLORP: Prevent direct download of media files';
     if (file_exists($strHtaccessPath)) {
-      if (!$bForce && filemtime($strHtaccessPath) <= (time() - 24*3600)) {
-        $bForce = true;
+      if (!$bForce) {
+        if (filemtime($strHtaccessPath) <= (time() - 12*3600)) {
+          $bForce = true;
+        } else {
+          return;
+        }
       }
       $strContents = file_get_contents( $strHtaccessPath );
       if (false !== strpos( $strContents, $strComment )) {
@@ -1323,9 +1327,11 @@ class FLORP{
       if ($aSite['public'] != 1 || $aSite['deleted'] == 1 || $aSite['archived'] == 1) {
         continue;
       }
-      $aMediaDlPreventionRuleLines[] = "  RewriteCond %{HTTP_REFERER} !^{$strProtocol}://{$aSite['domain']}$ [NC]";
-      $aMediaDlPreventionRuleLines[] = "  RewriteCond %{HTTP_REFERER} !^{$strProtocol}://{$aSite['domain']}/.*$ [NC]";
-      if ($bHtaccessExists && false === strpos( $strContents, $aSite['domain'] )) {
+      $strLine1 = "  RewriteCond %{HTTP_REFERER} !^{$strProtocol}://{$aSite['domain']}$ [NC]";
+      $strLine2 = "  RewriteCond %{HTTP_REFERER} !^{$strProtocol}://{$aSite['domain']}/.*$ [NC]";
+      $aMediaDlPreventionRuleLines[] = $strLine1;
+      $aMediaDlPreventionRuleLines[] = $strLine2;
+      if ($bHtaccessExists && (false === strpos( $strContents, $aSite['domain'] ) || false === strpos( $strContents, $strLine1 ) || false === strpos( $strContents, $strLine2 ))) {
         $bSiteMissing = true;
       }
     }
@@ -3089,16 +3095,17 @@ class FLORP{
     $aParticipantsFlat = array();
     foreach ($aParticipants as $iLeaderID => $aParticipantsOfLeader) {
       foreach ($aParticipantsOfLeader as $strEmail => $aParticipantData) {
-        $aParticipantsFlat[$strEmail] = $aParticipantData;
-        if (!isset($aParticipantsFlat['leader_user_id'])) {
-          $aParticipantsFlat['leader_user_id'] = $iLeaderID;
-        }
+        $strKey = $strEmail."_".$iLeaderID;
+        $aParticipantsFlat[$strKey] = $aParticipantData;
+        $aParticipantsFlat[$strKey]['leader_user_id'] = $iLeaderID;
+        $aParticipantsFlat[$strKey]['user_email'] = $strEmail;
       }
     }
     uasort($aParticipantsFlat, array($this, "participant_sort"));
     
-    foreach ($aParticipantsFlat as $strEmail => $aParticipantData) {
+    foreach ($aParticipantsFlat as $strKey => $aParticipantData) {
       $iLeaderID = $aParticipantData['leader_user_id'];
+      $strEmail = $aParticipantsData['user_email'];
       foreach ($aReplacements as $strKey => $aReplacementArr) {
         $aParticipantData[$strKey] = str_replace( $aReplacementArr['from'], $aReplacementArr['to'], $aParticipantData[$strKey]);
       }
@@ -4068,15 +4075,21 @@ class FLORP{
       if (isset($a['leader_user_id']) && isset($b['leader_user_id'])) {
         // Sort by leader ID //
         $a['leader_user_id'] < $b['leader_user_id'] ? -1 : 1;
-      } elseif (isset($a['leader_user_id']) || isset($b['leader_user_id'])) {
+      } elseif (isset($a['leader_user_id'])) {
         // The one without leader ID goes to top //
         return 1;
+      } elseif (isset($b['leader_user_id'])) {
+        // The one without leader ID goes to top //
+        return -1;
       } else {
         return 0;
       }
-    } elseif (isset($a['registered']) || isset($b['registered'])) {
-      // The on without registration timestamp goes to TOP //
+    } elseif (isset($a['registered'])) {
+      // The one without registration timestamp goes to TOP //
       return 1;
+    } elseif (isset($b['registered'])) {
+      // The one without registration timestamp goes to TOP //
+      return -1;
     } else {
       return 0;
     }

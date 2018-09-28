@@ -146,7 +146,7 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
               break;
             case "webpage":
               if (empty($strValue)) {
-                data[ 'errors' ][ 'form' ][$strKey] = $strLabel."Toto pole je povinné!";
+                $data[ 'errors' ][ 'form' ][$strKey] = $strLabel."Toto pole je povinné!";
               }
               break;
             case "flashmob_city":
