@@ -3004,7 +3004,7 @@ class FLORP{
           continue;
         }
         $bChecked = isset($aAllMeta[$strSubscriberType]) && $aAllMeta[$strSubscriberType];
-        $strValue = $bChecked ? '<input type="checkbox" disabled checked />' : '<input type="checkbox" disabled />';
+        $strValue = $bChecked ? '<input type="checkbox" disabled checked /><span class="hidden">yes</span>' : '<input type="checkbox" disabled /><span class="hidden">no</span>';
         $strLabel = str_replace(
           array('flashmob_organizer', 'teacher'),
           array('Zorganizuje Flashmob', 'Učí kurzy'),
@@ -3032,7 +3032,7 @@ class FLORP{
         if (is_array($aAllMeta[$strMetaKey])) {
           $strValue = implode( ', ', $aAllMeta[$strMetaKey]);
         } elseif (in_array($strMetaKey, $aSingleCheckboxes) || is_bool($aAllMeta[$strMetaKey])) {
-          $strValue = $aAllMeta[$strMetaKey] ? '<input type="checkbox" disabled checked />' : '<input type="checkbox" disabled />';
+          $strValue = $aAllMeta[$strMetaKey] ? '<input type="checkbox" disabled checked /><span class="hidden">yes</span>' : '<input type="checkbox" disabled /><span class="hidden">no</span>';
         } else {
           $strValue = $aAllMeta[$strMetaKey];
         }
@@ -3103,9 +3103,9 @@ class FLORP{
     }
     uasort($aParticipantsFlat, array($this, "participant_sort"));
     
-    foreach ($aParticipantsFlat as $strKey => $aParticipantData) {
+    foreach ($aParticipantsFlat as $strKeyFlat => $aParticipantData) {
       $iLeaderID = $aParticipantData['leader_user_id'];
-      $strEmail = $aParticipantsData['user_email'];
+      $strEmail = $aParticipantData['user_email'];
       foreach ($aReplacements as $strKey => $aReplacementArr) {
         $aParticipantData[$strKey] = str_replace( $aReplacementArr['from'], $aReplacementArr['to'], $aParticipantData[$strKey]);
       }
@@ -3148,7 +3148,7 @@ class FLORP{
         } elseif (is_array($mixValue)) {
           $strValue = implode( ', ', $mixValue);
         } elseif (is_bool($mixValue)) {
-          $strValue = $mixValue ? '<input type="checkbox" disabled checked />' : '<input type="checkbox" disabled />';
+          $strValue = $mixValue ? '<input type="checkbox" disabled checked /><span class="hidden">yes</span>' : '<input type="checkbox" disabled /><span class="hidden">no</span>';
         } else {
           $strValue = $mixValue;
         }
@@ -3863,7 +3863,7 @@ class FLORP{
           } elseif (is_array($mixValue)) {
             $strValue = implode( ', ', $mixValue);
           } elseif (in_array($strMetaKey, $aSingleCheckboxes) || is_bool($mixValue)) {
-            $strValue = $mixValue ? '<input type="checkbox" disabled checked />' : '<input type="checkbox" disabled />';
+            $strValue = $mixValue ? '<input type="checkbox" disabled checked /><span class="hidden">yes</span>' : '<input type="checkbox" disabled /><span class="hidden">no</span>';
           } else {
             $strValue = $mixValue;
           }
@@ -4069,12 +4069,12 @@ class FLORP{
   private function participant_sort($a, $b) {
     if (isset($a['registered']) && isset($b['registered'])) {
       // Both have registration timestamp //
-      $a['registered'] < $b['registered'] ? -1 : 1;
+      return $a['registered'] < $b['registered'] ? -1 : 1;
     } elseif (!isset($a['registered']) && !isset($b['registered'])) {
       // None have registration timestamp //
       if (isset($a['leader_user_id']) && isset($b['leader_user_id'])) {
         // Sort by leader ID //
-        $a['leader_user_id'] < $b['leader_user_id'] ? -1 : 1;
+        return $a['leader_user_id'] < $b['leader_user_id'] ? -1 : 1;
       } elseif (isset($a['leader_user_id'])) {
         // The one without leader ID goes to top //
         return 1;
