@@ -499,6 +499,18 @@ class FLORP{
   }
 
   private function get_default_options() {
+    $aNfFieldTypes = array();
+    $aNfSubmissions = array();
+    $aSites = wp_get_sites();
+    foreach ($aSites as $i => $aSite) {
+      if ($aSite['public'] != 1 || $aSite['deleted'] == 1 || $aSite['archived'] == 1) {
+        continue;
+      }
+      $iID = intval($aSite['blog_id']);  
+      $aNfFieldTypes[$iID] = array('done' => false, 'field_types' => array());
+      $aNfSubmissions[$iID] = array('done' => false, 'forms' => array());
+    }
+    
     return array(
       'bReloadAfterSuccessfulSubmissionMain'      => false,
       'bReloadAfterSuccessfulSubmissionFlashmob'  => false,
@@ -507,6 +519,8 @@ class FLORP{
       'bLeadersFrom2017Reimported'                => false,
       'aYearlyMapOptions'                         => array(),
       'aOptionChanges'                            => array(),
+      'aNfSubmissions'                            => $aNfSubmissions,
+      'aNfFieldTypes'                             => $aNfFieldTypes,
       'iFlashmobYear'                             => isset($this->aOptions['iCurrentFlashmobYear']) ? $this->aOptions['iCurrentFlashmobYear'] : intval(date( 'Y' )),
       'iFlashmobMonth'                            => 1,
       'iFlashmobDay'                              => 1,
@@ -785,7 +799,7 @@ class FLORP{
         'iTshirtOrderDeliveredBeforeFlashmobDdl',
       ),
     );
-    $this->aSeparateOptionKeys = array( 'logs', 'aParticipants', 'aTshirts', 'aYearlyMapOptions', 'aOrderDates', 'aOptionChanges' );
+    $this->aSeparateOptionKeys = array( 'logs', 'aParticipants', 'aTshirts', 'aYearlyMapOptions', 'aOrderDates', 'aOptionChanges', 'aNfSubmissions', 'aNfFieldTypes' );
 
     // Get options and set defaults //
     if (empty($this->aOptions)) {
@@ -845,6 +859,12 @@ class FLORP{
     return false;
   }
 
+  private function maybe_save_options($bSave = true) {
+    if ($bSave) {
+      $this->save_options();
+    }
+  }
+  
   private function save_options() {
     $aOptionsRest = array();
     foreach ($this->aOptionDefaults as $strOptionKey => $mixDefaultValue) {
@@ -2737,6 +2757,7 @@ class FLORP{
       'profil-organizatora-svk-flashmobu_page_florp-subsites',
       'profil-organizatora-svk-flashmobu_page_florp-history',
       'profil-organizatora-svk-flashmobu_page_florp-option-changes',
+      'profil-organizatora-svk-flashmobu_page_florp-leader-submission-history',
 //       'profil-organizatora-svk-flashmobu_page_florp-lwa',
     );
     if (in_array($strHook, $aPermittedHooks)) {
@@ -2869,6 +2890,14 @@ class FLORP{
           'manage_options',
           'florp-option-changes',
           array( $this, 'option_changes_table_admin' )
+        );
+        $page = add_submenu_page(
+          'florp-main',
+          'Leader submission history',
+          'Leader submission history',
+          'manage_options',
+          'florp-leader-submission-history',
+          array( $this, 'leader_submission_history_table_admin' )
         );
       }
     }
@@ -3066,6 +3095,7 @@ class FLORP{
     $strEcho .= '</table>';
     echo $strEcho;
     echo $this->get_missed_submissions_table( $this->iMainBlogID );
+    
     echo '</div><!-- .wrap -->';
   }
 
@@ -3499,6 +3529,159 @@ class FLORP{
     // $this->aOptions['aOptionChanges'] = array(); $this->save_options(); // NOTE DEVEL
   }
 
+  public function leader_submission_history_table_admin() {
+    echo "<div class=\"wrap\">\n<h1>" . "Leader submission history" . "</h1>\n";
+    $strEcho = '<table class="widefat striped noFilter"><th>User</th><th>Date</th><th>Changed option</th><th>From</th><th>To</th>'."\n";
+    $aNfSubmissionHistory = $this->get_nf_submissions( false, 'history' );
+    if (defined('FLORP_DEVEL') && FLORP_DEVEL === true) {
+//       echo "<pre>";var_dump($aNfSubmissionHistory);echo "</pre>"; // NOTE DEVEL
+    }
+    $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
+    // echo $strEcho; echo '</div><!-- .wrap -->'; return;
+    
+    foreach ($aNfSubmissionHistory as $strEmail => $aSubmissions) {
+      $iChangeCount = $aSubmissions['_count'];
+      $oLeader = get_user_by( 'email', $strEmail );
+      if (false === $oLeader) {
+        $strLeaderID = "";
+        $strNameOrEmail = $strEmail;
+      } else {
+        $strLeaderID = $oLeader->ID . ": ";
+        $strNameOrEmail = "<span title=\"{$strEmail}\">{$oLeader->first_name} {$oLeader->last_name}</span>";
+      }
+      if ($iChangeCount <= 0) {
+        continue;
+      }
+      $iRows = 0;
+      foreach ($aSubmissions['_submissions'] as $strSubmissionChangeID => $aSubmissionData) {
+        if ($aSubmissionData['_first']) {
+          foreach ($aSubmissionData['_data'] as $strKey => $mixValue) {
+            if ($this->aOptions['bCoursesInfoDisabled'] && in_array($strKey, $this->aMetaFieldsTeacher)) {
+              continue;
+            }
+            if (!isset($mixValue) || (!is_bool($mixValue) && !is_numeric($mixValue) && empty($mixValue)) || $mixValue === 'null' || in_array( $strKey, $aSkip )) {
+              continue;
+            }
+            $iRows++;
+          }
+        } elseif ($aSubmissionData['_resave']) {
+          $iRows++;
+        } else {
+          $iRows += count($aSubmissionData['_changes']);
+        }
+      }
+      $strEcho .= "<tr class=\"row\">";
+      $strEcho .=   "<td rowspan=\"{$iRows}\">{$strLeaderID}{$strNameOrEmail}</td>\n";
+      foreach ($aSubmissions['_submissions'] as $strSubmissionChangeID => $aSubmissionData) {
+        $iTimestamp = $aSubmissionData['_meta']['_submission_timestamp'];
+        $strDate = date( get_option('date_format')." ".get_option('time_format'), $iTimestamp + $iTimeZoneOffset*3600 );
+
+        if ($aSubmissionData['_first']) {
+          $iRows = 0;
+          foreach ($aSubmissionData['_data'] as $strKey => $mixValue) {
+            if ($this->aOptions['bCoursesInfoDisabled'] && in_array($strKey, $this->aMetaFieldsTeacher)) {
+              continue;
+            }
+            if (!isset($mixValue) || (!is_bool($mixValue) && !is_numeric($mixValue) && empty($mixValue)) || $mixValue === 'null' || in_array( $strKey, $aSkip )) {
+              continue;
+            }
+            $iRows++;
+          }
+          $strRowspan = " rowspan=\"{$iRows}\"";
+        } elseif ($aSubmissionData['_resave']) {
+          $strRowspan = "";
+        } else {
+          $iRowspan = count($aSubmissionData['_changes']);
+          $strRowspan = " rowspan=\"{$iRowspan}\"";
+        }
+        $strEcho .=   "<td{$strRowspan}>{$strDate}</td>\n";
+        $bFirst = false;
+        $bResave = false;
+        if ($aSubmissionData['_first']) {
+          $bFirst = true;
+          $strSubmission = "";
+          $aSkip = array();
+          $aTimestamps = array();
+          foreach ($aSubmissionData['_data'] as $strKey => $mixValue) {
+            if ($this->aOptions['bCoursesInfoDisabled'] && in_array($strKey, $this->aMetaFieldsTeacher)) {
+              continue;
+            }
+            if (!isset($mixValue) || (!is_bool($mixValue) && !is_numeric($mixValue) && empty($mixValue)) || $mixValue === 'null' || in_array( $strKey, $aSkip )) {
+              continue;
+            }
+            if (in_array($strKey, $aTimestamps)) {
+              $strKey = str_replace("_timestamp", "", $strKey);
+              $strValue = date( get_option('date_format')." ".get_option('time_format'), $mixValue );
+            } elseif (is_array($mixValue)) {
+              $strValue = implode( ', ', $mixValue);
+            } elseif (is_bool($mixValue)) {
+              $strValue = $mixValue ? '<input type="checkbox" disabled checked /><span class="hidden">yes</span>' : '<input type="checkbox" disabled /><span class="hidden">no</span>';
+            } else {
+              $strValue = $mixValue;
+            }
+            $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
+            $strType = " (".gettype($mixValue).")";
+//             $strSubmission .= '<strong title="'.$strKey.'">' . $strFieldName . '</strong>: ' . $strValue.$strType.'<br>';
+            $strEcho .= '<td><strong title="'.$strKey.'">' . $strFieldName . '</strong></td><td>-</td><td>' . $strValue . '</td>';
+            $strEcho .= "</tr>\n";
+          }
+          //$strEcho .=   "<td colspan=\"3\">{$strSubmission}</td>";
+        } elseif ($aSubmissionData['_resave']) {
+          $strEcho .=   "<td colspan=\"3\">[resave without change]</td>";
+          $strEcho .= "</tr>\n";
+        } else {
+          foreach ($aSubmissionData['_changes'] as $strKey => $aChange) {
+            if ($strKey === '_user_id') {
+              continue;
+            }
+            if (in_array($strKey, $this->aBooleanOptions)) {
+              $from = $aChange['from'] ? "True" : "False";
+              $to = $aChange['to'] ? "True" : "False";
+            } else {
+              if (is_array($aChange['from'])) {
+                $from = implode(', ', $aChange['from']);
+              } else {
+                $from = $aChange['from'];
+              }
+              if (is_array($aChange['to'])) {
+                $to = implode(', ', $aChange['to']);
+              } else {
+                $to = $aChange['to'];
+              }
+            }
+            if (is_null($from)) {
+              $from = "[null]";
+              $from_type = "";
+            } else {
+              $from_type = " (".gettype($aChange['from']).")";
+            }
+            if (is_null($to)) {
+              $to = "[null]";
+              $to_type = "";
+            } else {
+              $to_type = " (".gettype($aChange['to']).")";
+            }
+            if ($to === '') {
+              $to = "[empty]";
+            }
+            if ($from === '') {
+              $from = "[empty]";
+            }
+            $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
+//             $strEcho .= "<td><strong title=\"{$strKey}\">{$strFieldName}</strong></td><td>{$from}{$from_type}</td><td>{$to}{$to_type}</td>";
+            $strEcho .= "<td><strong title=\"{$strKey}\">{$strFieldName}</strong></td><td>{$from}</td><td>{$to}</td>";
+            $strEcho .= "</tr>\n";
+          }
+        }
+      }
+    }
+    $strEcho .= "</table>";
+
+    echo $strEcho;
+    echo '</div><!-- .wrap -->';
+    // $this->aOptions['aOptionChanges'] = array(); $this->save_options(); // NOTE DEVEL
+  }
+
   private function get_tshirt_order_date_data( $iTshirtID ) {
     $aOrderDates = $this->aOptions['aOrderDates'];
     if (empty($aOrderDates)) {
@@ -3705,8 +3888,91 @@ class FLORP{
     return $strEcho;
   }
 
-  private function get_missed_submissions( $iBlogID = false ) {
-    $aMissedSubmissions = array();
+  private function nf_submission_sort($a, $b) {
+    if (isset($a['_submission_timestamp'], $b['_submission_timestamp'])) {
+      return $a['_submission_timestamp'] < $b['_submission_timestamp'] ? -1 : 1;
+    } elseif (!isset($a['_submission_timestamp'])) {
+      return -1;
+    } elseif (!isset($b['_submission_timestamp'])) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+
+  private function get_nf_submission( $iBlogID, $iFormID, $iSubmissionID ) {
+    if ($iBlogID !== get_current_blog_id()) {
+      $mixChangeBlogID = $iBlogID;
+    }
+    if ($iBlogID === $this->iMainBlogID) {
+      $iProfileFormNinjaFormID = $this->iProfileFormNinjaFormIDMain;
+      $strBlog = "main";
+    } elseif ($iBlogID === $this->iFlashmobBlogID) {
+      $iProfileFormNinjaFormID = $this->iProfileFormNinjaFormIDFlashmob;
+      $strBlog = "flashmob";
+    } else {
+      return false;
+    }
+    if (false !== $mixChangeBlogID) {
+      switch_to_blog($mixChangeBlogID);
+    }
+    if (!function_exists('Ninja_Forms')) {
+      if (false !== $mixChangeBlogID) {
+        restore_current_blog();
+      }
+      return false;
+    }
+    
+    $aFields = Ninja_Forms()->form( $iFormID )->get_fields();
+    $aKeyToType = array();
+    foreach ($aFields as $oField) {
+      $aKeyToType[$oField->get_setting('key')] = $oField->get_setting('type');
+    }
+    
+    $aSubmission = Ninja_Forms()->form( $iFormID )->get_sub( $iSubmissionID );
+    $aFieldValues = array_map(
+      array($this, 'get_value_maybe_fix_unserialize_array'),
+      $oSubmission->get_field_values()
+    );
+    if (!isset($aFieldValues["user_email"]) || empty($aFieldValues["user_email"])) {
+      // Invalid submission //
+      continue;
+    }
+    foreach ($aFieldValues as $strKey => $mixValue) {
+      if (!isset($aKeyToType[$strKey])) {
+        unset($aFieldValues[$strKey]);
+      }
+    }
+    if ($sType === 'missed') {
+      if ($strBlog === "main" && email_exists($aFieldValues["user_email"])) {
+        continue;
+      } elseif ($strBlog === "flashmob" && $this->flashmob_participant_exists($aFieldValues["user_email"])) {
+        continue;
+      }
+    }
+    $aFieldValues['_submission_date'] = $oSubmission->get_sub_date( 'Y-m-d H:i:s' );
+    $aFieldValues['_submission_timestamp'] = $oSubmission->get_sub_date( 'U' );
+    $aFieldValues['_form_id'] = $iFormID;
+    $aFieldValues['_submission_id'] = $iSubmissionID;
+    $aFieldValues['_blog_id'] = $iBlogID;
+    $aFieldValues['_field_types'] = $aKeyToType;
+    $aNfSubmission = array_filter($aFieldValues, function($key) {
+      $aPermittedKeys = array('_submission_date', '_submission_timestamp', '_form_id', '_submission_id', '_blog_id', '_field_types');
+      return in_array($key, $aPermittedKeys) || strpos($key, "_") !== 0;
+    }, ARRAY_FILTER_USE_KEY);
+    
+    if (false !== $mixChangeBlogID) {
+      restore_current_blog();
+    }
+    return $aNfSubmission;
+  }
+  
+  private function get_nf_submissions( $iBlogID = false, $sType = 'missed', $bUseCacheTypes = true, $bUseCacheSubmissions = true, $bClearCacheIfNotUsed = true ) {
+    $aNfSubmissions = array();
+    $aTypes = array( 'missed', 'all', 'history' );
+    if (!in_array($sType, $aTypes)) {
+      return false;
+    }
 
     $mixChangeBlogID = false;
     $strBlog = "";
@@ -3734,68 +4000,282 @@ class FLORP{
     } else {
       return false;
     }
-    if (!function_exists('Ninja_Forms')) {
-      return false;
-    }
 
-    if (false !== $mixChangeBlogID) {
-      switch_to_blog($mixChangeBlogID);
+    if ($bClearCacheIfNotUsed) {
+      $aUseCache = array(
+        'aNfFieldTypes' => $bUseCacheTypes,
+        'aNfSubmissions' => $bUseCacheSubmissions,
+      );
+      if (!$bUseCacheTypes || !$bUseCacheSubmissions) {
+        $aKeys = array( 'aNfFieldTypes', 'aNfSubmissions' );
+        foreach ($aKeys as $strKey) {
+          if (!$aUseCache[$strKey] && $this->aOptions[$strKey] !== $this->aOptionDefaults[$strKey]) {
+            $this->aOptions[$strKey] = $this->aOptionDefaults[$strKey];
+            $this->save_options();
+          }
+        }
+      }
     }
-    $objProfileForm = Ninja_Forms()->form( $iProfileFormNinjaFormID )->get();
-    $strProfileFormTitle = $objProfileForm->get_setting( 'title' );
-    $aForms = Ninja_Forms()->form()->get_forms();
-    foreach( $aForms as $objForm ){
-      $iFormID = $objForm->get_id();
-      $strTitle = $objForm->get_setting( 'title' );
-      if (strpos($strTitle, $strProfileFormTitle) === false || strpos($strProfileFormTitle, $strTitle) === false) {
+//     echo "<pre>";var_dump($this->aOptions['aNfFieldTypes']);echo "</pre>"; // NOTE DEVEL
+//     echo "<pre>";var_dump($this->aOptions['aNfSubmissions']);echo "</pre>"; // NOTE DEVEL
+//     $this->aOptions['aNfSubmissions'] = $this->aOptionDefaults['aNfSubmissions']; // TODO DEVEL
+//     $this->aOptions['aNfFieldTypes'] = $this->aOptionDefaults['aNfFieldTypes']; // TODO DEVEL
+//     $this->save_options();return; // NOTE DEVEL
+
+    if ($bUseCacheTypes && $this->aOptions['aNfFieldTypes'][$iBlogID]['done']) {
+      // OK //
+    } else {
+      if (false !== $mixChangeBlogID) {
+        switch_to_blog($mixChangeBlogID);
+      }
+      if (!function_exists('Ninja_Forms')) {
+        if (false !== $mixChangeBlogID) {
+          restore_current_blog();
+        }
+        return false;
+      }
+      $objProfileForm = Ninja_Forms()->form( $iProfileFormNinjaFormID )->get();
+      $strProfileFormTitle = $objProfileForm->get_setting( 'title' );
+      $aForms = Ninja_Forms()->form()->get_forms();
+      foreach ($aForms as $objForm) {
+        $iFormID = $objForm->get_id();
+        if (isset($this->aOptions['aNfFieldTypes'][$iBlogID]['field_types'][$iFormID])) {
+          continue;
+        }
+        $strTitle = $objForm->get_setting( 'title' );
+        if (strpos($strTitle, $strProfileFormTitle) === false && strpos($strProfileFormTitle, $strTitle) === false) {
+          continue;
+        }
+        $aFields = Ninja_Forms()->form( $iFormID )->get_fields();
+        $aKeyToType = array();
+        foreach ($aFields as $oField) {
+          $aKeyToType[$oField->get_setting('key')] = $oField->get_setting('type');
+        }
+        unset($aFields);
+        $this->aOptions['aNfFieldTypes'][$iBlogID]['field_types'][$iFormID] = $aKeyToType;
+        $this->maybe_save_options($bUseCacheTypes);
+      }
+      if (false !== $mixChangeBlogID) {
+        restore_current_blog();
+      }
+      $this->aOptions['aNfFieldTypes'][$iBlogID]['done'] = true;
+      $this->maybe_save_options($bUseCacheTypes);
+    }
+//     echo "<pre>";var_dump($this->aOptions['aNfFieldTypes']);echo "</pre>"; // NOTE DEVEL
+    
+//     $this->aOptions['aNfSubmissions'][$iBlogID]['done'] = false; // TODO DEVEL
+//     $this->aOptions['aNfSubmissions'][6]['done'] = false; // TODO DEVEL
+//     $this->aOptions['aNfSubmissions'][6]['forms'] = array(); // TODO DEVEL
+
+    if ($bUseCacheSubmissions && $this->aOptions['aNfSubmissions'][$iBlogID]['done']) {
+      // OK //
+    } else {
+      if (false !== $mixChangeBlogID) {
+        switch_to_blog($mixChangeBlogID);
+      }
+      if (!function_exists('Ninja_Forms')) {
+        if (false !== $mixChangeBlogID) {
+          restore_current_blog();
+        }
+        return false;
+      }
+      $objProfileForm = Ninja_Forms()->form( $iProfileFormNinjaFormID )->get();
+      $strProfileFormTitle = $objProfileForm->get_setting( 'title' );
+      $aForms = Ninja_Forms()->form()->get_forms();
+      foreach ($aForms as $objForm) {
+        $iFormID = $objForm->get_id();
+        if (!isset($this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID])) {
+          $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID] = array(
+            'done' => false,
+            'rows' => array(),
+          );
+        }
+//         $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['done'] = false; // TODO DEVEL
+        if (isset($this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]) && isset($this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['done']) && $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['done'] === true) {
+          // Form is there and done //
+          continue;
+        }
+        $strTitle = $objForm->get_setting( 'title' );
+        if (strpos($strTitle, $strProfileFormTitle) === false && strpos($strProfileFormTitle, $strTitle) === false) {
+//           echo "<pre>'{$strTitle}' !~ '{$strProfileFormTitle}'</pre>"; // NOTE DEVEL
+          $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'] = false;
+          $this->maybe_save_options($bUseCacheSubmissions);
+          continue;
+        }
+        $aKeyToType = $this->aOptions['aNfFieldTypes'][$iBlogID]['field_types'][$iFormID];
+        
+        $aSubmissions = Ninja_Forms()->form( $iFormID )->get_subs();
+        if (count($aSubmissions) === 0) {
+          $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'] = false;
+          $this->maybe_save_options($bUseCacheSubmissions);
+          continue;
+        }
+//         echo "<pre>{$iFormID}: {$strTitle}\n";var_dump(count($aSubmissions));echo "</pre>"; // NOTE DEVEL
+//         continue;
+        foreach ($aSubmissions as $oSubmission) {
+          $iSubmissionID = $oSubmission->get_id();
+          if (isset($this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'][$iSubmissionID])) {
+            continue;
+          }
+          
+          $aFieldValues = array_map(
+            array($this, 'get_value_maybe_fix_unserialize_array'),
+            $oSubmission->get_field_values()
+          );
+          if (!isset($aFieldValues["user_email"]) || empty($aFieldValues["user_email"])) {
+            // Invalid submission //
+            $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'][$iSubmissionID] = false;
+            $this->maybe_save_options($bUseCacheSubmissions);
+            continue;
+          }
+          foreach ($aFieldValues as $strKey => $mixValue) {
+            if (!isset($aKeyToType[$strKey])) {
+              unset($aFieldValues[$strKey]);
+            }
+          }
+          if (empty($aFieldValues)) {
+            // Invalid submission //
+            $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'][$iSubmissionID] = false;
+            $this->maybe_save_options($bUseCacheSubmissions);
+            continue;
+          }
+
+          $aFieldValues['_submission_date'] = $oSubmission->get_sub_date( 'Y-m-d H:i:s' );
+          $aFieldValues['_submission_timestamp'] = $oSubmission->get_sub_date( 'U' );
+          $aFieldValues['_form_id'] = $iFormID;
+          $aFieldValues['_submission_id'] = $iSubmissionID;
+          $aFieldValues['_blog_id'] = $iBlogID;
+          
+          $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'][$iSubmissionID] = $aFieldValues;
+          $this->maybe_save_options($bUseCacheSubmissions);
+//           echo "<pre>{$iSubmissionID}:\n";var_dump($this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'][$iSubmissionID]);echo "</pre>"; // NOTE DEVEL
+//           echo "<pre>";var_dump($aKeyToType, $aFieldValues);echo "</pre>"; // NOTE DEVEL
+        }
+        $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['done'] = true;
+        $this->maybe_save_options($bUseCacheSubmissions);
+//         break; // NOTE DEVEL
+      }
+      if (false !== $mixChangeBlogID) {
+        restore_current_blog();
+      }
+      $this->aOptions['aNfSubmissions'][$iBlogID]['done'] = true;
+      $this->maybe_save_options($bUseCacheSubmissions);
+    }
+//     echo "<pre>";var_dump($this->aOptions['aNfSubmissions'][6]);echo "</pre>"; // NOTE DEVEL
+//     echo "<pre>";var_dump($this->aOptions['aNfSubmissions']);echo "</pre>"; // NOTE DEVEL
+
+    foreach ($this->aOptions['aNfSubmissions'][$iBlogID]['forms'] as $iFormID => $aSubmissions) {
+      if (!isset($aSubmissions['done']) || $aSubmissions['done'] !== true) {
         continue;
       }
-      $aFields = Ninja_Forms()->form( $iFormID )->get_fields();
-      $aKeyToType = array();
-      foreach ($aFields as $oField) {
-        $aKeyToType[$oField->get_setting('key')] = $oField->get_setting('type');
+      if (false === $aSubmissions['rows'] || !is_array($aSubmissions['rows'])) {
+        continue;
       }
-      $aSubmissions = Ninja_Forms()->form( $iFormID )->get_subs();
-      foreach ($aSubmissions as $oSubmission) {
-        $iSubmissionID = $oSubmission->get_id();
-        $aFieldValues = array_map(
-          array($this, 'get_value_maybe_fix_unserialize_array'),
-          $oSubmission->get_field_values()
-        );
-        if (!isset($aFieldValues["user_email"]) || empty($aFieldValues["user_email"])) {
-          // Invalid submission //
+      foreach ($aSubmissions['rows'] as $iSubmissionID => $aFieldValues) {
+        if (false === $aFieldValues) {
           continue;
         }
-        if ($strBlog === "main" && email_exists($aFieldValues["user_email"])) {
-          continue;
-        } elseif ($strBlog === "flashmob" && $this->flashmob_participant_exists($aFieldValues["user_email"])) {
-          continue;
+        if ($sType === 'missed') {
+          if ($strBlog === "main" && email_exists($aFieldValues["user_email"])) {
+            continue;
+          } elseif ($strBlog === "flashmob" && $this->flashmob_participant_exists($aFieldValues["user_email"])) {
+            continue;
+          }
         }
-        $aFieldValues['_submission_date'] = $oSubmission->get_sub_date( 'Y-m-d H:i:s' );
-        $aFieldValues['_submission_timestamp'] = $oSubmission->get_sub_date( 'U' );
-        $aFieldValues['_form_id'] = $iFormID;
-        $aFieldValues['_submission_id'] = $iSubmissionID;
-        $aFieldValues['_blog_id'] = $iBlogID;
-        $aFieldValues['_field_types'] = $aKeyToType;
-        if (!isset($aMissedSubmissions[$aFieldValues["user_email"]])) {
-          $aMissedSubmissions[$aFieldValues["user_email"]] = array();
+        if ($sType === 'history' && $strBlog === "main" && email_exists($aFieldValues["user_email"])) {
+          $oUser = get_user_by( 'email', $aFieldValues["user_email"] );
+          if (in_array("administrator", $oUser->roles)) {
+            continue;
+          }
         }
-        $aMissedSubmissions[$aFieldValues["user_email"]][] = array_filter($aFieldValues, function($key) {
-          $aPermittedKeys = array('_submission_date', '_submission_timestamp', '_form_id', '_submission_id', '_blog_id', '_field_types');
+        if (!isset($aNfSubmissions[$aFieldValues["user_email"]])) {
+          $aNfSubmissions[$aFieldValues["user_email"]] = array();
+        }
+        $aNfSubmissions[$aFieldValues["user_email"]][] = array_filter($aFieldValues, function($key) {
+          $aPermittedKeys = array('_submission_date', '_submission_timestamp', '_form_id', '_submission_id', '_blog_id');
+          if ($this->aOptions['bCoursesInfoDisabled'] && in_array($key, $this->aMetaFieldsTeacher)) {
+            return false;
+          }
           return in_array($key, $aPermittedKeys) || strpos($key, "_") !== 0;
         }, ARRAY_FILTER_USE_KEY);
+        
       }
     }
-    if (false !== $mixChangeBlogID) {
-      restore_current_blog();
-    }
+    
+    if ($sType === 'history') {
+      $aSkipKeys = array('_blog_id', '_submission_date', '_submission_timestamp', '_form_id', '_submission_id');
+      $aNfSubmissionsRaw = $aNfSubmissions;
+      $aNfSubmissions = array();
+      foreach ($aNfSubmissionsRaw as $strEmail => $aSubmissionsOfUser) {
+        $aNfSubmissions[$strEmail] = array(
+          '_count' => count($aSubmissionsOfUser),
+          '_submissions' => array(),
+        );
+        usort($aSubmissionsOfUser, array($this, "nf_submission_sort"));
+        foreach ($aSubmissionsOfUser as $iKey => $aSubmissionData) {
+          $aSubmissionMeta = array(
+            '_submission_date' => $aSubmissionData['_submission_date'],
+            '_submission_timestamp' => $aSubmissionData['_submission_timestamp'],
+            '_form_id' => $aSubmissionData['_form_id'],
+            '_submission_id' => $aSubmissionData['_submission_id'],
+          );
+          $strSubmissionChangeID = $aSubmissionMeta['_submission_timestamp']."_".$aSubmissionMeta['_form_id']."_".$aSubmissionMeta['_submission_id'];
+          if (!empty($aSkipKeys)) {
+            foreach ($aSkipKeys as $strskipKey) {
+              if (isset($aSubmissionData[$strskipKey])) {
+                unset($aSubmissionData[$strskipKey]);
+              }
+            }
+          }
+          $aNfSubmissions[$strEmail]['_submissions'][$strSubmissionChangeID] = array(
+            '_resave' => false,
+            '_first'  => false,
+            '_meta' => $aSubmissionMeta,
+          );
 
-    //echo "<pre>".var_export($aMissedSubmissions, true)."</pre>"; // NOTE DEVEL
-    return $aMissedSubmissions;
+          if ($iKey === 0) {
+            $aNfSubmissions[$strEmail]['_submissions'][$strSubmissionChangeID]['_first'] = true;
+            $aNfSubmissions[$strEmail]['_submissions'][$strSubmissionChangeID]['_data'] = $aSubmissionData;
+            continue;
+          }
+          
+          $aPreviousSubmissionData = $aSubmissionsOfUser[$iKey - 1];
+          if (!empty($aSkipKeys)) {
+            foreach ($aSkipKeys as $strskipKey) {
+              if (isset($aPreviousSubmissionData[$strskipKey])) {
+                unset($aPreviousSubmissionData[$strskipKey]);
+              }
+            }
+          }
+          if ($aSubmissionData === $aPreviousSubmissionData) {
+            $aNfSubmissions[$strEmail]['_submissions'][$strSubmissionChangeID]['_resave'] = true;
+            continue;
+          }
+          $aNotInNew = array_diff_assoc($aSubmissionData, $aPreviousSubmissionData);
+          $aNotInOld = array_diff_assoc($aPreviousSubmissionData, $aSubmissionData);
+          if (empty($aNotInNew) && empty($aNotInOld)) {
+            $aNfSubmissions[$strEmail]['_submissions'][$strSubmissionChangeID]['_resave'] = true;
+            continue;
+          }
+          $aDiffKeys = array_unique(array_merge(array_keys($aNotInNew), array_keys($aNotInOld)));
+          $aChanges = array();
+          foreach ($aDiffKeys as $strKey) {
+            $aChanges[$strKey] = array(
+              'from'  => $aPreviousSubmissionData[$strKey],
+              'to'    => $aSubmissionData[$strKey],
+            );
+          }
+          $aNfSubmissions[$strEmail]['_submissions'][$strSubmissionChangeID]['_changes'] = $aChanges;
+        }
+      }
+    }
+    
+    //echo "<pre>".var_export($aNfSubmissions, true)."</pre>"; // NOTE DEVEL
+    return $aNfSubmissions;
   }
 
   private function get_missed_submissions_table( $iBlogID = false ) {
-    $aMissedSubmissions = $this->get_missed_submissions( $iBlogID );
+    $aMissedSubmissions = $this->get_nf_submissions( $iBlogID, 'missed', true, true, true ); // $sType = 'missed', $bUseCacheTypes = true, $bUseCacheSubmissions = true, $bClearCacheIfNotUsed = true
     if (false === $aMissedSubmissions || empty($aMissedSubmissions)) {
       return "";
     }
@@ -3842,7 +4322,7 @@ class FLORP{
         $strEcho .=   '<td>'.$aSubmissionData['_submission_date'].'</td>';
         $strEcho .=   '<td>'.$aSubmissionData['first_name'].' '.$aSubmissionData['last_name'].$strButtons.'</td>';
         $aSingleCheckboxes = array( 'courses_in_city_2', 'courses_in_city_3', 'preference_newsletter', 'hide_leader_info' );
-        $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', '_submission_date', '_submission_timestamp', '_submission_id', '_form_id', '_blog_id', '_field_types' );
+        $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', '_submission_date', '_submission_timestamp', '_submission_id', '_form_id', '_blog_id' );
         $strEcho .= "<td>";
         foreach ($aSubmissionData as $strKey => $mixValue) {
           if (!isset($mixValue) || (!is_bool($mixValue) && !is_numeric($mixValue) && empty($mixValue)) || $mixValue === 'null' || in_array( $strKey, $aSkip )) {
@@ -4504,46 +4984,93 @@ class FLORP{
   public function action__delete_nf_submission_callback() {
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
+    $bTest = false; // NOTE DEVEL 
+    
     $aData = $_POST;
     $strErrorMessage = "Could not delete form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'";
     $strOkMessage = "Successfully deleted form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'";
     $aData["removeRowOnSuccess"] = true;
 
     $mixChangeBlogID = false;
-    $aData['blogId'] = intval($aData['blogId']);
-    if ($aData['blogId'] !== intval(get_current_blog_id())) {
-      $mixChangeBlogID = $aData['blogId'];
-    }
-    if (false !== $mixChangeBlogID) {
-      switch_to_blog($mixChangeBlogID);
-    }
+    $iBlogID = intval($aData['blogId']);
+    $iFormID = intval($aData['formId']);
+    $iSubmissionID = intval($aData['submissionId']);
+    
+    if (!isset($this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID], $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'][$iSubmissionID])) {
+      $aData['message'] = $strErrorMessage;
+      $aData['submissions_option'] = $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID];
+    } else {
+      if ($iBlogID !== intval(get_current_blog_id())) {
+        $mixChangeBlogID = $iBlogID;
+      }
+      if (false !== $mixChangeBlogID) {
+        switch_to_blog($mixChangeBlogID);
+      }
 
-    $oSubmission = Ninja_Forms()->form( $aData['formId'] )->get_sub( $aData['submissionId'] );
-    $oSubmission->delete();
+      $oSubmission = Ninja_Forms()->form( $iFormID )->get_sub( $iSubmissionID );
+      $strUserEmail = $oSubmission->get_field_value( 'user_email' );
+      if (empty($strUserEmail)) {
+        $aData['message'] = $strErrorMessage;
+      }
+      if (!$bTest) {
+        $oSubmission->delete();
+      }
 
-    if (false !== $mixChangeBlogID) {
-      restore_current_blog();
-    }
+      $oSubmission = Ninja_Forms()->form( $iFormID )->get_sub( $iSubmissionID );
+      $strUserEmailN = $oSubmission->get_field_value( 'user_email' );
+      if (!$bTest && $strUserEmail === $strUserEmailN) {
+        $aData['message'] = $strErrorMessage;
+      }
 
-    $aMissedSubmissions = $this->get_missed_submissions( $aData['blogId'] );
-    if (isset($aMissedSubmissions[$aData['email']])) {
-      foreach ($aMissedSubmissions[$aData['email']] as $aSubmissionData) {
-        if ($aSubmissionData['_form_id'] === $aData['formId'] && $aSubmissionData['_submission_id'] === $aData['submissionId'] && $aSubmissionData['_blog_id'] === $aData['blogId'] ) {
-          $aData['message'] = $strErrorMessage;
-          break;
+      if (false !== $mixChangeBlogID) {
+        restore_current_blog();
+      }
+
+      if (!isset($aData['message'])) {
+        if (isset($this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID], $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'][$iSubmissionID])) {
+          if ($bTest) {
+            $aData['deleted'] = $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'][$iSubmissionID];
+            $aData['submissions_option_before'] = $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'];
+          }
+          unset($this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'][$iSubmissionID]);
+          if ($bTest) {
+            $aData['submissions_option_after'] = $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'];
+          }
+          if (!$bTest) {
+            $this->save_options();
+          }
+        } elseif ($bTest) {
+          $aData['submissions_option'] = $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID];
+        }
+        
+        $aMissedSubmissions = $this->get_nf_submissions( $iBlogID );
+        if ($bTest) {
+          $aData['submissions'] = $aMissedSubmissions;
+        }
+        if (isset($aMissedSubmissions[$aData['email']])) {
+          foreach ($aMissedSubmissions[$aData['email']] as $aSubmissionData) {
+            if ($aSubmissionData['_form_id'] === $iFormID && $aSubmissionData['_submission_id'] === $iSubmissionID && $aSubmissionData['_blog_id'] === $iBlogID ) {
+              $aData['message'] = $strErrorMessage;
+              break;
+            }
+          }
+          if (!isset($aData['message'])) {
+            $aData['ok'] = true;
+            $aData['message'] = $strOkMessage;
+            if (!$bTest) {
+              $this->add_option_change("ajax__delete_nf_submission", "", "form #{$iFormID} submission #{$iSubmissionID} of '{$aData['email']}'");
+            }
+          }
+        } else {
+          $aData['ok'] = true;
+          $aData['message'] = $strOkMessage;
+          if (!$bTest) {
+            $this->add_option_change("ajax__delete_nf_submission", "", "form #{$iFormID} submission #{$iSubmissionID} of '{$aData['email']}'");
+          }
         }
       }
-      if (!isset($aData['message'])) {
-        $aData['ok'] = true;
-        $aData['message'] = $strOkMessage;
-        $this->add_option_change("ajax__delete_nf_submission", "", "form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'");
-      }
-    } else {
-      $aData['ok'] = true;
-      $aData['message'] = $strOkMessage;
-      $this->add_option_change("ajax__delete_nf_submission", "", "form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'");
     }
-
+    
     echo json_encode($aData);
     wp_die();
   }
@@ -4559,80 +5086,57 @@ class FLORP{
     $aData['blogId'] = intval($aData['blogId']);
 
     if ($aData['blogId'] === $this->iFlashmobBlogID) {
-      $aMissedSubmissions = $this->get_missed_submissions( $aData['blogId'] );
-      $aSubmission = false;
-      if (isset($aMissedSubmissions[$aData['email']])) {
-        foreach ($aMissedSubmissions[$aData['email']] as $aSubmissionData) {
-          if ($aSubmissionData['_form_id'] == $aData['formId'] && $aSubmissionData['_submission_id'] == $aData['submissionId'] && $aSubmissionData['_blog_id'] == $aData['blogId'] ) {
-            $aSubmission = $aSubmissionData;
-            break;
-          }
-        }
-        if ($aSubmission) {
-          $oLeader = get_user_by( 'id', $aSubmission['leader_user_id'] );
-          if (false === $oLeader) {
-            // Leader doesn't exist (any more) //
-            $aData['message'] = $strErrorMessage . "\nLeader doesn't exist";
-          } elseif (in_array( $this->strUserRolePending, (array) $oLeader->roles )) {
-            // Leader is pending //
-            $aData['message'] = $strErrorMessage . "\nLeader is pending approval";
-          } else {
-            $aFields = array();
-            $aSkipKeys = array('_submission_date', '_submission_timestamp', '_form_id', '_submission_id', '_blog_id', '_field_types');
-            foreach ($aSubmission as $key => $val) {
-              if (in_array($key, $aSkipKeys)) {
-                continue;
-              }
-              if (!isset($aSubmission['_field_types'][$key])) {
-                continue;
-              }
-              $aFields[] = array(
-                'type'  => $aSubmission['_field_types'][$key],
-                'key'   => $key,
-                'value' => $val
-              );
-            }
-            $aFormData = array(
-              'form_id' => $this->iProfileFormNinjaFormIDFlashmob,
-              'fields' => $aFields
-            );
-            $bIsFlashmobBlogBak =  $this->isFlashmobBlog;
-            $bIsMainBlogBak =  $this->isMainBlog;
-            $this->isFlashmobBlog = true;
-            $this->isMainBlog = false;
-            $res = $this->action__update_user_profile( $aFormData );
-            $this->isFlashmobBlog = $bIsFlashmobBlogBak;
-            $this->isMainBlog = $bIsMainBlogBak;
-            // $aData['res'] = var_export($res, true); // NOTE DEVEL
-
-            $aMissedSubmissionsAfterSave = $this->get_missed_submissions( $aData['blogId'] );
-            if (isset($aMissedSubmissionsAfterSave[$aData['email']])) {
-              foreach ($aMissedSubmissionsAfterSave[$aData['email']] as $aSubmissionData) {
-                if ($aSubmissionData['_form_id'] == $aData['formId'] && $aSubmissionData['_submission_id'] == $aData['submissionId'] && $aSubmissionData['_blog_id'] == $aData['blogId'] ) {
-                  $aData['message'] = $strErrorMessage;
-                  break;
-                }
-              }
-              if (!isset($aData['message'])) {
-                // Submission no longer exists //
-                $aData['ok'] = true;
-                $aData['message'] = $strOkMessage;
-                $this->add_option_change("ajax__import_flashmob_nf_submission", "", "form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'");
-              }
-            } else {
-              // No submission of given email exists any longer //
-              $aData['ok'] = true;
-              $aData['message'] = $strOkMessage;
-              $this->add_option_change("ajax__import_flashmob_nf_submission", "", "form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'");
-            }
-          }
+      $aSubmission = $this->get_nf_submission($aData['blogId'], $aData['formId'], $aData['submissionId']);
+      if ($aSubmission) {
+        $oLeader = get_user_by( 'id', $aSubmission['leader_user_id'] );
+        if (false === $oLeader) {
+          // Leader doesn't exist (any more) //
+          $aData['message'] = $strErrorMessage . "\nLeader doesn't exist";
+        } elseif (in_array( $this->strUserRolePending, (array) $oLeader->roles )) {
+          // Leader is pending //
+          $aData['message'] = $strErrorMessage . "\nLeader is pending approval";
         } else {
-          // Submission was not found //
-          $aData['message'] = $strErrorMessage . "\nSubmission couldn't be found";
+          $aFields = array();
+          $aSkipKeys = array('_submission_date', '_submission_timestamp', '_form_id', '_submission_id', '_blog_id', '_field_types');
+          foreach ($aSubmission as $key => $val) {
+            if (in_array($key, $aSkipKeys)) {
+              continue;
+            }
+            if (!isset($aSubmission['_field_types'][$key])) {
+              continue;
+            }
+            $aFields[] = array(
+              'type'  => $aSubmission['_field_types'][$key],
+              'key'   => $key,
+              'value' => $val
+            );
+          }
+          $aFormData = array(
+            'form_id' => $this->iProfileFormNinjaFormIDFlashmob,
+            'fields' => $aFields
+          );
+          $bIsFlashmobBlogBak =  $this->isFlashmobBlog;
+          $bIsMainBlogBak =  $this->isMainBlog;
+          $this->isFlashmobBlog = true;
+          $this->isMainBlog = false;
+          $res = $this->action__update_user_profile( $aFormData );
+          $this->isFlashmobBlog = $bIsFlashmobBlogBak;
+          $this->isMainBlog = $bIsMainBlogBak;
+          // $aData['res'] = var_export($res, true); // NOTE DEVEL
+
+          if (!$this->flashmob_participant_exists($aData['email'])) {
+            // Participant wasn't imported //
+            $aData['message'] = $strErrorMessage;
+          } else {
+            // Participant was imported //
+            $aData['ok'] = true;
+            $aData['message'] = $strOkMessage;
+            $this->add_option_change("ajax__import_flashmob_nf_submission", "", "form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'");
+          }
         }
       } else {
-        // No such submission //
-        $aData['message'] = $strErrorMessage . "\nThere is no such submission";
+        // Submission was not found //
+        $aData['message'] = $strErrorMessage . "\nSubmission couldn't be found";
       }
     } else {
       $aData['message'] = "This button is only for flashmob submissions!";
@@ -6843,6 +7347,19 @@ class FLORP{
       }
     }
 
+    $iBlogID = get_current_blog_id();
+    $this->aOptions['aNfSubmissions'][$iBlogID]['done'] = false;
+    if (isset($this->aOptions['aNfSubmissions'][$iBlogID]['forms'][intval($aFormData['form_id'])])) {
+      $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][intval($aFormData['form_id'])]['done'] = false;
+    } else {
+      $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][intval($aFormData['form_id'])] = array(
+        'done' => false,
+        'rows' => array(),
+      );
+    }
+    $this->aOptions['aNfFieldTypes'][$iBlogID]['done'] = false;
+    $this->save_options();
+    
     if ($this->isFlashmobBlog && intval($aFormData['form_id']) === $this->iProfileFormNinjaFormIDFlashmob) {
       // Get field values by keys //
       $aFieldData = array();

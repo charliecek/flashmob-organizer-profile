@@ -312,6 +312,9 @@ jQuery( document ).ready(function() {
     $tables.each(function( it ) {
       window["florpFilterColumnInputValues"][it] = {}
       var $table = jQuery(this)
+      if ($table.hasClass("noFilter")) {
+        return false
+      }
       var $rows = $table.find("tr")
       if ($rows.length === 0) {
         return false
