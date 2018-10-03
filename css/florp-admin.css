@@ -38,3 +38,56 @@ span.tableCountInfo{
   text-align: right;
   padding: 0 5px;
 }
+
+table.florpNoWrap{
+  white-space: nowrap;
+}
+
+table.florpHorizontalScroll{
+  overflow-x: auto;
+  display: block;
+}
+
+.florpTableCaption{
+  float: left;
+  margin-bottom: 0;
+  margin-top: 1.33em;
+}
+.florpTableCaption+.tableCountInfo{
+  float: right;
+  margin-top: 1.33em;
+}
+
+table.florpFirstColFrozen.florpHorizontalScroll{
+  width: calc( 100% - 14em - 20px );
+}
+
+table.florpFirstColFrozen tr td:first-of-type,
+table.florpFirstColFrozen tr th:first-of-type{
+  position: absolute;
+  width: 14em;
+  left: 10px;
+  background-color: white;
+  padding-left: 10px;
+  padding-right: 10px;
+/*  width: calc( 14em - 20px );
+  padding-left: 10px;
+  padding-right: 10px;*/
+}
+table.florpFirstColFrozen tr th:first-of-type{
+  width: calc( 14em - 20px );
+  padding-left: 10px;
+  padding-right: 10px;
+}
+table.florpFirstColFrozen.striped tr:nth-child(odd) :first-of-type {
+  background-color: #f9f9f9;
+}
+
+table.florpFirstColFrozen tr.florpFilterHeaderRow th:first-of-type{
+  width: 14em;
+  padding-left: 0;
+  padding-right: 0;
+}
+table.florpFirstColFrozen{
+  margin-left: calc( 14em + 20px );
+}

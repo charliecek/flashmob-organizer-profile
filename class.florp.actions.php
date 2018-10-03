@@ -82,16 +82,14 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
             $aKeyToLabel[$strKey] = $field_value['label'];
           }
         }
+        $aSubscriberType = array();
         foreach ($data['fields'] as $field_id => $field_value ) {
           $strKey = $field_value['key'];
           $strValue = $field_value['value'];
           if ($strKey == 'subscriber_type') { // old way //
             $aSubscriberType = $strValue;
             break;
-          } elseif ($strKey == 'flashmob_organizer' || $strKey == 'teacher') { // new way //
-            if (!isset($aSubscriberType)) {
-              $aSubscriberType = array();
-            }
+          } elseif (($strKey == 'flashmob_organizer' || $strKey == 'teacher') && $strValue === 1) { // new way //
             $aSubscriberType[] = $strKey;
           }
         }
@@ -199,9 +197,11 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
 //           $data[ 'errors' ][ 'form' ][] = 'DEVEL STOP';
 //           $data[ 'errors' ][ 'form' ][] = '<pre>'.var_export($aKeyToValue, true).'</pre>';
 //         }
-  //       if ($bUserIsLoggedIn) {
-  //         $data[ 'errors' ][ 'form' ][] = 'DEVEL STOP';
-  //       }
+//         if ($bUserIsLoggedIn) {
+//           $data[ 'errors' ][ 'form' ][] = 'DEVEL STOP';
+//           $data[ 'errors' ][ 'form' ][] = '<pre>'.var_export($aSubscriberType, true).'</pre>';
+//           $data[ 'errors' ][ 'form' ][] = '<pre>'.var_export(in_array("flashmob_organizer", $aSubscriberType), true).'</pre>';
+//         }
   //       if (!$bUserIsLoggedIn) {
   //         $data[ 'errors' ][ 'form' ][] = 'DEVEL STOP';
   //         $data[ 'errors' ][ 'form' ][] = '<pre>'.var_export($data['fields'], true).'</pre>';

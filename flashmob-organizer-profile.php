@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.6.6
+ * Version: 4.6.7
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '4.6.6';
+  private $strVersion = '4.6.7';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -64,7 +64,6 @@ class FLORP{
 
   public function __construct() {
     $this->load_options();
-    // $this->aOptions['aUnhideFlashmobFieldsForUsers'][] = 56; // NOTE DEVEL
 
     $this->set_variables();
 
@@ -2995,7 +2994,6 @@ class FLORP{
         $aCancelFlashmobProperties['buttonLabels'][$iLeaderID] = false;
       }
     }
-    // echo "<pre>";var_dump($aCancelFlashmobProperties);echo "</pre>"; // NOTE DEVEL
 
     $strEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Preferencie</th><th>Profil</th><th>Účastníci</th>';
     foreach ($aUsers as $oUser) {
@@ -3103,7 +3101,6 @@ class FLORP{
     echo "<div class=\"wrap\"><h1>" . "Zoznam účastníkov" . "</h1>";
 
     $strEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Líder</th>';
-//     $strEcho .= '<th>Pohlavie</th><th>Tanečná úroveň</th>';
     $strEcho .= '<th>Profil</th>';
     $aParticipants = $this->get_flashmob_participants( 0, false, true );
 //     echo "<pre>";var_dump($aParticipants);echo "</pre>"; // NOTE DEVEL
@@ -3160,11 +3157,9 @@ class FLORP{
         $strIsPending = " ({$this->strUserRolePendingName})";
       }
       $strEcho .=   '<td><a href="'.admin_url('admin.php?page=florp-leaders')."#{$iLeaderID}\">{$oLeader->first_name} {$oLeader->last_name}</a>{$strIsPending}</td>";
-//         $strEcho .=   '<td>'.$aParticipantData['gender'].'</td>';
-//         $strEcho .=   '<td>'.$aParticipantData['dance_level'].'</td>';
       $strEcho .=   '<td>';
       $aTimestamps = array( 'registered', 'tshirt_order_cancelled_timestamp' );
-      $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', 'leader_user_id'/*, 'dance_level', 'gender'*/ );
+      $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', 'leader_user_id' );
       if (!isset($aParticipantData['leader_notified'])) {
         $aParticipantData['leader_notified'] = false;
       }
@@ -3479,6 +3474,14 @@ class FLORP{
     echo "<div class=\"wrap\">\n<h1>" . "Option changes" . "</h1>\n";
     $strEcho = '<table class="widefat striped"><th>Date</th><th>User</th><th>Changed option key</th><th>From</th><th>To</th>'."\n";
     // echo "<pre>"; var_dump($this->aOptions['aOptionChanges']); echo "</pre>"; // NOTE DEVEL
+    $aTestIDsToDelete = array( 1538506746, 1538506194 );
+    foreach ($aTestIDsToDelete as $iTimestamp) {
+      if (isset($this->aOptions['aOptionChanges'][$iTimestamp])) {
+        unset($this->aOptions['aOptionChanges'][$iTimestamp]);
+        $this->save_options();
+      }
+    }
+    
     foreach ($this->aOptions['aOptionChanges'] as $iTimestamp => $aChanges) {
       $iUserID = $aChanges['_user_id'];
       $oUser = get_user_by( 'id', $iUserID );
@@ -3489,7 +3492,7 @@ class FLORP{
       $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
       $strDate = date( get_option('date_format')." ".get_option('time_format'), $iTimestamp + $iTimeZoneOffset*3600 );
 
-      $strEcho .= "<tr class=\"row\">";
+      $strEcho .= "<tr data-timestamp=\"{$iTimestamp}\" class=\"row\">";
       $strEcho .=   "<td rowspan=\"{$iChangeCount}\">{$strDate}</td>\n";
       $strEcho .=   "<td rowspan=\"{$iChangeCount}\">{$iUserID}: {$oUser->first_name} {$oUser->last_name}</td>\n";
       foreach ($aChanges as $strKey => $aChange) {
@@ -3531,13 +3534,239 @@ class FLORP{
 
   public function leader_submission_history_table_admin() {
     echo "<div class=\"wrap\">\n<h1>" . "Leader submission history" . "</h1>\n";
-    $strEcho = '<table class="widefat striped noFilter"><th>User</th><th>Date</th><th>Changed option</th><th>From</th><th>To</th>'."\n";
     $aNfSubmissionHistory = $this->get_nf_submissions( false, 'history' );
     if (defined('FLORP_DEVEL') && FLORP_DEVEL === true) {
 //       echo "<pre>";var_dump($aNfSubmissionHistory);echo "</pre>"; // NOTE DEVEL
     }
+    
+    $strCookieKey = "florp-history-table-admin-view";
+    $aViews = array( 'progress_vertical', 'progress_horizontal', 'table' );
+    if (isset($_POST) && isset($_POST['view']) && in_array($_POST['view'], $aViews)) {
+      $strView = $_POST['view'];
+      setcookie($strCookieKey, $strView, time() + (365 * 24 * 60 * 60), '/');
+    } elseif (isset($_COOKIE) && isset($_COOKIE[$strCookieKey]) && in_array($_COOKIE[$strCookieKey], $aViews)) {
+      $strView = $_COOKIE[$strCookieKey];
+    } else {
+      $strView = $aViews[0];
+      setcookie($strCookieKey, $strView, time() + (365 * 24 * 60 * 60), '/');
+    }
+    if (!isset($_COOKIE[$strCookieKey])) {
+      setcookie($strCookieKey, $strView, time() + (365 * 24 * 60 * 60), '/');
+    }
+    $strEcho = '<form action="" method="post">';
+    $strEcho .= '<label for="florp-view">Choose view:</label> <select id="florp-view" name="view" onchange="if (this.value != 0) { this.form.submit(); }">';
+    foreach ($aViews as $strViewOption) {
+      $strSelected = "";
+      if ($strView == $strViewOption) {
+        $strSelected = ' selected="selected"';
+      }
+      $strEcho .= "<option value=\"{$strViewOption}\"{$strSelected}>".ucfirst(str_replace( '_', ' ', $strViewOption ))."</option>";
+    }
+    $strEcho .= '</select>';
+    $strEcho .= '</form>';
+    
+    if ($strView === 'table') {
+      $strEcho .= $this->leader_submission_history_table_admin__table($aNfSubmissionHistory);
+    } elseif ($strView == 'progress_horizontal') {
+      $strEcho .= $this->leader_submission_history_table_admin__progress_horizontal($aNfSubmissionHistory);
+    } else {
+      $strEcho .= $this->leader_submission_history_table_admin__progress_vertical($aNfSubmissionHistory);
+    }
+    echo $strEcho;
+    echo '</div><!-- .wrap -->';
+  }
+    
+  private function leader_submission_history_table_admin__progress_vertical($aNfSubmissionHistory) {
+    $aData = $this->get_leader_submission_history_table_progress_data($aNfSubmissionHistory);
+    return $this->get_leader_submission_history_table_progress_table($aData, false);
+  }
+  
+  private function get_leader_submission_history_table_progress_data ($aNfSubmissionHistory) {
+    $aSkip = array();
+    $strDateFormat = get_option('date_format')." ".get_option('time_format');
     $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
-    // echo $strEcho; echo '</div><!-- .wrap -->'; return;
+    $aReturn = array();
+    foreach ($aNfSubmissionHistory as $strEmail => $aSubmissionsOfUser) {
+      $iChangeCount = $aSubmissionsOfUser['_count'];
+      $oLeader = get_user_by( 'email', $strEmail );
+      if (false === $oLeader) {
+        $strLeaderID = "";
+        $strNameOrEmail = $strEmail;
+      } else {
+        $strLeaderID = $oLeader->ID . ": ";
+        $strNameOrEmail = "<span title=\"{$strEmail}\">{$oLeader->first_name} {$oLeader->last_name}</span>";
+      }
+      if ($iChangeCount <= 0) {
+        continue;
+      }
+      $aReturn[$strEmail] = array(
+        'caption' => "{$strLeaderID}{$strNameOrEmail}"
+      );
+
+      $aReturn[$strEmail]['columns'] = array();
+      $aReturn[$strEmail]['rows'] = array();
+      foreach ($aSubmissionsOfUser['_submissions'] as $strSubmissionChangeID => $aSubmissionData) {
+        $iTimestamp = $aSubmissionData['_meta']['_submission_timestamp'];
+        $aDate = array(
+          'ts' => $aSubmissionData['_meta']['_submission_timestamp'],
+          'dtGmt' => $aSubmissionData['_meta']['_submission_date'],
+          'dt' => date( $strDateFormat, $iTimestamp + $iTimeZoneOffset*3600 ),
+        );
+        $aReturn[$strEmail]['columns'][$iTimestamp] = $aDate;
+        if ($aSubmissionData['_resave']) {
+          $aReturn[$strEmail]['columns'][$iTimestamp]['resave'] = true;
+          continue;
+        }
+        $bRows = false;
+        if ($aSubmissionData['_first']) {
+          foreach ($aSubmissionData['_data'] as $strKey => $mixValue) {
+            if ($this->aOptions['bCoursesInfoDisabled'] && in_array($strKey, $this->aMetaFieldsTeacher)) {
+              continue;
+            }
+            if (!isset($mixValue) || (!is_bool($mixValue) && !is_numeric($mixValue) && empty($mixValue)) || $mixValue === 'null' || in_array( $strKey, $aSkip )) {
+              continue;
+            }
+            if (!isset($aReturn[$strEmail]['rows'][$strKey])) {
+              $aReturn[$strEmail]['rows'][$strKey] = array();
+            }
+            $aReturn[$strEmail]['rows'][$strKey][$iTimestamp] = $mixValue;
+            $bRows = true;
+          }
+        } else {
+          foreach ($aSubmissionData['_changes'] as $strKey => $aChange) {
+            if (!isset($aReturn[$strEmail]['rows'][$strKey])) {
+              $aReturn[$strEmail]['rows'][$strKey] = array();
+            }
+            $aReturn[$strEmail]['rows'][$strKey][$iTimestamp] = $aChange['to'];
+            $bRows = true;
+          }
+        }
+        if (!$bRows) {
+          $aReturn[$strEmail]['columns'][$iTimestamp]['resave'] = true;
+        }
+      }
+    }
+    return $aReturn;
+  }
+  
+  private function get_leader_submission_history_table_progress_table ($aData, $bHorizontal = true) {
+    $strEcho = "";
+    $aTimestamps = array();
+    foreach ($aData as $strEmail => $aUser) {
+      $strAdditionalClasses = "";
+      if ($bHorizontal) {
+        $strAdditionalClasses = " noFilter";
+      } else {
+        $strAdditionalClasses = " florpNoWrap florpHorizontalScroll florpFirstColFrozen";
+      }
+      $strEcho .= "<h4 class=\"florpTableCaption\">{$aUser['caption']}</h4>".PHP_EOL;
+      $strEcho .= '<table class="widefat striped'.$strAdditionalClasses.'">'.PHP_EOL;
+      
+      if ($bHorizontal) {
+        // Hotizontal //
+        $aColumns = $aUser['columns'];
+        $aRows = $aUser['rows'];
+        // Headers //
+        $strEcho .= '<tr>'.PHP_EOL;
+        $strEcho .= "<th>Field key</th>".PHP_EOL;
+        foreach ($aColumns as $iTimestamp => $aCol) {
+          $strEcho .= "<th>{$aCol['dt']}</th>";
+        }
+        $strEcho .= '</tr>'.PHP_EOL;
+        
+        foreach ($aRows as $strFieldKey => $aRow) {
+          $strEcho .= '<tr>'.PHP_EOL;
+          $strKey = $strFieldKey;
+          if (in_array($strFieldKey, $aTimestamps)) {
+            $strKey = str_replace("_timestamp", "", $strFieldKey);
+          }
+          $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
+          $strEcho .= "<th>{$strFieldName}</th>".PHP_EOL;
+          foreach ($aColumns as $iTimestamp => $aCol) {
+            $strEcho .= '<td>'.PHP_EOL;
+            if ($aCol['resave']) {
+              $strEcho .= "[resave without change]";
+            } elseif (isset($aRow[$iTimestamp])) {
+              $mixValue = $aRow[$iTimestamp];
+              if (in_array($strFieldKey, $aTimestamps)) {
+                $strKey = str_replace("_timestamp", "", $strKey);
+                $strValue = date( get_option('date_format')." ".get_option('time_format'), $mixValue );
+              } elseif (is_array($mixValue)) {
+                $strValue = implode( ', ', $mixValue);
+              } elseif (is_bool($mixValue)) {
+                $strValue = $mixValue ? '<input type="checkbox" disabled checked /><span class="hidden">yes</span>' : '<input type="checkbox" disabled /><span class="hidden">no</span>';
+              } else {
+                $strValue = $mixValue;
+              }
+              $strEcho .= $strValue;
+            } else {
+              // No change for this column //
+            }
+            $strEcho .= '</td>'.PHP_EOL;
+          }
+          $strEcho .= '</tr>'.PHP_EOL;
+        }
+      } else {
+        // Vertical //
+        $aColumns = $aUser['rows'];
+        $aRows = $aUser['columns'];
+        // Headers //
+        $strEcho .= '<tr>'.PHP_EOL;
+        $strEcho .= "<th>Date</th>".PHP_EOL;
+        foreach ($aColumns as $strFieldKey => $aColumn) {
+          $strKey = $strFieldKey;
+          if (in_array($strFieldKey, $aTimestamps)) {
+            $strKey = str_replace("_timestamp", "", $strFieldKey);
+          }
+          $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
+          $strEcho .= "<th>{$strFieldName}</th>".PHP_EOL;
+        }
+        $strEcho .= '</tr>'.PHP_EOL;
+        
+        foreach ($aRows as $iTimestamp => $aRow) {
+          $strEcho .= '<tr>'.PHP_EOL;
+          $strEcho .= "<td>{$aRow['dt']}</td>";
+          foreach ($aColumns as $strFieldKey => $aColumn) {
+            $strEcho .= '<td>'.PHP_EOL;
+            if ($aRow['resave']) {
+              $strEcho .= "[resave without change]";
+            } elseif (isset($aColumn[$iTimestamp])) {
+              $mixValue = $aColumn[$iTimestamp];
+              if (in_array($strFieldKey, $aTimestamps)) {
+                $strKey = str_replace("_timestamp", "", $strKey);
+                $strValue = date( get_option('date_format')." ".get_option('time_format'), $mixValue );
+              } elseif (is_array($mixValue)) {
+                $strValue = implode( ', ', $mixValue);
+              } elseif (is_bool($mixValue)) {
+                $strValue = $mixValue ? '<input type="checkbox" disabled checked /><span class="hidden">yes</span>' : '<input type="checkbox" disabled /><span class="hidden">no</span>';
+              } else {
+                $strValue = $mixValue;
+              }
+              $strEcho .= $strValue;
+            } else {
+              // No change for this column //
+            }
+            $strEcho .= '</td>'.PHP_EOL;
+          }
+          $strEcho .= '</tr>'.PHP_EOL;
+        }
+      }
+      
+      $strEcho .= '</table>'.PHP_EOL;
+      $strEcho .= '<p></p>'.PHP_EOL;
+    }
+    return $strEcho;
+  }
+  
+  private function leader_submission_history_table_admin__progress_horizontal($aNfSubmissionHistory) {
+    $aData = $this->get_leader_submission_history_table_progress_data($aNfSubmissionHistory);
+    return $this->get_leader_submission_history_table_progress_table($aData, true);
+  }
+  
+  private function leader_submission_history_table_admin__table($aNfSubmissionHistory) {
+    $strEcho = '<table class="widefat striped noFilter"><th>User</th><th>Date</th><th>Changed option</th><th>From</th><th>To</th>'."\n";
+    $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
+    // echo $strEcho; return;
     
     foreach ($aNfSubmissionHistory as $strEmail => $aSubmissions) {
       $iChangeCount = $aSubmissions['_count'];
@@ -3677,8 +3906,7 @@ class FLORP{
     }
     $strEcho .= "</table>";
 
-    echo $strEcho;
-    echo '</div><!-- .wrap -->';
+    return $strEcho;
     // $this->aOptions['aOptionChanges'] = array(); $this->save_options(); // NOTE DEVEL
   }
 
@@ -4018,8 +4246,8 @@ class FLORP{
     }
 //     echo "<pre>";var_dump($this->aOptions['aNfFieldTypes']);echo "</pre>"; // NOTE DEVEL
 //     echo "<pre>";var_dump($this->aOptions['aNfSubmissions']);echo "</pre>"; // NOTE DEVEL
-//     $this->aOptions['aNfSubmissions'] = $this->aOptionDefaults['aNfSubmissions']; // TODO DEVEL
-//     $this->aOptions['aNfFieldTypes'] = $this->aOptionDefaults['aNfFieldTypes']; // TODO DEVEL
+//     $this->aOptions['aNfSubmissions'] = $this->aOptionDefaults['aNfSubmissions']; // NOTE DEVEL
+//     $this->aOptions['aNfFieldTypes'] = $this->aOptionDefaults['aNfFieldTypes']; // NOTE DEVEL
 //     $this->save_options();return; // NOTE DEVEL
 
     if ($bUseCacheTypes && $this->aOptions['aNfFieldTypes'][$iBlogID]['done']) {
@@ -4063,10 +4291,6 @@ class FLORP{
     }
 //     echo "<pre>";var_dump($this->aOptions['aNfFieldTypes']);echo "</pre>"; // NOTE DEVEL
     
-//     $this->aOptions['aNfSubmissions'][$iBlogID]['done'] = false; // TODO DEVEL
-//     $this->aOptions['aNfSubmissions'][6]['done'] = false; // TODO DEVEL
-//     $this->aOptions['aNfSubmissions'][6]['forms'] = array(); // TODO DEVEL
-
     if ($bUseCacheSubmissions && $this->aOptions['aNfSubmissions'][$iBlogID]['done']) {
       // OK //
     } else {
@@ -4090,14 +4314,12 @@ class FLORP{
             'rows' => array(),
           );
         }
-//         $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['done'] = false; // TODO DEVEL
         if (isset($this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]) && isset($this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['done']) && $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['done'] === true) {
           // Form is there and done //
           continue;
         }
         $strTitle = $objForm->get_setting( 'title' );
         if (strpos($strTitle, $strProfileFormTitle) === false && strpos($strProfileFormTitle, $strTitle) === false) {
-//           echo "<pre>'{$strTitle}' !~ '{$strProfileFormTitle}'</pre>"; // NOTE DEVEL
           $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'] = false;
           $this->maybe_save_options($bUseCacheSubmissions);
           continue;
@@ -4110,8 +4332,6 @@ class FLORP{
           $this->maybe_save_options($bUseCacheSubmissions);
           continue;
         }
-//         echo "<pre>{$iFormID}: {$strTitle}\n";var_dump(count($aSubmissions));echo "</pre>"; // NOTE DEVEL
-//         continue;
         foreach ($aSubmissions as $oSubmission) {
           $iSubmissionID = $oSubmission->get_id();
           if (isset($this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'][$iSubmissionID])) {
@@ -4148,12 +4368,9 @@ class FLORP{
           
           $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'][$iSubmissionID] = $aFieldValues;
           $this->maybe_save_options($bUseCacheSubmissions);
-//           echo "<pre>{$iSubmissionID}:\n";var_dump($this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'][$iSubmissionID]);echo "</pre>"; // NOTE DEVEL
-//           echo "<pre>";var_dump($aKeyToType, $aFieldValues);echo "</pre>"; // NOTE DEVEL
         }
         $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['done'] = true;
         $this->maybe_save_options($bUseCacheSubmissions);
-//         break; // NOTE DEVEL
       }
       if (false !== $mixChangeBlogID) {
         restore_current_blog();
@@ -4161,8 +4378,6 @@ class FLORP{
       $this->aOptions['aNfSubmissions'][$iBlogID]['done'] = true;
       $this->maybe_save_options($bUseCacheSubmissions);
     }
-//     echo "<pre>";var_dump($this->aOptions['aNfSubmissions'][6]);echo "</pre>"; // NOTE DEVEL
-//     echo "<pre>";var_dump($this->aOptions['aNfSubmissions']);echo "</pre>"; // NOTE DEVEL
 
     foreach ($this->aOptions['aNfSubmissions'][$iBlogID]['forms'] as $iFormID => $aSubmissions) {
       if (!isset($aSubmissions['done']) || $aSubmissions['done'] !== true) {
@@ -4773,7 +4988,7 @@ class FLORP{
     if (isset($aData['orderdate'],$aData['orderdate_timestamp'],$aData['ordertype']) && in_array($aData['ordertype'], $aOrderTypes) && intval($aData['orderdate_timestamp']) > 0) {
       $iTimestamp = intval($aData['orderdate_timestamp']);
       $iTimestampMax = 0;
-      $bTest = false; // NOTE DEVEL
+      $bTest = false; // NOTE DEVEL TEST //
       if ($bTest) {
         $this->aOptions['aOrderDates'] = array();
       }
@@ -4984,7 +5199,7 @@ class FLORP{
   public function action__delete_nf_submission_callback() {
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
-    $bTest = false; // NOTE DEVEL 
+    $bTest = false; // NOTE DEVEL TEST //
     
     $aData = $_POST;
     $strErrorMessage = "Could not delete form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'";
@@ -7431,7 +7646,6 @@ class FLORP{
         $this->new_user_notification( $aFieldData['user_email'], '', $aFieldData['user_email'], $strBlogname, $strMessageContent, $this->aOptions['strParticipantRegisteredSubject'], $aHeaders );
       }
       return 1;
-      // return array($aFormData, $aFieldData, $iUserID, $this->aOptions['aParticipants'][$iUserID]); // NOTE DEVEL
     }
 
     if (!$this->isMainBlog || intval($aFormData['form_id']) !== $this->iProfileFormNinjaFormIDMain) {
