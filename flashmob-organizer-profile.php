@@ -495,6 +495,9 @@ class FLORP{
       'og_map_image_alt'  => "Mapka registrovaných organizátorov rueda flashmobu na Slovensku",
       'fb_app_id'         => $this->aOptions['strFbAppID'],
     );
+    $this->aLeaderSubmissionHistoryViews = array( 'progress_vertical', 'progress_horizontal', 'table' );
+    $this->strLeaderSubmissionHistoryViewsCookieKey = "florp-history-table-admin-view";
+    $this->strLeaderSubmissionHistoryView = $this->aLeaderSubmissionHistoryViews[0];
   }
 
   private function get_default_options() {
@@ -1541,8 +1544,28 @@ class FLORP{
       add_action( 'admin_notices', array( $this, 'action__admin_notices__florp_devel_purge_tshirts_save_is_on' ));
     }
 
-    if (isset($_POST['florp-download-tshirt-csv'])) {
+    if (is_admin() && current_user_can( 'activate_plugins' ) && isset($_POST['florp-download-tshirt-csv'])) {
       $this->serveTshirtCSV();
+    }
+    
+    if (is_admin() && current_user_can( 'activate_plugins' )) {
+      // Set cookie for leader submission history view //
+      $strCookieKey = $this->strLeaderSubmissionHistoryViewsCookieKey;
+      $aViews = $this->aLeaderSubmissionHistoryViews;
+      if (isset($_POST) && isset($_POST['view']) && in_array($_POST['view'], $aViews)) {
+        $strView = $_POST['view'];
+        setcookie($strCookieKey, $strView, time() + (365 * 24 * 60 * 60), '/');
+      } elseif (isset($_COOKIE) && isset($_COOKIE[$strCookieKey]) && in_array($_COOKIE[$strCookieKey], $aViews)) {
+        // OK //
+        $strView = $_COOKIE[$strCookieKey];
+      } else {
+        $strView = $aViews[0];
+        setcookie($strCookieKey, $strView, time() + (365 * 24 * 60 * 60), '/');
+      }
+      if (!isset($_COOKIE[$strCookieKey]) && isset($strView)) {
+        setcookie($strCookieKey, $strView, time() + (365 * 24 * 60 * 60), '/');
+      }
+      $this->strLeaderSubmissionHistoryView = $strView;
     }
   }
 
@@ -3539,19 +3562,13 @@ class FLORP{
 //       echo "<pre>";var_dump($aNfSubmissionHistory);echo "</pre>"; // NOTE DEVEL
     }
     
-    $strCookieKey = "florp-history-table-admin-view";
-    $aViews = array( 'progress_vertical', 'progress_horizontal', 'table' );
-    if (isset($_POST) && isset($_POST['view']) && in_array($_POST['view'], $aViews)) {
-      $strView = $_POST['view'];
-      setcookie($strCookieKey, $strView, time() + (365 * 24 * 60 * 60), '/');
-    } elseif (isset($_COOKIE) && isset($_COOKIE[$strCookieKey]) && in_array($_COOKIE[$strCookieKey], $aViews)) {
-      $strView = $_COOKIE[$strCookieKey];
+    $aViews = $this->aLeaderSubmissionHistoryViews;
+
+    if (isset($this->strLeaderSubmissionHistoryView) && in_array($this->strLeaderSubmissionHistoryView, $aViews)) {
+      $strView = $this->strLeaderSubmissionHistoryView;
     } else {
       $strView = $aViews[0];
-      setcookie($strCookieKey, $strView, time() + (365 * 24 * 60 * 60), '/');
-    }
-    if (!isset($_COOKIE[$strCookieKey])) {
-      setcookie($strCookieKey, $strView, time() + (365 * 24 * 60 * 60), '/');
+      $this->strLeaderSubmissionHistoryView = $strView;
     }
     $strEcho = '<form action="" method="post">';
     $strEcho .= '<label for="florp-view">Choose view:</label> <select id="florp-view" name="view" onchange="if (this.value != 0) { this.form.submit(); }">';
@@ -4398,8 +4415,9 @@ class FLORP{
           }
         }
         if ($sType === 'history' && $strBlog === "main" && email_exists($aFieldValues["user_email"])) {
+          $bIncludeAdmins = (isset($_GET['include-admins']) && $_GET['include-admins'] == 1);
           $oUser = get_user_by( 'email', $aFieldValues["user_email"] );
-          if (in_array("administrator", $oUser->roles)) {
+          if (in_array("administrator", $oUser->roles) && !$bIncludeAdmins ) {
             continue;
           }
         }
