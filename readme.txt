@@ -13,6 +13,19 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v4.6.7: Submission history view, fixes =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.7)
+- fixed bug: flashmob organizer check on submission
+- removed a couple of DEVEL comments, logs
+- admin filter table count update on row removal
+- admin js: callback fn with proper variable passing
+- leader submission history
+  - cookie saving, include admins
+  - NF submission date offset fix, date format refactor
+  - progress views for leader submission history
+- fix in participant sort
+- improvement: admin filter can search checkboxes (yes/no)
+
 = v4.6.6: participant sorting, htaccess generation, static map fix =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.6)
 - fixed "moved_from_user_id" (moving participants between leaders)
@@ -210,11 +223,5 @@ New registration forms and related changes
   - improved separation of optional placeholders by line breaks
 - added styling for form trigger link
 
-= v4.0.3: LWA default template evaluation fix, Admin leaders table fix =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.0.3)
-- LWA: default template evaluation fix
-- Fixed leaders table in admin
-  - table was missing participants if leader was pending
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.0.3)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.1.0)
