@@ -498,6 +498,7 @@ class FLORP{
     $this->aLeaderSubmissionHistoryViews = array( 'progress_vertical', 'progress_horizontal', 'table' );
     $this->strLeaderSubmissionHistoryViewsCookieKey = "florp-history-table-admin-view";
     $this->strLeaderSubmissionHistoryView = $this->aLeaderSubmissionHistoryViews[0];
+    $this->strDateFormat = get_option('date_format')." ".get_option('time_format');
   }
 
   private function get_default_options() {
@@ -3192,7 +3193,7 @@ class FLORP{
         }
         if (in_array($strKey, $aTimestamps)) {
           $strKey = str_replace("_timestamp", "", $strKey);
-          $strValue = date( get_option('date_format')." ".get_option('time_format'), $mixValue );
+          $strValue = date( $this->strDateFormat, $mixValue );
         } elseif (is_array($mixValue)) {
           $strValue = implode( ', ', $mixValue);
         } elseif (is_bool($mixValue)) {
@@ -3261,7 +3262,7 @@ class FLORP{
       } elseif ($aTshirtData["is_paid"]) {
         $strTitle = "";
         if (isset($aTshirtData["paid_timestamp"])) {
-          $strTitle = ' title="'.date( get_option('date_format')." ".get_option('time_format'), $aTshirtData["paid_timestamp"] ).'"';
+          $strTitle = ' title="'.date( $this->strDateFormat, $aTshirtData["paid_timestamp"] ).'"';
         }
         $strButtons .= '<span data-button-id="'.$strPaidButtonID.'" class="notice notice-success"'.$strTitle.'>Zaplatené</span>';
         $iPaid++;
@@ -3294,7 +3295,7 @@ class FLORP{
             if ($aTshirtData["payment_warning_sent"]) {
               $strTitle = "";
               if (isset($aTshirtData["payment_warning_sent_timestamp"])) {
-                $strTitle = ' title="'.date( get_option('date_format')." ".get_option('time_format'), $aTshirtData["payment_warning_sent_timestamp"] ).'"';
+                $strTitle = ' title="'.date( $this->strDateFormat, $aTshirtData["payment_warning_sent_timestamp"] ).'"';
               }
               $strButtons .= '<span data-button-id="'.$strPaymentWarningButtonID.'" class="notice notice-success"'.$strTitle.'>Upozornený na neskorú platbu</span>';
             } else {
@@ -3513,7 +3514,7 @@ class FLORP{
         continue;
       }
       $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
-      $strDate = date( get_option('date_format')." ".get_option('time_format'), $iTimestamp + $iTimeZoneOffset*3600 );
+      $strDate = date( $this->strDateFormat, $iTimestamp + $iTimeZoneOffset*3600 );
 
       $strEcho .= "<tr data-timestamp=\"{$iTimestamp}\" class=\"row\">";
       $strEcho .=   "<td rowspan=\"{$iChangeCount}\">{$strDate}</td>\n";
@@ -3600,7 +3601,6 @@ class FLORP{
   
   private function get_leader_submission_history_table_progress_data ($aNfSubmissionHistory) {
     $aSkip = array();
-    $strDateFormat = get_option('date_format')." ".get_option('time_format');
     $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
     $aReturn = array();
     foreach ($aNfSubmissionHistory as $strEmail => $aSubmissionsOfUser) {
@@ -3624,10 +3624,11 @@ class FLORP{
       $aReturn[$strEmail]['rows'] = array();
       foreach ($aSubmissionsOfUser['_submissions'] as $strSubmissionChangeID => $aSubmissionData) {
         $iTimestamp = $aSubmissionData['_meta']['_submission_timestamp'];
+        $strDateFormat = $this->strDateFormat;
         $aDate = array(
           'ts' => $aSubmissionData['_meta']['_submission_timestamp'],
-          'dtGmt' => $aSubmissionData['_meta']['_submission_date'],
-          'dt' => date( $strDateFormat, $iTimestamp + $iTimeZoneOffset*3600 ),
+          'dt' => $aSubmissionData['_meta']['_submission_date'],
+          'dtWpFormat' => isset($aSubmissionData['_meta']['_submission_date_wp_format']) ? $aSubmissionData['_meta']['_submission_date_wp_format'] : date( $strDateFormat, $aSubmissionData['_meta']['_submission_timestamp'] ),
         );
         $aReturn[$strEmail]['columns'][$iTimestamp] = $aDate;
         if ($aSubmissionData['_resave']) {
@@ -3687,7 +3688,8 @@ class FLORP{
         $strEcho .= '<tr>'.PHP_EOL;
         $strEcho .= "<th>Field key</th>".PHP_EOL;
         foreach ($aColumns as $iTimestamp => $aCol) {
-          $strEcho .= "<th>{$aCol['dt']}</th>";
+          $strDate = isset($aCol['dtWpFormat']) ? $aCol['dtWpFormat'] : $aCol['dt'];
+          $strEcho .= "<th>{$strDate}</th>";
         }
         $strEcho .= '</tr>'.PHP_EOL;
         
@@ -3707,7 +3709,7 @@ class FLORP{
               $mixValue = $aRow[$iTimestamp];
               if (in_array($strFieldKey, $aTimestamps)) {
                 $strKey = str_replace("_timestamp", "", $strKey);
-                $strValue = date( get_option('date_format')." ".get_option('time_format'), $mixValue );
+                $strValue = date( $this->strDateFormat, $mixValue );
               } elseif (is_array($mixValue)) {
                 $strValue = implode( ', ', $mixValue);
               } elseif (is_bool($mixValue)) {
@@ -3742,7 +3744,8 @@ class FLORP{
         
         foreach ($aRows as $iTimestamp => $aRow) {
           $strEcho .= '<tr>'.PHP_EOL;
-          $strEcho .= "<td>{$aRow['dt']}</td>";
+          $strDate = isset($aRow['dtWpFormat']) ? $aRow['dtWpFormat'] : $aRow['dt'];
+          $strEcho .= "<td>{$strDate}</td>";
           foreach ($aColumns as $strFieldKey => $aColumn) {
             $strEcho .= '<td>'.PHP_EOL;
             if ($aRow['resave']) {
@@ -3751,7 +3754,7 @@ class FLORP{
               $mixValue = $aColumn[$iTimestamp];
               if (in_array($strFieldKey, $aTimestamps)) {
                 $strKey = str_replace("_timestamp", "", $strKey);
-                $strValue = date( get_option('date_format')." ".get_option('time_format'), $mixValue );
+                $strValue = date( $this->strDateFormat, $mixValue );
               } elseif (is_array($mixValue)) {
                 $strValue = implode( ', ', $mixValue);
               } elseif (is_bool($mixValue)) {
@@ -3819,8 +3822,8 @@ class FLORP{
       $strEcho .= "<tr class=\"row\">";
       $strEcho .=   "<td rowspan=\"{$iRows}\">{$strLeaderID}{$strNameOrEmail}</td>\n";
       foreach ($aSubmissions['_submissions'] as $strSubmissionChangeID => $aSubmissionData) {
-        $iTimestamp = $aSubmissionData['_meta']['_submission_timestamp'];
-        $strDate = date( get_option('date_format')." ".get_option('time_format'), $iTimestamp + $iTimeZoneOffset*3600 );
+        $strDateFormat = $this->strDateFormat;
+        $strDate = isset( $aSubmissionData['_meta']['_submission_date_wp_format'] ) ? $aSubmissionData['_meta']['_submission_date_wp_format'] : date( $strDateFormat, $aSubmissionData['_meta']['_submission_timestamp'] );
 
         if ($aSubmissionData['_first']) {
           $iRows = 0;
@@ -3857,7 +3860,7 @@ class FLORP{
             }
             if (in_array($strKey, $aTimestamps)) {
               $strKey = str_replace("_timestamp", "", $strKey);
-              $strValue = date( get_option('date_format')." ".get_option('time_format'), $mixValue );
+              $strValue = date( $this->strDateFormat, $mixValue );
             } elseif (is_array($mixValue)) {
               $strValue = implode( ', ', $mixValue);
             } elseif (is_bool($mixValue)) {
@@ -3938,7 +3941,7 @@ class FLORP{
         $aReturn['id'] = $iKey;
         if (!isset($aReturn['datetime'])) {
           $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
-          $aReturn['datetime'] = date(get_option('date_format')." ".get_option('time_format'), $iKey + $iTimeZoneOffset*3600);
+          $aReturn['datetime'] = date($this->strDateFormat, $iKey + $iTimeZoneOffset*3600);
         }
         return $aReturn;
       }
@@ -4101,7 +4104,7 @@ class FLORP{
       $strDate = $aOrderData['datetime'];
     } else {
       $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
-      $strDate = date(get_option('date_format')." ".get_option('time_format'), $iTimestamp + $iTimeZoneOffset*3600);
+      $strDate = date($this->strDateFormat, $iTimestamp + $iTimeZoneOffset*3600);
     }
     $strEcho .= '<td><span title="ID: '.$iTimestamp.'">'.$strDate.'</span></td>';
     $strEcho .= '<td>'.$aOrderData['type'].'</td>';
@@ -4195,14 +4198,16 @@ class FLORP{
         return false;
       }
     }
+    $strDateFormat = $this->strDateFormat;
     $aFieldValues['_submission_date'] = $oSubmission->get_sub_date( 'Y-m-d H:i:s' );
+    $aFieldValues['_submission_date_wp_format'] = $oSubmission->get_sub_date( $strDateFormat );
     $aFieldValues['_submission_timestamp'] = $oSubmission->get_sub_date( 'U' );
     $aFieldValues['_form_id'] = $iFormID;
     $aFieldValues['_submission_id'] = $iSubmissionID;
     $aFieldValues['_blog_id'] = $iBlogID;
     $aFieldValues['_field_types'] = $aKeyToType;
     $aNfSubmission = array_filter($aFieldValues, function($key) {
-      $aPermittedKeys = array('_submission_date', '_submission_timestamp', '_form_id', '_submission_id', '_blog_id', '_field_types');
+      $aPermittedKeys = array('_submission_date', '_submission_date_wp_format', '_submission_timestamp', '_form_id', '_submission_id', '_blog_id', '_field_types');
       return in_array($key, $aPermittedKeys) || strpos($key, "_") !== 0;
     }, ARRAY_FILTER_USE_KEY);
     
@@ -4377,7 +4382,9 @@ class FLORP{
             continue;
           }
 
+          $strDateFormat = $this->strDateFormat;
           $aFieldValues['_submission_date'] = $oSubmission->get_sub_date( 'Y-m-d H:i:s' );
+          $aFieldValues['_submission_date_wp_format'] = $oSubmission->get_sub_date( $strDateFormat );
           $aFieldValues['_submission_timestamp'] = $oSubmission->get_sub_date( 'U' );
           $aFieldValues['_form_id'] = $iFormID;
           $aFieldValues['_submission_id'] = $iSubmissionID;
@@ -4425,7 +4432,7 @@ class FLORP{
           $aNfSubmissions[$aFieldValues["user_email"]] = array();
         }
         $aNfSubmissions[$aFieldValues["user_email"]][] = array_filter($aFieldValues, function($key) {
-          $aPermittedKeys = array('_submission_date', '_submission_timestamp', '_form_id', '_submission_id', '_blog_id');
+          $aPermittedKeys = array('_submission_date', '_submission_date_wp_format', '_submission_timestamp', '_form_id', '_submission_id', '_blog_id');
           if ($this->aOptions['bCoursesInfoDisabled'] && in_array($key, $this->aMetaFieldsTeacher)) {
             return false;
           }
@@ -4436,7 +4443,7 @@ class FLORP{
     }
     
     if ($sType === 'history') {
-      $aSkipKeys = array('_blog_id', '_submission_date', '_submission_timestamp', '_form_id', '_submission_id');
+      $aSkipKeys = array('_blog_id', '_submission_date', '_submission_date_wp_format', '_submission_timestamp', '_form_id', '_submission_id');
       $aNfSubmissionsRaw = $aNfSubmissions;
       $aNfSubmissions = array();
       foreach ($aNfSubmissionsRaw as $strEmail => $aSubmissionsOfUser) {
@@ -4448,6 +4455,7 @@ class FLORP{
         foreach ($aSubmissionsOfUser as $iKey => $aSubmissionData) {
           $aSubmissionMeta = array(
             '_submission_date' => $aSubmissionData['_submission_date'],
+            '_submission_date_wp_format' => $aSubmissionData['_submission_date_wp_format'],
             '_submission_timestamp' => $aSubmissionData['_submission_timestamp'],
             '_form_id' => $aSubmissionData['_form_id'],
             '_submission_id' => $aSubmissionData['_submission_id'],
@@ -4552,10 +4560,11 @@ class FLORP{
         }
         $strEcho .= '<tr class="row missedSubmissionRow" data-row-id="'.$strRowID.'" data-email="'.$aSubmissionData['user_email'].'">';
         $strEcho .=   '<td><a name="'.$aSubmissionData['user_email'].'">'.$aSubmissionData['user_email'].'</a></td>';
-        $strEcho .=   '<td>'.$aSubmissionData['_submission_date'].'</td>';
+        $strDate = isset($aSubmissionData['_submission_date_wp_format']) ? $aSubmissionData['_submission_date_wp_format'] : $aSubmissionData['_submission_date'];
+        $strEcho .=   '<td>'.$strDate.'</td>';
         $strEcho .=   '<td>'.$aSubmissionData['first_name'].' '.$aSubmissionData['last_name'].$strButtons.'</td>';
         $aSingleCheckboxes = array( 'courses_in_city_2', 'courses_in_city_3', 'preference_newsletter', 'hide_leader_info' );
-        $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', '_submission_date', '_submission_timestamp', '_submission_id', '_form_id', '_blog_id' );
+        $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', '_submission_date', '_submission_date_wp_format', '_submission_timestamp', '_submission_id', '_form_id', '_blog_id' );
         $strEcho .= "<td>";
         foreach ($aSubmissionData as $strKey => $mixValue) {
           if (!isset($mixValue) || (!is_bool($mixValue) && !is_numeric($mixValue) && empty($mixValue)) || $mixValue === 'null' || in_array( $strKey, $aSkip )) {
@@ -4713,7 +4722,7 @@ class FLORP{
             "tshirt_size" => isset($aParticipantData['flashmob_participant_tshirt_size']) ? $aParticipantData['flashmob_participant_tshirt_size'] : "n/a",
             "tshirt_gender" => isset($aParticipantData['flashmob_participant_tshirt_gender']) ? $aParticipantData['flashmob_participant_tshirt_gender'] : "n/a",
             "tshirt_color" => isset($aParticipantData['flashmob_participant_tshirt_color']) ? $aParticipantData['flashmob_participant_tshirt_color'] : "n/a",
-            "ordered" => isset($aParticipantData["registered"]) ? date(get_option('date_format')." ".get_option('time_format'), $aParticipantData["registered"]) : "n/a",
+            "ordered" => isset($aParticipantData["registered"]) ? date($this->strDateFormat, $aParticipantData["registered"]) : "n/a",
           ),
         ), $aToMerge );
       }
@@ -4954,7 +4963,7 @@ class FLORP{
       $aData["ok"] = true;
       $aData["removeRowOnSuccess"] = false;
       $aData["replaceButton"] = true;
-      $strTitle = ' title="'.date( get_option('date_format')." ".get_option('time_format'), $iTimestampNow ).'"';
+      $strTitle = ' title="'.date( $this->strDateFormat, $iTimestampNow ).'"';
       $strPaymentWarningButtonID = str_replace( "-paid-", "-paymentWarning-", $aData['buttonId']);
       $strCancelOrderButtonID = str_replace( "-paid-", "-cancelOrder-", $aData['buttonId']);
       $aData["hideSelector"] = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strPaymentWarningButtonID}], tr[data-row-id={$aData['rowId']}] span[data-button-id={$strCancelOrderButtonID}]";
@@ -5069,7 +5078,7 @@ class FLORP{
       $iTimestampNow = (int) current_time( 'timestamp' );
       $aData["removeRowOnSuccess"] = false;
       $aData["replaceButton"] = true;
-      $strTitle = ' title="'.date( get_option('date_format')." ".get_option('time_format'), $iTimestampNow ).'"';
+      $strTitle = ' title="'.date( $this->strDateFormat, $iTimestampNow ).'"';
       $aData["replaceButtonHtml"] = '<span data-button-id="'.$aData['buttonId'].'" class="notice notice-success"'.$strTitle.'>Upozornený na neskorú platbu</span>';
 
       $strMessageContent = $this->aOptions['strTshirtPaymentWarningNotificationMsg'];
@@ -5330,7 +5339,7 @@ class FLORP{
           $aData['message'] = $strErrorMessage . "\nLeader is pending approval";
         } else {
           $aFields = array();
-          $aSkipKeys = array('_submission_date', '_submission_timestamp', '_form_id', '_submission_id', '_blog_id', '_field_types');
+          $aSkipKeys = array('_submission_date', '_submission_date_wp_format', '_submission_timestamp', '_form_id', '_submission_id', '_blog_id', '_field_types');
           foreach ($aSubmission as $key => $val) {
             if (in_array($key, $aSkipKeys)) {
               continue;
