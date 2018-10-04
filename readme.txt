@@ -13,6 +13,14 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v4.6.6: participant sorting, htaccess generation, static map fix =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.6)
+- fixed "moved_from_user_id" (moving participants between leaders)
+- improved htaccess generation and added call on subsite creation
+- added participant sorting by registration date
+- fix: region added also for static map api call (og image)
+- new main form
+
 = v4.6.5: dancer num check, geocoder region, fixes =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.5)
 - added dancer number check
@@ -208,14 +216,5 @@ New registration forms and related changes
 - Fixed leaders table in admin
   - table was missing participants if leader was pending
 
-= v4.0.2: LWA: new FLORP template, template path fix; login links =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.0.2)
-- LWA
-  - new FLORP template (SVK)
-  - template path fix
-- New options for login bar links
-- Added separate option for GM Static Key
-- Fixed saving of 'use static map' option (flashmob)
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.0.2)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.0.3)
