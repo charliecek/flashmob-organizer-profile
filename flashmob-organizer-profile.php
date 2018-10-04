@@ -3786,6 +3786,7 @@ class FLORP{
   private function leader_submission_history_table_admin__table($aNfSubmissionHistory) {
     $strEcho = '<table class="widefat striped noFilter"><th>User</th><th>Date</th><th>Changed option</th><th>From</th><th>To</th>'."\n";
     $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
+    $aSkip = array();
     // echo $strEcho; return;
     
     foreach ($aNfSubmissionHistory as $strEmail => $aSubmissions) {
@@ -3849,7 +3850,6 @@ class FLORP{
         if ($aSubmissionData['_first']) {
           $bFirst = true;
           $strSubmission = "";
-          $aSkip = array();
           $aTimestamps = array();
           foreach ($aSubmissionData['_data'] as $strKey => $mixValue) {
             if ($this->aOptions['bCoursesInfoDisabled'] && in_array($strKey, $this->aMetaFieldsTeacher)) {
