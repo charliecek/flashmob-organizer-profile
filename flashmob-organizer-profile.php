@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.6.7
+ * Version: 4.6.8
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '4.6.7';
+  private $strVersion = '4.6.8';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -1545,6 +1545,9 @@ class FLORP{
       add_action( 'admin_notices', array( $this, 'action__admin_notices__florp_devel_purge_tshirts_save_is_on' ));
     }
 
+    if (is_admin() && current_user_can( 'activate_plugins' ) && isset($_POST['florp-download-participant-csv'])) {
+      $this->serveParticipantCSV();
+    }
     if (is_admin() && current_user_can( 'activate_plugins' ) && isset($_POST['florp-download-tshirt-csv'])) {
       $this->serveTshirtCSV();
     }
@@ -3124,90 +3127,101 @@ class FLORP{
   public function participants_table_admin() {
     echo "<div class=\"wrap\"><h1>" . "Zoznam účastníkov" . "</h1>";
 
-    $strEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Líder</th>';
-    $strEcho .= '<th>Profil</th>';
+    $strEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Líder</th><th>Profil</th>';
     $aParticipants = $this->get_flashmob_participants( 0, false, true );
 //     echo "<pre>";var_dump($aParticipants);echo "</pre>"; // NOTE DEVEL
-    $aReplacements = array(
-      'gender' => array(
-        'from'  => array( 'muz', 'zena', 'par' ),
-        'to'    => array( 'muž', 'žena', 'pár' )
-      ),
-      'dance_level' => array(
-        'from'  => array( '_', 'zaciatocnik', 'pokrocily', 'ucitel' ),
-        'to'    => array( ' ', 'začiatočník', 'pokročilý', 'učiteľ' )
-      ),
-      'preferences' => array(
-        'from'  => array( 'flashmob_participant_tshirt', 'newsletter_subscribe' ),
-        'to'    => array( 'Chcem pamätné Flashmob tričko', 'Chcem dostávať newsletter' )
-      )
-    );
-    
-    $aParticipantsFlat = array();
-    foreach ($aParticipants as $iLeaderID => $aParticipantsOfLeader) {
-      foreach ($aParticipantsOfLeader as $strEmail => $aParticipantData) {
-        $strKey = $strEmail."_".$iLeaderID;
-        $aParticipantsFlat[$strKey] = $aParticipantData;
-        $aParticipantsFlat[$strKey]['leader_user_id'] = $iLeaderID;
-        $aParticipantsFlat[$strKey]['user_email'] = $strEmail;
-      }
-    }
-    uasort($aParticipantsFlat, array($this, "participant_sort"));
-    
-    foreach ($aParticipantsFlat as $strKeyFlat => $aParticipantData) {
-      $iLeaderID = $aParticipantData['leader_user_id'];
-      $strEmail = $aParticipantData['user_email'];
-      foreach ($aReplacements as $strKey => $aReplacementArr) {
-        $aParticipantData[$strKey] = str_replace( $aReplacementArr['from'], $aReplacementArr['to'], $aParticipantData[$strKey]);
-      }
-      $strButtonLabelDelete = "Zmazať";
-      $strDoubleCheckQuestion = "Ste si istý?";
-      $strRowID = "florpRow-".$iLeaderID."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
-      $strButtonID = "florpButton-".$iLeaderID."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
-      $strButtons = '<br/><span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelDelete.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-leader-id="'.$iLeaderID.'" data-participant-email="'.$strEmail.'" data-sure="0" data-action="delete_florp_participant" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelDelete.'</span>';
-      $strEcho .= '<tr class="row" data-row-id="'.$strRowID.'">';
-      $strEcho .=   '<td>'.$aParticipantData['first_name'].' '.$aParticipantData['last_name'].$strButtons.'</td>';
-      $strEcho .=   '<td><a name="'.$aParticipantData['user_email'].'">'.$aParticipantData['user_email'].'</a></td>';
-      $oLeader = get_user_by( 'id', $iLeaderID );
-      $strLeadersFlashmobCity = get_user_meta( $iLeaderID, 'flashmob_city', true );
-      $strWarning = "";
-      if ($strLeadersFlashmobCity !== $aParticipantData['flashmob_city']) {
-        $strTitle = " title=\"Pozor: pri registrácii účastníka mal líder nastavené mesto flashmobu na  {$aParticipantData['flashmob_city']}!\"";
-        $strWarning = ' <span '.$strTitle.' class="dashicons dashicons-warning"></span>';
-      }
-      $strEcho .=   '<td>'.$strLeadersFlashmobCity.$strWarning.'</td>';
-      $strIsPending = "";
-      if (in_array( $this->strUserRolePending, (array) $oLeader->roles )) {
-        $strIsPending = " ({$this->strUserRolePendingName})";
-      }
-      $strEcho .=   '<td><a href="'.admin_url('admin.php?page=florp-leaders')."#{$iLeaderID}\">{$oLeader->first_name} {$oLeader->last_name}</a>{$strIsPending}</td>";
-      $strEcho .=   '<td>';
-      $aTimestamps = array( 'registered', 'tshirt_order_cancelled_timestamp' );
-      $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', 'leader_user_id' );
-      if (!isset($aParticipantData['leader_notified'])) {
-        $aParticipantData['leader_notified'] = false;
-      }
-      foreach ($aParticipantData as $strKey => $mixValue) {
-        if (!isset($mixValue) || (!is_bool($mixValue) && !is_numeric($mixValue) && empty($mixValue)) || $mixValue === 'null' || in_array( $strKey, $aSkip )) {
-          continue;
+//     echo "<pre>";var_dump($this->get_flashmob_participant_csv('notshirts'));echo "</pre>"; // NOTE DEVEL
+
+    if (!empty($aParticipants)) {
+      $aReplacements = array(
+        'gender' => array(
+          'from'  => array( 'muz', 'zena', 'par' ),
+          'to'    => array( 'muž', 'žena', 'pár' )
+        ),
+        'dance_level' => array(
+          'from'  => array( '_', 'zaciatocnik', 'pokrocily', 'ucitel' ),
+          'to'    => array( ' ', 'začiatočník', 'pokročilý', 'učiteľ' )
+        ),
+        'preferences' => array(
+          'from'  => array( 'flashmob_participant_tshirt', 'newsletter_subscribe' ),
+          'to'    => array( 'Chcem pamätné Flashmob tričko', 'Chcem dostávať newsletter' )
+        )
+      );
+      
+      $aParticipantsFlat = array();
+      foreach ($aParticipants as $iLeaderID => $aParticipantsOfLeader) {
+        foreach ($aParticipantsOfLeader as $strEmail => $aParticipantData) {
+          $strKey = $strEmail."_".$iLeaderID;
+          $aParticipantsFlat[$strKey] = $aParticipantData;
+          $aParticipantsFlat[$strKey]['leader_user_id'] = $iLeaderID;
+          $aParticipantsFlat[$strKey]['user_email'] = $strEmail;
         }
-        if (in_array($strKey, $aTimestamps)) {
-          $strKey = str_replace("_timestamp", "", $strKey);
-          $strValue = date( $this->strDateFormat, $mixValue );
-        } elseif (is_array($mixValue)) {
-          $strValue = implode( ', ', $mixValue);
-        } elseif (is_bool($mixValue)) {
-          $strValue = $mixValue ? '<input type="checkbox" disabled checked /><span class="hidden">yes</span>' : '<input type="checkbox" disabled /><span class="hidden">no</span>';
-        } else {
-          $strValue = $mixValue;
-        }
-        $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
-        $strEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>';
       }
-      $strEcho .=   '</td>';
-      $strEcho .= '</tr>';
+      uasort($aParticipantsFlat, array($this, "participant_sort"));
+      
+      foreach ($aParticipantsFlat as $strKeyFlat => $aParticipantData) {
+        $iLeaderID = $aParticipantData['leader_user_id'];
+        $strEmail = $aParticipantData['user_email'];
+        foreach ($aReplacements as $strKey => $aReplacementArr) {
+          $aParticipantData[$strKey] = str_replace( $aReplacementArr['from'], $aReplacementArr['to'], $aParticipantData[$strKey]);
+        }
+        $strButtonLabelDelete = "Zmazať";
+        $strDoubleCheckQuestion = "Ste si istý?";
+        $strRowID = "florpRow-".$iLeaderID."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
+        $strButtonID = "florpButton-".$iLeaderID."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
+        $strButtons = '<br/><span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelDelete.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-leader-id="'.$iLeaderID.'" data-participant-email="'.$strEmail.'" data-sure="0" data-action="delete_florp_participant" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelDelete.'</span>';
+        $strEcho .= '<tr class="row" data-row-id="'.$strRowID.'">';
+        $strEcho .=   '<td>'.$aParticipantData['first_name'].' '.$aParticipantData['last_name'].$strButtons.'</td>';
+        $strEcho .=   '<td><a name="'.$aParticipantData['user_email'].'">'.$aParticipantData['user_email'].'</a></td>';
+        $oLeader = get_user_by( 'id', $iLeaderID );
+        $strLeadersFlashmobCity = get_user_meta( $iLeaderID, 'flashmob_city', true );
+        $strWarning = "";
+        if ($strLeadersFlashmobCity !== $aParticipantData['flashmob_city']) {
+          $strTitle = " title=\"Pozor: pri registrácii účastníka mal líder nastavené mesto flashmobu na  {$aParticipantData['flashmob_city']}!\"";
+          $strWarning = ' <span '.$strTitle.' class="dashicons dashicons-warning"></span>';
+        }
+        $strEcho .=   '<td>'.$strLeadersFlashmobCity.$strWarning.'</td>';
+        $strIsPending = "";
+        if (in_array( $this->strUserRolePending, (array) $oLeader->roles )) {
+          $strIsPending = " ({$this->strUserRolePendingName})";
+        }
+        $strEcho .=   '<td><a href="'.admin_url('admin.php?page=florp-leaders')."#{$iLeaderID}\">{$oLeader->first_name} {$oLeader->last_name}</a>{$strIsPending}</td>";
+        $strEcho .=   '<td>';
+        $aTimestamps = array( 'registered', 'tshirt_order_cancelled_timestamp' );
+        $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', 'leader_user_id' );
+        if (!isset($aParticipantData['leader_notified'])) {
+          $aParticipantData['leader_notified'] = false;
+        }
+        foreach ($aParticipantData as $strKey => $mixValue) {
+          if (!isset($mixValue) || (!is_bool($mixValue) && !is_numeric($mixValue) && empty($mixValue)) || $mixValue === 'null' || in_array( $strKey, $aSkip )) {
+            continue;
+          }
+          if (in_array($strKey, $aTimestamps)) {
+            $strKey = str_replace("_timestamp", "", $strKey);
+            $strValue = date( $this->strDateFormat, $mixValue );
+          } elseif (is_array($mixValue)) {
+            $strValue = implode( ', ', $mixValue);
+          } elseif (is_bool($mixValue)) {
+            $strValue = $mixValue ? '<input type="checkbox" disabled checked /><span class="hidden">yes</span>' : '<input type="checkbox" disabled /><span class="hidden">no</span>';
+          } else {
+            $strValue = $mixValue;
+          }
+          $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
+          $strEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>';
+        }
+        $strEcho .=   '</td>';
+        $strEcho .= '</tr>';
+      }
     }
     $strEcho .= '</table>';
+    if (!empty($aParticipants)) {
+      $strEcho .= '<form action="" method="post">';
+      $strEcho .= '<input type="hidden" name="security" value="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">';
+      $strEcho .= '<input type="hidden" name="florp-download-participant-csv" value="1">';
+      $strEcho .= '<input id="florp-download-participant-csv-all" class="button button-primary button-large" name="florp-download-participant-csv-all" type="submit" value="Stiahni CSV - všetko" />';
+      $strEcho .= '<input id="florp-download-participant-csv-notshirts" class="button button-primary button-large" name="florp-download-participant-csv-notshirts" type="submit" value="Stiahni CSV - bez tričiek" />';
+      $strEcho .= '</form>';
+    }
     echo $strEcho;
     echo $this->get_missed_submissions_table( $this->iFlashmobBlogID );
     echo '</div><!-- .wrap -->';
@@ -4817,6 +4831,161 @@ class FLORP{
     }
   }
 
+  private function get_flashmob_participant_csv($sType = 'all') {
+    $aParticipantCSV = array();
+    $aParticipants = $this->get_flashmob_participants();
+    
+    // Get participants as a flat array //
+    $aParticipantsFlat = array();
+    $aPreferences = array();
+    foreach ($aParticipants as $iLeaderID => $aParticipantsOfLeader) {
+      foreach ($aParticipantsOfLeader as $strEmail => $aParticipantData) {
+        $strKey = $strEmail."_".$iLeaderID;
+        $aParticipantsFlat[$strKey] = $aParticipantData;
+        $aParticipantsFlat[$strKey]['leader_user_id'] = $iLeaderID;
+        $aParticipantsFlat[$strKey]['user_email'] = $strEmail;
+        if (isset($aParticipantData['preferences'])) {
+          unset($aParticipantsFlat[$strKey]['preferences']);
+          foreach ($aParticipantData['preferences'] as $strPreferenceKey) {
+            $strPreferenceKey = 'preference-'.$strPreferenceKey;
+            if (!in_array( $strPreferenceKey, $aPreferences )) {
+              $aPreferences[] = $strPreferenceKey;
+            }
+            $aParticipantsFlat[$strKey][$strPreferenceKey] = true;
+          }
+        }
+      }
+    }
+    uasort($aParticipantsFlat, array($this, "participant_sort"));
+    // echo '<pre>'.var_export($aParticipantsFlat, true).'</pre>'; // NOTE DEVEL
+
+    // Get headers //
+    $aHeaders = array();
+    foreach ($aParticipantsFlat as $aParticipantData) {
+      foreach ($aParticipantData as $strKey => $mixVal) {
+        if (!isset($aHeaders[$strKey])) {
+          $aHeaders[$strKey] = ucfirst(str_replace( array( '_timestamp', '-', '_' ), array( '_date', ': ', ' ' ), $strKey ));
+        }
+      }
+    }
+    $iColumnCount = count($aHeaders);
+    $aParticipantCSV[] = $aHeaders;
+    
+    $aTimestamps = array( 'registered' );
+    $aReplacements = array(
+      'gender' => array(
+        'from'  => array( 'muz', 'zena', 'par' ),
+        'to'    => array( 'muž', 'žena', 'pár' )
+      ),
+      'flashmob_participant_tshirt_gender' => array(
+        'from'  => array( 'muz', 'zena', 'par' ),
+        'to'    => array( 'muž', 'žena', 'pár' )
+      ),
+      'dance_level' => array(
+        'from'  => array( '_', 'zaciatocnik', 'pokrocily', 'ucitel' ),
+        'to'    => array( ' ', 'začiatočník', 'pokročilý', 'učiteľ' )
+      )
+    );
+    
+    // Get the participant rows //
+    foreach ($aParticipantsFlat as $aParticipantData) {
+      $aRow = array();
+      foreach ($aHeaders as $strFieldKey => $strHeaderName) {
+        if (in_array($strFieldKey, $aPreferences) && !isset($aParticipantData[$strFieldKey])) {
+          $aParticipantData[$strFieldKey] = false;
+        }
+        if (isset($aParticipantData[$strFieldKey])) {
+          $mixVal = $aParticipantData[$strFieldKey];
+          if (is_bool($mixVal)) {
+            $strValue = $mixVal ? "1" : "0";
+          } elseif (preg_match('~_timestamp$~', $strFieldKey) || in_array($strFieldKey, $aTimestamps)) {
+            $strValue = date( $this->strDateFormat, $mixVal );
+          } else {
+            $strValue = strval($mixVal);
+          }
+          if (isset($aReplacements[$strFieldKey])) {
+            $strValue = str_replace( $aReplacements[$strFieldKey]['from'], $aReplacements[$strFieldKey]['to'], $strValue );
+          }
+          $aRow[$strFieldKey] = $strValue;
+        } else {
+          $aRow[$strFieldKey] = "-";
+        }
+      }
+      if ($sType === 'notshirts' && $aRow['preference-flashmob_participant_tshirt'] === "1") {
+        continue;
+      }
+      if (count($aRow) === $iColumnCount) {
+        $aParticipantCSV[] = $aRow;
+      }
+    }
+    
+    return $aParticipantCSV;
+  }
+  
+  private function serveParticipantCSV() {
+    $bPassed = check_ajax_referer( 'srd-florp-admin-security-string', 'security', false );
+    if (!$bPassed) {
+      add_action( 'admin_notices', function() {
+        echo '<div class="notice notice-error"><p>Request validation failed</p></div>'.PHP_EOL;
+      });
+      return;
+    }
+    
+    $aButtonNames = array(
+      'florp-download-participant-csv-all',
+      'florp-download-participant-csv-notshirts',
+    );
+    $strType = "";
+    $bFound = false;
+    foreach ($aButtonNames as $strButtonName) {
+      if (isset($_POST[$strButtonName])) {
+        $bFound = true;
+        $strType = str_replace( "florp-download-participant-csv-", "", $strButtonName );
+        $aParticipants = $this->get_flashmob_participant_csv($strType);
+        break;
+      }
+    }
+    if (!$bFound) {
+      add_action( 'admin_notices', function() {
+        echo '<div class="notice notice-error"><p>Invalid request - unknown button was clicked</p></div>'.PHP_EOL;
+      });
+      return;
+    }
+    
+    if (!is_array($aParticipants) || empty($aParticipants) || count($aParticipants) === 1) {
+      $GLOBALS['florpInfo'] = "";
+//       $GLOBALS['florpInfo'] = '<pre>'.var_export($aParticipants, true).'</pre>'; // NOTE DEVEL
+
+      $GLOBALS['florpWarningReason'] = '';
+      if (is_string($aParticipants)) {
+        $GLOBALS['florpWarningReason'] = '<p>'.$aParticipants.'</p>';
+      }
+      add_action( 'admin_notices', function() {
+        echo '<div class="notice notice-warning"><p>No participants to build CSV from</p>'.$GLOBALS['florpWarningReason'].$GLOBALS['florpInfo'].'</div>'.PHP_EOL;
+      });
+      return;
+    }
+
+    $strFileName = "participants-{$strType}-".current_time('Ymd-His').".csv";
+    
+    // output headers so that the file is downloaded rather than displayed
+    header('Content-type: text/csv');
+    header('Content-Disposition: attachment; filename="'.$strFileName.'"');
+
+    // do not cache the file
+    header('Pragma: no-cache');
+    header('Expires: 0');
+
+    // create a file pointer connected to the output stream
+    $file = fopen('php://output', 'w');
+
+    // output column headers and each row of the data
+    foreach ($aParticipants as $aParticipantData) {
+      fputcsv($file, $aParticipantData);
+    }
+    exit();
+  }
+  
   private function serveTshirtCSV() {
     $bPassed = check_ajax_referer( 'srd-florp-admin-security-string', 'security', false );
     if (!$bPassed) {
