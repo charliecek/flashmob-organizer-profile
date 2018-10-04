@@ -4164,7 +4164,7 @@ class FLORP{
     );
     if (!isset($aFieldValues["user_email"]) || empty($aFieldValues["user_email"])) {
       // Invalid submission //
-      continue;
+      return false;
     }
     foreach ($aFieldValues as $strKey => $mixValue) {
       if (!isset($aKeyToType[$strKey])) {
@@ -4173,9 +4173,9 @@ class FLORP{
     }
     if ($sType === 'missed') {
       if ($strBlog === "main" && email_exists($aFieldValues["user_email"])) {
-        continue;
+        return false;
       } elseif ($strBlog === "flashmob" && $this->flashmob_participant_exists($aFieldValues["user_email"])) {
-        continue;
+        return false;
       }
     }
     $aFieldValues['_submission_date'] = $oSubmission->get_sub_date( 'Y-m-d H:i:s' );
