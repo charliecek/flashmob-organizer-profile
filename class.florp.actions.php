@@ -63,7 +63,7 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
         setcookie('florp-form-saved', "0", time() + (1 * 24 * 60 * 60), '/');
         $aPwdCheck = array();
         $aVideoTypes= array(
-          'youtube_link'  => array( 'name' => 'Youtube', 'regex' => '~^https?://(www\.|m\.)?youtube\.com/watch\?v=(.+)$~i'),
+          'youtube_link'  => array( 'name' => 'Youtube', 'regex' => '~^https?://(www\.|m\.)?(youtube\.com/watch\?v=|youtu.be/)(.+)$~i'),
           'facebook_link' => array( 'name' => 'Facebook', 'regex' => '~^https?://(www.)?facebook.com/[a-zA-Z0-9]+/videos/[a-zA-Z0-9]+/?$~i'),
           'vimeo_link'    => array( 'name' => 'Vimeo', 'regex' => '~^https?://(www.)?vimeo.com/([0-9]+)/?$~i'),
         );

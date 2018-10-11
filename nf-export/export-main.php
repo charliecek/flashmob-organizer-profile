@@ -10725,7 +10725,7 @@ $aFlorpNinjaFormExportData = array (
       'element_class' => 'florp_webpage',
       'admin_label' => '',
       'help_text' => '',
-      'desc_text' => '<p>Webstránka sa zobrazí na mape a bude vytlačená na pamätnom flashmob tričku (pravý rukáv)</p>',
+      'desc_text' => '<p>Webstránka sa zobrazí na mape a bude vytlačená na pamätnom flashmob tričku (ľavý rukáv)</p>',
       'manual_key' => true,
       'drawerDisabled' => false,
     ),
@@ -51642,7 +51642,7 @@ $aFlorpNinjaFormExportData = array (
       'order' => 34,
       'label_pos' => 'above',
       'default' => '{usermeta:flashmob_number_of_dancers}',
-      'placeholder' => '',
+      'placeholder' => 'Počet tancujúcich - číslo',
       'container_class' => 'florp-class florp-profile-field florp-flashmob florp-left florp-3-col-1 florp-section-flashmob',
       'element_class' => 'florp_flashmob_number_of_dancers',
       'manual_key' => '1',
@@ -51651,7 +51651,7 @@ $aFlorpNinjaFormExportData = array (
       'help_text' => '',
       'desc_text' => '',
       'product_assignment' => '',
-      'num_min' => '',
+      'num_min' => '0',
       'num_max' => '',
       'num_step' => '1',
       'drawerDisabled' => false,
@@ -51719,12 +51719,7 @@ $aFlorpNinjaFormExportData = array (
       'disable_input' => '',
       'admin_label' => '',
       'help_text' => '<p><br></p>',
-      'desc_text' => '<p>Povolené tvary:</p>
-<ul>
-  <li>https://www.youtube.com/watch?v=[video_ID]</li>
-  <li>https://www.facebook.com/[pozivatel]/videos/[video_ID]/</li>
-  <li>http://vimeo.com/[video_ID]</li>
-</ul>',
+      'desc_text' => '<p>Povolené tvary:</p><ul>  <li>https://www.youtube.com/watch?v=[video_ID], https://youtu.be/[video_ID]</li>  <li>https://www.facebook.com/[pozivatel]/videos/[video_ID]/</li>  <li>http://vimeo.com/[video_ID]</li></ul>',
       'disable_browser_autocomplete' => '',
       'mask' => '',
       'custom_mask' => '',
@@ -52000,6 +51995,6 @@ $aFlorpNinjaFormExportData = array (
       'payment_total_type' => '',
     ),
   ),
-  'version' => 4006005,
-  'timestamp' => 1538118399,
+  'version' => 4006008,
+  'timestamp' => 1539296130,
 ); ?>

@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.6.8
+ * Version: 4.6.9
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '4.6.8';
+  private $strVersion = '4.6.9';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -7487,7 +7487,7 @@ class FLORP{
     }
 
     $aVideoRegexes = array(
-      "youtube"   => '~^https?://(www\.|m\.)?youtube\.com/watch\?v=(.+)$~i',
+      "youtube"   => '~^https?://(www\.|m\.)?(youtube\.com/watch\?v=|youtu.be/)(.+)$~i',
       "facebook"  => '~^https?://(www.)?facebook.com/[a-zA-Z0-9]+/videos/[a-zA-Z0-9]+/?$~i',
       "vimeo"     => '~^https?://(www.)?vimeo.com/([0-9]+)/?$~i',
     );
@@ -7508,14 +7508,30 @@ class FLORP{
     if ($strVideoLinkType == "other") {
       $strEmbedCode = "";
     } elseif ($strVideoLinkType === "youtube") {
-      if (!isset($aVideoRegexMatches[2]) || empty($aVideoRegexMatches[2])) {
+      if (!isset($aVideoRegexMatches[3]) || empty($aVideoRegexMatches[3])) {
         $strEmbedCode = "";
       } else {
-        $strYoutubeVideoParams = $aVideoRegexMatches[2];
+        $strYoutubeVideoParams = $aVideoRegexMatches[3];
         // Try to explode by &amp; and if it's not present, explode by & //
-        $aYoutubeVideoParams = explode('&amp;', $strYoutubeVideoParams);
-        if (count($aYoutubeVideoParams) === 1) {
-          $aYoutubeVideoParams = explode('&', $strYoutubeVideoParams);
+        if ($aVideoRegexMatches[2] === 'youtu.be/') {
+          $aYoutubeVideoParams = explode('?', $strYoutubeVideoParams);
+          if (count($aYoutubeVideoParams) === 2) {
+            $aYoutubeVideoParams2 = explode('&amp;', $aYoutubeVideoParams[1]);
+            if (count($aYoutubeVideoParams2) === 1) {
+              $aYoutubeVideoParams2 = explode('&', $aYoutubeVideoParams[1]);
+            }
+            if (count($aYoutubeVideoParams2) > 1) {
+              unset($aYoutubeVideoParams[1]);
+              $aYoutubeVideoParams = array_merge($aYoutubeVideoParams, $aYoutubeVideoParams2);
+            }
+          } elseif (count($aYoutubeVideoParams) > 2) {
+            // NOT OK //
+          }
+        } else {
+          $aYoutubeVideoParams = explode('&amp;', $strYoutubeVideoParams);
+          if (count($aYoutubeVideoParams) === 1) {
+            $aYoutubeVideoParams = explode('&', $strYoutubeVideoParams);
+          }
         }
         $strYoutubeVideoID = array_shift($aYoutubeVideoParams);
         if (empty($aYoutubeVideoParams)) {

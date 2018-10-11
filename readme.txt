@@ -13,6 +13,10 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v4.6.8: Participant CSV download buttons =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.8)
+- Participant CSV download buttons
+
 = v4.6.7: Submission history view, fixes =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.7)
 - fixed bug: flashmob organizer check on submission
@@ -217,11 +221,5 @@ Bugfix - rewriting of version to old value
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.2.0)
 New registration forms and related changes
 
-= Map info window templates as options =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.1.0)
-- added map info window templates as options
-  - improved separation of optional placeholders by line breaks
-- added styling for form trigger link
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.1.0)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.2.0)
