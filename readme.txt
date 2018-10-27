@@ -13,6 +13,11 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v4.6.9: added youtu.be video link form, small profile form changes =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.9)
+- added youtu.be video link form
+- small profile form changes
+
 = v4.6.8: Participant CSV download buttons =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.8)
 - Participant CSV download buttons
@@ -217,9 +222,5 @@ Bugfixes
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.2.1)
 Bugfix - rewriting of version to old value
 
-= v4.2.0: New registration forms and related changes =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.2.0)
-New registration forms and related changes
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.2.0)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.2.1)

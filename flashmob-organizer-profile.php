@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.6.9
+ * Version: 4.6.10
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '4.6.9';
+  private $strVersion = '4.6.10';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -1876,15 +1876,29 @@ class FLORP{
     $aFieldsToUse = array( 'text:1', 'text:4' );
     if ($this->iProfileFormPageIDMain > 0) {
       if (!is_object($post) || $post->post_type !== 'page' || $post->ID !== $this->iProfileFormPageIDMain) {
+        // We are not on the profile page //
         $aNewSettingsByType['profile'] = array(
           'text' => $bUserLoggedIn ? $this->aOptions['strLoginBarLabelProfile'] : $this->aOptions['strLoginBarLabelLogin'],
           'link' => get_permalink( $this->iProfileFormPageIDMain ),
           'el_class' => 'florp_profile_link_profile',
         );
+        // Make the top area visible everywhere //
+        $aSettings["default"]["options"]["top_show"] = 1;
+        $aSettings["tablets"]["options"]["top_show"] = 1;
+        $aSettings["mobiles"]["options"]["top_show"] = 1;
+      } else {
+        // Make the top area invisible everywhere (i.e. no gap since it's supposed to be empty) //
+        $aSettings["default"]["options"]["top_show"] = 0;
+        $aSettings["tablets"]["options"]["top_show"] = 0;
+        $aSettings["mobiles"]["options"]["top_show"] = 0;
       }
     }
 
     if ($bUserLoggedIn) {
+      // Make the top area visible everywhere //
+      $aSettings["default"]["options"]["top_show"] = 1;
+      $aSettings["tablets"]["options"]["top_show"] = 1;
+      $aSettings["mobiles"]["options"]["top_show"] = 1;
       if (is_object($post)) {
         $strRedir = get_permalink( $post->ID );
       } elseif ($_SERVER['HTTP_HOST'] && $_SERVER['REQUEST_URI']) {
