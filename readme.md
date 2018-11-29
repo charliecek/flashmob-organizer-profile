@@ -17,6 +17,12 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 ## Version history
 
+### v4.6.10: Fixed when top bar (for login/logout) is shown
+
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.10)
+
+- fixed when top bar (for login/logout) is shown
+
 ### v4.6.9: added youtu.be video link form, small profile form changes
 
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.9)
@@ -280,11 +286,5 @@ Bugfixes
 - new form exports
 - other fixes
 
-### v4.2.1: Bugfix - rewriting of version to old value
 
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.2.1)
-
-Bugfix - rewriting of version to old value
-
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.2.1)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.3.0)

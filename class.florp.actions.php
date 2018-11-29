@@ -165,12 +165,16 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
                   user_id != ' . $iUserID . '
                   AND meta_key = "'.$strKey.'"
                   AND trim(lower(meta_value)) = "' . trim(strtolower($strValue)) . '"';
-              $results = $wpdb->get_results(
+              $aResults = $wpdb->get_results(
                 $strQuery,
-                ARRAY_N
+                ARRAY_A
               );
-              if (!empty($results)) {
-                $data[ 'errors' ][ 'form' ][$strKey] = $strLabel."V databáze už existuje líder, ktorý organizuje flashmob v meste '$strValue'!";
+              // $data[ 'errors' ][ 'form' ][] = "<pre>".var_export($aResults, true)."</pre>";
+              foreach ($aResults as $aRow) {
+                if (is_user_member_of_blog($aRow["user_id"], get_current_blog_id())) {
+                  $data[ 'errors' ][ 'form' ][$strKey] = $strLabel."V databáze už existuje líder, ktorý organizuje flashmob v meste '$strValue'!";
+                  break;
+                }
               }
               break;
             case "flashmob_number_of_dancers":
