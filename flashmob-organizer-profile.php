@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.6.10
+ * Version: 4.6.11
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '4.6.10';
+  private $strVersion = '4.6.11';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -587,13 +587,12 @@ class FLORP{
 %%embed_code%%</div>',
       'strMarkerInfoWindowTemplateTeacher'        => '<div class="florp-marker-infowindow-wrapper">
 <h5 class="florp-course-location">%%courses_city%%</h5>
-<p>%%organizer%% %%school%%</p>
+<p>%%teacher%% %%school%%</p>
 <div class="florp-course-info">%%courses_info%%</div>
 </div>',
-      // TODO %%organizer%% => %%teacher%%
       'strSignupLinkLabel'                        => 'Prihlásiť na Flashmob',
-      'strInfoWindowLabel_organizer'              => '<strong>Organizátor</strong>',
-      // TODO: add 'strInfoWindowLabel_teacher' - in case of courses!
+      'strInfoWindowLabel_organizer'              => '<strong>Líder</strong>',
+      'strInfoWindowLabel_teacher'                => '<strong>Líder</strong>',
       'strInfoWindowLabel_signup'                 => '',
       'strInfoWindowLabel_participant_count'      => 'Prihlásených účastníkov',
       'strInfoWindowLabel_year'                   => '<strong>Rok</strong>',
@@ -673,6 +672,7 @@ class FLORP{
       'florp_infowindow_template_teacher'         => 'strMarkerInfoWindowTemplateTeacher',
       'florp_signup_link_label'                   => 'strSignupLinkLabel',
       'florp_infowindow_label_organizer'          => 'strInfoWindowLabel_organizer',
+      'florp_infowindow_label_teacher'            => 'strInfoWindowLabel_teacher',
       'florp_infowindow_label_signup'             => 'strInfoWindowLabel_signup',
       'florp_infowindow_label_participant_count'  => 'strInfoWindowLabel_participant_count',
       'florp_infowindow_label_year'               => 'strInfoWindowLabel_year',
@@ -764,6 +764,7 @@ class FLORP{
         'strMarkerInfoWindowTemplateTeacher',
         'strSignupLinkLabel',
         'strInfoWindowLabel_organizer',
+        'strInfoWindowLabel_teacher',
         'strInfoWindowLabel_signup',
         'strInfoWindowLabel_participant_count',
         'strInfoWindowLabel_year',
@@ -1738,6 +1739,11 @@ class FLORP{
           if ($bHide) {
             $aField['settings']['container_class'] .= " hidden";
           }
+        }
+
+        // Set number of dancers //
+        if ($aField['settings']['type'] === 'number' || $aField['settings']['type'] === 'quantity') {
+          $aField['settings']['default'] = get_user_meta( $iUserID, $aField['settings']['key'], true );
         }
       }
 
@@ -6641,7 +6647,7 @@ class FLORP{
     $strMarkerInfoWindowTemplateOrganizer = $this->get_wp_editor( $this->aOptions['strMarkerInfoWindowTemplateOrganizer'], 'florp_infowindow_template_organizer' );
     $strMarkerInfoWindowTemplateTeacher = $this->get_wp_editor( $this->aOptions['strMarkerInfoWindowTemplateTeacher'], 'florp_infowindow_template_teacher' );
 
-    $aInfoWindowLabelSlugs = array( 'organizer', 'signup', 'participant_count', 'year', 'dancers', 'school', 'note', 'web', 'facebook', /*'embed_code', 'courses_info'*/ );
+    $aInfoWindowLabelSlugs = array( 'organizer', 'teacher', 'signup', 'participant_count', 'year', 'dancers', 'school', 'note', 'web', 'facebook', /*'embed_code', 'courses_info'*/ );
     $strInfoWindowLabels = "";
     foreach ($aInfoWindowLabelSlugs as $strSlug) {
       $strElementID = 'florp_infowindow_label_'.$strSlug;
@@ -6838,7 +6844,7 @@ class FLORP{
               </th>
               <td style="border-top: 1px lightgray dashed;">
                 %%wpEditorMarkerInfoWindowTemplateTeacher%%
-                <span style="width: 100%;">Placeholdre: <code>%%courses_city%%</code>, <code>%%organizer%%</code>*, <code>%%school%%</code>*, <code>%%courses_info%%</code></span><br>
+                <span style="width: 100%;">Placeholdre: <code>%%courses_city%%</code>, <code>%%teacher%%</code>*, <code>%%school%%</code>*, <code>%%courses_info%%</code></span><br>
                 <span style="width: 100%;">*Pozor: nepridávaj zalomenie riadkov (&lt;br&gt;, &lt;br /&gt;) pred a za placeholdre s hviezdičkou - ak sa zamenia za prázdny text, ostane po nich prázdny riadok!
               </td>
             </tr>
@@ -7439,6 +7445,8 @@ class FLORP{
     }
     // $strOrganizer .= var_export($aInfoWindowData, true);
 
+    $strTeacher = $this->getInfoWindowLabel('teacher').$aInfoWindowData['first_name']['value'] . " " . $aInfoWindowData['last_name']['value'];
+
     $strFacebook = '';
     if (!$bHideLeaderInfo && !empty($aInfoWindowData['facebook']['value'])) {
       $strFacebookLabel = preg_replace( '~^https?://(www\.)?|/$~', "", $aInfoWindowData['facebook']['value'] );
@@ -7630,7 +7638,7 @@ class FLORP{
     }
 
     // Separate optional placeholders by a line break //
-    $aPlaceholdersToSeparate = array( 'organizer' => 'strOrganizer', 'school' => 'strSchool', 'school_web' => 'strSchoolWeb', 'web' => 'strWeb', 'facebook' => 'strFacebook', 'dancers' => 'strDancers', 'year' => 'strYear', 'note' => 'strNote', 'signup' => 'strSignupLink', 'participant_count' => 'strParticipantCount' );
+    $aPlaceholdersToSeparate = array( 'organizer' => 'strOrganizer', 'teacher' => 'strTeacher', 'school' => 'strSchool', 'school_web' => 'strSchoolWeb', 'web' => 'strWeb', 'facebook' => 'strFacebook', 'dancers' => 'strDancers', 'year' => 'strYear', 'note' => 'strNote', 'signup' => 'strSignupLink', 'participant_count' => 'strParticipantCount' );
     $aPlaceholdersToSeparatePositions = array();
     foreach ($aPlaceholdersToSeparate as $strPlaceholder => $strVarName) {
       $mixPosition = strpos($this->aMarkerInfoWindowTemplates[$aInfoWindowData['strMapType']],'%%'.$strPlaceholder.'%%');
@@ -7647,7 +7655,7 @@ class FLORP{
       ${$strVarName} .= "<br>";
     }
 
-    $aSearch = array( 'flashmob_city', 'organizer', 'school', 'web', 'facebook', 'embed_code', 'dancers', 'year', 'note', 'courses_city' ,'courses_info', 'signup', 'participant_count' );
+    $aSearch = array( 'flashmob_city', 'organizer', 'teacher', 'school', 'web', 'facebook', 'embed_code', 'dancers', 'year', 'note', 'courses_city' ,'courses_info', 'signup', 'participant_count' );
     foreach ($aSearch as $key => $value) {
       $aSearch[$key] = '%%'.$value.'%%';
     }
@@ -7674,7 +7682,7 @@ class FLORP{
 //       // This is a tag only for the organizer info window //
 //       $strWeb = "";
 //     }
-    $aReplace = array( $strLocation, $strOrganizer, $strSchool, $strWeb, $strFacebook, $strEmbedCode, $strDancers, $strYear, $strNote, $strLocation, $strCoursesInfo, $strSignupLink, $strParticipantCount );
+    $aReplace = array( $strLocation, $strOrganizer, $strTeacher, $strSchool, $strWeb, $strFacebook, $strEmbedCode, $strDancers, $strYear, $strNote, $strLocation, $strCoursesInfo, $strSignupLink, $strParticipantCount );
     $strText = str_replace( $aSearch, $aReplace, $this->aMarkerInfoWindowTemplates[$aInfoWindowData['strMapType']] );
     return $strText;
     /*

@@ -326,6 +326,7 @@
     if (strMapType.length === 0) {
       strMapType = jQuery('#'+divID).data('mapType')
     }
+    console.info("Map type: ", strMapType)
 
     if ("undefined" === typeof florp.maps) {
       initFlorpMapsObject();
@@ -369,10 +370,11 @@
     if (noMarker) {
       if ("undefined" !== typeof florp.user_id) {
         if (strMapType === "flashmob_organizer") {
-          console.info("Removing user's marker")
+          console.info("Removing user's marker - flashmob_organizer")
           var mixMarkerKey = 0
           florpRemoveUserMarker(florp.user_id, map, divID, mixMarkerKey)
         } else if (strMapType === "teacher") {
+          console.info("Removing user's markers - teacher")
           aProperties = ["courses_city", "courses_city_2", "courses_city_3"]
           aProperties.forEach(function(prop) {
             florpRemoveUserMarker(florp.user_id, map, divID, prop)
@@ -418,22 +420,33 @@
         var oUserOptions = oMapOptions[iUserID];
         var strLocation = ""
         if (strMapType === "flashmob_organizer") {
+          // console.info("Showing marker - flashmob_organizer")
           strLocation = oUserOptions.flashmob_address || oUserOptions.flashmob_city || ""
           florpSetUserMarker( iUserID, oUserOptions, map, divID, florp.maps.markerShownOnLoad[divID] === iUserID, strLocation, 0, strMapType, bIsPreview );
         } else if (strMapType === "teacher") {
+          // console.info("Showing markers - teacher")
           var bShowOnLoad = true, bDontShow = false, aProperties = ["courses_city", "courses_city_2", "courses_city_3"]
           if (divID !== 'teacher_map_preview') {
             bShowOnLoad = false
           }
-          aProperties.forEach(function(prop) {
+          var aPropertyCheckboxes = {
+            "courses_city": false,
+            "courses_city_2": "courses_in_city_2",
+            "courses_city_3": "courses_in_city_3",
+          }
+          jQuery.each(aProperties, function(i, prop) {
             if ("undefined" === typeof oUserOptions[prop]) {
               strLocation = ""
+            } else if (aPropertyCheckboxes[prop] !== false && ("undefined" === typeof oUserOptions[aPropertyCheckboxes[prop]] || "1" != oUserOptions[aPropertyCheckboxes[prop]])) {
+              console.info("User has not enabled "+prop+"; stopping marker drawing for user "+iUserID)
+              return false
             } else {
               strLocation = oUserOptions[prop]
               if (bShowOnLoad) {
                 bDontShow = true
               }
             }
+            // console.info("Maker location: ", strLocation)
             florpSetUserMarker( iUserID, oUserOptions, map, divID, bShowOnLoad, strLocation, prop, strMapType, bIsPreview );
             if (bDontShow) {
               bDontShow = false
@@ -477,6 +490,7 @@
   }
 
   function florpSetUserMarker(iUserID, oUserOptions, map, divID, show, strLocation, mixMarkerKey = 0, strMapType = "flashmob_organizer", bIsPreview ) {
+    // console.log(arguments)
     var k, oInfoWindowData = {};
     for (k in oUserOptions) {
       if (oUserOptions.hasOwnProperty(k)) {
@@ -529,15 +543,17 @@
               mixMarkerKey = getMarkerInfoHtmlRes.data.mixMarkerKey
               oUserOptions = getMarkerInfoHtmlRes.data.oUserOptions
               location = getMarkerInfoHtmlRes.data.location
+              strMapType = getMarkerInfoHtmlRes.data.strMapType
               map = florp.maps.objects[divID]
             }
 
             if ("undefined" !== typeof getMarkerInfoHtmlRes.data && "undefined" !== typeof florp.maps.markers && "undefined" !== typeof florp.maps.markers[divID]) {
-              if ("undefined" !== typeof oUserOptions.latitude && jQuery.isNumeric(oUserOptions.latitude)
+              if (("undefined" !== strMapType && "flashmob_organizer" === strMapType)
+                  &&  "undefined" !== typeof oUserOptions.latitude && jQuery.isNumeric(oUserOptions.latitude)
                   && "undefined" !== typeof oUserOptions.longitude && jQuery.isNumeric(oUserOptions.longitude)) {
                 if ("undefined" === typeof florp.maps.markers[divID][iUserID] || "undefined" === typeof florp.maps.markers[divID][iUserID][mixMarkerKey]) {
                   // Creating new marker - by coordinates //
-                  // console.log("Creating new marker - by coordinates", divID, iUserID)
+                  // console.info("Creating new marker - by coordinates", divID, iUserID)
                   if ("undefined" === typeof florp.maps.markers[divID][iUserID]) {
                     florp.maps.markers[divID][iUserID] = {}
                   }
@@ -573,7 +589,7 @@
                   }
                 } else {
                   // Updating marker - by coordinates //
-                  // console.log("Updating marker - by coordinates", divID, iUserID)
+                  // console.info("Updating marker - by coordinates", divID, iUserID)
                   var marker = florp.maps.markers[divID][iUserID][mixMarkerKey].object;
                   var infowindow = florp.maps.markers[divID][iUserID][mixMarkerKey].info_window_object;
                   marker.setPosition(new google.maps.LatLng(oUserOptions.latitude, oUserOptions.longitude));
@@ -626,7 +642,7 @@
 
                     if ("undefined" === typeof florp.maps.markers[divID][iUserID] || "undefined" === typeof florp.maps.markers[divID][iUserID][mixMarkerKey]) {
                       // Creating new marker - no coordinates //
-                      // console.log("Creating new marker - no coordinates", divID, iUserID)
+                      // console.info("Creating new marker - no coordinates", divID, iUserID)
                       if ("undefined" === typeof florp.maps.markers[divID][iUserID]) {
                         florp.maps.markers[divID][iUserID] = {}
                       }
@@ -662,6 +678,7 @@
                       }
                     } else {
                       // Updating marker - no coordinates //
+                      // console.info("Updating marker - no coordinates", divID, iUserID)
                       var marker = florp.maps.markers[divID][iUserID][mixMarkerKey].object;
                       var infowindow = florp.maps.markers[divID][iUserID][mixMarkerKey].info_window_object;
                       marker.setPosition(addressLocation);

@@ -3,12 +3,12 @@ $aFlorpNinjaFormExportData = array (
   'form_settings' => 
   array (
     'objectType' => 'Form Setting',
-    'editActive' => '1',
+    'editActive' => true,
     'title' => 'Rueda organizer profile',
     'key' => '',
     'created_at' => '2018-04-18 10:50:13',
     'unique_field_error' => 'A form with this value has already been submitted.',
-    'drawerDisabled' => '',
+    'drawerDisabled' => false,
     'formContentData' => 
     array (
       0 => 'hr_1499211561322',
@@ -75,6 +75,7 @@ $aFlorpNinjaFormExportData = array (
     'hide_complete' => '0',
     'show_title' => '0',
     'clear_complete' => '0',
+    'changeDateErrorMsg' => '',
   ),
   'field_settings' => 
   array (
@@ -126,6 +127,7 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Meno',
       'key' => 'first_name',
       'type' => 'firstname',
+      'personally_identifiable' => '1',
     ),
     8 => 
     array (
@@ -148,6 +150,7 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Priezvisko',
       'key' => 'last_name',
       'type' => 'lastname',
+      'personally_identifiable' => '1',
     ),
     9 => 
     array (
@@ -170,6 +173,7 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Email',
       'key' => 'user_email',
       'type' => 'email',
+      'personally_identifiable' => '1',
     ),
     12 => 
     array (
@@ -10280,9 +10284,7 @@ $aFlorpNinjaFormExportData = array (
 <p>Máte právo byť jednoducho vymazaný z databázy, právo na presun údajov a právo na prístup k informáciám ktoré o vás tento web zhromaždil.</p>',
       'manual_key' => true,
       'drawerDisabled' => false,
-      'desc_text' => '<p class="florp-newsletter-banner">
-  <img src="/wpsite/wp-content/plugins/flashmob-organizer-profile/img/newsletter-banner.jpg" alt="newsletter" title="newsletter">
-</p>',
+      'desc_text' => '<p class="florp-newsletter-banner"><a href="http://festivaly.salsarueda.dance/newsletters/nl-latest.html" target="_blank"><img src="/wpsite/wp-content/plugins/flashmob-organizer-profile/img/newsletter-banner.jpg" alt="newsletter" title="newsletter"></a>&nbsp;<span class="hidden">_</span></p>',
       'label' => 'Newsletter',
       'key' => 'preference_newsletter',
       'type' => 'listcheckbox',
@@ -10315,13 +10317,14 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Facebook',
       'key' => 'facebook',
       'type' => 'textbox',
+      'personally_identifiable' => '',
     ),
     37 => 
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 12,
+      'order' => 11,
       'type' => 'listradio',
       'label' => 'Typ trička',
       'key' => 'flashmob_leader_tshirt_gender',
@@ -10490,7 +10493,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 13,
+      'order' => 12,
       'type' => 'listradio',
       'label' => 'Webstránka',
       'key' => 'webpage',
@@ -10734,7 +10737,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 14,
+      'order' => 13,
       'type' => 'listselect',
       'label' => 'Veľkosť trička',
       'key' => 'flashmob_leader_tshirt_size',
@@ -11289,7 +11292,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 15,
+      'order' => 14,
       'type' => 'listradio',
       'label' => 'Farba trička',
       'key' => 'flashmob_leader_tshirt_color',
@@ -11458,7 +11461,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 16,
+      'order' => 15,
       'label_pos' => 'left',
       'required' => '0',
       'default' => '{usermeta:custom_webpage}',
@@ -11481,13 +11484,14 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Vlastná webstránka',
       'key' => 'custom_webpage',
       'type' => 'textbox',
+      'personally_identifiable' => '',
     ),
     38 => 
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 17,
+      'order' => 16,
       'default' => '<h5 class="florp-courses-info-h5">Info o kurzoch</h5>',
       'container_class' => 'florp-class florp-profile-field florp-section-toggler florp-section-courses',
       'element_class' => '',
@@ -11501,7 +11505,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 18,
+      'order' => 17,
       'label_pos' => 'default',
       'required' => '0',
       'default' => '{usermeta:school_name}',
@@ -11524,13 +11528,14 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Meno školy (skupiny)',
       'key' => 'school_name',
       'type' => 'textbox',
+      'personally_identifiable' => '',
     ),
     56 => 
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 19,
+      'order' => 18,
       'type' => 'checkbox',
       'label' => 'Vediem rueda kurzy',
       'key' => 'teacher',
@@ -11553,7 +11558,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 20,
+      'order' => 19,
       'label_pos' => 'above',
       'required' => '',
       'options' => 
@@ -21517,7 +21522,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 21,
+      'order' => 20,
       'default' => '<div class="florp-courses-map-preview-wrapper">
   <div class="florp-map-preview-title florp-left-with-button">
     <h5>Náhľad Vašich kurzov na mape</h5>
@@ -21546,7 +21551,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 22,
+      'order' => 21,
       'type' => 'textarea',
       'label' => 'Informácie o kurzoch zobrazené na mapke',
       'key' => 'courses_info',
@@ -21573,7 +21578,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 23,
+      'order' => 22,
       'type' => 'checkbox',
       'label' => 'Pridať druhé mesto kurzov',
       'key' => 'courses_in_city_2',
@@ -21596,7 +21601,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 24,
+      'order' => 23,
       'type' => 'checkbox',
       'label' => 'Pridať tretie mesto kurzov',
       'key' => 'courses_in_city_3',
@@ -21619,7 +21624,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 25,
+      'order' => 24,
       'label_pos' => 'above',
       'required' => '',
       'options' => 
@@ -31583,7 +31588,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 26,
+      'order' => 25,
       'label_pos' => 'above',
       'required' => '',
       'options' => 
@@ -41547,7 +41552,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 27,
+      'order' => 26,
       'type' => 'textarea',
       'label' => 'Informácie o kurzoch (2) zobrazené na mapke',
       'key' => 'courses_info_2',
@@ -41574,7 +41579,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 28,
+      'order' => 27,
       'type' => 'textarea',
       'label' => 'Informácie o kurzoch (3) zobrazené na mapke',
       'key' => 'courses_info_3',
@@ -41601,7 +41606,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 29,
+      'order' => 28,
       'default' => '<h5 class="florp-flashmob-info-h5">Info o flashmobe</h5>',
       'container_class' => 'florp-class florp-profile-field florp-flashmob florp-section-toggler florp-section-flashmob',
       'element_class' => '',
@@ -41615,7 +41620,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 30,
+      'order' => 29,
       'type' => 'checkbox',
       'label' => 'Zorganizujem rueda flashmob {flashmob_date[j. n. Y]}',
       'key' => 'flashmob_organizer',
@@ -41638,7 +41643,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 31,
+      'order' => 30,
       'label_pos' => 'left',
       'required' => '',
       'options' => 
@@ -51602,7 +51607,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 32,
+      'order' => 31,
       'type' => 'checkbox',
       'label' => 'Informácie Rueda lídra nezobrazovať na mape',
       'key' => 'hide_leader_info',
@@ -51625,7 +51630,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 33,
+      'order' => 32,
       'default' => '<p class="florp-flashmob-info-p">Nasledujúce položky sa budú dať vyplniť po uskutočnení flashmobu.</p>',
       'container_class' => 'florp-class florp-profile-field florp-flashmob florp-before-flashmob florp-section-flashmob',
       'element_class' => '',
@@ -51634,30 +51639,28 @@ $aFlorpNinjaFormExportData = array (
       'key' => 'info_vyplnitelne_po_flashmobe_1533469816899',
       'type' => 'html',
     ),
-    21 => 
+    58 => 
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
       'order' => 34,
+      'type' => 'number',
+      'label' => 'Počet tancujúcich',
+      'key' => 'flashmob_number_of_dancers',
       'label_pos' => 'above',
+      'required' => false,
       'default' => '{usermeta:flashmob_number_of_dancers}',
       'placeholder' => 'Počet tancujúcich - číslo',
       'container_class' => 'florp-class florp-profile-field florp-flashmob florp-left florp-3-col-1 florp-section-flashmob',
       'element_class' => 'florp_flashmob_number_of_dancers',
-      'manual_key' => '1',
-      'disable_input' => '',
+      'manual_key' => true,
       'admin_label' => '',
       'help_text' => '',
-      'desc_text' => '',
-      'product_assignment' => '',
       'num_min' => '0',
       'num_max' => '',
       'num_step' => '1',
       'drawerDisabled' => false,
-      'label' => 'Počet tancujúcich',
-      'key' => 'flashmob_number_of_dancers',
-      'type' => 'quantity',
     ),
     29 => 
     array (
@@ -51728,6 +51731,7 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Link videa (Youtube, Facebook, Vimeo)',
       'key' => 'video_link',
       'type' => 'textbox',
+      'personally_identifiable' => '',
     ),
     27 => 
     array (
@@ -51757,6 +51761,7 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Miesto konania flashmobu',
       'key' => 'flashmob_address',
       'type' => 'address',
+      'personally_identifiable' => '1',
     ),
     31 => 
     array (
@@ -51786,6 +51791,7 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Zemepisná šírka',
       'key' => 'latitude',
       'type' => 'textbox',
+      'personally_identifiable' => '',
     ),
     30 => 
     array (
@@ -51815,6 +51821,7 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Zemepisná dĺžka',
       'key' => 'longitude',
       'type' => 'textbox',
+      'personally_identifiable' => '',
     ),
     32 => 
     array (
@@ -51876,6 +51883,14 @@ $aFlorpNinjaFormExportData = array (
       'objectDomain' => 'actions',
       'objectType' => 'Action',
       'payment_total_type' => '',
+      'message' => 'This action adds users to WordPress\' personal data export tool, allowing admins to comply with the GDPR and other privacy regulations from the site\'s front end.',
+      'submitter_email' => '',
+      'fields-save-toggle' => 'save_all',
+      'exception_fields' => 
+      array (
+      ),
+      'set_subs_to_expire' => '0',
+      'subs_expire_time' => '90',
     ),
     6 => 
     array (
@@ -51935,6 +51950,14 @@ $aFlorpNinjaFormExportData = array (
       'redirect_url' => '',
       'success_msg' => '<span class="florp_success_message">Profil bol úspešne uložený.</span>',
       'drawerDisabled' => '',
+      'message' => 'This action adds users to WordPress\' personal data export tool, allowing admins to comply with the GDPR and other privacy regulations from the site\'s front end.',
+      'submitter_email' => '',
+      'fields-save-toggle' => 'save_all',
+      'exception_fields' => 
+      array (
+      ),
+      'set_subs_to_expire' => '0',
+      'subs_expire_time' => '90',
     ),
     8 => 
     array (
@@ -51963,6 +51986,14 @@ $aFlorpNinjaFormExportData = array (
       'redirect_url' => '',
       'success_msg' => '<span class="florp_success_message">Registrácia prebehla úspešne.</span>',
       'drawerDisabled' => '',
+      'message' => 'This action adds users to WordPress\' personal data export tool, allowing admins to comply with the GDPR and other privacy regulations from the site\'s front end.',
+      'submitter_email' => '',
+      'fields-save-toggle' => 'save_all',
+      'exception_fields' => 
+      array (
+      ),
+      'set_subs_to_expire' => '0',
+      'subs_expire_time' => '90',
     ),
     9 => 
     array (
@@ -51993,8 +52024,16 @@ $aFlorpNinjaFormExportData = array (
       'objectDomain' => 'actions',
       'objectType' => 'Action',
       'payment_total_type' => '',
+      'message' => 'This action adds users to WordPress\' personal data export tool, allowing admins to comply with the GDPR and other privacy regulations from the site\'s front end.',
+      'submitter_email' => '',
+      'fields-save-toggle' => 'save_all',
+      'exception_fields' => 
+      array (
+      ),
+      'set_subs_to_expire' => '0',
+      'subs_expire_time' => '90',
     ),
   ),
-  'version' => 4006008,
-  'timestamp' => 1539296130,
+  'version' => 4006010,
+  'timestamp' => 1543461155,
 ); ?>

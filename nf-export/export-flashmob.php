@@ -90,6 +90,7 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Meno',
       'key' => 'first_name',
       'type' => 'firstname',
+      'personally_identifiable' => '1',
     ),
     237 => 
     array (
@@ -112,6 +113,7 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Priezvisko',
       'key' => 'last_name',
       'type' => 'lastname',
+      'personally_identifiable' => '1',
     ),
     238 => 
     array (
@@ -134,6 +136,7 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Email',
       'key' => 'user_email',
       'type' => 'email',
+      'personally_identifiable' => '1',
     ),
     242 => 
     array (
@@ -11000,9 +11003,7 @@ $aFlorpNinjaFormExportData = array (
       'order' => 9,
       'type' => 'html',
       'label' => 'HTML - newsletter banner Mobile',
-      'default' => '<p class="florp-newsletter-banner participants">
-  <img src="/wpsite/wp-content/plugins/flashmob-organizer-profile/img/newsletter-banner.jpg" alt="newsletter" title="newsletter">
-</p>',
+      'default' => '<p class="florp-newsletter-banner participants">  <a href="http://festivaly.salsarueda.dance/newsletters/nl-latest.html" target="_blank"><img src="/wpsite/wp-content/plugins/flashmob-organizer-profile/img/newsletter-banner.jpg" alt="newsletter" title="newsletter"></a></p>',
       'container_class' => 'florp-class florp-right florp-registration-field florp-mobile',
       'element_class' => '',
       'key' => 'html_-_newsletter_banner_mobile_1535795671381',
@@ -11031,7 +11032,7 @@ $aFlorpNinjaFormExportData = array (
       'type' => 'html',
       'label' => 'HTML - newsletter banner',
       'default' => '<p class="florp-newsletter-banner participants">
-  <img src="/wpsite/wp-content/plugins/flashmob-organizer-profile/img/newsletter-banner.jpg" alt="newsletter" title="newsletter">
+  <a href="http://festivaly.salsarueda.dance/newsletters/nl-latest.html" target="_blank"><img src="/wpsite/wp-content/plugins/flashmob-organizer-profile/img/newsletter-banner.jpg" alt="newsletter" title="newsletter"/></a>
 </p>',
       'container_class' => 'florp-class florp-right florp-registration-field florp-desktop',
       'element_class' => '',
@@ -12006,6 +12007,14 @@ $aFlorpNinjaFormExportData = array (
       'email_format' => 'html',
       'from_address' => '',
       'drawerDisabled' => '',
+      'set_subs_to_expire' => '0',
+      'subs_expire_time' => '90',
+      'exception_fields' => 
+      array (
+      ),
+      'fields-save-toggle' => 'save_all',
+      'submitter_email' => '',
+      'message' => 'This action adds users to WordPress\' personal data export tool, allowing admins to comply with the GDPR and other privacy regulations from the site\'s front end.',
     ),
     42 => 
     array (
@@ -12065,6 +12074,14 @@ $aFlorpNinjaFormExportData = array (
       'bcc' => '',
       'success_msg' => '<span class="florp_success_message">Prihlásenie prebehlo úspešne.</span>',
       'drawerDisabled' => '',
+      'message' => 'This action adds users to WordPress\' personal data export tool, allowing admins to comply with the GDPR and other privacy regulations from the site\'s front end.',
+      'subs_expire_time' => '90',
+      'set_subs_to_expire' => '0',
+      'exception_fields' => 
+      array (
+      ),
+      'fields-save-toggle' => 'save_all',
+      'submitter_email' => '',
     ),
     40 => 
     array (
@@ -12073,6 +12090,13 @@ $aFlorpNinjaFormExportData = array (
       'type' => 'closepopup',
       'active' => '1',
       'created_at' => '2018-06-13 01:10:51',
+      'subs_expire_time' => '90',
+      'set_subs_to_expire' => '0',
+      'exception_fields' => 
+      array (
+      ),
+      'fields-save-toggle' => 'save_all',
+      'submitter_email' => '',
       'objectDomain' => 'actions',
       'objectType' => 'Action',
       'editActive' => '',
@@ -12094,6 +12118,7 @@ $aFlorpNinjaFormExportData = array (
       'success_msg' => 'Your form has been successfully submitted.',
       'close_delay' => '3',
       'drawerDisabled' => '',
+      'message' => 'This action adds users to WordPress\' personal data export tool, allowing admins to comply with the GDPR and other privacy regulations from the site\'s front end.',
     ),
     43 => 
     array (
@@ -12102,6 +12127,14 @@ $aFlorpNinjaFormExportData = array (
       'type' => 'success-message-logged-in',
       'active' => '0',
       'created_at' => '2018-03-31 18:49:27',
+      'set_subs_to_expire' => '0',
+      'exception_fields' => 
+      array (
+      ),
+      'fields-save-toggle' => 'save_all',
+      'submitter_email' => '',
+      'message' => 'This action adds users to WordPress\' personal data export tool, allowing admins to comply with the GDPR and other privacy regulations from the site\'s front end.',
+      'subs_expire_time' => '90',
       'email_format' => 'html',
       'from_address' => '',
       'from_name' => '',
@@ -12130,6 +12163,14 @@ $aFlorpNinjaFormExportData = array (
       'type' => 'success-message-logged-out',
       'active' => '0',
       'created_at' => '2018-03-31 18:49:27',
+      'subs_expire_time' => '90',
+      'set_subs_to_expire' => '0',
+      'exception_fields' => 
+      array (
+      ),
+      'fields-save-toggle' => 'save_all',
+      'submitter_email' => '',
+      'message' => 'This action adds users to WordPress\' personal data export tool, allowing admins to comply with the GDPR and other privacy regulations from the site\'s front end.',
       'objectType' => 'Action',
       'objectDomain' => 'actions',
       'editActive' => '',
@@ -12158,6 +12199,14 @@ $aFlorpNinjaFormExportData = array (
       'type' => 'florp',
       'active' => '1',
       'created_at' => '2018-03-31 14:05:52',
+      'subs_expire_time' => '90',
+      'set_subs_to_expire' => '0',
+      'exception_fields' => 
+      array (
+      ),
+      'fields-save-toggle' => 'save_all',
+      'submitter_email' => '',
+      'message' => 'This action adds users to WordPress\' personal data export tool, allowing admins to comply with the GDPR and other privacy regulations from the site\'s front end.',
       'cc' => '',
       'bcc' => '',
       'attach_csv' => '',
@@ -12182,6 +12231,6 @@ $aFlorpNinjaFormExportData = array (
       'payment_total_type' => '',
     ),
   ),
-  'version' => 4005006,
-  'timestamp' => 1537485136,
+  'version' => 4006010,
+  'timestamp' => 1543455975,
 ); ?>
