@@ -13,6 +13,16 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v4.6.11: Fixing teacher map, new forms, flashmob city check fix =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.11)
+- fixing teacher map (showing flashmob city if coordinates were present)
+- adding teacher header in options and markers
+- new forms
+  - with NL link on banner,
+  - fix for hidden non-text description
+  - fixed default value for fields of type 'number' (main)
+- limiting flashmob city check to users on given blog only
+
 = v4.6.10: Fixed when top bar (for login/logout) is shown =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.10)
 - fixed when top bar (for login/logout) is shown
@@ -214,13 +224,5 @@ fixed preview when shown on the right half of screen
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.3.1)
 Bugfixes
 
-= v4.3.0: T-shirt image preview, fixes =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.3.0)
-- tshirt image preview
-- field checking, error messages with field label
-- new tshirt images
-- new form exports
-- other fixes
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.3.0)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.3.1)

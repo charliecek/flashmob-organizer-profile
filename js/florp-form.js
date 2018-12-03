@@ -426,18 +426,31 @@
         } else if (strMapType === "teacher") {
           // console.info("Showing markers - teacher")
           var bShowOnLoad = true, bDontShow = false, aProperties = ["courses_city", "courses_city_2", "courses_city_3"]
-          if (divID !== 'teacher_map_preview') {
+          bIsPreview = (divID === 'teacher_map_preview')
+          if (bIsPreview) {
+            // When on preview, we reverse the order so that we can stop marker drawing after the first non-checked city //
+            aProperties = aProperties.reverse()
+          } else {
             bShowOnLoad = false
           }
           var aPropertyCheckboxes = {
             "courses_city": false,
             "courses_city_2": "courses_in_city_2",
             "courses_city_3": "courses_in_city_3",
+          }, aPropertyNum = {
+            "courses_city": 1,
+            "courses_city_2": 2,
+            "courses_city_3": 3,
           }
           jQuery.each(aProperties, function(i, prop) {
-            if ("undefined" === typeof oUserOptions[prop]) {
+            if ("undefined" !== typeof florp.courses_number_enabled && aPropertyNum[prop] > florp.courses_number_enabled) {
+              console.info("Only "+florp.courses_number_enabled+" courses cities are enabled; skipping "+prop)
+              return true
+            } else if ("undefined" === typeof oUserOptions[prop]) {
               strLocation = ""
-            } else if (aPropertyCheckboxes[prop] !== false && ("undefined" === typeof oUserOptions[aPropertyCheckboxes[prop]] || "1" != oUserOptions[aPropertyCheckboxes[prop]])) {
+            } else if (!bIsPreview && aPropertyCheckboxes[prop] !== false && ("undefined" === typeof oUserOptions[aPropertyCheckboxes[prop]] || "1" != oUserOptions[aPropertyCheckboxes[prop]])) {
+              // When we are not in preview, we check if the city's checkbox has been checked //
+              // On preview, the checkboxes are not present in oUserOptions; oUserOptions have already been filtered by them //
               console.info("User has not enabled "+prop+"; stopping marker drawing for user "+iUserID)
               return false
             } else {
@@ -447,6 +460,9 @@
               }
             }
             // console.info("Maker location: ", strLocation)
+            if (strLocation !== "") {
+              console.info("Showing user "+iUserID+"'s maker at location: ", strLocation)
+            }
             florpSetUserMarker( iUserID, oUserOptions, map, divID, bShowOnLoad, strLocation, prop, strMapType, bIsPreview );
             if (bDontShow) {
               bDontShow = false

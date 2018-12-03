@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.6.11
+ * Version: 4.6.12
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '4.6.11';
+  private $strVersion = '4.6.12';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
@@ -603,7 +603,7 @@ class FLORP{
       'strInfoWindowLabel_note'                   => 'Poznámka',
       'strInfoWindowLabel_embed_code'             => '',
       'strInfoWindowLabel_courses_info'           => '',
-      'bCoursesInfoDisabled'                      => true,
+      'iCoursesNumberEnabled'                     => 1,
       'strTshirtPaymentWarningNotificationSbj'    => 'Chýba nám platba za objednané tričko',
       'strTshirtPaymentWarningNotificationMsg'    => '<p>Prosíme, pošlite platbu za objednané tričko.</p><p>Váš SalsaRueda.Dance team</p>',
       'bTshirtOrderingDisabled'                   => false,
@@ -683,7 +683,7 @@ class FLORP{
       'florp_infowindow_label_note'               => 'strInfoWindowLabel_note',
       'florp_infowindow_label_embed_code'         => 'strInfoWindowLabel_embed_code',
       'florp_infowindow_label_courses_info'       => 'strInfoWindowLabel_courses_info',
-      'florp_courses_info_disabled'               => 'bCoursesInfoDisabled',
+      'florp_courses_number_enabled'              => 'iCoursesNumberEnabled',
       'florp_tshirt_payment_warning_notif_sbj'    => 'strTshirtPaymentWarningNotificationSbj',
       'florp_tshirt_payment_warning_notif_msg'    => 'strTshirtPaymentWarningNotificationMsg',
       'florp_tshirt_ordering_disabled'            => 'bTshirtOrderingDisabled',
@@ -705,13 +705,13 @@ class FLORP{
       'iProfileFormNinjaFormIDFlashmob' => 'iProfileFormNinjaFormID',
       'iProfileFormPopupIDFlashmob' => 'iProfileFormPopupID',
       'strGoogleMapsKey' => 'strGoogleMapKey',
+      'bCoursesInfoDisabled',
     );
     $this->aBooleanOptions = array(
       'bReloadAfterSuccessfulSubmissionMain', 'bReloadAfterSuccessfulSubmissionFlashmob',
       'bLoadMapsAsync', 'bLoadMapsLazy', 'bLoadVideosLazy', 'bUseMapImage',
       'bApproveUsersAutomatically',
       'bPreventDirectMediaDownloads',
-      'bCoursesInfoDisabled',
       'bTshirtOrderingDisabled',
       'bTshirtOrderingDisabledOnlyDisable',
       'bOnlyFlorpProfileNinjaFormMain',
@@ -775,7 +775,7 @@ class FLORP{
         'strInfoWindowLabel_note',
         'strInfoWindowLabel_embed_code',
         'strInfoWindowLabel_courses_info',
-        'bCoursesInfoDisabled',
+        'iCoursesNumberEnabled',
         'bOnlyFlorpProfileNinjaFormMain',
         'aHideFlashmobFieldsForUsers',
         'aUnhideFlashmobFieldsForUsers',
@@ -1744,6 +1744,19 @@ class FLORP{
         // Set number of dancers //
         if ($aField['settings']['type'] === 'number' || $aField['settings']['type'] === 'quantity') {
           $aField['settings']['default'] = get_user_meta( $iUserID, $aField['settings']['key'], true );
+        }
+
+        // Hide and uncheck teacher course fields by iCoursesNumberEnabled //
+        $aCourseCheckboxes = array(
+          'courses_in_city_2' => 2,
+          'courses_in_city_3' => 3,
+        );
+        foreach ($aCourseCheckboxes as $sKey => $iNum) {
+          if ($aField['settings']['key'] == $sKey && $iNum > $this->aOptions['iCoursesNumberEnabled']) {
+            // .hide-field-florp force-hides the container //
+            $aField['settings']['container_class'] .= " florp-hidden hide-field-florp";
+            $aField['settings']['default_value'] = 'unchecked';
+          }
         }
       }
 
@@ -2779,7 +2792,8 @@ class FLORP{
       'img_path'                      => plugins_url( 'flashmob-organizer-profile/img/' ),
       'tshirt_imgs_couples'           => $aTshirtImages,
       'tshirt_imgs_full'              => $aTshirtFullImages,
-      'courses_info_disabled'         => $this->aOptions['bCoursesInfoDisabled'] ? 1 : 0,
+      'courses_info_disabled'         => $this->aOptions['iCoursesNumberEnabled'] == 0 ? 1 : 0,
+      'courses_number_enabled'        => intval($this->aOptions['iCoursesNumberEnabled']),
       'tshirt_ordering_disabled'      => $this->aOptions['bTshirtOrderingDisabled'] ? 1 : 0,
       'tshirt_ordering_only_disable'  => $this->aOptions['bTshirtOrderingDisabledOnlyDisable'] ? 1 : 0,
 //       'all_imgs'                      => glob($strImagePath . "t-shirt-*.png"),
@@ -3074,7 +3088,7 @@ class FLORP{
       $strEcho .=   '<td>'.$aAllMeta['flashmob_city'].'</td>';
       $strEcho .=   '<td>';
       foreach( $this->aSubscriberTypes as $strSubscriberType) {
-        if ($this->aOptions['bCoursesInfoDisabled'] && in_array($strSubscriberType, $this->aMetaFieldsTeacher)) {
+        if ($this->aOptions['iCoursesNumberEnabled'] == 0 && in_array($strSubscriberType, $this->aMetaFieldsTeacher)) {
           continue;
         }
         $bChecked = isset($aAllMeta[$strSubscriberType]) && $aAllMeta[$strSubscriberType];
@@ -3095,7 +3109,7 @@ class FLORP{
           continue;
         }
 
-        if ($this->aOptions['bCoursesInfoDisabled'] && in_array($strMetaKey, $this->aMetaFieldsTeacher)) {
+        if ($this->aOptions['iCoursesNumberEnabled'] == 0 && in_array($strMetaKey, $this->aMetaFieldsTeacher)) {
           continue;
         }
 
@@ -3672,7 +3686,7 @@ class FLORP{
         $bRows = false;
         if ($aSubmissionData['_first']) {
           foreach ($aSubmissionData['_data'] as $strKey => $mixValue) {
-            if ($this->aOptions['bCoursesInfoDisabled'] && in_array($strKey, $this->aMetaFieldsTeacher)) {
+            if ($this->aOptions['iCoursesNumberEnabled'] == 0 && in_array($strKey, $this->aMetaFieldsTeacher)) {
               continue;
             }
             if (!isset($mixValue) || (!is_bool($mixValue) && !is_numeric($mixValue) && empty($mixValue)) || $mixValue === 'null' || in_array( $strKey, $aSkip )) {
@@ -3840,7 +3854,7 @@ class FLORP{
       foreach ($aSubmissions['_submissions'] as $strSubmissionChangeID => $aSubmissionData) {
         if ($aSubmissionData['_first']) {
           foreach ($aSubmissionData['_data'] as $strKey => $mixValue) {
-            if ($this->aOptions['bCoursesInfoDisabled'] && in_array($strKey, $this->aMetaFieldsTeacher)) {
+            if ($this->aOptions['iCoursesNumberEnabled'] == 0 && in_array($strKey, $this->aMetaFieldsTeacher)) {
               continue;
             }
             if (!isset($mixValue) || (!is_bool($mixValue) && !is_numeric($mixValue) && empty($mixValue)) || $mixValue === 'null' || in_array( $strKey, $aSkip )) {
@@ -3863,7 +3877,7 @@ class FLORP{
         if ($aSubmissionData['_first']) {
           $iRows = 0;
           foreach ($aSubmissionData['_data'] as $strKey => $mixValue) {
-            if ($this->aOptions['bCoursesInfoDisabled'] && in_array($strKey, $this->aMetaFieldsTeacher)) {
+            if ($this->aOptions['iCoursesNumberEnabled'] == 0 && in_array($strKey, $this->aMetaFieldsTeacher)) {
               continue;
             }
             if (!isset($mixValue) || (!is_bool($mixValue) && !is_numeric($mixValue) && empty($mixValue)) || $mixValue === 'null' || in_array( $strKey, $aSkip )) {
@@ -3886,7 +3900,7 @@ class FLORP{
           $strSubmission = "";
           $aTimestamps = array();
           foreach ($aSubmissionData['_data'] as $strKey => $mixValue) {
-            if ($this->aOptions['bCoursesInfoDisabled'] && in_array($strKey, $this->aMetaFieldsTeacher)) {
+            if ($this->aOptions['iCoursesNumberEnabled'] == 0 && in_array($strKey, $this->aMetaFieldsTeacher)) {
               continue;
             }
             if (!isset($mixValue) || (!is_bool($mixValue) && !is_numeric($mixValue) && empty($mixValue)) || $mixValue === 'null' || in_array( $strKey, $aSkip )) {
@@ -4467,7 +4481,7 @@ class FLORP{
         }
         $aNfSubmissions[$aFieldValues["user_email"]][] = array_filter($aFieldValues, function($key) {
           $aPermittedKeys = array('_submission_date', '_submission_date_wp_format', '_submission_timestamp', '_form_id', '_submission_id', '_blog_id');
-          if ($this->aOptions['bCoursesInfoDisabled'] && in_array($key, $this->aMetaFieldsTeacher)) {
+          if ($this->aOptions['iCoursesNumberEnabled'] == 0 && in_array($key, $this->aMetaFieldsTeacher)) {
             return false;
           }
           return in_array($key, $aPermittedKeys) || strpos($key, "_") !== 0;
@@ -6617,6 +6631,7 @@ class FLORP{
       'optionsDays'     => array( 'start' => 1, 'end' => 31, 'leadingZero' => false, 'optionKey' => 'iFlashmobDay' ),
       'optionsHours'    => array( 'start' => 0, 'end' => 23, 'leadingZero' => true, 'optionKey' => 'iFlashmobHour' ),
       'optionsMinutes'  => array( 'start' => 0, 'end' => 59, 'leadingZero' => true, 'optionKey' => 'iFlashmobMinute' ),
+      'optionsCoursesNumberEnabled' => array( 'start' => 0, 'end' => 3, 'leadingZero' => false, 'optionKey' => 'iCoursesNumberEnabled' ),
     );
     $aNumOptions = array();
     foreach ($aNumOptionSettings as $strOptionKey => $aSettings) {
@@ -6688,8 +6703,7 @@ class FLORP{
         '%%loadMapsAsyncChecked%%',
         '%%loadMapsLazyChecked%%',
         '%%loadVideosLazyChecked%%',
-        '%%bCoursesInfoDisabled%%',
-        '%%optionsYears%%', '%%optionsMonths%%', '%%optionsDays%%', '%%optionsHours%%', '%%optionsMinutes%%',
+        '%%optionsYears%%', '%%optionsMonths%%', '%%optionsDays%%', '%%optionsHours%%', '%%optionsMinutes%%', '%%optionsCoursesNumberEnabled%%',
         '%%strGoogleMapsKey%%', '%%strGoogleMapsKeyStatic%%', '%%strFbAppID%%', '%%preventDirectMediaDownloadsChecked%%', '%%strNewsletterAPIKey%%',
         '%%strSignupLinkLabel%%', '%%strInfoWindowLabels%%',
         '%%wpEditorMarkerInfoWindowTemplateOrganizer%%', '%%wpEditorMarkerInfoWindowTemplateTeacher%%',
@@ -6698,8 +6712,7 @@ class FLORP{
         $aBooleanOptionsChecked['bLoadMapsAsync'],
         $aBooleanOptionsChecked['bLoadMapsLazy'],
         $aBooleanOptionsChecked['bLoadVideosLazy'],
-        $aBooleanOptionsChecked['bCoursesInfoDisabled'],
-        $aNumOptions['optionsYears'], $optionsMonths, $aNumOptions['optionsDays'], $aNumOptions['optionsHours'], $aNumOptions['optionsMinutes'],
+        $aNumOptions['optionsYears'], $optionsMonths, $aNumOptions['optionsDays'], $aNumOptions['optionsHours'], $aNumOptions['optionsMinutes'], $aNumOptions['optionsCoursesNumberEnabled'],
         $this->aOptions['strGoogleMapsKey'], $this->aOptions['strGoogleMapsKeyStatic'], $this->aOptions['strFbAppID'], $aBooleanOptionsChecked['bPreventDirectMediaDownloads'], $this->aOptions['strNewsletterAPIKey'],
         $this->aOptions['strSignupLinkLabel'], $strInfoWindowLabels,
         $strMarkerInfoWindowTemplateOrganizer, $strMarkerInfoWindowTemplateTeacher,
@@ -6820,10 +6833,10 @@ class FLORP{
             </tr>
             <tr style="width: 98%; padding:  5px 1%;">
               <th style="width: 47%; padding: 0 1%; text-align: right;">
-                <label for="florp_courses_info_disabled">Vypnúť zobrazovanie položiek o kurzoch vo formulári?</label>
+                <label for="florp_courses_number_enabled">Počet povolených miest kurzov (0 = vypnúť zobrazovanie položiek o kurzoch vo formulári)</label>
               </th>
               <td>
-                <input id="florp_courses_info_disabled" name="florp_courses_info_disabled" type="checkbox" %%bCoursesInfoDisabled%% value="1"/>
+                <select id="florp_courses_number_enabled" name="florp_courses_number_enabled">%%optionsCoursesNumberEnabled%%</select>
               </td>
             </tr>
             %%strInfoWindowLabels%%
@@ -7419,7 +7432,7 @@ class FLORP{
         $strWeb = $strWebpage;
       }
     }
-    if ($this->aOptions["bCoursesInfoDisabled"] || empty($aData['school_name'])) {
+    if ($this->aOptions["iCoursesNumberEnabled"] == 0 || empty($aData['school_name'])) {
       if (!empty($strSchoolWebpage)) {
         if ($aData["bReturnAnchor"]) {
           $strSchoolWebpageLabel = preg_replace( '~^https?://(www\.)?|/$~', "", $strSchoolWebpage );
@@ -7497,7 +7510,7 @@ class FLORP{
 
     $strSchool = '';
     $bIsYearUpTo2017 = (isset($aInfoWindowData['iYear']) && !empty($aInfoWindowData['iYear']) && $aInfoWindowData['iYear'] <= 2017);
-    if (($bIsYearUpTo2017 || !$this->aOptions["bCoursesInfoDisabled"]) && !empty($aInfoWindowData['school_name']['value'])) {
+    if (($bIsYearUpTo2017 || $this->aOptions["iCoursesNumberEnabled"] > 0) && !empty($aInfoWindowData['school_name']['value'])) {
       $strSchool = $aInfoWindowData['school_name']['value'];
       if (!empty($strSchoolWebpage)) {
         $strSchool = '<a href="'.$strSchoolWebpage.'" target="_blank">'.$strSchool.'</a>';
