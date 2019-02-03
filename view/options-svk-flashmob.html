@@ -1,0 +1,169 @@
+<tr style="width: 98%; padding:  5px 1%;">
+  <th colspan="2"><h3>Flashmobová podstránka</h3></th>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_flashmob_blog_id">Podstránka</label></th>
+  <td>
+    <select id="florp_flashmob_blog_id" name="florp_flashmob_blog_id" style="width: 100%;">%%optionsFlashmobSite%%</select>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_profile_form_ninja_form_id_flashmob">Registračný / profilový formulár (spomedzi Ninja Form formulárov)</label></th>
+  <td>
+    <select id="florp_profile_form_ninja_form_id_flashmob" name="florp_profile_form_ninja_form_id_flashmob" style="width: 100%;">%%optionsNinjaFormsFlashmob%%</select>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    <label for="florp_only_florp_profile_nf_flashmob">Na flashmob blogu je jediným ninja form formulárom profilový?</label>
+  </th>
+  <td>
+    <input id="florp_only_florp_profile_nf_flashmob" name="florp_only_florp_profile_nf_flashmob" type="checkbox" %%bOnlyFlorpProfileNinjaFormFlashmob%% value="1"/>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_profile_form_page_id_flashmob">Dedikovaná profilová stránka (v ktorej je registračný / profilový formulár)</label></th>
+  <td>
+    <select id="florp_profile_form_page_id_flashmob" name="florp_profile_form_page_id_flashmob" style="width: 100%;">%%optionsPagesFlashmob%%</select>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_profile_form_popup_id_flashmob">PUM Popup, v ktorom je registračný / profilový formulár</label></th>
+  <td>
+    <select id="florp_profile_form_popup_id_flashmob" name="florp_profile_form_popup_id_flashmob" style="width: 100%;">%%optionsPopupsFlashmob%%</select>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th colspan="2">
+    <span style="font-size: smaller;">Ak je na stránke s PUM Popup-om element <code>#florp-popup-scroll</code>, pri zatvorení PUM Popup-u sa stránka scrollne na tento element.</span>
+  </th>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    <label for="florp_reload_after_ok_submission_flashmob">Znovu načítať celú stránku po vypnutí popup-u po úspešnom uložení formulára?</label>
+  </th>
+  <td>
+    <input id="florp_reload_after_ok_submission_flashmob" name="florp_reload_after_ok_submission_flashmob" type="checkbox" %%reloadCheckedFlashmob%% value="1"/>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th colspan="2">
+    <span style="font-size: smaller;">Znovunačítanie je odporúčané zapnúť iba ak je problém s obnovením mapky / mapiek po uložení formuláru.</span>
+  </th>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    <label for="florp_use_map_image">Použiť obrázok mapy slovenských flashmobov pri náhľade stránky pri zdieľaní (FB)?</label>
+  </th>
+  <td>
+    <input id="florp_use_map_image" name="florp_use_map_image" type="checkbox" %%useMapImageChecked%% value="1"/>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
+    HTML text zobrazený nad prihlasovacím (resp. registračným) formulárom
+  </th>
+  <td style="border-top: 1px lightgray dashed;">
+    %%wpEditorBeforeLoginFormHtmlFlashmob%%
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
+    <label for="florp_newsletter_lists_flashmob">Newsletter zoznamy (oddelené čiarkou)</label>
+  </th>
+  <td style="border-top: 1px lightgray dashed;">
+    <input id="florp_newsletter_lists_flashmob" name="florp_newsletter_lists_flashmob" type="text" value="%%strNewsletterListsFlashmob%%" style="width: 100%;" />
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
+    <label for="florp_participant_registered_subject">Predmet správy poslanej prihláseným účastníkom flashmobu</label>
+  </th>
+  <td style="border-top: 1px lightgray dashed;">
+    <input id="florp_participant_registered_subject" name="florp_participant_registered_subject" type="text" value="%%strParticipantRegisteredSubject%%" style="width: 100%;" />
+    <span style="width: 100%;">Placeholdre: <code>%BLOGNAME%</code>, <code>%BLOGURL%</code></span>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    Správa poslaná prihláseným účastníkom flashmobu
+  </th>
+  <td style="border-top: 1px lightgray dashed;">
+    %%wpEditorParticipantRegisteredMessage%%
+    <span style="width: 100%;">Placeholdre: <code>%BLOGNAME%</code>, <code>%BLOGURL%</code>, <code>%USERNAME%</code>, <code>%EMAIL%</code></span>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
+    <label for="florp_participant_removed_subject">Predmet správy poslanej odstráneným účastníkom flashmobu</label>
+  </th>
+  <td style="border-top: 1px lightgray dashed;">
+    <input id="florp_participant_removed_subject" name="florp_participant_removed_subject" type="text" value="%%strParticipantRemovedSubject%%" style="width: 100%;" />
+    <span style="width: 100%;">Placeholdre: <code>%BLOGNAME%</code>, <code>%BLOGURL%</code></span>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    Správa poslaná odstráneným účastníkom flashmobu
+  </th>
+  <td style="border-top: 1px lightgray dashed;">
+    %%wpEditorParticipantRemovedMessage%%
+    <span style="width: 100%;">Placeholdre: <code>%BLOGNAME%</code>, <code>%BLOGURL%</code>, <code>%USERNAME%</code>, <code>%EMAIL%</code></span>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
+    <label for="florp_tshirt_payment_warning_notif_sbj">Predmet upozornenia na platbu za tričko</label>
+  </th>
+  <td style="border-top: 1px lightgray dashed;">
+    <input id="florp_tshirt_payment_warning_notif_sbj" name="florp_tshirt_payment_warning_notif_sbj" type="text" value="%%strTshirtPaymentWarningNotificationSbj%%" style="width: 100%;" />
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    Text upozornenia na platbu za tričko
+  </th>
+  <td style="border-top: 1px lightgray dashed;">
+    %%wpEditorTshirtPaymentWarningNotificationMsg%%
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
+    <label for="florp_tshirt_ordering_disabled">Vypnúť objednávanie tričiek na formulári pre účastníkov?</label>
+  </th>
+  <td style="border-top: 1px lightgray dashed;">
+    <input id="florp_tshirt_ordering_disabled" name="florp_tshirt_ordering_disabled" type="checkbox" %%tshirtOrderingDisabledChecked%% value="1"/>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    <label for="florp_tshirt_ordering_only_disable">Pri vypnutom objednávaní tričiek na formulári pre účastníkov ponechať checkbox viditeľný (ale neklikateľný)?</label>
+  </th>
+  <td>
+    <input id="florp_tshirt_ordering_only_disable" name="florp_tshirt_ordering_only_disable" type="checkbox" %%tshirtOrderingDisabledOnlyDisableChecked%% value="1"/>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
+    <label for="florp_tshirt_payment_warning_deadline">Deadline na zobrazovanie upozornenia na dátum, po ktorom už tričká nebudú doručené pred flashmobom [počet dní pred flashmobom]</label>
+  </th>
+  <td style="border-top: 1px lightgray dashed;">
+    <input id="florp_tshirt_payment_warning_deadline" name="florp_tshirt_payment_warning_deadline" type="number" value="%%iTshirtPaymentWarningDeadline%%" style="width: 100%;" min="0" max="21" title="Current: %%iTshirtPaymentWarningDeadline%% => %%iTshirtPaymentWarningDeadlineTime%%" />
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    <label for="florp_tshirt_payment_warning_btn_deadline">Deadline na zobrazovanie nútené tlačítka na odoslanie upozornenia na neskorú platbu za tričko [počet dní pred flashmobom]</label>
+  </th>
+  <td>
+    <input id="florp_tshirt_payment_warning_btn_deadline" name="florp_tshirt_payment_warning_btn_deadline" type="number" value="%%iTshirtPaymentWarningButtonDeadline%%" style="width: 100%;" min="-1" max="21" title="Current: %%iTshirtPaymentWarningButtonDeadline%% => %%iTshirtPaymentWarningButtonDeadlineTime%%" />
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    <label for="florp_tshirt_order_delivered_b4_flash_ddl">Deadline, po ktorom už tričká nebudú doručené pred flashmobom [počet dní pred flashmobom]</label>
+  </th>
+  <td>
+    <input id="florp_tshirt_order_delivered_b4_flash_ddl" name="florp_tshirt_order_delivered_b4_flash_ddl" type="number" value="%%iTshirtOrderDeliveredBeforeFlashmobDdl%%" style="width: 100%;" min="0" max="21" title="Current: %%iTshirtOrderDeliveredBeforeFlashmobDdl%% => %%iTshirtOrderDeliveredBeforeFlashmobDdlTime%%" />
+  </td>
+</tr>

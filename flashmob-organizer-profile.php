@@ -19,6 +19,7 @@ class FLORP{
   private $strVersion = '4.6.12';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
+  private $iIntfBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
   private $iProfileFormNinjaFormIDFlashmob;
   private $iProfileFormPopupIDMain;
@@ -46,9 +47,11 @@ class FLORP{
   private $bDisplayingProfileFormNinjaForm = false;
   private $strNinjaFormExportPathMain = __DIR__ . '/nf-export/export-main.php';
   private $strNinjaFormExportPathFlashmob = __DIR__ . '/nf-export/export-flashmob.php';
+  private $strNinjaFormExportPathIntf = __DIR__ . '/nf-export/export-intf.php';
   private $strExportVarName = 'aFlorpNinjaFormExportData';
   private $isMainBlog = false;
   private $isFlashmobBlog = false;
+  private $isIntfBlog = false;
   private $iProfileFormPageIDMain;
   private $iProfileFormPageIDFlashmob;
   private $strUserRolePending = 'florp-pending';
@@ -451,10 +454,10 @@ class FLORP{
                           'hide_leader_info', 'flashmob_number_of_dancers', 'video_link', 'flashmob_address', 'longitude', 'latitude' );
     $this->aMetaFieldsTeacher = array('teacher', 'courses_city', 'courses_info', 'courses_in_city_2', 'courses_city_2', 'courses_info_2', 'courses_in_city_3', 'courses_info_3', 'courses_city_3');
     $this->aMetaFields = array_merge( $this->aMetaFieldsFlashmobToArchive,
-                          $this->aMetaFieldsTeacher,
-                          array(
+                        $this->aMetaFieldsTeacher,
+                        array(
                           'user_city', 'flashmob_leader_tshirt_size', 'flashmob_leader_tshirt_gender', 'flashmob_leader_tshirt_color', 'preference_newsletter',
-                           ));
+                        ));
     $this->aFlashmobMetaFieldsToClean = array(
                           'flashmob_organizer', 'flashmob_city',
                           'flashmob_number_of_dancers', 'video_link', 'flashmob_address', 'longitude', 'latitude',
@@ -509,11 +512,11 @@ class FLORP{
       if ($aSite['public'] != 1 || $aSite['deleted'] == 1 || $aSite['archived'] == 1) {
         continue;
       }
-      $iID = intval($aSite['blog_id']);  
+      $iID = intval($aSite['blog_id']);
       $aNfFieldTypes[$iID] = array('done' => false, 'field_types' => array());
       $aNfSubmissions[$iID] = array('done' => false, 'forms' => array());
     }
-    
+
     return array(
       'bReloadAfterSuccessfulSubmissionMain'      => false,
       'bReloadAfterSuccessfulSubmissionFlashmob'  => false,
@@ -533,12 +536,16 @@ class FLORP{
       'iMainBlogID'                               => 1,
       'iNewsletterBlogID'                         => 0,
       'iCloneSourceBlogID'                        => 0,
+      'iIntfBlogID'                               => 6,
       'iProfileFormNinjaFormIDMain'               => 0,
       'iProfileFormNinjaFormImportVersionMain'    => 0,
       'iProfileFormPopupIDMain'                   => 0,
       'iProfileFormNinjaFormIDFlashmob'           => 0,
       'iProfileFormNinjaFormImportVersionFlashmob'=> 0,
       'iProfileFormPopupIDFlashmob'               => 0,
+      'iProfileFormNinjaFormIDIntf'               => 0,
+      'iProfileFormNinjaFormImportVersionIntf'    => 0,
+      'iProfileFormPopupIDIntf'                   => 0,
       'bLoadMapsLazy'                             => true,
       'bLoadMapsAsync'                            => true,
       'bLoadVideosLazy'                           => true,
@@ -546,6 +553,7 @@ class FLORP{
       'strVersion'                                => '0',
       'iProfileFormPageIDMain'                    => 0,
       'iProfileFormPageIDFlashmob'                => 0,
+      'iProfileFormPageIDIntf'                    => 0,
       'bApproveUsersAutomatically'                => false,
       'strPendingUserPageContentHTML'             => '<p>Ďakujeme, že ste sa registrovali.</p>
 <p>Vaša registrácia čaká na schválenie. Akonáhle Vás schválime, dostanete o tom notifikáciu na emailovú adresu, ktorú ste zadali pri registrácii.</p>
@@ -634,16 +642,20 @@ class FLORP{
       'florp_main_blog_id'                        => 'iMainBlogID',
       'florp_newsletter_blog_id'                  => 'iNewsletterBlogID',
       'florp_clone_source_blog_id'                => 'iCloneSourceBlogID',
+      'florp_intf_blog_id'                        => 'iIntfBlogID',
       'florp_profile_form_ninja_form_id_main'     => 'iProfileFormNinjaFormIDMain',
       'florp_profile_form_popup_id_main'          => 'iProfileFormPopupIDMain',
       'florp_profile_form_ninja_form_id_flashmob' => 'iProfileFormNinjaFormIDFlashmob',
       'florp_profile_form_popup_id_flashmob'      => 'iProfileFormPopupIDFlashmob',
+      'florp_profile_form_ninja_form_id_intf'     => 'iProfileFormNinjaFormIDIntf',
+      'florp_profile_form_popup_id_intf'          => 'iProfileFormPopupIDIntf',
       'florp_load_maps_lazy'                      => 'bLoadMapsLazy',
       'florp_load_maps_async'                     => 'bLoadMapsAsync',
       'florp_load_videos_lazy'                    => 'bLoadVideosLazy',
       'florp_use_map_image'                       => 'bUseMapImage',
       'florp_profile_form_page_id_main'           => 'iProfileFormPageIDMain',
       'florp_profile_form_page_id_flashmob'       => 'iProfileFormPageIDFlashmob',
+      'florp_profile_form_page_id_intf'           => 'iProfileFormPageIDIntf',
       'florp_pending_user_page_content_html'      => 'strPendingUserPageContentHTML',
       'florp_user_approved_message'               => 'strUserApprovedMessage',
       'florp_user_approved_subject'               => 'strUserApprovedSubject',
@@ -802,6 +814,12 @@ class FLORP{
         'iTshirtPaymentWarningButtonDeadline',
         'iTshirtOrderDeliveredBeforeFlashmobDdl',
       ),
+      'international' => array(
+        'iIntfBlogID',
+        'iProfileFormPageIDIntf',
+        'iProfileFormPopupIDIntf',
+        'iProfileFormNinjaFormIDIntf',
+      ),
     );
     $this->aSeparateOptionKeys = array( 'logs', 'aParticipants', 'aTshirts', 'aYearlyMapOptions', 'aOrderDates', 'aOptionChanges', 'aNfSubmissions', 'aNfFieldTypes' );
 
@@ -868,7 +886,7 @@ class FLORP{
       $this->save_options();
     }
   }
-  
+
   private function save_options() {
     $aOptionsRest = array();
     foreach ($this->aOptionDefaults as $strOptionKey => $mixDefaultValue) {
@@ -1227,6 +1245,7 @@ class FLORP{
     $iCurrentBlogID = get_current_blog_id();
     $this->isMainBlog = ($iCurrentBlogID == $this->iMainBlogID);
     $this->isFlashmobBlog = ($iCurrentBlogID == $this->iFlashmobBlogID);
+    $this->isIntfBlog = ($iCurrentBlogID == $this->iIntfBlogID);
   }
 
   private function get_registration_user_role() {
@@ -1359,7 +1378,7 @@ class FLORP{
         $bSiteMissing = true;
       }
     }
-    
+
     $aMediaDlPreventionRuleLines = array_merge($aMediaDlPreventionRuleLines, array(
       "  RewriteRule ^.* - [F,L]",
       "</IfModule>",
@@ -1552,7 +1571,7 @@ class FLORP{
     if (is_admin() && current_user_can( 'activate_plugins' ) && isset($_POST['florp-download-tshirt-csv'])) {
       $this->serveTshirtCSV();
     }
-    
+
     if (is_admin() && current_user_can( 'activate_plugins' )) {
       // Set cookie for leader submission history view //
       $strCookieKey = $this->strLeaderSubmissionHistoryViewsCookieKey;
@@ -1856,7 +1875,7 @@ class FLORP{
     }
     return $aFields;
   }
-  
+
   public function filter__the_content( $strTheContent ) {
     global $post;
     if ($post->post_type !== 'page') {
@@ -1971,7 +1990,7 @@ class FLORP{
     $strShortcodeOutput = do_shortcode( '[ninja_form id='.$iNFID.']' );
     return '<div id="'.$this->strProfileFormWrapperID.'">' . $strShortcodeOutput.'</div>';
   }
-  
+
   public function profile_form_loader( $aAttributes ) {
     // NOTE: OFF //
     $strDivID = 'florp-profile-form-placeholder-div';
@@ -1990,7 +2009,7 @@ class FLORP{
       </script>
     ';
   }
-  
+
   public function main_blog_profile( $aAttributes = array() ) {
     if ($this->isMainBlog) {
       $aDefaults = array(
@@ -2343,7 +2362,7 @@ class FLORP{
     $strReturn = implode($aAttributes['separator'], $aReturn);
     return $strReturn;
   }
-  
+
   public function map_flashmob( $aAttributes ) {
     $iFlashmobYear = intval($this->aOptions['iFlashmobYear']);
     $iIsCurrentYear = 0;
@@ -2369,7 +2388,7 @@ class FLORP{
         $iIsCurrentYear = 1;
       }
     }
-    
+
     if ($bAllYears) {
       // Current year: //
       $aSchoolCities = array();
@@ -2382,7 +2401,7 @@ class FLORP{
         $strCity = $aOptions['flashmob_city'];
         if (!empty($strCity)) {
           $strCity = strtolower($strCity);
-        
+
           $bVideo = false;
           foreach ($aVideoFields as $strFieldKey) {
             if (isset($aOptions[$strFieldKey]) && !empty($aOptions[$strFieldKey])) {
@@ -2604,7 +2623,7 @@ class FLORP{
     $aSizeArr = explode( "x", $aMapOptions['og_map']['size']);
     $aOptionsFromUsers = $this->get_flashmob_map_options_array();
     $aMarkerOptions = array( 'icon:'.urlencode($aMapOptions['markers']['icon']) );
-    
+
     if (!empty($aOptionsFromUsers)) {
       foreach ($aOptionsFromUsers as $iUserID => $aOptions ) {
         if (isset($aOptions['latitude'],$aOptions['longitude']) && !empty($aOptions['latitude']) && !empty($aOptions['longitude'])) {
@@ -2620,11 +2639,11 @@ class FLORP{
       }
     }
     $strMarkerOptions = implode( "|", $aMarkerOptions );
-    
+
     $aMapImageOptions = $aMapOptions['og_map'];
     $aMapImageOptions['markers'] = $strMarkerOptions;
     array_walk($aMapImageOptions, function(&$a, $b) { $a = "$b=$a"; });
-    
+
     $strMapImage = 'https://maps.googleapis.com/maps/api/staticmap?'.implode("&", $aMapImageOptions);
     $aReturn = array(
       'url'       => $strMapImage,
@@ -2636,7 +2655,7 @@ class FLORP{
     // echo "<!-- ".var_export($aMapOptions, true) . "\n" . var_export($aOptionsFromUsers, true)."\n".var_export($aMapImageOptions, true)."\n".$strMapImage." -->";
     return $aReturn;
   }
-  
+
   public function filter__us_meta_tags( $aMetaTags ) {
     if (!$this->aOptions['bUseMapImage']) {
       return $aMetaTags;
@@ -2656,12 +2675,12 @@ class FLORP{
     }
     return $aMetaTags;
   }
-  
+
   public function filter__us_meta_tags_before_echo( $aMetaTags ) {
     // NOTE: OFF //
     return $aMetaTags;
   }
-  
+
   public function action__wp_enqueue_scripts() {
     $iUserID = get_current_user_id();
     wp_enqueue_script('florp_nf_action_controller', plugins_url('js/florp_nf_action_controller.js', __FILE__), array('jquery'), $this->strVersion, true);
@@ -2893,7 +2912,7 @@ class FLORP{
     // Shown on each blog - links get the admin to the right settings page url //
     add_menu_page(
       "Profil organizátora slovenského flashmobu",
-      'Profil organizátora SVK flashmobu',
+      'Slovenský Flashmob',
       'manage_options',
       'florp-main',
       array( $this, "options_page" ),
@@ -2901,6 +2920,14 @@ class FLORP{
       58
     );
     if ($this->isMainBlog) {
+      $page = add_submenu_page(
+        'florp-main',
+        'Profil organizátora slovenského flashmobu',
+        'Nastavenia profilu',
+        'manage_options',
+        'florp-main',
+        array( $this, 'options_page' )
+      );
       $page = add_submenu_page(
         'florp-main',
         'Zoznam lídrov',
@@ -2960,6 +2987,26 @@ class FLORP{
           array( $this, 'leader_submission_history_table_admin' )
         );
       }
+    } elseif ($this->isFlashmobBlog) {
+      add_menu_page(
+        "Medzinárodný Flashmob",
+        'Medzinárodný Flashmob',
+        'manage_options',
+        'florp-international',
+        array( $this, "options_page_international" ),
+        // plugins_url( 'flashmob-organizer-profile/img/florp-icon-30.png' ),
+        "dashicons-admin-site",
+        58
+      );
+      $page = add_submenu_page(
+        'florp-international',
+        'Medzinárodný Flashmob',
+        'Nastavenia prihlásenia',
+        'manage_options',
+        'florp-international',
+        array( $this, 'options_page_international' )
+      );
+
     }
   }
 
@@ -3154,7 +3201,7 @@ class FLORP{
     $strEcho .= '</table>';
     echo $strEcho;
     echo $this->get_missed_submissions_table( $this->iMainBlogID );
-    
+
     echo '</div><!-- .wrap -->';
   }
 
@@ -3181,7 +3228,7 @@ class FLORP{
           'to'    => array( 'Chcem pamätné Flashmob tričko', 'Chcem dostávať newsletter' )
         )
       );
-      
+
       $aParticipantsFlat = array();
       foreach ($aParticipants as $iLeaderID => $aParticipantsOfLeader) {
         foreach ($aParticipantsOfLeader as $strEmail => $aParticipantData) {
@@ -3192,7 +3239,7 @@ class FLORP{
         }
       }
       uasort($aParticipantsFlat, array($this, "participant_sort"));
-      
+
       foreach ($aParticipantsFlat as $strKeyFlat => $aParticipantData) {
         $iLeaderID = $aParticipantData['leader_user_id'];
         $strEmail = $aParticipantData['user_email'];
@@ -3553,7 +3600,7 @@ class FLORP{
         $this->save_options();
       }
     }
-    
+
     foreach ($this->aOptions['aOptionChanges'] as $iTimestamp => $aChanges) {
       $iUserID = $aChanges['_user_id'];
       $oUser = get_user_by( 'id', $iUserID );
@@ -3610,7 +3657,7 @@ class FLORP{
     if (defined('FLORP_DEVEL') && FLORP_DEVEL === true) {
 //       echo "<pre>";var_dump($aNfSubmissionHistory);echo "</pre>"; // NOTE DEVEL
     }
-    
+
     $aViews = $this->aLeaderSubmissionHistoryViews;
 
     if (isset($this->strLeaderSubmissionHistoryView) && in_array($this->strLeaderSubmissionHistoryView, $aViews)) {
@@ -3630,7 +3677,7 @@ class FLORP{
     }
     $strEcho .= '</select>';
     $strEcho .= '</form>';
-    
+
     if ($strView === 'table') {
       $strEcho .= $this->leader_submission_history_table_admin__table($aNfSubmissionHistory);
     } elseif ($strView == 'progress_horizontal') {
@@ -3641,12 +3688,12 @@ class FLORP{
     echo $strEcho;
     echo '</div><!-- .wrap -->';
   }
-    
+
   private function leader_submission_history_table_admin__progress_vertical($aNfSubmissionHistory) {
     $aData = $this->get_leader_submission_history_table_progress_data($aNfSubmissionHistory);
     return $this->get_leader_submission_history_table_progress_table($aData, false);
   }
-  
+
   private function get_leader_submission_history_table_progress_data ($aNfSubmissionHistory) {
     $aSkip = array();
     $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
@@ -3714,7 +3761,7 @@ class FLORP{
     }
     return $aReturn;
   }
-  
+
   private function get_leader_submission_history_table_progress_table ($aData, $bHorizontal = true) {
     $strEcho = "";
     $aTimestamps = array();
@@ -3727,7 +3774,7 @@ class FLORP{
       }
       $strEcho .= "<h4 class=\"florpTableCaption\">{$aUser['caption']}</h4>".PHP_EOL;
       $strEcho .= '<table class="widefat striped'.$strAdditionalClasses.'">'.PHP_EOL;
-      
+
       if ($bHorizontal) {
         // Hotizontal //
         $aColumns = $aUser['columns'];
@@ -3740,7 +3787,7 @@ class FLORP{
           $strEcho .= "<th>{$strDate}</th>";
         }
         $strEcho .= '</tr>'.PHP_EOL;
-        
+
         foreach ($aRows as $strFieldKey => $aRow) {
           $strEcho .= '<tr>'.PHP_EOL;
           $strKey = $strFieldKey;
@@ -3789,7 +3836,7 @@ class FLORP{
           $strEcho .= "<th>{$strFieldName}</th>".PHP_EOL;
         }
         $strEcho .= '</tr>'.PHP_EOL;
-        
+
         foreach ($aRows as $iTimestamp => $aRow) {
           $strEcho .= '<tr>'.PHP_EOL;
           $strDate = isset($aRow['dtWpFormat']) ? $aRow['dtWpFormat'] : $aRow['dt'];
@@ -3819,24 +3866,24 @@ class FLORP{
           $strEcho .= '</tr>'.PHP_EOL;
         }
       }
-      
+
       $strEcho .= '</table>'.PHP_EOL;
       $strEcho .= '<p></p>'.PHP_EOL;
     }
     return $strEcho;
   }
-  
+
   private function leader_submission_history_table_admin__progress_horizontal($aNfSubmissionHistory) {
     $aData = $this->get_leader_submission_history_table_progress_data($aNfSubmissionHistory);
     return $this->get_leader_submission_history_table_progress_table($aData, true);
   }
-  
+
   private function leader_submission_history_table_admin__table($aNfSubmissionHistory) {
     $strEcho = '<table class="widefat striped noFilter"><th>User</th><th>Date</th><th>Changed option</th><th>From</th><th>To</th>'."\n";
     $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
     $aSkip = array();
     // echo $strEcho; return;
-    
+
     foreach ($aNfSubmissionHistory as $strEmail => $aSubmissions) {
       $iChangeCount = $aSubmissions['_count'];
       $oLeader = get_user_by( 'email', $strEmail );
@@ -4218,13 +4265,13 @@ class FLORP{
       }
       return false;
     }
-    
+
     $aFields = Ninja_Forms()->form( $iFormID )->get_fields();
     $aKeyToType = array();
     foreach ($aFields as $oField) {
       $aKeyToType[$oField->get_setting('key')] = $oField->get_setting('type');
     }
-    
+
     $aSubmission = Ninja_Forms()->form( $iFormID )->get_sub( $iSubmissionID );
     $aFieldValues = array_map(
       array($this, 'get_value_maybe_fix_unserialize_array'),
@@ -4258,13 +4305,13 @@ class FLORP{
       $aPermittedKeys = array('_submission_date', '_submission_date_wp_format', '_submission_timestamp', '_form_id', '_submission_id', '_blog_id', '_field_types');
       return in_array($key, $aPermittedKeys) || strpos($key, "_") !== 0;
     }, ARRAY_FILTER_USE_KEY);
-    
+
     if (false !== $mixChangeBlogID) {
       restore_current_blog();
     }
     return $aNfSubmission;
   }
-  
+
   private function get_nf_submissions( $iBlogID = false, $sType = 'missed', $bUseCacheTypes = true, $bUseCacheSubmissions = true, $bClearCacheIfNotUsed = true ) {
     $aNfSubmissions = array();
     $aTypes = array( 'missed', 'all', 'history' );
@@ -4360,7 +4407,7 @@ class FLORP{
       $this->maybe_save_options($bUseCacheTypes);
     }
 //     echo "<pre>";var_dump($this->aOptions['aNfFieldTypes']);echo "</pre>"; // NOTE DEVEL
-    
+
     if ($bUseCacheSubmissions && $this->aOptions['aNfSubmissions'][$iBlogID]['done']) {
       // OK //
     } else {
@@ -4395,7 +4442,7 @@ class FLORP{
           continue;
         }
         $aKeyToType = $this->aOptions['aNfFieldTypes'][$iBlogID]['field_types'][$iFormID];
-        
+
         $aSubmissions = Ninja_Forms()->form( $iFormID )->get_subs();
         if (count($aSubmissions) === 0) {
           $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'] = false;
@@ -4407,7 +4454,7 @@ class FLORP{
           if (isset($this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'][$iSubmissionID])) {
             continue;
           }
-          
+
           $aFieldValues = array_map(
             array($this, 'get_value_maybe_fix_unserialize_array'),
             $oSubmission->get_field_values()
@@ -4437,7 +4484,7 @@ class FLORP{
           $aFieldValues['_form_id'] = $iFormID;
           $aFieldValues['_submission_id'] = $iSubmissionID;
           $aFieldValues['_blog_id'] = $iBlogID;
-          
+
           $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'][$iSubmissionID] = $aFieldValues;
           $this->maybe_save_options($bUseCacheSubmissions);
         }
@@ -4486,10 +4533,10 @@ class FLORP{
           }
           return in_array($key, $aPermittedKeys) || strpos($key, "_") !== 0;
         }, ARRAY_FILTER_USE_KEY);
-        
+
       }
     }
-    
+
     if ($sType === 'history') {
       $aSkipKeys = array('_blog_id', '_submission_date', '_submission_date_wp_format', '_submission_timestamp', '_form_id', '_submission_id');
       $aNfSubmissionsRaw = $aNfSubmissions;
@@ -4527,7 +4574,7 @@ class FLORP{
             $aNfSubmissions[$strEmail]['_submissions'][$strSubmissionChangeID]['_data'] = $aSubmissionData;
             continue;
           }
-          
+
           $aPreviousSubmissionData = $aSubmissionsOfUser[$iKey - 1];
           if (!empty($aSkipKeys)) {
             foreach ($aSkipKeys as $strskipKey) {
@@ -4558,7 +4605,7 @@ class FLORP{
         }
       }
     }
-    
+
     //echo "<pre>".var_export($aNfSubmissions, true)."</pre>"; // NOTE DEVEL
     return $aNfSubmissions;
   }
@@ -4868,7 +4915,7 @@ class FLORP{
   private function get_flashmob_participant_csv($sType = 'all') {
     $aParticipantCSV = array();
     $aParticipants = $this->get_flashmob_participants();
-    
+
     // Get participants as a flat array //
     $aParticipantsFlat = array();
     $aPreferences = array();
@@ -4904,7 +4951,7 @@ class FLORP{
     }
     $iColumnCount = count($aHeaders);
     $aParticipantCSV[] = $aHeaders;
-    
+
     $aTimestamps = array( 'registered' );
     $aReplacements = array(
       'gender' => array(
@@ -4920,7 +4967,7 @@ class FLORP{
         'to'    => array( ' ', 'začiatočník', 'pokročilý', 'učiteľ' )
       )
     );
-    
+
     // Get the participant rows //
     foreach ($aParticipantsFlat as $aParticipantData) {
       $aRow = array();
@@ -4952,10 +4999,10 @@ class FLORP{
         $aParticipantCSV[] = $aRow;
       }
     }
-    
+
     return $aParticipantCSV;
   }
-  
+
   private function serveParticipantCSV() {
     $bPassed = check_ajax_referer( 'srd-florp-admin-security-string', 'security', false );
     if (!$bPassed) {
@@ -4964,7 +5011,7 @@ class FLORP{
       });
       return;
     }
-    
+
     $aButtonNames = array(
       'florp-download-participant-csv-all',
       'florp-download-participant-csv-notshirts',
@@ -4985,7 +5032,7 @@ class FLORP{
       });
       return;
     }
-    
+
     if (!is_array($aParticipants) || empty($aParticipants) || count($aParticipants) === 1) {
       $GLOBALS['florpInfo'] = "";
 //       $GLOBALS['florpInfo'] = '<pre>'.var_export($aParticipants, true).'</pre>'; // NOTE DEVEL
@@ -5001,7 +5048,7 @@ class FLORP{
     }
 
     $strFileName = "participants-{$strType}-".current_time('Ymd-His').".csv";
-    
+
     // output headers so that the file is downloaded rather than displayed
     header('Content-type: text/csv');
     header('Content-Disposition: attachment; filename="'.$strFileName.'"');
@@ -5019,7 +5066,7 @@ class FLORP{
     }
     exit();
   }
-  
+
   private function serveTshirtCSV() {
     $bPassed = check_ajax_referer( 'srd-florp-admin-security-string', 'security', false );
     if (!$bPassed) {
@@ -5430,7 +5477,7 @@ class FLORP{
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
     $bTest = false; // NOTE DEVEL TEST //
-    
+
     $aData = $_POST;
     $strErrorMessage = "Could not delete form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'";
     $strOkMessage = "Successfully deleted form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'";
@@ -5440,7 +5487,7 @@ class FLORP{
     $iBlogID = intval($aData['blogId']);
     $iFormID = intval($aData['formId']);
     $iSubmissionID = intval($aData['submissionId']);
-    
+
     if (!isset($this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID], $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'][$iSubmissionID])) {
       $aData['message'] = $strErrorMessage;
       $aData['submissions_option'] = $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID];
@@ -5487,7 +5534,7 @@ class FLORP{
         } elseif ($bTest) {
           $aData['submissions_option'] = $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID];
         }
-        
+
         $aMissedSubmissions = $this->get_nf_submissions( $iBlogID );
         if ($bTest) {
           $aData['submissions'] = $aMissedSubmissions;
@@ -5515,7 +5562,7 @@ class FLORP{
         }
       }
     }
-    
+
     echo json_encode($aData);
     wp_die();
   }
@@ -5917,24 +5964,21 @@ class FLORP{
     return "salsarueda.dance";
   }
 
-  public function options_page() {
-    // echo "<h1>" . __("Flashmob Organizer Profile Options", "florp" ) . "</h1>";
-    echo "<div class=\"wrap\"><h1>" . "Nastavenia profilu organizátora slovenského flashmobu" . "</h1>";
+  private function get_options_page_vars() {
+    $aReturn = array();
 
-    if (isset($_POST['save-florp-options'])) {
-      $this->save_option_page_options($_POST);
-    }
-
-    $optionNone = '<option value="0">Žiadny</option>';
-    $optionNoneF = '<option value="0">Žiadna</option>';
+    $aReturn['optionNone'] = '<option value="0">Žiadny</option>';
+    $aReturn['optionNoneF'] = '<option value="0">Žiadna</option>';
 
     $optionsFlashmobSite = '';
     $optionsMainSite = '';
     $optionsNewsletterSite = $optionNoneF;
     $optionsCloneSourceSite = $optionNoneF;
+    $optionsIntfSite = '';
     $aSites = wp_get_sites();
     $strMainBlogDomain = '';
     $strFlashmobBlogDomain = '';
+    $strIntfBlogDomain = '';
     foreach ( $aSites as $i => $aSite ) {
       if ($aSite['public'] != 1 || $aSite['deleted'] == 1 || $aSite['archived'] == 1) {
         continue;
@@ -5953,6 +5997,12 @@ class FLORP{
       } else {
         $strSelectedMainSite = '';
       }
+      if ($this->iIntfBlogID == $iID) {
+        $strSelectedIntfSite = 'selected="selected"';
+        $strIntfBlogDomain = $aSite['domain'];
+      } else {
+        $strSelectedIntfSite = '';
+      }
       if ($this->aOptions['iNewsletterBlogID'] == $iID) {
         $strSelectedNewsletterSite = 'selected="selected"';
       } else {
@@ -5967,6 +6017,36 @@ class FLORP{
       $optionsMainSite .= '<option value="'.$iID.'" '.$strSelectedMainSite.'>'.$strTitle.'</option>';
       $optionsNewsletterSite .= '<option value="'.$iID.'" '.$strSelectedNewsletterSite.'>'.$strTitle.'</option>';
       $optionsCloneSourceSite .= '<option value="'.$iID.'" '.$strSelectedCloneSourceSite.'>'.$strTitle.'</option>';
+      $optionsIntfSite .= '<option value="'.$iID.'" '.$strSelectedIntfSite.'>'.$strTitle.'</option>';
+    }
+    $aReturn['optionsFlashmobSite'] = $optionsFlashmobSite;
+    $aReturn['optionsMainSite'] = $optionsMainSite;
+    $aReturn['optionsNewsletterSite'] = $optionsNewsletterSite;
+    $aReturn['optionsCloneSourceSite'] = $optionsCloneSourceSite;
+    $aReturn['optionsIntfSite'] = $optionsIntfSite;
+    $aReturn['strIntfBlogDomain'] = $strIntfBlogDomain;
+    $aReturn['strMainBlogDomain'] = $strMainBlogDomain;
+    $aReturn['strFlashmobBlogDomain'] = $strFlashmobBlogDomain;
+
+    $aBooleanOptionsChecked = array();
+    foreach ($this->aBooleanOptions as $strOptionKey) {
+      if ($this->aOptions[$strOptionKey] === true) {
+        $aBooleanOptionsChecked[$strOptionKey] = 'checked="checked"';
+      } else {
+        $aBooleanOptionsChecked[$strOptionKey] = '';
+      }
+    }
+    $aReturn['aBooleanOptionsChecked'] = $aBooleanOptionsChecked;
+
+    return $aReturn;
+  }
+
+  public function options_page() {
+    // echo "<h1>" . __("Flashmob Organizer Profile Options", "florp" ) . "</h1>";
+    echo "<div class=\"wrap\"><h1>" . "Nastavenia profilu organizátora slovenského flashmobu" . "</h1>";
+
+    if (isset($_POST['save-florp-options'])) {
+      $this->save_option_page_options($_POST);
     }
 
     if (!$this->isMainBlog && strlen($strMainBlogDomain) > 0) {
@@ -6000,31 +6080,24 @@ class FLORP{
       // echo "<pre>" .var_export($this->findCityWebpage( "Bánovce nad Bebravou" ), true). "</pre>";
     }
 
-    $aBooleanOptionsChecked = array();
-    foreach ($this->aBooleanOptions as $strOptionKey) {
-      if ($this->aOptions[$strOptionKey] === true) {
-        $aBooleanOptionsChecked[$strOptionKey] = 'checked="checked"';
-      } else {
-        $aBooleanOptionsChecked[$strOptionKey] = '';
-      }
-    }
+    $aVariables = $this->get_options_page_vars();
 
     $aVariablesMain = array(
-      'optionsMainSite' => $optionsMainSite,
-      'optionNone' => $optionNone,
-      'optionNoneF' => $optionNoneF,
-      'aBooleanOptionsChecked' => $aBooleanOptionsChecked,
-      'optionsCloneSourceSite' => $optionsCloneSourceSite
+      'optionsMainSite' => $aVariables['optionsMainSite'],
+      'optionNone' => $aVariables['optionNone'],
+      'optionNoneF' => $aVariables['optionNoneF'],
+      'aBooleanOptionsChecked' => $aVariables['aBooleanOptionsChecked'],
+      'optionsCloneSourceSite' => $aVariables['optionsCloneSourceSite'],
     );
     $aVariablesFlashmob = array(
-      'optionsFlashmobSite' => $optionsFlashmobSite,
-      'optionNone' => $optionNone,
-      'optionNoneF' => $optionNoneF,
-      'aBooleanOptionsChecked' => $aBooleanOptionsChecked,
+      'optionsFlashmobSite' => $aVariables['optionsFlashmobSite'],
+      'optionNone' => $aVariables['optionNone'],
+      'optionNoneF' => $aVariables['optionNoneF'],
+      'aBooleanOptionsChecked' => $aVariables['aBooleanOptionsChecked'],
     );
     $aVariablesCommon = array(
-      'aBooleanOptionsChecked' => $aBooleanOptionsChecked,
-      'optionsNewsletterSite' => $optionsNewsletterSite,
+      'aBooleanOptionsChecked' => $aVariables['aBooleanOptionsChecked'],
+      'optionsNewsletterSite' => $aVariables['optionsNewsletterSite'],
     );
 
     $strSettingsHtmlMain = $this->options_page_main( $aVariablesMain );
@@ -6036,20 +6109,7 @@ class FLORP{
     echo str_replace(
       array( '%%optionsMainSite%%', '%%optionsFlashmobSite%%', '%%optionsCommon%%' ),
       array( $strSettingsHtmlMain, $strSettingsHtmlFlashmob, $strSettingsHtmlCommon ),
-      '
-        <form action="" method="post">
-          <table style="width: 100%">
-            %%optionsMainSite%%
-            %%optionsFlashmobSite%%
-            %%optionsCommon%%
-          </table>
-
-          <span style="">
-            <input id="save-florp-options-bottom" class="button button-primary button-large" name="save-florp-options" type="submit" value="Ulož" />
-          </span>
-        </form>
-        </div><!-- .wrap -->
-      '
+      file_get_contents( __DIR__ . "/view/options-svk.html" )
     );
   }
 
@@ -6082,7 +6142,7 @@ class FLORP{
     $optionsPopupsMain = $optionNone;
     if (function_exists('get_all_popups')) {
       $aPopupsWPQuery = get_all_popups();
-//       var_dump($aPopupsWPQuery);
+      // var_dump($aPopupsWPQuery);
 
       if ( $aPopupsWPQuery->have_posts() ) {
         while ( $aPopupsWPQuery->have_posts() ) :
@@ -6146,177 +6206,7 @@ class FLORP{
         $this->aOptions['strLoginBarLabelLogin'], $this->aOptions['strLoginBarLabelLogout'], $this->aOptions['strLoginBarLabelProfile'],
         $optionsCloneSourceSite,
         $aBooleanOptionsChecked['bOnlyFlorpProfileNinjaFormMain'] ),
-        // BEGIN replace template //
-      '
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th colspan="2"><h3>Hlavná stránka</h3></th>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_main_blog_id">Podstránka</label></th>
-              <td>
-                <select id="florp_main_blog_id" name="florp_main_blog_id" style="width: 100%;">%%optionsMainSite%%</select>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_profile_form_ninja_form_id_main">Registračný / profilový formulár (spomedzi Ninja Form formulárov)</label></th>
-              <td>
-                <select id="florp_profile_form_ninja_form_id_main" name="florp_profile_form_ninja_form_id_main" style="width: 100%;">%%optionsNinjaFormsMain%%</select>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                <label for="florp_only_florp_profile_nf_main">Na hlavnom blogu je jediným ninja form formulárom profilový?</label>
-              </th>
-              <td>
-                <input id="florp_only_florp_profile_nf_main" name="florp_only_florp_profile_nf_main" type="checkbox" %%bOnlyFlorpProfileNinjaFormMain%% value="1"/>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_profile_form_page_id_main">Dedikovaná profilová stránka (v ktorej je registračný / profilový formulár)</label></th>
-              <td>
-                <select id="florp_profile_form_page_id_main" name="florp_profile_form_page_id_main" style="width: 100%;">%%optionsPagesMain%%</select>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_profile_form_popup_id_main">PUM Popup, v ktorom je registračný / profilový formulár</label></th>
-              <td>
-                <select id="florp_profile_form_popup_id_main" name="florp_profile_form_popup_id_main" style="width: 100%;">%%optionsPopupsMain%%</select>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th colspan="2">
-                <span style="font-size: smaller;">Ak je na stránke s PUM Popup-om element <code>#florp-popup-scroll</code>, pri zatvorení PUM Popup-u sa stránka scrollne na tento element.</span>
-              </th>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                <label for="florp_reload_after_ok_submission_main">Znovu načítať celú stránku po vypnutí popup-u po úspešnom uložení formulára?</label>
-              </th>
-              <td>
-                <input id="florp_reload_after_ok_submission_main" name="florp_reload_after_ok_submission_main" type="checkbox" %%reloadCheckedMain%% value="1"/>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th colspan="2">
-                <span style="font-size: smaller;">Znovunačítanie je odporúčané zapnúť iba ak je problém s obnovením mapky / mapiek po uložení formuláru.</span>
-              </th>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
-                HTML text zobrazený nad prihlasovacím (resp. registračným) formulárom
-              </th>
-              <td style="border-top: 1px lightgray dashed;">
-                %%wpEditorBeforeLoginFormHtmlMain%%
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
-                <label for="florp_registration_successful_message">Správa zobrazená po úspešnej registrácii (pred prihlásením)</label>
-              </th>
-              <td style="border-top: 1px lightgray dashed;">
-                <input id="florp_registration_successful_message" name="florp_registration_successful_message" type="text" value="%%strRegistrationSuccessfulMessage%%" style="width: 100%;" />
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                <label for="florp_login_successful_message">Správa zobrazená po úspešnom prihlásení</label>
-              </th>
-              <td>
-                <input id="florp_login_successful_message" name="florp_login_successful_message" type="text" value="%%strLoginSuccessfulMessage%%" style="width: 100%;" />
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
-                <label for="florp_approve_users_automatically">Schváliť registrovaných používateľov automaticky?</label>
-              </th>
-              <td style="border-top: 1px lightgray dashed;">
-                <input id="florp_approve_users_automatically" name="florp_approve_users_automatically" type="checkbox" %%approveUsersAutomaticallyChecked%% value="1"/>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                Správa zobrazená prihláseným užívateľom, čakajúcim na schválenie
-              </th>
-              <td style="border-top: 1px lightgray dashed;">
-                %%wpEditorPendingUserPageContentHTML%%
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                <label for="florp_user_approved_subject">Predmet správy poslanej užívateľom po schválení</label>
-              </th>
-              <td style="border-top: 1px lightgray dashed;">
-                <input id="florp_user_approved_subject" name="florp_user_approved_subject" type="text" value="%%strUserApprovedSubject%%" style="width: 100%;" />
-                <span style="width: 100%;">Placeholdre: <code>%BLOGNAME%</code>, <code>%BLOGURL%</code></span>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                Správa poslaná užívateľom po schválení
-              </th>
-              <td style="border-top: 1px lightgray dashed;">
-                %%wpEditorUserApprovedMessage%%
-                <span style="width: 100%;">Placeholdre: <code>%BLOGNAME%</code>, <code>%BLOGURL%</code>, <code>%USERNAME%</code>, <code>%EMAIL%</code>, <code>%PROFILE_URL%</code></span>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
-                <label for="florp_newsletter_lists_main">Newsletter zoznamy (oddelené čiarkou)</label>
-              </th>
-              <td style="border-top: 1px lightgray dashed;">
-                <input id="florp_newsletter_lists_main" name="florp_newsletter_lists_main" type="text" value="%%strNewsletterListsMain%%" style="width: 100%;" />
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
-                <label for="florp_leader_participant_list_notif_sbj">Predmet správy poslanej lídrom raz za deň o prihlásených účastníkoch flashmobu</label>
-              </th>
-              <td style="border-top: 1px lightgray dashed;">
-                <input id="florp_leader_participant_list_notif_sbj" name="florp_leader_participant_list_notif_sbj" type="text" value="%%strLeaderParticipantListNotificationSbj%%" style="width: 100%;" />
-                <span style="width: 100%;">Placeholdre: <code>%BLOGNAME%</code>, <code>%BLOGURL%</code></span>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                Správa poslaná lídrom raz za deň o prihlásených účastníkoch flashmobu
-              </th>
-              <td style="border-top: 1px lightgray dashed;">
-                %%wpEditorLeaderParticipantListNotificationMsg%%
-                <span style="width: 100%;">Placeholdre: <strong><code>%PARTICIPANT_LIST%</code></strong>, <code>%BLOGNAME%</code>, <code>%BLOGURL%</code>, <code>%USERNAME%</code>, <code>%EMAIL%</code>, <code>%PROFILE_URL%</code></span>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
-                <label for="florp_login_bar_label_login">Text linky prihlasovacieho formulára</label>
-              </th>
-              <td style="border-top: 1px lightgray dashed;">
-                <input id="florp_login_bar_label_login" name="florp_login_bar_label_login" type="text" value="%%strLoginBarLabelLogin%%" style="width: 100%;" />
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                <label for="florp_login_bar_label_logout">Text linky na odhlásenie</label>
-              </th>
-              <td>
-                <input id="florp_login_bar_label_logout" name="florp_login_bar_label_logout" type="text" value="%%strLoginBarLabelLogout%%" style="width: 100%;" />
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                <label for="florp_login_bar_label_profile">Text linky profilu (keď je líder prihlásený)</label>
-              </th>
-              <td>
-                <input id="florp_login_bar_label_profile" name="florp_login_bar_label_profile" type="text" value="%%strLoginBarLabelProfile%%" style="width: 100%;" />
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;"><label for="florp_clone_source_blog_id">Podstránka, ktorá sa má klonovať</label></th>
-              <td style="border-top: 1px lightgray dashed;">
-                <select id="florp_clone_source_blog_id" name="florp_clone_source_blog_id" style="width: 100%;">%%optionsCloneSourceSite%%</select>
-              </td>
-            </tr>
-      '
-      // END replace template //
+      file_get_contents( __DIR__ . "/view/options-svk-main.html" )
     );
   }
 
@@ -6350,7 +6240,7 @@ class FLORP{
 
     if (function_exists('get_all_popups')) {
       $aPopupsWPQuery = get_all_popups();
-//       var_dump($aPopupsWPQuery);
+      // var_dump($aPopupsWPQuery);
 
       if ( $aPopupsWPQuery->have_posts() ) {
         while ( $aPopupsWPQuery->have_posts() ) :
@@ -6426,179 +6316,7 @@ class FLORP{
         $this->aOptions['iTshirtPaymentWarningDeadline'], $this->iTshirtPaymentWarningDeadlineTime,
         $this->aOptions['iTshirtPaymentWarningButtonDeadline'], $this->iTshirtPaymentWarningButtonDeadlineTime,
         $this->aOptions['iTshirtOrderDeliveredBeforeFlashmobDdl'], $this->iTshirtOrderDeliveredBeforeFlashmobDdlTime ),
-        // BEGIN replace template //
-      '
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th colspan="2"><h3>Flashmobová podstránka</h3></th>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_flashmob_blog_id">Podstránka</label></th>
-              <td>
-                <select id="florp_flashmob_blog_id" name="florp_flashmob_blog_id" style="width: 100%;">%%optionsFlashmobSite%%</select>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_profile_form_ninja_form_id_flashmob">Registračný / profilový formulár (spomedzi Ninja Form formulárov)</label></th>
-              <td>
-                <select id="florp_profile_form_ninja_form_id_flashmob" name="florp_profile_form_ninja_form_id_flashmob" style="width: 100%;">%%optionsNinjaFormsFlashmob%%</select>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                <label for="florp_only_florp_profile_nf_flashmob">Na flashmob blogu je jediným ninja form formulárom profilový?</label>
-              </th>
-              <td>
-                <input id="florp_only_florp_profile_nf_flashmob" name="florp_only_florp_profile_nf_flashmob" type="checkbox" %%bOnlyFlorpProfileNinjaFormFlashmob%% value="1"/>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_profile_form_page_id_flashmob">Dedikovaná profilová stránka (v ktorej je registračný / profilový formulár)</label></th>
-              <td>
-                <select id="florp_profile_form_page_id_flashmob" name="florp_profile_form_page_id_flashmob" style="width: 100%;">%%optionsPagesFlashmob%%</select>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_profile_form_popup_id_flashmob">PUM Popup, v ktorom je registračný / profilový formulár</label></th>
-              <td>
-                <select id="florp_profile_form_popup_id_flashmob" name="florp_profile_form_popup_id_flashmob" style="width: 100%;">%%optionsPopupsFlashmob%%</select>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th colspan="2">
-                <span style="font-size: smaller;">Ak je na stránke s PUM Popup-om element <code>#florp-popup-scroll</code>, pri zatvorení PUM Popup-u sa stránka scrollne na tento element.</span>
-              </th>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                <label for="florp_reload_after_ok_submission_flashmob">Znovu načítať celú stránku po vypnutí popup-u po úspešnom uložení formulára?</label>
-              </th>
-              <td>
-                <input id="florp_reload_after_ok_submission_flashmob" name="florp_reload_after_ok_submission_flashmob" type="checkbox" %%reloadCheckedFlashmob%% value="1"/>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th colspan="2">
-                <span style="font-size: smaller;">Znovunačítanie je odporúčané zapnúť iba ak je problém s obnovením mapky / mapiek po uložení formuláru.</span>
-              </th>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                <label for="florp_use_map_image">Použiť obrázok mapy slovenských flashmobov pri náhľade stránky pri zdieľaní (FB)?</label>
-              </th>
-              <td>
-                <input id="florp_use_map_image" name="florp_use_map_image" type="checkbox" %%useMapImageChecked%% value="1"/>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
-                HTML text zobrazený nad prihlasovacím (resp. registračným) formulárom
-              </th>
-              <td style="border-top: 1px lightgray dashed;">
-                %%wpEditorBeforeLoginFormHtmlFlashmob%%
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
-                <label for="florp_newsletter_lists_flashmob">Newsletter zoznamy (oddelené čiarkou)</label>
-              </th>
-              <td style="border-top: 1px lightgray dashed;">
-                <input id="florp_newsletter_lists_flashmob" name="florp_newsletter_lists_flashmob" type="text" value="%%strNewsletterListsFlashmob%%" style="width: 100%;" />
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
-                <label for="florp_participant_registered_subject">Predmet správy poslanej prihláseným účastníkom flashmobu</label>
-              </th>
-              <td style="border-top: 1px lightgray dashed;">
-                <input id="florp_participant_registered_subject" name="florp_participant_registered_subject" type="text" value="%%strParticipantRegisteredSubject%%" style="width: 100%;" />
-                <span style="width: 100%;">Placeholdre: <code>%BLOGNAME%</code>, <code>%BLOGURL%</code></span>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                Správa poslaná prihláseným účastníkom flashmobu
-              </th>
-              <td style="border-top: 1px lightgray dashed;">
-                %%wpEditorParticipantRegisteredMessage%%
-                <span style="width: 100%;">Placeholdre: <code>%BLOGNAME%</code>, <code>%BLOGURL%</code>, <code>%USERNAME%</code>, <code>%EMAIL%</code></span>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
-                <label for="florp_participant_removed_subject">Predmet správy poslanej odstráneným účastníkom flashmobu</label>
-              </th>
-              <td style="border-top: 1px lightgray dashed;">
-                <input id="florp_participant_removed_subject" name="florp_participant_removed_subject" type="text" value="%%strParticipantRemovedSubject%%" style="width: 100%;" />
-                <span style="width: 100%;">Placeholdre: <code>%BLOGNAME%</code>, <code>%BLOGURL%</code></span>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                Správa poslaná odstráneným účastníkom flashmobu
-              </th>
-              <td style="border-top: 1px lightgray dashed;">
-                %%wpEditorParticipantRemovedMessage%%
-                <span style="width: 100%;">Placeholdre: <code>%BLOGNAME%</code>, <code>%BLOGURL%</code>, <code>%USERNAME%</code>, <code>%EMAIL%</code></span>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
-                <label for="florp_tshirt_payment_warning_notif_sbj">Predmet upozornenia na platbu za tričko</label>
-              </th>
-              <td style="border-top: 1px lightgray dashed;">
-                <input id="florp_tshirt_payment_warning_notif_sbj" name="florp_tshirt_payment_warning_notif_sbj" type="text" value="%%strTshirtPaymentWarningNotificationSbj%%" style="width: 100%;" />
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                Text upozornenia na platbu za tričko
-              </th>
-              <td style="border-top: 1px lightgray dashed;">
-                %%wpEditorTshirtPaymentWarningNotificationMsg%%
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
-                <label for="florp_tshirt_ordering_disabled">Vypnúť objednávanie tričiek na formulári pre účastníkov?</label>
-              </th>
-              <td style="border-top: 1px lightgray dashed;">
-                <input id="florp_tshirt_ordering_disabled" name="florp_tshirt_ordering_disabled" type="checkbox" %%tshirtOrderingDisabledChecked%% value="1"/>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                <label for="florp_tshirt_ordering_only_disable">Pri vypnutom objednávaní tričiek na formulári pre účastníkov ponechať checkbox viditeľný (ale neklikateľný)?</label>
-              </th>
-              <td>
-                <input id="florp_tshirt_ordering_only_disable" name="florp_tshirt_ordering_only_disable" type="checkbox" %%tshirtOrderingDisabledOnlyDisableChecked%% value="1"/>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
-                <label for="florp_tshirt_payment_warning_deadline">Deadline na zobrazovanie upozornenia na dátum, po ktorom už tričká nebudú doručené pred flashmobom [počet dní pred flashmobom]</label>
-              </th>
-              <td style="border-top: 1px lightgray dashed;">
-                <input id="florp_tshirt_payment_warning_deadline" name="florp_tshirt_payment_warning_deadline" type="number" value="%%iTshirtPaymentWarningDeadline%%" style="width: 100%;" min="0" max="21" title="Current: %%iTshirtPaymentWarningDeadline%% => %%iTshirtPaymentWarningDeadlineTime%%" />
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                <label for="florp_tshirt_payment_warning_btn_deadline">Deadline na zobrazovanie nútené tlačítka na odoslanie upozornenia na neskorú platbu za tričko [počet dní pred flashmobom]</label>
-              </th>
-              <td>
-                <input id="florp_tshirt_payment_warning_btn_deadline" name="florp_tshirt_payment_warning_btn_deadline" type="number" value="%%iTshirtPaymentWarningButtonDeadline%%" style="width: 100%;" min="-1" max="21" title="Current: %%iTshirtPaymentWarningButtonDeadline%% => %%iTshirtPaymentWarningButtonDeadlineTime%%" />
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                <label for="florp_tshirt_order_delivered_b4_flash_ddl">Deadline, po ktorom už tričká nebudú doručené pred flashmobom [počet dní pred flashmobom]</label>
-              </th>
-              <td>
-                <input id="florp_tshirt_order_delivered_b4_flash_ddl" name="florp_tshirt_order_delivered_b4_flash_ddl" type="number" value="%%iTshirtOrderDeliveredBeforeFlashmobDdl%%" style="width: 100%;" min="0" max="21" title="Current: %%iTshirtOrderDeliveredBeforeFlashmobDdl%% => %%iTshirtOrderDeliveredBeforeFlashmobDdlTime%%" />
-              </td>
-            </tr>
-      '
-          // END replace template //
+      file_get_contents( __DIR__ . "/view/options-svk-flashmob.html" )
     );
   }
 
@@ -6658,7 +6376,7 @@ class FLORP{
     $strOptionsDaysEnd = "";
     $iSeasonStartDay = $this->aOptions["iSeasonStartDay"];
     $iSeasonEndDay = $this->aOptions["iSeasonEndDay"];
-    
+
     $strMarkerInfoWindowTemplateOrganizer = $this->get_wp_editor( $this->aOptions['strMarkerInfoWindowTemplateOrganizer'], 'florp_infowindow_template_organizer' );
     $strMarkerInfoWindowTemplateTeacher = $this->get_wp_editor( $this->aOptions['strMarkerInfoWindowTemplateTeacher'], 'florp_infowindow_template_teacher' );
 
@@ -6669,9 +6387,9 @@ class FLORP{
       $strOptionKey = 'strInfoWindowLabel_'.$strSlug;
       $strOptionValue = $this->aOptions[$strOptionKey];
       $strNote = "";
-//       if ('web' === $strSlug) {
-//         $strNote = '<span style="width: 100%;">Táto položka sa zobrazí len ak nie je povolené zobrazovanie kurzov vo formulári alebo je prázdne meno školy.</span>';
-//       }
+      // if ('web' === $strSlug) {
+      //   $strNote = '<span style="width: 100%;">Táto položka sa zobrazí len ak nie je povolené zobrazovanie kurzov vo formulári alebo je prázdne meno školy.</span>';
+      // }
       $strInfoWindowLabels .= '<th style="width: 47%; padding: 0 1%; text-align: right;">
                 <label for="'.$strElementID.'">Nadpis pre položku "'.$strSlug.'"</label>
               </th>
@@ -6717,157 +6435,112 @@ class FLORP{
         $this->aOptions['strSignupLinkLabel'], $strInfoWindowLabels,
         $strMarkerInfoWindowTemplateOrganizer, $strMarkerInfoWindowTemplateTeacher,
         $strHideFlashmobFieldsForUsers, $strUnhideFlashmobFieldsForUsers ),
-        // BEGIN replace template //
-      '
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th colspan="2"><h3>Spoločné nastavenia</h3></th>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_newsletter_blog_id">Podstránka, ktorá obsahuje newsletter</label></th>
-              <td>
-                <select id="florp_newsletter_blog_id" name="florp_newsletter_blog_id" style="width: 100%;">%%optionsNewsletterSite%%</select>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                <label for="florp_newsletter_api_key">Newsletter API kľúč</label>
-              </th>
-              <td>
-                <input id="florp_newsletter_api_key" name="florp_newsletter_api_key" type="text" value="%%strNewsletterAPIKey%%" style="width: 100%;" />
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_flashmob_year">Dátum a čas slovenského flashmobu</label></th>
-              <td>
-                <select id="florp_flashmob_year" name="florp_flashmob_year">%%optionsYears%%</select>
-                / <select id="florp_flashmob_month" name="florp_flashmob_month">%%optionsMonths%%</select>
-                / <select id="florp_flashmob_day" name="florp_flashmob_day">%%optionsDays%%</select>
-                <select id="florp_flashmob_hour" name="florp_flashmob_hour">%%optionsHours%%</select>
-                : <select id="florp_flashmob_minute" name="florp_flashmob_minute">%%optionsMinutes%%</select>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th colspan="2">
-                <span style="font-size: smaller;">Pozor: Ak zmeníte rok flashmobu, aktuálny rok sa archivuje a položky týkajúce sa presného miesta a videa sa u každého registrovaného účastníka vymažú.</span>
-              </th>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                Flashmob sa ešte neodohral pre užívateľov:
-              </th>
-              <td>
-                %%aHideFlashmobFieldsForUsers%%
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                Flashmob sa už odohral pre užívateľov:
-              </th>
-              <td>
-                %%aUnhideFlashmobFieldsForUsers%%
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                <label for="florp_load_maps_lazy">Načítavať skryté mapy až po kliknutí na príslušnú záložku?</label>
-              </th>
-              <td>
-                <input id="florp_load_maps_lazy" name="florp_load_maps_lazy" type="checkbox" %%loadMapsLazyChecked%% value="1"/>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                <label for="florp_load_maps_async">Načítavať mapy asynchrónne?</label>
-              </th>
-              <td>
-                <input id="florp_load_maps_async" name="florp_load_maps_async" type="checkbox" %%loadMapsAsyncChecked%% value="1"/>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                <label for="florp_load_videos_lazy">Načítavať skryté videá až po kliknutí na príslušnú záložku?</label>
-              </th>
-              <td>
-                <input id="florp_load_videos_lazy" name="florp_load_videos_lazy" type="checkbox" %%loadVideosLazyChecked%% value="1"/>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                <label for="florp_google_maps_key">Google Maps API Key</label>
-              </th>
-              <td>
-                <input id="florp_google_maps_key" name="florp_google_maps_key" type="text" value="%%strGoogleMapsKey%%" style="width: 100%;" />
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                <label for="florp_google_maps_key_static">Google Maps Static API Key</label>
-              </th>
-              <td>
-                <input id="florp_google_maps_key_static" name="florp_google_maps_key_static" type="text" value="%%strGoogleMapsKeyStatic%%" style="width: 100%;" />
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                <label for="florp_fb_app_id">Facebook app ID</label>
-              </th>
-              <td>
-                <input id="florp_fb_app_id" name="florp_fb_app_id" type="text" value="%%strFbAppID%%" style="width: 100%;" />
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                <label for="florp_prevent_direct_media_downloads">Zakázať priame stiahnutie mediálnych súborov (pomocou <code>.htaccess</code>)?</label>
-              </th>
-              <td>
-                <input id="florp_prevent_direct_media_downloads" name="florp_prevent_direct_media_downloads" type="checkbox" %%preventDirectMediaDownloadsChecked%% value="1"/>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
-                <label for="florp_signup_link_label">Text linky na prihlásenie na Flashmob</label>
-              </th>
-              <td style="border-top: 1px lightgray dashed;">
-                <input id="florp_signup_link_label" name="florp_signup_link_label" type="text" value="%%strSignupLinkLabel%%" style="width: 100%;" />
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                <label for="florp_courses_number_enabled">Počet povolených miest kurzov (0 = vypnúť zobrazovanie položiek o kurzoch vo formulári)</label>
-              </th>
-              <td>
-                <select id="florp_courses_number_enabled" name="florp_courses_number_enabled">%%optionsCoursesNumberEnabled%%</select>
-              </td>
-            </tr>
-            %%strInfoWindowLabels%%
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right;">
-                Info okno leadra ako organizátora flashmobu na mape
-              </th>
-              <td>
-                %%wpEditorMarkerInfoWindowTemplateOrganizer%%
-                <span style="width: 100%;">Placeholdre: <code>%%flashmob_city%%</code>, <code>%%organizer%%</code>*, <code>%%signup%%</code>**, <code>%%participant_count%%</code>*, <code>%%year%%</code>*, <code>%%school%%</code>*, <code>%%web%%</code>*, <code>%%flashmob%%</code>*, <code>%%dancers%%</code>*, <code>%%note%%</code>*, <code>%%embed_code%%</code></span><br>
-                <span style="width: 100%;">*,**: Pozor: nepridávaj zalomenie riadkov (&lt;br&gt;, &lt;br /&gt;) pred a za placeholdre s hviezdičkou - ak sa zamenia za prázdny text, ostane po nich prázdny riadok!</span><br>
-                <span style="width: 100%;">**: Za placeholdre s 2 hviezdičkami sa pridáva automaticky ešte jedno zalomenie riadku (&lt;br&gt;, &lt;br /&gt;).</span><br>
-              </td>
-            </tr>
-            <tr style="width: 98%; padding:  5px 1%;">
-              <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
-                Info okno kurzov leadra na mape
-              </th>
-              <td style="border-top: 1px lightgray dashed;">
-                %%wpEditorMarkerInfoWindowTemplateTeacher%%
-                <span style="width: 100%;">Placeholdre: <code>%%courses_city%%</code>, <code>%%teacher%%</code>*, <code>%%school%%</code>*, <code>%%courses_info%%</code></span><br>
-                <span style="width: 100%;">*Pozor: nepridávaj zalomenie riadkov (&lt;br&gt;, &lt;br /&gt;) pred a za placeholdre s hviezdičkou - ak sa zamenia za prázdny text, ostane po nich prázdny riadok!
-              </td>
-            </tr>
-      '
-        // END replace template //
+      file_get_contents( __DIR__ . "/view/options-svk-common.html" )
     );
   }
 
-  private function save_option_page_options( $aPostedOptions ) {
-    if ($this->isMainBlog) {
+  public function options_page_international() {
+    echo "<div class=\"wrap\"><h1>" . "Medzinárodný Flashmob" . "</h1>";
+
+    if (isset($_POST['save-florp-options'])) {
+      $this->save_option_page_options($_POST, true);
+    }
+
+    do_action('florp_options_page_notices');
+
+    $aVariables = $this->get_options_page_vars();
+
+    // $aVariablesToUse = array(
+    //   'optionsIntfSite' => $aVariables['optionsIntfSite'],
+    //   'optionNone' => $aVariables['optionNone'],
+    //   'optionNoneF' => $aVariables['optionNoneF'],
+    //   'aBooleanOptionsChecked' => $aVariables['aBooleanOptionsChecked'],
+    // );
+
+    if ($this->isIntfBlog) {
+      $optionsNinjaFormsIntf = $aVariables['optionNone'];
+      $optionsPopupsIntf = $aVariables['optionNone'];
+
+      if (function_exists('Ninja_Forms')) {
+        $aForms = Ninja_Forms()->form()->get_forms();
+        foreach( $aForms as $objForm ){
+          $iID = $objForm->get_id();
+          $strTitle = $objForm->get_setting( 'title' ) . " (ID: {$iID})";
+          if ($this->iProfileFormNinjaFormIDIntf == $iID) {
+            $strSelectedIntf = 'selected="selected"';
+          } else {
+            $strSelectedIntf = '';
+          }
+          $optionsNinjaFormsIntf .= '<option value="'.$iID.'" '.$strSelectedIntf.'>'.$strTitle.'</option>';
+        }
+      }
+
+      if (function_exists('get_all_popups')) {
+        $aPopupsWPQuery = get_all_popups();
+        // var_dump($aPopupsWPQuery);
+
+        if ( $aPopupsWPQuery->have_posts() ) {
+          while ( $aPopupsWPQuery->have_posts() ) :
+            $aPopupsWPQuery->next_post();
+            $iID = $aPopupsWPQuery->post->ID;
+            $strTitle = $aPopupsWPQuery->post->post_title . " (ID: {$iID})";
+            if ($this->iProfileFormPopupIDIntf == $iID) {
+              $strSelectedIntf = 'selected="selected"';
+            } else {
+              $strSelectedIntf = '';
+            }
+            $optionsPopupsIntf .= '<option value="'.$iID.'" '.$strSelectedIntf.'>'.$strTitle.'</option>';
+          endwhile;
+        }
+      }
+
+      $optionsPagesIntf = $aVariables['optionNoneF'];
+      $aPages = get_pages();
+      foreach ($aPages as $oPage) {
+        $iID = $oPage->ID;
+        $strTitle = $oPage->post_title . " (ID: {$iID})";
+        if (function_exists('pll_get_post_language')) {
+          $strLang = pll_get_post_language( $iID, 'name' );
+          $strTitle .= " [{$strLang}]";
+        }
+        if ($this->iProfileFormPageIDIntf == $iID) {
+          $strSelectedIntf = 'selected="selected"';
+        } else {
+          $strSelectedIntf = '';
+        }
+        $optionsPagesIntf .= '<option value="'.$iID.'" '.$strSelectedIntf.'>'.$strTitle.'</option>';
+      }
+
+      $strIntfOptions = str_replace(
+        array(
+          '%%optionsIntfSite%%',
+          '%%optionsNinjaFormsIntf%%',
+          '%%optionsPopupsIntf%%',
+          '%%optionsPagesIntf%%',
+        ),
+        array(
+          $aVariables['optionsIntfSite'],
+          $optionsNinjaFormsIntf,
+          $optionsPopupsIntf,
+          $optionsPagesIntf,
+        ),
+        file_get_contents( __DIR__ . "/view/options-international-settings.html" )
+      );
+    } else {
+      $strIntfOptions = '';
+    }
+
+    echo str_replace(
+      array( '%%optionsIntfSite%%' ),
+      array( $strIntfOptions ),
+      file_get_contents( __DIR__ . "/view/options-international.html" )
+    );
+  }
+
+  private function save_option_page_options( $aPostedOptions, $bInternational = false ) {
+    if ($bInternational) {
+      $aKeysToSave = $this->aOptionKeysByBlog['international'];
+    } elseif ($this->isMainBlog) {
       $aKeysToSave = $this->aOptionKeysByBlog['main'];
 
       // Archive current flashmob year's data //
@@ -6986,7 +6659,13 @@ class FLORP{
 
     $this->set_variables();
 
-    $this->export_ninja_form();
+    if ($bInternational) {
+      if ($this->iProfileFormNinjaFormIDIntf != 0) {
+        $this->export_ninja_form($this->iProfileFormNinjaFormIDIntf, $this->strNinjaFormExportPathIntf);
+      }
+    } else {
+      $this->export_ninja_form();
+    }
 
     $this->prevent_direct_media_downloads();
 
@@ -7188,7 +6867,7 @@ class FLORP{
       show_admin_bar( false );
     }
   }
-  
+
   public function action__reset_password_redirect() {
     // Check if have submitted
     $confirm = ( isset($_GET['action'] ) && $_GET['action'] == resetpass );
@@ -7199,18 +6878,18 @@ class FLORP{
       exit;
     }
   }
-  
+
   public function filter__ninja_forms_register_fields( $aFields ) {
     require_once __DIR__ . "/nf-custom-fields/Recaptcha_logged-out-only.php";
     $aFields['recaptcha_logged-out-only'] = new NF_Fields_RecaptchaLoggedOutOnly();
     return $aFields;
   }
-  
+
   public function action__register_merge_tags() {
     require_once __DIR__ . "/class.florp.mergetags.php";
     Ninja_Forms()->merge_tags[ 'florp_merge_tags' ] = new FlorpMergeTags();
   }
-  
+
   public function action__get_markerInfoHTML_callback() {
     check_ajax_referer( 'srd-florp-security-string', 'security' );
     $aMarkerData = array_merge(
@@ -7234,7 +6913,7 @@ class FLORP{
     echo json_encode($aRes);
     wp_die();
   }
-  
+
   public function action__get_leaderParticipantsTable_callback() {
     check_ajax_referer( 'srd-florp-security-string', 'security' );
     $aData = $_POST;
@@ -7718,7 +7397,7 @@ class FLORP{
 
   private function generate_username( $strFirstName, $strLastName ) {
     $strUserNameBase = $strFirstName.".".$strLastName;
-    
+
     $strOriginalLocale = setlocale(LC_CTYPE, 0);
 
     // set locale to UK //
@@ -7821,7 +7500,7 @@ class FLORP{
     }
     $this->aOptions['aNfFieldTypes'][$iBlogID]['done'] = false;
     $this->save_options();
-    
+
     if ($this->isFlashmobBlog && intval($aFormData['form_id']) === $this->iProfileFormNinjaFormIDFlashmob) {
       // Get field values by keys //
       $aFieldData = array();
@@ -8157,6 +7836,10 @@ class FLORP{
     return $this->isFlashmobBlog;
   }
 
+  public function is_intf_blog() {
+    return $this->isIntfBlog;
+  }
+
   public function is_tshirt_ordering_disabled() {
     return $this->aOptions['bTshirtOrderingDisabled'];
   }
@@ -8274,6 +7957,10 @@ function florp_is_main_blog() {
 function florp_is_flashmob_blog() {
   global $FLORP;
   return $FLORP->is_flashmob_blog();
+}
+function florp_is_intf_blog() {
+  global $FLORP;
+  return $FLORP->is_intf_blog();
 }
 function florp_is_tshirt_ordering_disabled() {
   global $FLORP;

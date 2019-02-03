@@ -1,0 +1,167 @@
+<tr style="width: 98%; padding:  5px 1%;">
+  <th colspan="2"><h3>Hlavná stránka</h3></th>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_main_blog_id">Podstránka</label></th>
+  <td>
+    <select id="florp_main_blog_id" name="florp_main_blog_id" style="width: 100%;">%%optionsMainSite%%</select>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_profile_form_ninja_form_id_main">Registračný / profilový formulár (spomedzi Ninja Form formulárov)</label></th>
+  <td>
+    <select id="florp_profile_form_ninja_form_id_main" name="florp_profile_form_ninja_form_id_main" style="width: 100%;">%%optionsNinjaFormsMain%%</select>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    <label for="florp_only_florp_profile_nf_main">Na hlavnom blogu je jediným ninja form formulárom profilový?</label>
+  </th>
+  <td>
+    <input id="florp_only_florp_profile_nf_main" name="florp_only_florp_profile_nf_main" type="checkbox" %%bOnlyFlorpProfileNinjaFormMain%% value="1"/>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_profile_form_page_id_main">Dedikovaná profilová stránka (v ktorej je registračný / profilový formulár)</label></th>
+  <td>
+    <select id="florp_profile_form_page_id_main" name="florp_profile_form_page_id_main" style="width: 100%;">%%optionsPagesMain%%</select>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_profile_form_popup_id_main">PUM Popup, v ktorom je registračný / profilový formulár</label></th>
+  <td>
+    <select id="florp_profile_form_popup_id_main" name="florp_profile_form_popup_id_main" style="width: 100%;">%%optionsPopupsMain%%</select>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th colspan="2">
+    <span style="font-size: smaller;">Ak je na stránke s PUM Popup-om element <code>#florp-popup-scroll</code>, pri zatvorení PUM Popup-u sa stránka scrollne na tento element.</span>
+  </th>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    <label for="florp_reload_after_ok_submission_main">Znovu načítať celú stránku po vypnutí popup-u po úspešnom uložení formulára?</label>
+  </th>
+  <td>
+    <input id="florp_reload_after_ok_submission_main" name="florp_reload_after_ok_submission_main" type="checkbox" %%reloadCheckedMain%% value="1"/>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th colspan="2">
+    <span style="font-size: smaller;">Znovunačítanie je odporúčané zapnúť iba ak je problém s obnovením mapky / mapiek po uložení formuláru.</span>
+  </th>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
+    HTML text zobrazený nad prihlasovacím (resp. registračným) formulárom
+  </th>
+  <td style="border-top: 1px lightgray dashed;">
+    %%wpEditorBeforeLoginFormHtmlMain%%
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
+    <label for="florp_registration_successful_message">Správa zobrazená po úspešnej registrácii (pred prihlásením)</label>
+  </th>
+  <td style="border-top: 1px lightgray dashed;">
+    <input id="florp_registration_successful_message" name="florp_registration_successful_message" type="text" value="%%strRegistrationSuccessfulMessage%%" style="width: 100%;" />
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    <label for="florp_login_successful_message">Správa zobrazená po úspešnom prihlásení</label>
+  </th>
+  <td>
+    <input id="florp_login_successful_message" name="florp_login_successful_message" type="text" value="%%strLoginSuccessfulMessage%%" style="width: 100%;" />
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
+    <label for="florp_approve_users_automatically">Schváliť registrovaných používateľov automaticky?</label>
+  </th>
+  <td style="border-top: 1px lightgray dashed;">
+    <input id="florp_approve_users_automatically" name="florp_approve_users_automatically" type="checkbox" %%approveUsersAutomaticallyChecked%% value="1"/>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    Správa zobrazená prihláseným užívateľom, čakajúcim na schválenie
+  </th>
+  <td style="border-top: 1px lightgray dashed;">
+    %%wpEditorPendingUserPageContentHTML%%
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    <label for="florp_user_approved_subject">Predmet správy poslanej užívateľom po schválení</label>
+  </th>
+  <td style="border-top: 1px lightgray dashed;">
+    <input id="florp_user_approved_subject" name="florp_user_approved_subject" type="text" value="%%strUserApprovedSubject%%" style="width: 100%;" />
+    <span style="width: 100%;">Placeholdre: <code>%BLOGNAME%</code>, <code>%BLOGURL%</code></span>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    Správa poslaná užívateľom po schválení
+  </th>
+  <td style="border-top: 1px lightgray dashed;">
+    %%wpEditorUserApprovedMessage%%
+    <span style="width: 100%;">Placeholdre: <code>%BLOGNAME%</code>, <code>%BLOGURL%</code>, <code>%USERNAME%</code>, <code>%EMAIL%</code>, <code>%PROFILE_URL%</code></span>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
+    <label for="florp_newsletter_lists_main">Newsletter zoznamy (oddelené čiarkou)</label>
+  </th>
+  <td style="border-top: 1px lightgray dashed;">
+    <input id="florp_newsletter_lists_main" name="florp_newsletter_lists_main" type="text" value="%%strNewsletterListsMain%%" style="width: 100%;" />
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
+    <label for="florp_leader_participant_list_notif_sbj">Predmet správy poslanej lídrom raz za deň o prihlásených účastníkoch flashmobu</label>
+  </th>
+  <td style="border-top: 1px lightgray dashed;">
+    <input id="florp_leader_participant_list_notif_sbj" name="florp_leader_participant_list_notif_sbj" type="text" value="%%strLeaderParticipantListNotificationSbj%%" style="width: 100%;" />
+    <span style="width: 100%;">Placeholdre: <code>%BLOGNAME%</code>, <code>%BLOGURL%</code></span>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    Správa poslaná lídrom raz za deň o prihlásených účastníkoch flashmobu
+  </th>
+  <td style="border-top: 1px lightgray dashed;">
+    %%wpEditorLeaderParticipantListNotificationMsg%%
+    <span style="width: 100%;">Placeholdre: <strong><code>%PARTICIPANT_LIST%</code></strong>, <code>%BLOGNAME%</code>, <code>%BLOGURL%</code>, <code>%USERNAME%</code>, <code>%EMAIL%</code>, <code>%PROFILE_URL%</code></span>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
+    <label for="florp_login_bar_label_login">Text linky prihlasovacieho formulára</label>
+  </th>
+  <td style="border-top: 1px lightgray dashed;">
+    <input id="florp_login_bar_label_login" name="florp_login_bar_label_login" type="text" value="%%strLoginBarLabelLogin%%" style="width: 100%;" />
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    <label for="florp_login_bar_label_logout">Text linky na odhlásenie</label>
+  </th>
+  <td>
+    <input id="florp_login_bar_label_logout" name="florp_login_bar_label_logout" type="text" value="%%strLoginBarLabelLogout%%" style="width: 100%;" />
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    <label for="florp_login_bar_label_profile">Text linky profilu (keď je líder prihlásený)</label>
+  </th>
+  <td>
+    <input id="florp_login_bar_label_profile" name="florp_login_bar_label_profile" type="text" value="%%strLoginBarLabelProfile%%" style="width: 100%;" />
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;"><label for="florp_clone_source_blog_id">Podstránka, ktorá sa má klonovať</label></th>
+  <td style="border-top: 1px lightgray dashed;">
+    <select id="florp_clone_source_blog_id" name="florp_clone_source_blog_id" style="width: 100%;">%%optionsCloneSourceSite%%</select>
+  </td>
+</tr>

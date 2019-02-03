@@ -1,0 +1,142 @@
+<tr style="width: 98%; padding:  5px 1%;">
+  <th colspan="2"><h3>Spoločné nastavenia</h3></th>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_newsletter_blog_id">Podstránka, ktorá obsahuje newsletter</label></th>
+  <td>
+    <select id="florp_newsletter_blog_id" name="florp_newsletter_blog_id" style="width: 100%;">%%optionsNewsletterSite%%</select>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    <label for="florp_newsletter_api_key">Newsletter API kľúč</label>
+  </th>
+  <td>
+    <input id="florp_newsletter_api_key" name="florp_newsletter_api_key" type="text" value="%%strNewsletterAPIKey%%" style="width: 100%;" />
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;"><label for="florp_flashmob_year">Dátum a čas slovenského flashmobu</label></th>
+  <td>
+    <select id="florp_flashmob_year" name="florp_flashmob_year">%%optionsYears%%</select>
+    / <select id="florp_flashmob_month" name="florp_flashmob_month">%%optionsMonths%%</select>
+    / <select id="florp_flashmob_day" name="florp_flashmob_day">%%optionsDays%%</select>
+    <select id="florp_flashmob_hour" name="florp_flashmob_hour">%%optionsHours%%</select>
+    : <select id="florp_flashmob_minute" name="florp_flashmob_minute">%%optionsMinutes%%</select>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th colspan="2">
+    <span style="font-size: smaller;">Pozor: Ak zmeníte rok flashmobu, aktuálny rok sa archivuje a položky týkajúce sa presného miesta a videa sa u každého registrovaného účastníka vymažú.</span>
+  </th>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    Flashmob sa ešte neodohral pre užívateľov:
+  </th>
+  <td>
+    %%aHideFlashmobFieldsForUsers%%
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    Flashmob sa už odohral pre užívateľov:
+  </th>
+  <td>
+    %%aUnhideFlashmobFieldsForUsers%%
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    <label for="florp_load_maps_lazy">Načítavať skryté mapy až po kliknutí na príslušnú záložku?</label>
+  </th>
+  <td>
+    <input id="florp_load_maps_lazy" name="florp_load_maps_lazy" type="checkbox" %%loadMapsLazyChecked%% value="1"/>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    <label for="florp_load_maps_async">Načítavať mapy asynchrónne?</label>
+  </th>
+  <td>
+    <input id="florp_load_maps_async" name="florp_load_maps_async" type="checkbox" %%loadMapsAsyncChecked%% value="1"/>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    <label for="florp_load_videos_lazy">Načítavať skryté videá až po kliknutí na príslušnú záložku?</label>
+  </th>
+  <td>
+    <input id="florp_load_videos_lazy" name="florp_load_videos_lazy" type="checkbox" %%loadVideosLazyChecked%% value="1"/>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    <label for="florp_google_maps_key">Google Maps API Key</label>
+  </th>
+  <td>
+    <input id="florp_google_maps_key" name="florp_google_maps_key" type="text" value="%%strGoogleMapsKey%%" style="width: 100%;" />
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    <label for="florp_google_maps_key_static">Google Maps Static API Key</label>
+  </th>
+  <td>
+    <input id="florp_google_maps_key_static" name="florp_google_maps_key_static" type="text" value="%%strGoogleMapsKeyStatic%%" style="width: 100%;" />
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    <label for="florp_fb_app_id">Facebook app ID</label>
+  </th>
+  <td>
+    <input id="florp_fb_app_id" name="florp_fb_app_id" type="text" value="%%strFbAppID%%" style="width: 100%;" />
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    <label for="florp_prevent_direct_media_downloads">Zakázať priame stiahnutie mediálnych súborov (pomocou <code>.htaccess</code>)?</label>
+  </th>
+  <td>
+    <input id="florp_prevent_direct_media_downloads" name="florp_prevent_direct_media_downloads" type="checkbox" %%preventDirectMediaDownloadsChecked%% value="1"/>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
+    <label for="florp_signup_link_label">Text linky na prihlásenie na Flashmob</label>
+  </th>
+  <td style="border-top: 1px lightgray dashed;">
+    <input id="florp_signup_link_label" name="florp_signup_link_label" type="text" value="%%strSignupLinkLabel%%" style="width: 100%;" />
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    <label for="florp_courses_number_enabled">Počet povolených miest kurzov (0 = vypnúť zobrazovanie položiek o kurzoch vo formulári)</label>
+  </th>
+  <td>
+    <select id="florp_courses_number_enabled" name="florp_courses_number_enabled">%%optionsCoursesNumberEnabled%%</select>
+  </td>
+</tr>
+%%strInfoWindowLabels%%
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    Info okno leadra ako organizátora flashmobu na mape
+  </th>
+  <td>
+    %%wpEditorMarkerInfoWindowTemplateOrganizer%%
+    <span style="width: 100%;">Placeholdre: <code>%%flashmob_city%%</code>, <code>%%organizer%%</code>*, <code>%%signup%%</code>**, <code>%%participant_count%%</code>*, <code>%%year%%</code>*, <code>%%school%%</code>*, <code>%%web%%</code>*, <code>%%flashmob%%</code>*, <code>%%dancers%%</code>*, <code>%%note%%</code>*, <code>%%embed_code%%</code></span><br>
+    <span style="width: 100%;">*,**: Pozor: nepridávaj zalomenie riadkov (&lt;br&gt;, &lt;br /&gt;) pred a za placeholdre s hviezdičkou - ak sa zamenia za prázdny text, ostane po nich prázdny riadok!</span><br>
+    <span style="width: 100%;">**: Za placeholdre s 2 hviezdičkami sa pridáva automaticky ešte jedno zalomenie riadku (&lt;br&gt;, &lt;br /&gt;).</span><br>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
+    Info okno kurzov leadra na mape
+  </th>
+  <td style="border-top: 1px lightgray dashed;">
+    %%wpEditorMarkerInfoWindowTemplateTeacher%%
+    <span style="width: 100%;">Placeholdre: <code>%%courses_city%%</code>, <code>%%teacher%%</code>*, <code>%%school%%</code>*, <code>%%courses_info%%</code></span><br>
+    <span style="width: 100%;">*Pozor: nepridávaj zalomenie riadkov (&lt;br&gt;, &lt;br /&gt;) pred a za placeholdre s hviezdičkou - ak sa zamenia za prázdny text, ostane po nich prázdny riadok!
+  </td>
+</tr>
