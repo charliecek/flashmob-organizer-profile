@@ -13,6 +13,14 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v4.7.0: International flashmob signup form =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.7.0)
+- Added international flashmob signup form
+  - city poll
+  - with relevant options like deadlines, selection of cities etc.
+  - exporting of the NF form
+  - email notifications, tshirt images, newsletter subscription
+
 = v4.6.12: course preview bug, course city number =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.12)
 - fixed bug where course preview map wouldn't show additional cities
@@ -218,12 +226,5 @@ fixed preview when shown on the right half of screen
 - Trimming ending slash from website info labels
 - Minor flashmob form change
 
-= v4.3.2: Added possibility of different tshirt preview image, fixes =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.3.2)
-- Added possibility of different tshirt preview image
-- changes to profile form, info windows, fields
-- checking if email is subscribed to newsletter (via DB)
-- fixed bug with radiobutton clearing on submit
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.3.2)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.3.3)

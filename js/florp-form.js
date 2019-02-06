@@ -992,7 +992,7 @@
             console.log("opening")
             var $el = this.target
             if (window[id+"_interval"]) {
-//               console.info("Clearing old interval")
+              // console.info("Clearing old interval")
               clearInterval(window[id+"_interval"]);
               window[id+"_interval"] = false
             }
@@ -1006,7 +1006,7 @@
                   }
                   clearInterval(window[_jb.id+"_interval"]);
                   window[_jb.id+"_interval"] = false
-//                   console.info("clearing interval")
+                  // console.info("clearing interval")
                 }
                 if (window[_jb.id+"_intervalCount"] > 10) {
                   clearInterval(window[_jb.id+"_interval"]);
@@ -1014,7 +1014,7 @@
                   console.warn("clearing interval - reached limit")
                 }
               } else {
-//                 console.info("running interval")
+                // console.info("running interval")
               }
             }, 200, this, $el);
           }
@@ -1044,25 +1044,27 @@
     // Turn .florp_disabled fields into disabled fields //
     jQuery(".florp_disabled select,.florp_disabled input").prop("disabled", true);
     if (-1 < jQuery.inArray("main", florp.blog_types) && florp.has_participants == 1) {
-      jQuery("input.florp_flashmob_organizer").prop("disabled", true)
-      jQuery(".florp_flashmob_city").prop("disabled", true)
+      jQuery("#nf-form-"+florp.form_id_main+"-cont input.florp_flashmob_organizer").prop("disabled", true)
+      jQuery("#nf-form-"+florp.form_id_main+"-cont .florp_flashmob_city").prop("disabled", true)
     }
 
     // Fix the info circle's position for the newsletter checkbox //
-    var $preferenceInfo = jQuery(".florp_newsletter_container .nf-field-label label span.fa-info-circle")
-    if ($preferenceInfo.length > 0) {
-      $newsletterSubscribeLabel = jQuery(".florp_newsletter_container input[value=newsletter_subscribe]").parent().find("label")
-      if ($newsletterSubscribeLabel.length > 0) {
-        $newsletterSubscribeLabel.html($newsletterSubscribeLabel.html()+" ").append($preferenceInfo)
+    jQuery.each([florp.form_id_main, florp.form_id_flashmob, florp.form_id_intf], function(i, iFormID) {
+      var $preferenceInfo = jQuery("#nf-form-"+iFormID+"-cont .florp_newsletter_container .nf-field-label label span.fa-info-circle")
+      if ($preferenceInfo.length > 0) {
+        $newsletterSubscribeLabel = jQuery("#nf-form-"+iFormID+"-cont .florp_newsletter_container input[value=newsletter_subscribe]").parent().find("label")
+        if ($newsletterSubscribeLabel.length > 0) {
+          $newsletterSubscribeLabel.html($newsletterSubscribeLabel.html()+" ").append($preferenceInfo)
+        }
       }
-    }
-    var $preferenceInfo = jQuery(".florp_preferences_container .nf-field-label label span.fa-info-circle")
-    if ($preferenceInfo.length > 0) {
-      $newsletterSubscribeLabel = jQuery(".florp_preferences_container input[value=newsletter_subscribe]").parent().find("label")
-      if ($newsletterSubscribeLabel.length > 0) {
-        $newsletterSubscribeLabel.html($newsletterSubscribeLabel.html()+" ").append($preferenceInfo)
+      var $preferenceInfo = jQuery("#nf-form-"+iFormID+"-cont .florp_preferences_container .nf-field-label label span.fa-info-circle")
+      if ($preferenceInfo.length > 0) {
+        $newsletterSubscribeLabel = jQuery("#nf-form-"+iFormID+"-cont .florp_preferences_container input[value=newsletter_subscribe]").parent().find("label")
+        if ($newsletterSubscribeLabel.length > 0) {
+          $newsletterSubscribeLabel.html($newsletterSubscribeLabel.html()+" ").append($preferenceInfo)
+        }
       }
-    }
+    })
 
     // FN to get selected school webpage radiolist value //
     var fnGetSchoolWebpageRadiolistValue = function() {
