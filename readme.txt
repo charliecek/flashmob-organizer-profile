@@ -13,6 +13,11 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v4.6.12: course preview bug, course city number =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.12)
+- fixed bug where course preview map wouldn't show additional cities
+- added option to configure number of allowed course cities
+
 = v4.6.11: Fixing teacher map, new forms, flashmob city check fix =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.11)
 - fixing teacher map (showing flashmob city if coordinates were present)
@@ -220,9 +225,5 @@ fixed preview when shown on the right half of screen
 - checking if email is subscribed to newsletter (via DB)
 - fixed bug with radiobutton clearing on submit
 
-= v4.3.1: Bugfixes =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.3.1)
-Bugfixes
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.3.1)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.3.2)

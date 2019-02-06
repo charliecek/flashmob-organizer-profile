@@ -352,7 +352,8 @@ body.state_default .jBox-wrapper {
 .florp-leader-participants-table tr:nth-child(odd) {
   background-color: #eee;
 }
-.florp-click-participant-trigger {
+.florp-click-participant-trigger,
+.florp-click-international-participant-trigger {
   /* color: red; */
   color: #277cea;
   text-decoration: underline dashed;

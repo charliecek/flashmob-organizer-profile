@@ -37,7 +37,6 @@ function add_florp_action_controllers() {
 
   var florpSubmitController = Marionette.Object.extend( {
     formModel: null,
-    formID: florp.form_id,
     initialize: function() {
       // On the Form Submission's field validaiton...
       var submitChannel = Backbone.Radio.channel( 'submit' );
@@ -48,18 +47,17 @@ function add_florp_action_controllers() {
     },
 
     validateSubmit: function( model ) {
-      if ("undefined" === typeof this.formID) {
-        this.formID = florp.form_id
-      }
-      if ("undefined" === typeof this.formID) {
-        console.warn("formID wasn't set");
-        return
+      var formID = model.attributes.formID
+      if (formID != florp.form_id_main && formID != florp.form_id_flashmob && formID != florp.form_id_intf) {
+        console.info("This is not a FLORP form");
+        return;
       }
       jQuery(".nf-response-msg").children().remove()
 
       if (this.formModel === null || typeof this.formModel === "undefined") {
-        this.formModel = nfRadio.channel( 'app' ).request( 'get:form', this.formID );
+        this.formModel = nfRadio.channel( 'app' ).request( 'get:form', formID );
         if (this.formModel === null || typeof this.formModel === "undefined") {
+          console.log(model)
           console.warn("formModel wasn't set (is this the right form?)");
           return;
         }
@@ -77,19 +75,13 @@ function add_florp_action_controllers() {
     },
 
     actionSubmit: function( response ) {
-      if ("undefined" === typeof this.formID) {
-        this.formID = florp.form_id
-      }
-      if ("undefined" === typeof this.formID) {
-        console.warn("formID wasn't set");
-        return
-      }
-      if (response.data.form_id != this.formID) {
-        console.info("This is not form with ID="+this.formID);
+      var formID = response.data.form_id
+      if (formID != florp.form_id_main && formID != florp.form_id_flashmob && formID != florp.form_id_intf) {
+        console.info("This is not a FLORP form");
         return;
       }
-      if ("undefined" === typeof florp || (florp.blog_type !== 'main' && florp.blog_type !== 'flashmob')) {
-        console.info("This is not the main or flashmob blog");
+      if ("undefined" === typeof florp || (-1 == jQuery.inArray("main", florp.blog_types) && -1 == jQuery.inArray("flashmob", florp.blog_types) && -1 == jQuery.inArray("international", florp.blog_types))) {
+        console.info("This is not the main, flashmob or international flashmob blog");
         return;
       }
       var errorCount = 0;
@@ -111,8 +103,12 @@ function add_florp_action_controllers() {
       }
       if (errorCount == 0) {
         sessionStorage.setItem("florpFormSubmitSuccessful", "1");
-        if (florp.blog_type === 'flashmob') {
-          console.info("Successful submission on the flashmob blog => clearing form")
+        if (formID == florp.form_id_flashmob || formID == florp.form_id_intf) {
+          if (formID == florp.form_id_flashmob) {
+            console.info("Successful submission on the flashmob blog => clearing form")
+          } else {
+            console.info("Successful submission on the international flashmob blog => clearing form")
+          }
           jQuery('.florp-clear-on-submission').find("input, select").each(function () {
             var $this = jQuery(this)
             if ($this.is("select")) {
@@ -170,7 +166,7 @@ function add_florp_action_controllers() {
           return
         }
 
-        if (florp.blog_type === 'main' && ("undefined" !== typeof florp.user_id || florp.user_id > 0)) {
+        if (formID == florp.form_id_flashmob && ("undefined" !== typeof florp.user_id || florp.user_id > 0)) {
           console.info("This is the main blog's profile form");
 
           // Replace the "flashmobbers" tab //

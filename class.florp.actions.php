@@ -211,7 +211,9 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
   //         $data[ 'errors' ][ 'form' ][] = '<pre>'.var_export($data['fields'], true).'</pre>';
   //       }
   //       $data[ 'errors' ][ 'form' ][] = 'DEVEL STOP';
-      } elseif (florp_is_flashmob_blog() && $form_id == florp_get_profile_form_id_flashmob()) {
+      } elseif ((florp_is_flashmob_blog() && $form_id == florp_get_profile_form_id_flashmob())
+             || (florp_is_intf_blog() && $form_id == florp_get_profile_form_id_intf())) {
+        $bIsIntfForm = ($form_id == florp_get_profile_form_id_intf());
         $bGenderOK = false;
         $aKeyToValue = array();
         $aKeyToLabel = array();
@@ -231,15 +233,21 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
           switch( $strKey ) {
             case "user_email":
               $strValue = trim( $strValue );
-              if (email_exists( $strValue ) || florp_flashmob_participant_exists( $strValue )) {
+              // if (email_exists( $strValue ) || (!$bIsIntfForm && florp_flashmob_participant_exists( $strValue )) || ($bIsIntfForm && florp_intf_participant_exists( $strValue ))) {
+              if ((!$bIsIntfForm && (email_exists( $strValue ) || florp_flashmob_participant_exists( $strValue ))) || ($bIsIntfForm && florp_intf_participant_exists( $strValue ))) {
                 $data[ 'errors' ][ 'form' ][$strKey] = 'Zadaný e-mail už je zaregistrovaný'; //__( 'The submitted email is in use already', 'florp' ); // Zadaný e-mail už je zaregistrovaný
               }
               break;
             case "gender":
               $bGenderOK = in_array($strValue, array("muz", "zena"));
+              break;
           }
           if ($strType === 'listselect' && $field_value['required'] == 1 && $strValue === 'null') {
-            $data[ 'errors' ][ 'form' ][$strKey] = '"'.$field_value['label'].'" je povinné pole';
+            if ($strKey == "intf_city" && florp_is_intf_city_poll_disabled()) {
+              // OK //
+            } else {
+              $data[ 'errors' ][ 'form' ][$strKey] = '"'.$field_value['label'].'" je povinné pole';
+            }
           } elseif ($strType === 'listradio' && $field_value['required'] == 1 && !$strValue) {
             $data[ 'errors' ][ 'form' ][$strKey] = '"'.$field_value['label'].'" je povinné pole';
           }
@@ -249,7 +257,7 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
         }
 //         $data[ 'errors' ][ 'form' ][] = '<pre>'.var_export($aKeyToLabel, true).'</pre>';
         if (isset($aKeyToValue['preferences']) && is_array($aKeyToValue['preferences']) && in_array("flashmob_participant_tshirt", $aKeyToValue['preferences'])) {
-          if (florp_is_tshirt_ordering_disabled()) {
+          if ((!$bIsIntfForm && florp_is_tshirt_ordering_disabled()) || ($bIsIntfForm && florp_is_intf_tshirt_ordering_disabled())) {
             $data[ 'errors' ][ 'form' ]['tshirt_ordering_disabled'] = 'Objednávanie tričiek je zastavené. Žiaľ, nejaká chyba Vám umožnila si vybrať tričko. Prosíme, zrušte si objednávku trička, aby ste mohli dokončiť prihlásenie. Ak sa objednávka trička nedá zrušiť, prosíme, obnovte si stránku.';
           } else {
             $aRequiredFields = array(

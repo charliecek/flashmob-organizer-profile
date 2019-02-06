@@ -50,7 +50,7 @@
 //   });
 
   jQuery( document ).on( 'ready', function() {
-    jQuery.fn.jBox = function (type, options){
+    jQuery.fn.jBox = function (type, options) {
       // Variables type and object are required
       !type && (type = {});
       !options && (options = {});
@@ -147,7 +147,7 @@
   }
 
   function florpRescrapeFbOgMapImage() {
-    if (florp.blog_type != 'main' || florp.using_og_map_image != 1) {
+    if (-1 === inArray("main", florp.blog_types) || florp.using_og_map_image != 1) {
       return
     }
     jQuery.post(
@@ -161,8 +161,8 @@
       }
     );
   }
-  function florp_reload_on_successful_submission() {
-    if (florp.reload_ok_submission != 1) {
+  function florp_reload_on_successful_submission(sReloadOkVar) {
+    if (florp[sReloadOkVar] != 1) {
       florpReloadMaps();
       return;
     }
@@ -789,17 +789,22 @@
     // Rescrape the FB OG map image //
     florpRescrapeFbOgMapImage();
 
-    if (florp.blog_type === "main") {
+    var bIsMapBlog = false
+    if (-1 < jQuery.inArray("main", florp.blog_types)) {
       var reloadMaps = jQuery(".florp-map[data-is-current-year='1'], .florp-map[data-map-type=teacher]");
-    } else if (florp.blog_type === "flashmob") {
+      bIsMapBlog = true
+    }
+    if (-1 < jQuery.inArray("flashmob", florp.blog_types)) {
       var reloadMaps = jQuery(".florp-map[data-is-current-year='1']");
-      var $popup = PUM.getPopup(florp.popup_id)
+      var $popup = PUM.getPopup(florp.popup_id_flashmob)
       var iUserID = $popup.data("userId")
       var divID = $popup.data("divId")
       if ("undefined" !== typeof iUserID && "undefined" !== typeof divID) {
         florp.maps.markerShownOnLoad[divID] = iUserID
       }
-    } else {
+      bIsMapBlog = true
+    }
+    if (!bIsMapBlog) {
       return
     }
     var fnReloadMarker = function (response) {
@@ -847,9 +852,15 @@
     reloadMaps.each(function () {
       var $this = jQuery(this);
       var id = $this.prop('id');
-      var $popup = PUM.getPopup(florp.popup_id)
+      var $popup = 0
+      if (-1 < jQuery.inArray("main", florp.blog_types)) {
+        $popup = PUM.getPopup(florp.popup_id_main)
+      }
+      if (-1 < jQuery.inArray("flashmob", florp.blog_types)) {
+        $popup = PUM.getPopup(florp.popup_id_flashmob)
+      }
       var popupUserID = $popup.data("userId")
-      if (("undefined" === typeof florp.user_id || florp.blog_type !== "main") && !(florp.blog_type === "flashmob" && "undefined" !== typeof popupUserID)) {
+      if (("undefined" === typeof florp.user_id || -1 === jQuery.inArray("main", florp.blog_types)) && !(-1 < jQuery.inArray("flashmob", florp.blog_types) && "undefined" !== typeof popupUserID)) {
         // reload all markers //
         console.info("Reloading all markers in map "+id)
         for (user_id in florp_map_options_object[id]) {
@@ -882,7 +893,7 @@
       } else {
         // reload only the marker of the logged in user //
         var iUserIDToReload = florp.user_id
-        if (florp.blog_type === "flashmob" && "undefined" !== typeof popupUserID) {
+        if (-1 < jQuery.inArray("flashmob", florp.blog_types) && "undefined" !== typeof popupUserID) {
           iUserIDToReload = popupUserID
         }
         console.info("Reloading marker "+iUserIDToReload+" in map "+id)
@@ -912,27 +923,37 @@
     });
   }
 
-  var fnGetTshirtImgPath = function( strImgCitySlug, color ) {
+  var fnGetTshirtImgPath = function( strImgCitySlug, color, bInternational = false ) {
     var strImgCitySlugLoc = "default"
-    if ("undefined" !== typeof florp.tshirt_imgs_couples && "undefined" !== typeof florp.tshirt_imgs_couples[strImgCitySlug] && florp.tshirt_imgs_couples[strImgCitySlug]) {
+    var strKey = "tshirt_imgs_couples", strPrefix = ""
+    if (bInternational) {
+      strKey = "intf_tshirt_imgs_couples"
+      strPrefix = "intf-"
+    }
+    if ("undefined" !== typeof florp[strKey] && "undefined" !== typeof florp[strKey][strImgCitySlug] && florp[strKey][strImgCitySlug]) {
       strImgCitySlugLoc = strImgCitySlug
     }
-    return florp.img_path+"t-shirt-chest-"+color+"-"+strImgCitySlugLoc+".png"
+    return florp.img_path+strPrefix+"t-shirt-chest-"+color+"-"+strImgCitySlugLoc+".png"
   }
-  var fnGetTshirtPreviewImgPath = function( strImgCitySlug, color ) {
-    if ("undefined" === typeof florp.tshirt_imgs_full || "undefined" === typeof florp.tshirt_imgs_full[color]) {
-      return fnGetTshirtImgPath( strImgCitySlug, color )
+  var fnGetTshirtPreviewImgPath = function( strImgCitySlug, color, bInternational = false ) {
+    var strKey = "tshirt_imgs_full", strPrefix = ""
+    if (bInternational) {
+      strKey = "intf_tshirt_imgs_full"
+      strPrefix = "intf-"
+    }
+    if ("undefined" === typeof florp[strKey] || "undefined" === typeof florp[strKey][color]) {
+      return fnGetTshirtImgPath( strImgCitySlug, color, bInternational )
     }
 
     var strImgCitySlugLoc = "default"
-    if ("undefined" !== typeof florp.tshirt_imgs_full[color][strImgCitySlug] && florp.tshirt_imgs_full[color][strImgCitySlug]) {
+    if ("undefined" !== typeof florp[strKey][color][strImgCitySlug] && florp[strKey][color][strImgCitySlug]) {
       strImgCitySlugLoc = strImgCitySlug
-    } else if ("undefined" !== typeof florp.tshirt_imgs_full[color]["default"] && florp.tshirt_imgs_full[color]["default"]) {
+    } else if ("undefined" !== typeof florp[strKey][color]["default"] && florp[strKey][color]["default"]) {
       // ok //
     } else {
-      return fnGetTshirtImgPath( strImgCitySlug, color )
+      return fnGetTshirtImgPath( strImgCitySlug, color, bInternational )
     }
-    return florp.img_path+"t-shirt-"+color+"-"+strImgCitySlugLoc+".png"
+    return florp.img_path+strPrefix+"t-shirt-"+color+"-"+strImgCitySlugLoc+".png"
   }
 
   function florpFixFormClasses() {
@@ -959,7 +980,7 @@
     }
 
     // Fix jBox info text style //
-    if (florp.popup_id > 0) {
+    if (florp.popup_id_main > 0 || florp.popup_id_flashmob > 0 || florp.popup_id_intf > 0) {
       jQuery('body').on('DOMNodeInserted', '.jBox-wrapper', function () {
         // console.log("jBox-wrapper div was created")
         var $this = jQuery( this )
@@ -1003,23 +1024,26 @@
       });
     }
 
-    // Replace tshirt color radio buttons with images //
-    var $tshirtColorRadioButtons = jQuery(".florp-participant-tshirt-color .nf-field-element ul>li input, .florp-leader-tshirt-color .nf-field-element ul>li input")
-    if ($tshirtColorRadioButtons.length > 0) {
-      $tshirtColorRadioButtons.each(function( index ) {
-        var $this = jQuery(this)
-        var color = $this.val()
-        var imgCitySlug = "default"
-        var tshirtImgPath = fnGetTshirtImgPath( imgCitySlug, color )
-        var tshirtImgPreviewPath = fnGetTshirtPreviewImgPath( imgCitySlug, color )
-        var $label = $this.parent().find("label")
-        $label.html(jQuery('<img id="florp-tshirt-color-label-img-'+index+'" data-color="'+color+'" data-preview-path="'+tshirtImgPreviewPath+'" class="florp-tshirt-color-label-img" src="'+tshirtImgPath+'"/>'))
-      })
-    }
+    jQuery.each([florp.form_id_main, florp.form_id_flashmob, florp.form_id_intf], function(i, iFormID) {
+      // Replace tshirt color radio buttons with images //
+      var $tshirtColorRadioButtons = jQuery("#nf-form-"+iFormID+"-cont .florp-participant-tshirt-color .nf-field-element ul>li input, .florp-leader-tshirt-color .nf-field-element ul>li input")
+      if ($tshirtColorRadioButtons.length > 0) {
+        $tshirtColorRadioButtons.each(function( index ) {
+          var $this = jQuery(this)
+          var color = $this.val()
+          var imgCitySlug = "default"
+          var bInternational = (iFormID == florp.form_id_intf)
+          var tshirtImgPath = fnGetTshirtImgPath( imgCitySlug, color, bInternational )
+          var tshirtImgPreviewPath = fnGetTshirtPreviewImgPath( imgCitySlug, color, bInternational )
+          var $label = $this.parent().find("label")
+          $label.html(jQuery('<img id="florp-tshirt-color-label-img-'+index+'" data-color="'+color+'" data-preview-path="'+tshirtImgPreviewPath+'" class="florp-tshirt-color-label-img" src="'+tshirtImgPath+'"/>'))
+        })
+      }
+    })
 
     // Turn .florp_disabled fields into disabled fields //
     jQuery(".florp_disabled select,.florp_disabled input").prop("disabled", true);
-    if (florp.blog_type === "main" && florp.has_participants == 1) {
+    if (-1 < jQuery.inArray("main", florp.blog_types) && florp.has_participants == 1) {
       jQuery("input.florp_flashmob_organizer").prop("disabled", true)
       jQuery(".florp_flashmob_city").prop("disabled", true)
     }
@@ -1082,7 +1106,7 @@
     }
 
     // FN to Toggle fields based on checked checkboxes //
-    var fnToggleFields = function($aTogglableCheckboxesLoc, strToggleType = "") {
+    var fnToggleFields = function($aTogglableCheckboxesLoc, strToggleType = "", iFormID) {
 //       console.log($aTogglableCheckboxesLoc)
       // Count checkboxes //
       $aTogglableCheckboxesLoc.each(function() {
@@ -1098,7 +1122,7 @@
             val = 'courses3'
           } else if ($this.parents(".florp_webpage_radiolist").length > 0) {
             val = 'webpage_own'
-            $checkbox = jQuery(".florp_webpage_radiolist input[type=radio][value=vlastna]")
+            $checkbox = jQuery("#nf-form-"+iFormID+"-cont .florp_webpage_radiolist input[type=radio][value=vlastna]")
           } else {
             console.warn("fnToggleFields called with type 'checkbox' on invalid item:")
             console.log($aTogglableCheckboxesLoc)
@@ -1107,7 +1131,7 @@
         } else {
           val = $this.val()
         }
-        var strTogglableFieldSelector = ".florp-"+strToggleType+"-field_"+val+" .nf-field-container"
+        var strTogglableFieldSelector = "#nf-form-"+iFormID+"-cont .florp-"+strToggleType+"-field_"+val+" .nf-field-container"
         var $aTogglableFieldsAll = jQuery(strTogglableFieldSelector)
 
         var bChecked = $checkbox.is(':checked')
@@ -1136,7 +1160,7 @@
           var $toggler = jQuery(strSelector+".florp-section-toggler")
           var $togglees = jQuery(strSelector+":not(.florp-section-toggler)")
           $toggler.data("open", 0).removeClass("active")
-//           $togglees.addClass("hidden")
+          // $togglees.addClass("hidden")
           florpAnimateHide($togglees)
         }
       })
@@ -1215,7 +1239,7 @@
     }
 
     // Add correct classes to buttons //
-    var buttons = jQuery(".florp-button,florp-profile-form-wrapper-div input[type=button]");
+    var buttons = jQuery(".florp-button,#florp-profile-form-wrapper-div input[type=button]");
     buttons.each(function () {
       var $this = jQuery(this);
       if (!$this.hasClass("button")) {
@@ -1270,11 +1294,31 @@
       jQuery('#t-shirt-preview').remove();
     })
 
-    if (florp.blog_type === "main") {
+    var fnChangeProfileTshirtImgs = function($city, iFormID) {
+      var strImgCitySlug = $city.val().toLowerCase().replace(/\s+/g, "-").replace(/[^a-zA-Z0-9_-]/g, "_")
+      if ("undefined" === typeof nfForms || "undefined" === typeof florp || "undefined" === typeof iFormID) {
+        return;
+      }
+      var $form = jQuery("#nf-form-"+iFormID+"-cont")
+      var $tshirtImgs = $form.find(".florp-tshirt-color-label-img")
+      $tshirtImgs.data("formId", iFormID).data("strCitySlug", strImgCitySlug)
+      $tshirtImgs.each(function(index) {
+        var $this = jQuery(this)
+        var color = $this.data("color")
+        var strImgCitySlugLoc = $this.data("strCitySlug")
+        var iFormIDLoc = $this.data("formId")
+        var bInternational = (iFormIDLoc == florp.form_id_intf)
+        var tshirtImgPath = fnGetTshirtImgPath( strImgCitySlugLoc, color, bInternational )
+        var tshirtImgPreviewPath = fnGetTshirtPreviewImgPath( strImgCitySlugLoc, color, bInternational )
+        $this.prop("src", tshirtImgPath).data( "previewPath", tshirtImgPreviewPath )
+      })
+    }
+
+    if (-1 < jQuery.inArray("main", florp.blog_types)) {
       // Toggle fields based on checkboxes //
-      fnToggleFields($aTogglableSingleCheckboxCheckboxes, "checkbox");
+      fnToggleFields($aTogglableSingleCheckboxCheckboxes, "checkbox", florp.form_id_main);
       $aTogglableSingleCheckboxCheckboxes.change(function () {
-        fnToggleFields(jQuery(this), "checkbox");
+        fnToggleFields(jQuery(this), "checkbox", florp.form_id_main);
       });
 
       if ("undefined" === typeof florp.user_id ) {
@@ -1283,10 +1327,10 @@
         return
       }
 
-      var $florpUserCitySelect = jQuery(".florp_user_city");
-      var $florpFlashmobCitySelect = jQuery(".florp_flashmob_city");
-      var $florpCoursesCitySelect = jQuery(".florp_courses_city");
-      var $florpNonUserCitySelects = jQuery(".florp_flashmob_city,.florp_courses_city")
+      var $florpUserCitySelect = jQuery("#nf-form-"+florp.form_id_main+"-cont .florp_user_city");
+      var $florpFlashmobCitySelect = jQuery("#nf-form-"+florp.form_id_main+"-cont select.florp_flashmob_city");
+      var $florpCoursesCitySelect = jQuery("#nf-form-"+florp.form_id_main+"-cont select.florp_courses_city");
+      var $florpNonUserCitySelects = jQuery("#nf-form-"+florp.form_id_main+"-cont .florp_flashmob_city,#nf-form-"+florp.form_id_main+"-cont .florp_courses_city")
       $florpNonUserCitySelects.each(function () {
         var $this = jQuery(this)
         if ($this.val() === "null") {
@@ -1319,27 +1363,11 @@
       })
 
       // Replace tshirt color radio buttons with images //
-      var fnChangeProfileTshirtImgs = function($city) {
-        var strImgCitySlug = $city.val().toLowerCase().replace(/\s+/g, "-").replace(/[^a-zA-Z0-9_-]/g, "_")
-//         console.log(strImgCitySlug)
-        if ("undefined" === typeof nfForms || "undefined" === typeof florp || "undefined" === typeof florp.form_id) {
-          return;
-        }
-        var $form = jQuery("#florp-profile-form-wrapper-div #nf-form-"+florp.form_id+"-cont")
-        var $tshirtImgs = $form.find(".florp-tshirt-color-label-img")
-        $tshirtImgs.each(function(index) {
-          var $this = jQuery(this)
-          var color = $this.data("color")
-          var tshirtImgPath = fnGetTshirtImgPath( strImgCitySlug, color )
-          var tshirtImgPreviewPath = fnGetTshirtPreviewImgPath( strImgCitySlug, color )
-          $this.prop("src", tshirtImgPath).data( "previewPath", tshirtImgPreviewPath )
-        })
-      }
       $florpFlashmobCitySelect.each(function(index) {
-        fnChangeProfileTshirtImgs(jQuery(this))
+        fnChangeProfileTshirtImgs(jQuery(this), florp.form_id_main)
       })
       $florpFlashmobCitySelect.change(function() {
-        fnChangeProfileTshirtImgs(jQuery(this))
+        fnChangeProfileTshirtImgs(jQuery(this), florp.form_id_main)
       })
 
       // Add correct classes to map refresh buttons //
@@ -1716,16 +1744,17 @@
       fnReloadCoursesMap()
       fnBindReloadCoursesMapEvents()
       // END reload courses //
-    } else if (florp.blog_type === "flashmob") {
+    }
+    if (-1 < jQuery.inArray("flashmob", florp.blog_types)) {
       // Get create and populate the togglable checkbox values into an array //
-      $aPreferenceTogglerCheckboxes = jQuery(".florp_preferences_container input[type=checkbox]")
-      fnToggleFields($aPreferenceTogglerCheckboxes, "preference");
+      $aPreferenceTogglerCheckboxes = jQuery("#nf-form-"+florp.form_id_flashmob+"-cont .florp_preferences_container input[type=checkbox]")
+      fnToggleFields($aPreferenceTogglerCheckboxes, "preference", florp.form_id_flashmob);
       $aPreferenceTogglerCheckboxes.change(function() {
         var $this = jQuery(this)
-        fnToggleFields($this, "preference");
+        fnToggleFields($this, "preference", florp.form_id_flashmob);
       })
       if (florp.tshirt_ordering_disabled == "1") {
-        $tshirtPreferenceCheckbox = jQuery(".florp_preferences_container input[type=checkbox][value=flashmob_participant_tshirt]")
+        $tshirtPreferenceCheckbox = jQuery("#nf-form-"+florp.form_id_flashmob+"-cont .florp_preferences_container input[type=checkbox][value=flashmob_participant_tshirt]")
         $tshirtPreferenceCheckbox.prop("disabled", true)
         var bHide = (florp.tshirt_ordering_only_disable != "1")
         if (bHide) {
@@ -1733,9 +1762,39 @@
 //           $tshirtPreferenceCheckbox.css("visibility", "hidden")
 //           jQuery("label[for="+id+"]").css("visibility", "hidden")
           $tshirtPreferenceCheckbox.hide()
-          jQuery("label[for="+id+"]").hide()
+          jQuery("#nf-form-"+florp.form_id_flashmob+"-cont label[for="+id+"]").hide()
         }
       }
+    }
+    if (-1 < jQuery.inArray("international", florp.blog_types)) {
+      // console.log("international")
+      // Get create and populate the togglable checkbox values into an array //
+      var $florpFlashmobCitySelect = jQuery("#nf-form-"+florp.form_id_intf+"-cont select.florp_flashmob_city");
+      $aPreferenceTogglerCheckboxes = jQuery("#nf-form-"+florp.form_id_intf+"-cont .florp_preferences_container input[type=checkbox]")
+      fnToggleFields($aPreferenceTogglerCheckboxes, "preference", florp.form_id_intf);
+      $aPreferenceTogglerCheckboxes.change(function() {
+        var $this = jQuery(this)
+        fnToggleFields($this, "preference", florp.form_id_intf);
+      })
+      if (florp.tshirt_ordering_disabled_intf == "1") {
+        $tshirtPreferenceCheckbox = jQuery("#nf-form-"+florp.form_id_intf+"-cont .florp_preferences_container input[type=checkbox][value=flashmob_participant_tshirt]")
+        $tshirtPreferenceCheckbox.prop("disabled", true)
+        var bHide = (florp.tshirt_ordering_only_disable_intf != "1")
+        if (bHide) {
+          var id = $tshirtPreferenceCheckbox.attr("id")
+//           $tshirtPreferenceCheckbox.css("visibility", "hidden")
+//           jQuery("label[for="+id+"]").css("visibility", "hidden")
+          $tshirtPreferenceCheckbox.hide()
+          jQuery("#nf-form-"+florp.form_id_intf+"-cont label[for="+id+"]").hide()
+        }
+      }
+      // Replace tshirt color radio buttons with images //
+      $florpFlashmobCitySelect.each(function(index) {
+        fnChangeProfileTshirtImgs(jQuery(this), florp.form_id_intf)
+      })
+      $florpFlashmobCitySelect.change(function() {
+        fnChangeProfileTshirtImgs(jQuery(this), florp.form_id_intf)
+      })
     }
   }
 
@@ -1808,10 +1867,10 @@
     }
   });
 
-  jQuery(document).on( 'pumAfterOpen', '#pum-'+florp.popup_id, function () {
+  jQuery(document).on( 'pumAfterOpen', '#pum-'+florp.popup_id_main+', #pum-'+florp.popup_id_flashmob+', #pum-'+florp.popup_id_intf, function () {
     var $popup = PUM.getPopup(this);
     if (!$popup.length || !$popup.hasClass('pum')) { $popup = jQuery(this); console.warn("Trying to get the popup object by jQuery from 'this'"); }
-    if (!$popup.length || !$popup.hasClass('pum')) { $popup = jQuery('#pum-'+florp.popup_id); console.warn("Trying to get the popup object by jQuery from ID"); }
+    // if (!$popup.length || !$popup.hasClass('pum')) { $popup = jQuery('#pum-'+florp.popup_id); console.warn("Trying to get the popup object by jQuery from ID"); }
     if (!$popup.length || !$popup.hasClass('pum')) { console.warn("Couldn't get the popup object!"); return; }
     var settings = $popup.popmake('getSettings');
     if (settings.close_on_overlay_click) {
@@ -1834,19 +1893,24 @@
   });
 
   jQuery(document).on( 'click', '.florp-click-participant-trigger', function () {
-    if (florp.popup_id > 0) {
+    // Flashmob specific //
+    if (florp.popup_id_flashmob > 0) {
       var $this = jQuery(this),
           iUserID = $this.data("userId"),
           strDivID = $this.data("divId"),
-          strFlashmobCity = $this.data("flashmobCity"),
-          strImgCitySlug = strFlashmobCity.toLowerCase().replace(/\s+/g, "-").replace(/[^a-zA-Z0-9_-]/g, "_")
+          strFlashmobCity = $this.data("flashmobCity")
+      if ("undefined" === typeof strFlashmobCity) {
+        console.warn("Missing flashmobCity data attribute; not opening popup")
+        return
+      }
+      var strImgCitySlug = strFlashmobCity.toLowerCase().replace(/\s+/g, "-").replace(/[^a-zA-Z0-9_-]/g, "_")
       // console.log($this)
-      var $form = jQuery("#florp-profile-form-wrapper-div #nf-form-"+florp.form_id+"-cont")
+      var $form = jQuery("#nf-form-"+florp.form_id_flashmob+"-cont")
       if ("undefined" === typeof nfForms) {
         return;
       }
       nfForms.forEach(function (oForm) {
-        if (oForm.id == florp.form_id) {
+        if (oForm.id == florp.form_id_flashmob) {
           oForm.fields.forEach(function (oField) {
             if (oField.key === 'leader_user_id') {
               jQuery( '#nf-field-' + oField.id ).val( iUserID ).trigger('change')
@@ -1860,17 +1924,41 @@
       $tshirtImgs.each(function(index) {
         var $this = jQuery(this)
         var color = $this.data("color")
-        var tshirtImgPath = fnGetTshirtImgPath( strImgCitySlug, color )
-        var tshirtImgPreviewPath = fnGetTshirtPreviewImgPath( strImgCitySlug, color )
+        var tshirtImgPath = fnGetTshirtImgPath( strImgCitySlug, color, false )
+        var tshirtImgPreviewPath = fnGetTshirtPreviewImgPath( strImgCitySlug, color, false )
         $this.prop("src", tshirtImgPath).data( "previewPath", tshirtImgPreviewPath )
       })
-      PUM.getPopup(florp.popup_id).data("markerKey", $this.data("markerKey")).data("userId", iUserID).data("divId", strDivID)
-      PUM.open(florp.popup_id);
+      PUM.getPopup(florp.popup_id_flashmob).data("markerKey", $this.data("markerKey")).data("userId", iUserID).data("divId", strDivID)
+      PUM.open(florp.popup_id_flashmob);
     }
   })
 
-  jQuery(document).on( 'pumAfterOpen', '#pum-'+florp.popup_id, function () {
-    sessionStorage.setItem("florpFormSubmitSuccessful", "0");
+  jQuery(document).on( 'click', '.florp-click-international-participant-trigger', function () {
+    // International Flashmob specific //
+    if (florp.popup_id_intf > 0) {
+      var $this = jQuery(this),
+          strImgCitySlug = "default"
+      // console.log($this)
+      var $form = jQuery("#nf-form-"+florp.form_id_intf+"-cont")
+      if ("undefined" === typeof nfForms) {
+        return;
+      }
+      var $tshirtImgs = $form.find(".florp-tshirt-color-label-img")
+      $tshirtImgs.each(function(index) {
+        var $this = jQuery(this)
+        var color = $this.data("color")
+        var tshirtImgPath = fnGetTshirtImgPath( strImgCitySlug, color, true )
+        var tshirtImgPreviewPath = fnGetTshirtPreviewImgPath( strImgCitySlug, color, true )
+        $this.prop("src", tshirtImgPath).data( "previewPath", tshirtImgPreviewPath )
+      })
+      PUM.open(florp.popup_id_intf);
+    }
+  })
+
+  jQuery(document).on( 'pumAfterOpen',
+    '#pum-'+florp.popup_id_main+', #pum-'+florp.popup_id_flashmob+', #pum-'+florp.popup_id_intf,
+    function () {
+      sessionStorage.setItem("florpFormSubmitSuccessful", "0");
   });
 
   // jQuery(document).on( 'pumBeforeOpen', '#pum-'+florp.popup_id, function () {
@@ -1878,16 +1966,16 @@
   //   jQuery(".jBox-wrapper").addClass("z-index-1999999999")
   // });
 
-  jQuery(document).on( 'pumBeforeClose', '#pum-'+florp.popup_id, florpScrollToAnchor );
-  // jQuery(document).on( 'pumAfterClose', '#pum-'+florp.popup_id, florpScrollToAnchor );
-  jQuery(document).on( 'pumBeforeClose', '#pum-'+florp.popup_id, florp_reload_on_successful_submission );
+  jQuery(document).on( 'pumBeforeClose', '#pum-'+florp.popup_id_main+', #pum-'+florp.popup_id_flashmob+', #pum-'+florp.popup_id_intf, florpScrollToAnchor );
+  jQuery(document).on( 'pumBeforeClose', '#pum-'+florp.popup_id_main, function() {florp_reload_on_successful_submission("reload_ok_submission_main")} );
+  jQuery(document).on( 'pumBeforeClose', '#pum-'+florp.popup_id_flashmob, function() {florp_reload_on_successful_submission("reload_ok_submission_flashmob")} );
 
   jQuery( document ).on( 'nfFormReady', function() {
     florpFixFormClasses();
 
     // Trigger the popup //
-    if (florp.do_trigger_popup_click) {
-      jQuery("."+florp.click_trigger_class).first().trigger( "click" );
+    if (florp.do_trigger_popup_click_main) {
+      jQuery("."+florp.click_trigger_class_main).first().trigger( "click" );
       console.log("click triggered");
     }
 
@@ -1970,8 +2058,8 @@
       });
     }
 
-    if (florp.blog_type === "main" && "undefined" === typeof florp.user_id ) {
-      jQuery("#pum_popup_title_"+florp.popup_id).html("Registrácia");
+    if (-1 < jQuery.inArray("main", florp.blog_types) && "undefined" === typeof florp.user_id ) {
+      jQuery("#pum_popup_title_"+florp.popup_id_main).html("Registrácia");
       // console.log(jQuery("#pum_popup_title_"+florp.popup_id))
     }
 

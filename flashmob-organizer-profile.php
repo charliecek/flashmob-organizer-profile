@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.6.12
+ * Version: 4.7.0
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,14 +16,16 @@
 
 class FLORP{
 
-  private $strVersion = '4.6.12';
+  private $strVersion = '4.7.0';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iIntfBlogID = 6;
   private $iProfileFormNinjaFormIDMain;
   private $iProfileFormNinjaFormIDFlashmob;
+  private $iProfileFormNinjaFormIDIntf;
   private $iProfileFormPopupIDMain;
   private $iProfileFormPopupIDFlashmob;
+  private $iProfileFormPopupIDIntf;
   private $strOptionsPageSlug = 'florp-options';
   private $strOptionKey = 'florp-options';
   private $aOptionDefaults = array();
@@ -38,6 +40,8 @@ class FLORP{
   private $aLocationFields;
   private $strProfileFormWrapperID = 'florp-profile-form-wrapper-div';
   private $strClickTriggerClass = 'florp-click-register-trigger';
+  private $strClickTriggerClassFlashmob = 'florp-click-participant-trigger';
+  private $strClickTriggerClassIntf = 'florp-click-international-participant-trigger';
   private $strClickTriggerGetParam = 'popup-florp';
   private $strClickTriggerAnchor = 'popup-florp';
   private $strClickTriggerCookieKey = 'florp-popup';
@@ -54,6 +58,7 @@ class FLORP{
   private $isIntfBlog = false;
   private $iProfileFormPageIDMain;
   private $iProfileFormPageIDFlashmob;
+  private $iProfileFormPageIDIntf;
   private $strUserRolePending = 'florp-pending';
   private $strUserRoleApproved = 'subscriber';
   private $strUserRolePendingName = "Čaká na schválenie";
@@ -61,9 +66,12 @@ class FLORP{
   private $strUserApprovedMessage;
   private $strBeforeLoginFormHtmlMain;
   private $strBeforeLoginFormHtmlFlashmob;
+  private $strBeforeLoginFormHtmlIntf;
   private $iFlashmobTimestamp = 0;
+  private $iIntfFlashmobTimestamp = 0;
   private $bHideFlashmobFields;
   private $aSubscriberTypes = array("flashmob_organizer", "teacher");
+  private $bIntfCityPollDisabled = false;
 
   public function __construct() {
     $this->load_options();
@@ -564,6 +572,7 @@ class FLORP{
       'strUserApprovedSubject'                    => 'Vaša registrácia na %BLOGURL% bola schválená',
       'strBeforeLoginFormHtmlMain'                => '',
       'strBeforeLoginFormHtmlFlashmob'            => '',
+      'strBeforeLoginFormHtmlIntf'                => '',
       'strGoogleMapsKeyStatic'                    => 'AIzaSyC_g9bY9qgW7mA0L1EupZ4SDYrBQWWi-V0',
       'strGoogleMapsKey'                          => 'AIzaSyBaPowbVdIBpJqo_yhEfLn1v60EWbow6ZY',
       'strFbAppID'                                => '768253436664320',
@@ -574,6 +583,7 @@ class FLORP{
       'strNewsletterListsMain'                    => '',
       'strNewsletterListsFlashmob'                => '',
       'aParticipants'                             => array(),
+      'aIntfParticipants'                         => array(),
       'aTshirts'                                  => array( "leaders" => array(), "participants" => array() ),
       'aOrderDates'                               => array(),
       'strParticipantRegisteredSubject'           => 'Boli ste prihásený na flashmob',
@@ -623,6 +633,25 @@ class FLORP{
       'iTshirtOrderDeliveredBeforeFlashmobDdl'    => 9,
       'aUnhideFlashmobFieldsForUsers'             => array(),
       'aHideFlashmobFieldsForUsers'               => array(),
+      'strIntfParticipantRegisteredSubject'       => 'Boli ste prihásený na medzinárodný flashmob',
+      'iIntfTshirtOrderDeliveredBeforeFlashmobDdl'=> 9,
+      'bIntfTshirtOrderingDisabled'               => false,
+      'bIntfTshirtOrderingDisabledOnlyDisable'    => false,
+      'iIntfTshirtPaymentWarningButtonDeadline'   => -1,
+      'iIntfTshirtPaymentWarningDeadline'         => 14,
+      'iIntfCityPollDeadline'                     => 31,
+      'strIntfTshirtPaymentWarningNotificationSbj'=> 'Chýba nám platba za objednané tričko',
+      'strNewsletterListsIntf'                    => '',
+      'strIntfParticipantRegisteredMessage'       => '<p>Ďakujeme, že ste sa prihlásili na flashmob!</p>
+<p>Váš SalsaRueda.Dance team</p>',
+      'strIntfTshirtPaymentWarningNotificationMsg'=> '<p>Prosíme, pošlite platbu za objednané tričko.</p><p>Váš SalsaRueda.Dance team</p>',
+      'iIntfFlashmobYear'                         => intval(date( 'Y' )),
+      'iIntfFlashmobMonth'                        => 1,
+      'iIntfFlashmobDay'                          => 1,
+      'iIntfFlashmobHour'                         => 0,
+      'iIntfFlashmobMinute'                       => 0,
+      'aIntfCityPollUsers'                        => get_users( ['blog_id' => $this->iMainBlogID, 'role' => $this->strUserRoleApproved, 'fields' => 'ID'] ),
+      'strIntfCityPollExtraCities'                => '',
     );
   }
 
@@ -631,82 +660,101 @@ class FLORP{
     $this->aOptions = get_site_option( $this->strOptionKey, array() );
     $this->aOptionDefaults = $this->get_default_options();
     $this->aOptionFormKeys = array(
-      'florp_reload_after_ok_submission_main'     => 'bReloadAfterSuccessfulSubmissionMain',
-      'florp_reload_after_ok_submission_flashmob' => 'bReloadAfterSuccessfulSubmissionFlashmob',
-      'florp_flashmob_year'                       => 'iFlashmobYear',
-      'florp_flashmob_month'                      => 'iFlashmobMonth',
-      'florp_flashmob_day'                        => 'iFlashmobDay',
-      'florp_flashmob_hour'                       => 'iFlashmobHour',
-      'florp_flashmob_minute'                     => 'iFlashmobMinute',
-      'florp_flashmob_blog_id'                    => 'iFlashmobBlogID',
-      'florp_main_blog_id'                        => 'iMainBlogID',
-      'florp_newsletter_blog_id'                  => 'iNewsletterBlogID',
-      'florp_clone_source_blog_id'                => 'iCloneSourceBlogID',
-      'florp_intf_blog_id'                        => 'iIntfBlogID',
-      'florp_profile_form_ninja_form_id_main'     => 'iProfileFormNinjaFormIDMain',
-      'florp_profile_form_popup_id_main'          => 'iProfileFormPopupIDMain',
-      'florp_profile_form_ninja_form_id_flashmob' => 'iProfileFormNinjaFormIDFlashmob',
-      'florp_profile_form_popup_id_flashmob'      => 'iProfileFormPopupIDFlashmob',
-      'florp_profile_form_ninja_form_id_intf'     => 'iProfileFormNinjaFormIDIntf',
-      'florp_profile_form_popup_id_intf'          => 'iProfileFormPopupIDIntf',
-      'florp_load_maps_lazy'                      => 'bLoadMapsLazy',
-      'florp_load_maps_async'                     => 'bLoadMapsAsync',
-      'florp_load_videos_lazy'                    => 'bLoadVideosLazy',
-      'florp_use_map_image'                       => 'bUseMapImage',
-      'florp_profile_form_page_id_main'           => 'iProfileFormPageIDMain',
-      'florp_profile_form_page_id_flashmob'       => 'iProfileFormPageIDFlashmob',
-      'florp_profile_form_page_id_intf'           => 'iProfileFormPageIDIntf',
-      'florp_pending_user_page_content_html'      => 'strPendingUserPageContentHTML',
-      'florp_user_approved_message'               => 'strUserApprovedMessage',
-      'florp_user_approved_subject'               => 'strUserApprovedSubject',
-      'florp_approve_users_automatically'         => 'bApproveUsersAutomatically',
-      'florp_before_login_form_html_main'         => 'strBeforeLoginFormHtmlMain',
-      'florp_before_login_form_html_flashmob'     => 'strBeforeLoginFormHtmlFlashmob',
-      'florp_google_maps_key'                     => 'strGoogleMapsKey',
-      'florp_google_maps_key_static'              => 'strGoogleMapsKeyStatic',
-      'florp_fb_app_id'                           => 'strFbAppID',
-      'florp_registration_successful_message'     => 'strRegistrationSuccessfulMessage',
-      'florp_login_successful_message'            => 'strLoginSuccessfulMessage',
-      'florp_prevent_direct_media_downloads'      => 'bPreventDirectMediaDownloads',
-      'florp_newsletter_api_key'                  => 'strNewsletterAPIKey',
-      'florp_newsletter_lists_main'               => 'strNewsletterListsMain',
-      'florp_newsletter_lists_flashmob'           => 'strNewsletterListsFlashmob',
-      'florp_participant_registered_subject'      => 'strParticipantRegisteredSubject',
-      'florp_participant_registered_message'      => 'strParticipantRegisteredMessage',
-      'florp_participant_removed_subject'         => 'strParticipantRemovedSubject',
-      'florp_participant_removed_message'         => 'strParticipantRemovedMessage',
-      'florp_leader_participant_list_notif_msg'   => 'strLeaderParticipantListNotificationMsg',
-      'florp_leader_participant_list_notif_sbj'   => 'strLeaderParticipantListNotificationSbj',
-      'florp_login_bar_label_login'               => 'strLoginBarLabelLogin',
-      'florp_login_bar_label_logout'              => 'strLoginBarLabelLogout',
-      'florp_login_bar_label_profile'             => 'strLoginBarLabelProfile',
-      'florp_infowindow_template_organizer'       => 'strMarkerInfoWindowTemplateOrganizer',
-      'florp_infowindow_template_teacher'         => 'strMarkerInfoWindowTemplateTeacher',
-      'florp_signup_link_label'                   => 'strSignupLinkLabel',
-      'florp_infowindow_label_organizer'          => 'strInfoWindowLabel_organizer',
-      'florp_infowindow_label_teacher'            => 'strInfoWindowLabel_teacher',
-      'florp_infowindow_label_signup'             => 'strInfoWindowLabel_signup',
-      'florp_infowindow_label_participant_count'  => 'strInfoWindowLabel_participant_count',
-      'florp_infowindow_label_year'               => 'strInfoWindowLabel_year',
-      'florp_infowindow_label_dancers'            => 'strInfoWindowLabel_dancers',
-      'florp_infowindow_label_school'             => 'strInfoWindowLabel_school',
-      'florp_infowindow_label_web'                => 'strInfoWindowLabel_web',
-      'florp_infowindow_label_facebook'           => 'strInfoWindowLabel_facebook',
-      'florp_infowindow_label_note'               => 'strInfoWindowLabel_note',
-      'florp_infowindow_label_embed_code'         => 'strInfoWindowLabel_embed_code',
-      'florp_infowindow_label_courses_info'       => 'strInfoWindowLabel_courses_info',
-      'florp_courses_number_enabled'              => 'iCoursesNumberEnabled',
-      'florp_tshirt_payment_warning_notif_sbj'    => 'strTshirtPaymentWarningNotificationSbj',
-      'florp_tshirt_payment_warning_notif_msg'    => 'strTshirtPaymentWarningNotificationMsg',
-      'florp_tshirt_ordering_disabled'            => 'bTshirtOrderingDisabled',
-      'florp_tshirt_ordering_only_disable'        => 'bTshirtOrderingDisabledOnlyDisable',
-      'florp_only_florp_profile_nf_flashmob'      => 'bOnlyFlorpProfileNinjaFormFlashmob',
-      'florp_only_florp_profile_nf_main'          => 'bOnlyFlorpProfileNinjaFormMain',
-      'florp_tshirt_payment_warning_deadline'     => 'iTshirtPaymentWarningDeadline',
-      'florp_tshirt_payment_warning_btn_deadline' => 'iTshirtPaymentWarningButtonDeadline',
-      'florp_tshirt_order_delivered_b4_flash_ddl' => 'iTshirtOrderDeliveredBeforeFlashmobDdl',
-      'florp_hide_flashmob_fields_individual'     => 'aHideFlashmobFieldsForUsers',
-      'florp_unhide_flashmob_fields_individual'   => 'aUnhideFlashmobFieldsForUsers',
+      'florp_reload_after_ok_submission_main'         => 'bReloadAfterSuccessfulSubmissionMain',
+      'florp_reload_after_ok_submission_flashmob'     => 'bReloadAfterSuccessfulSubmissionFlashmob',
+      'florp_flashmob_year'                           => 'iFlashmobYear',
+      'florp_flashmob_month'                          => 'iFlashmobMonth',
+      'florp_flashmob_day'                            => 'iFlashmobDay',
+      'florp_flashmob_hour'                           => 'iFlashmobHour',
+      'florp_flashmob_minute'                         => 'iFlashmobMinute',
+      'florp_flashmob_blog_id'                        => 'iFlashmobBlogID',
+      'florp_main_blog_id'                            => 'iMainBlogID',
+      'florp_newsletter_blog_id'                      => 'iNewsletterBlogID',
+      'florp_clone_source_blog_id'                    => 'iCloneSourceBlogID',
+      'florp_intf_blog_id'                            => 'iIntfBlogID',
+      'florp_profile_form_ninja_form_id_main'         => 'iProfileFormNinjaFormIDMain',
+      'florp_profile_form_popup_id_main'              => 'iProfileFormPopupIDMain',
+      'florp_profile_form_ninja_form_id_flashmob'     => 'iProfileFormNinjaFormIDFlashmob',
+      'florp_profile_form_popup_id_flashmob'          => 'iProfileFormPopupIDFlashmob',
+      'florp_profile_form_ninja_form_id_intf'         => 'iProfileFormNinjaFormIDIntf',
+      'florp_profile_form_popup_id_intf'              => 'iProfileFormPopupIDIntf',
+      'florp_load_maps_lazy'                          => 'bLoadMapsLazy',
+      'florp_load_maps_async'                         => 'bLoadMapsAsync',
+      'florp_load_videos_lazy'                        => 'bLoadVideosLazy',
+      'florp_use_map_image'                           => 'bUseMapImage',
+      'florp_profile_form_page_id_main'               => 'iProfileFormPageIDMain',
+      'florp_profile_form_page_id_flashmob'           => 'iProfileFormPageIDFlashmob',
+      'florp_profile_form_page_id_intf'               => 'iProfileFormPageIDIntf',
+      'florp_pending_user_page_content_html'          => 'strPendingUserPageContentHTML',
+      'florp_user_approved_message'                   => 'strUserApprovedMessage',
+      'florp_user_approved_subject'                   => 'strUserApprovedSubject',
+      'florp_approve_users_automatically'             => 'bApproveUsersAutomatically',
+      'florp_before_login_form_html_main'             => 'strBeforeLoginFormHtmlMain',
+      'florp_before_login_form_html_flashmob'         => 'strBeforeLoginFormHtmlFlashmob',
+      'florp_before_login_form_html_intf'             => 'strBeforeLoginFormHtmlIntf',
+      'florp_google_maps_key'                         => 'strGoogleMapsKey',
+      'florp_google_maps_key_static'                  => 'strGoogleMapsKeyStatic',
+      'florp_fb_app_id'                               => 'strFbAppID',
+      'florp_registration_successful_message'         => 'strRegistrationSuccessfulMessage',
+      'florp_login_successful_message'                => 'strLoginSuccessfulMessage',
+      'florp_prevent_direct_media_downloads'          => 'bPreventDirectMediaDownloads',
+      'florp_newsletter_api_key'                      => 'strNewsletterAPIKey',
+      'florp_newsletter_lists_main'                   => 'strNewsletterListsMain',
+      'florp_newsletter_lists_flashmob'               => 'strNewsletterListsFlashmob',
+      'florp_participant_registered_subject'          => 'strParticipantRegisteredSubject',
+      'florp_participant_registered_message'          => 'strParticipantRegisteredMessage',
+      'florp_participant_removed_subject'             => 'strParticipantRemovedSubject',
+      'florp_participant_removed_message'             => 'strParticipantRemovedMessage',
+      'florp_leader_participant_list_notif_msg'       => 'strLeaderParticipantListNotificationMsg',
+      'florp_leader_participant_list_notif_sbj'       => 'strLeaderParticipantListNotificationSbj',
+      'florp_login_bar_label_login'                   => 'strLoginBarLabelLogin',
+      'florp_login_bar_label_logout'                  => 'strLoginBarLabelLogout',
+      'florp_login_bar_label_profile'                 => 'strLoginBarLabelProfile',
+      'florp_infowindow_template_organizer'           => 'strMarkerInfoWindowTemplateOrganizer',
+      'florp_infowindow_template_teacher'             => 'strMarkerInfoWindowTemplateTeacher',
+      'florp_signup_link_label'                       => 'strSignupLinkLabel',
+      'florp_infowindow_label_organizer'              => 'strInfoWindowLabel_organizer',
+      'florp_infowindow_label_teacher'                => 'strInfoWindowLabel_teacher',
+      'florp_infowindow_label_signup'                 => 'strInfoWindowLabel_signup',
+      'florp_infowindow_label_participant_count'      => 'strInfoWindowLabel_participant_count',
+      'florp_infowindow_label_year'                   => 'strInfoWindowLabel_year',
+      'florp_infowindow_label_dancers'                => 'strInfoWindowLabel_dancers',
+      'florp_infowindow_label_school'                 => 'strInfoWindowLabel_school',
+      'florp_infowindow_label_web'                    => 'strInfoWindowLabel_web',
+      'florp_infowindow_label_facebook'               => 'strInfoWindowLabel_facebook',
+      'florp_infowindow_label_note'                   => 'strInfoWindowLabel_note',
+      'florp_infowindow_label_embed_code'             => 'strInfoWindowLabel_embed_code',
+      'florp_infowindow_label_courses_info'           => 'strInfoWindowLabel_courses_info',
+      'florp_courses_number_enabled'                  => 'iCoursesNumberEnabled',
+      'florp_tshirt_payment_warning_notif_sbj'        => 'strTshirtPaymentWarningNotificationSbj',
+      'florp_tshirt_payment_warning_notif_msg'        => 'strTshirtPaymentWarningNotificationMsg',
+      'florp_tshirt_ordering_disabled'                => 'bTshirtOrderingDisabled',
+      'florp_tshirt_ordering_only_disable'            => 'bTshirtOrderingDisabledOnlyDisable',
+      'florp_only_florp_profile_nf_flashmob'          => 'bOnlyFlorpProfileNinjaFormFlashmob',
+      'florp_only_florp_profile_nf_main'              => 'bOnlyFlorpProfileNinjaFormMain',
+      'florp_tshirt_payment_warning_deadline'         => 'iTshirtPaymentWarningDeadline',
+      'florp_tshirt_payment_warning_btn_deadline'     => 'iTshirtPaymentWarningButtonDeadline',
+      'florp_tshirt_order_delivered_b4_flash_ddl'     => 'iTshirtOrderDeliveredBeforeFlashmobDdl',
+      'florp_hide_flashmob_fields_individual'         => 'aHideFlashmobFieldsForUsers',
+      'florp_unhide_flashmob_fields_individual'       => 'aUnhideFlashmobFieldsForUsers',
+      'florp_intf_participant_registered_subject'     => 'strIntfParticipantRegisteredSubject',
+      'florp_intf_participant_registered_message'     => 'strIntfParticipantRegisteredMessage',
+      'florp_intf_tshirt_order_delivered_b4_flash_ddl'=> 'iIntfTshirtOrderDeliveredBeforeFlashmobDdl',
+      'florp_intf_tshirt_ordering_disabled'           => 'bIntfTshirtOrderingDisabled',
+      'florp_intf_tshirt_ordering_only_disable'       => 'bIntfTshirtOrderingDisabledOnlyDisable',
+      'florp_intf_tshirt_payment_warning_btn_deadline'=> 'iIntfTshirtPaymentWarningButtonDeadline',
+      'florp_intf_tshirt_payment_warning_deadline'    => 'iIntfTshirtPaymentWarningDeadline',
+      'florp_intf_tshirt_payment_warning_notif_sbj'   => 'strIntfTshirtPaymentWarningNotificationSbj',
+      'florp_intf_tshirt_payment_warning_notif_msg'   => 'strIntfTshirtPaymentWarningNotificationMsg',
+      'florp_newsletter_lists_intf'                   => 'strNewsletterListsIntf',
+      'florp_intf_flashmob_year'                      => 'iIntfFlashmobYear',
+      'florp_intf_flashmob_month'                     => 'iIntfFlashmobMonth',
+      'florp_intf_flashmob_day'                       => 'iIntfFlashmobDay',
+      'florp_intf_flashmob_hour'                      => 'iIntfFlashmobHour',
+      'florp_intf_flashmob_minute'                    => 'iIntfFlashmobMinute',
+      'florp_intf_city_poll_deadline'                 => 'iIntfCityPollDeadline',
+      'florp_intf_city_poll_users'                    => 'aIntfCityPollUsers',
+      'florp_intf_city_poll_extra_cities'             => 'strIntfCityPollExtraCities',
     );
     $aDeprecatedKeys = array(
       // new => old //
@@ -718,6 +766,7 @@ class FLORP{
       'iProfileFormPopupIDFlashmob' => 'iProfileFormPopupID',
       'strGoogleMapsKey' => 'strGoogleMapKey',
       'bCoursesInfoDisabled',
+      // 'aIntfCityPollUsers',
     );
     $this->aBooleanOptions = array(
       'bReloadAfterSuccessfulSubmissionMain', 'bReloadAfterSuccessfulSubmissionFlashmob',
@@ -728,10 +777,13 @@ class FLORP{
       'bTshirtOrderingDisabledOnlyDisable',
       'bOnlyFlorpProfileNinjaFormMain',
       'bOnlyFlorpProfileNinjaFormFlashmob',
+      'bIntfTshirtOrderingDisabledOnlyDisable',
+      'bIntfTshirtOrderingDisabled',
     );
     $this->aArrayOptions = array(
       'aHideFlashmobFieldsForUsers',
       'aUnhideFlashmobFieldsForUsers',
+      'aIntfCityPollUsers',
     );
     $this->aOptionKeysByBlog = array(
       'main'      => array(
@@ -819,9 +871,27 @@ class FLORP{
         'iProfileFormPageIDIntf',
         'iProfileFormPopupIDIntf',
         'iProfileFormNinjaFormIDIntf',
+        'strIntfParticipantRegisteredSubject',
+        'iIntfTshirtOrderDeliveredBeforeFlashmobDdl',
+        'bIntfTshirtOrderingDisabled',
+        'bIntfTshirtOrderingDisabledOnlyDisable',
+        'iIntfTshirtPaymentWarningButtonDeadline',
+        'iIntfTshirtPaymentWarningDeadline',
+        'strIntfTshirtPaymentWarningNotificationSbj',
+        'strNewsletterListsIntf',
+        'strBeforeLoginFormHtmlIntf',
+        'iIntfFlashmobYear',
+        'iIntfFlashmobMonth',
+        'iIntfFlashmobDay',
+        'iIntfFlashmobHour',
+        'iIntfFlashmobMinute',
+        'iIntfCityPollDeadline',
+        'aIntfParticipants',
+        'aIntfCityPollUsers',
+        'strIntfCityPollExtraCities',
       ),
     );
-    $this->aSeparateOptionKeys = array( 'logs', 'aParticipants', 'aTshirts', 'aYearlyMapOptions', 'aOrderDates', 'aOptionChanges', 'aNfSubmissions', 'aNfFieldTypes' );
+    $this->aSeparateOptionKeys = array( 'logs', 'aParticipants', 'aIntfParticipants', 'aTshirts', 'aYearlyMapOptions', 'aOrderDates', 'aOptionChanges', 'aNfSubmissions', 'aNfFieldTypes' );
 
     // Get options and set defaults //
     if (empty($this->aOptions)) {
@@ -1133,58 +1203,58 @@ class FLORP{
       rename($strOldExportPath, $this->strNinjaFormExportPathFlashmob);
     }
 
-    // BEGIN participant registration date import //
-    if (!$this->aOptions["bParticipantRegistrationProcessed"] && !empty($this->aOptions['aParticipants'])) {
-      $aParticipantRegistrationDates = array(
-        'erika.csicsaiova@skgeodesy.sk' => '17.09.2018',
-        'k.siskova@zoznam.sk' => '17.09.2018',
-        'jarohluch+1@gmail.com' => '17.09.2018',
-        'martinbenkosj@gmail.com' => '17.09.2018',
-        'anikorigoalmasi@gmail.com' => '16.09.2018',
-        'rigoletto@pobox.sk' => '16.09.2018',
-        'alenamachova30@gmail.com' => '16.09.2018',
-        'jdtsikulova@gmail.com' => '16.09.2018',
-        'zuzana.meszaros@gmail.com' => '16.09.2018',
-        'furitimea86@gmail.com' => '15.09.2018',
-        's.gaalova@pobox.sk' => '15.09.2018',
-        'daniela.krasinska@gmail.com' => '15.09.2018',
-        'evasevcova@yahoo.com' => '15.09.2018',
-        'gaal.j@pobox.sk' => '15.09.2018',
-        'iveta.neilinger@gmail.com' => '15.09.2018',
-        'lengyeltibi1@gmail.com' => '15.09.2018',
-        'ivonagreen@gmail.com' => '14.09.2018',
-        'keszike@freemail.hu' => '14.09.2018',
-        'farkasg324@gmail.com' => '14.09.2018',
-        'szabi84@centrum.sk' => '14.09.2018',
-        'jurajsmart@gmail.com' => '14.09.2018',
-        'akatona81@gmail.com' => '13.09.2018',
-        'blahutova.dominika@gmail.com' => '13.09.2018',
-        'kerecsenx@freemail.hu' => '13.09.2018',
-        'pavol.martinca@gmail.com' => '11.09.2018',
-        'iivabla@gmail.com' => '09.09.2018',
-      );
-      $bUpdated = false;
-      foreach ($this->aOptions['aParticipants'] as $iLeaderID => $aParticipants) {
-        foreach ($aParticipants as $strEmail => $aParticipantData) {
-          if (isset($aParticipantRegistrationDates[$strEmail]) && (!isset($this->aOptions['aParticipants'][$iLeaderID][$strEmail]['registered']) || $this->aOptions['aParticipants'][$iLeaderID][$strEmail]['registered'] === 0)) {
-            $strDate = $aParticipantRegistrationDates[$strEmail];
-            $aDateParts = explode( ".", $strDate );
-            // $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
-            $iTime = mktime( 0, 0, 0, $aDateParts[1], $aDateParts[0], $aDateParts[2] );
-            if ($iTime !== false) {
-              $this->aOptions['aParticipants'][$iLeaderID][$strEmail]['registered'] = $iTime;
-              $bUpdated = true;
-            }
-          }
-        }
-      }
-      if ($bUpdated) {
-        $this->save_options();
-      }
-      $this->aOptions["bParticipantRegistrationProcessed"] = true;
-      $this->save_options();
-    }
-    // END participant registration date import //
+    // // BEGIN participant registration date import //
+    // if (!$this->aOptions["bParticipantRegistrationProcessed"] && !empty($this->aOptions['aParticipants'])) {
+    //   $aParticipantRegistrationDates = array(
+    //     'erika.csicsaiova@skgeodesy.sk' => '17.09.2018',
+    //     'k.siskova@zoznam.sk' => '17.09.2018',
+    //     'jarohluch+1@gmail.com' => '17.09.2018',
+    //     'martinbenkosj@gmail.com' => '17.09.2018',
+    //     'anikorigoalmasi@gmail.com' => '16.09.2018',
+    //     'rigoletto@pobox.sk' => '16.09.2018',
+    //     'alenamachova30@gmail.com' => '16.09.2018',
+    //     'jdtsikulova@gmail.com' => '16.09.2018',
+    //     'zuzana.meszaros@gmail.com' => '16.09.2018',
+    //     'furitimea86@gmail.com' => '15.09.2018',
+    //     's.gaalova@pobox.sk' => '15.09.2018',
+    //     'daniela.krasinska@gmail.com' => '15.09.2018',
+    //     'evasevcova@yahoo.com' => '15.09.2018',
+    //     'gaal.j@pobox.sk' => '15.09.2018',
+    //     'iveta.neilinger@gmail.com' => '15.09.2018',
+    //     'lengyeltibi1@gmail.com' => '15.09.2018',
+    //     'ivonagreen@gmail.com' => '14.09.2018',
+    //     'keszike@freemail.hu' => '14.09.2018',
+    //     'farkasg324@gmail.com' => '14.09.2018',
+    //     'szabi84@centrum.sk' => '14.09.2018',
+    //     'jurajsmart@gmail.com' => '14.09.2018',
+    //     'akatona81@gmail.com' => '13.09.2018',
+    //     'blahutova.dominika@gmail.com' => '13.09.2018',
+    //     'kerecsenx@freemail.hu' => '13.09.2018',
+    //     'pavol.martinca@gmail.com' => '11.09.2018',
+    //     'iivabla@gmail.com' => '09.09.2018',
+    //   );
+    //   $bUpdated = false;
+    //   foreach ($this->aOptions['aParticipants'] as $iLeaderID => $aParticipants) {
+    //     foreach ($aParticipants as $strEmail => $aParticipantData) {
+    //       if (isset($aParticipantRegistrationDates[$strEmail]) && (!isset($this->aOptions['aParticipants'][$iLeaderID][$strEmail]['registered']) || $this->aOptions['aParticipants'][$iLeaderID][$strEmail]['registered'] === 0)) {
+    //         $strDate = $aParticipantRegistrationDates[$strEmail];
+    //         $aDateParts = explode( ".", $strDate );
+    //         // $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
+    //         $iTime = mktime( 0, 0, 0, $aDateParts[1], $aDateParts[0], $aDateParts[2] );
+    //         if ($iTime !== false) {
+    //           $this->aOptions['aParticipants'][$iLeaderID][$strEmail]['registered'] = $iTime;
+    //           $bUpdated = true;
+    //         }
+    //       }
+    //     }
+    //   }
+    //   if ($bUpdated) {
+    //     $this->save_options();
+    //   }
+    //   $this->aOptions["bParticipantRegistrationProcessed"] = true;
+    //   $this->save_options();
+    // }
+    // // END participant registration date import //
   }
 
   private function set_variables() {
@@ -1207,6 +1277,7 @@ class FLORP{
     }
     $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
     $this->iFlashmobTimestamp = intval(mktime( $this->aOptions['iFlashmobHour'] - $iTimeZoneOffset, $this->aOptions['iFlashmobMinute'], 0, $this->aOptions['iFlashmobMonth'], $this->aOptions['iFlashmobDay'], $this->aOptions['iFlashmobYear'] ));
+    $this->iIntfFlashmobTimestamp = intval(mktime( $this->aOptions['iIntfFlashmobHour'] - $iTimeZoneOffset, $this->aOptions['iIntfFlashmobMinute'], 0, $this->aOptions['iIntfFlashmobMonth'], $this->aOptions['iIntfFlashmobDay'], $this->aOptions['iIntfFlashmobYear'] ));
 
     $iNow = time();
     if ($this->iFlashmobTimestamp < $iNow) {
@@ -1220,6 +1291,7 @@ class FLORP{
       'teacher' => $this->aOptions['strMarkerInfoWindowTemplateTeacher'],
     );
 
+    // Slovak Flashmob //
     // This is from when ordered tshirts are delivered after the flashmob; should be 23:59 on the date iTshirtOrderDeliveredBeforeFlashmobDdl days before flashmob //
     $this->iTshirtOrderDeliveredBeforeFlashmobDdlTimestamp = intval(mktime( 23 - $iTimeZoneOffset, 59, 59, $this->aOptions['iFlashmobMonth'], $this->aOptions['iFlashmobDay'] - $this->aOptions['iTshirtOrderDeliveredBeforeFlashmobDdl'], $this->aOptions['iFlashmobYear'] ));
     $this->iTshirtOrderDeliveredBeforeFlashmobDdlTime = date('Y/m/d H:i:s', $this->iTshirtOrderDeliveredBeforeFlashmobDdlTimestamp + $iTimeZoneOffset*3600);
@@ -1236,6 +1308,30 @@ class FLORP{
     } else {
       $this->iTshirtPaymentWarningButtonDeadlineTime = "-";
     }
+
+    // International Flashmob //
+    // This is from when ordered tshirts are delivered after the flashmob; should be 23:59 on the date iTshirtOrderDeliveredBeforeFlashmobDdl days before flashmob //
+    $this->iIntfTshirtOrderDeliveredBeforeFlashmobDdlTimestamp = intval(mktime( 23 - $iTimeZoneOffset, 59, 59, $this->aOptions['iIntfFlashmobMonth'], $this->aOptions['iIntfFlashmobDay'] - $this->aOptions['iIntfTshirtOrderDeliveredBeforeFlashmobDdl'], $this->aOptions['iIntfFlashmobYear'] ));
+    $this->iIntfTshirtOrderDeliveredBeforeFlashmobDdlTime = date('Y/m/d H:i:s', $this->iIntfTshirtOrderDeliveredBeforeFlashmobDdlTimestamp + $iTimeZoneOffset*3600);
+    $this->iIntfTshirtOrderDeliveredBeforeFlashmobDdlDate = date('d.m.Y', $this->iIntfTshirtOrderDeliveredBeforeFlashmobDdlTimestamp + $iTimeZoneOffset*3600);
+
+    // This is when the warnings are first shown; should be from 00:00 on the date iIntfTshirtPaymentWarningDeadline days before flashmob //
+    $this->iIntfTshirtPaymentWarningDeadlineTimestamp = intval(mktime( 0 - $iTimeZoneOffset, 0, 0, $this->aOptions['iIntfFlashmobMonth'], $this->aOptions['iIntfFlashmobDay'] - $this->aOptions['iIntfTshirtPaymentWarningDeadline'], $this->aOptions['iIntfFlashmobYear'] ));
+    $this->iIntfTshirtPaymentWarningDeadlineTime = date('Y/m/d H:i:s', $this->iIntfTshirtPaymentWarningDeadlineTimestamp + $iTimeZoneOffset*3600);
+
+    // This is when the warning buttons are forced shown; should be from 00:00 on the date iIntfTshirtPaymentWarningButtonDeadline days before flashmob //
+    if ($this->aOptions['iIntfTshirtPaymentWarningButtonDeadline'] > -1) {
+      $this->iIntfTshirtPaymentWarningButtonDeadlineTimestamp = intval(mktime( 0 - $iTimeZoneOffset, 0, 0, $this->aOptions['iIntfFlashmobMonth'], $this->aOptions['iIntfFlashmobDay'] - $this->aOptions['iIntfTshirtPaymentWarningButtonDeadline'], $this->aOptions['iIntfFlashmobYear'] ));
+      $this->iIntfTshirtPaymentWarningButtonDeadlineTime = date('Y/m/d H:i:s', $this->iIntfTshirtPaymentWarningButtonDeadlineTimestamp + $iTimeZoneOffset*3600);
+    } else {
+      $this->iIntfTshirtPaymentWarningButtonDeadlineTime = "-";
+    }
+
+    // This is from when the city poll is closed; should be 23:59 on the date iIntfCityPollDeadline days before flashmob //
+    $this->iIntfCityPollDdlTimestamp = intval(mktime( 23 - $iTimeZoneOffset, 59, 59, $this->aOptions['iIntfFlashmobMonth'], $this->aOptions['iIntfFlashmobDay'] - $this->aOptions['iIntfCityPollDeadline'], $this->aOptions['iIntfFlashmobYear'] ));
+    $this->iIntfCityPollDdlTime = date('Y/m/d H:i:s', $this->iIntfCityPollDdlTimestamp + $iTimeZoneOffset*3600);
+    $this->iIntfCityPollDdlDate = date('d.m.Y', $this->iIntfCityPollDdlTimestamp + $iTimeZoneOffset*3600);
+    $this->bIntfCityPollDisabled = ($this->iIntfCityPollDdlTimestamp <= time());
 
 
     $this->set_variables_per_subsite();
@@ -1260,19 +1356,19 @@ class FLORP{
     $aNotices = array();
     switch ($strType) {
       case 'htaccess_remove_failed':
-        $aNotices[] = array( 'warning' => 'Could not re-enable media files download: could not remove HTACCESS file.');
+        $aNotices[] = array( 'warning' => 'Could not re-enable media files download: could not remove HTACCESS file.' );
         break;
       case 'htaccess_revert_failed':
-        $aNotices[] = array( 'warning' => 'Could not re-enable media files download: could not rename old HTACCESS file to <code>.htaccess</code>.');
+        $aNotices[] = array( 'warning' => 'Could not re-enable media files download: could not rename old HTACCESS file to <code>.htaccess</code>.' );
         break;
       case 'htaccess_rename_failed':
-        $aNotices[] = array( 'warning' => 'Could not prevent media files download: could not rename HTACCESS file.');
+        $aNotices[] = array( 'warning' => 'Could not prevent media files download: could not rename HTACCESS file.' );
         break;
       case 'htaccess_renamed':
-        $aNotices[] = array( 'info' => 'There was a HTACCESS in WP_CONTENT_DIR. It was renamed and replaced by a media download preventing HTACCESS file (by FLORP).');
+        $aNotices[] = array( 'info' => 'There was a HTACCESS in WP_CONTENT_DIR. It was renamed and replaced by a media download preventing HTACCESS file (by FLORP).' );
         break;
       case 'htaccess_save_failed':
-        $aNotices[] = array( 'warning' => 'Could not prevent media files download: could not save HTACCESS file.');
+        $aNotices[] = array( 'warning' => 'Could not prevent media files download: could not save HTACCESS file.' );
         break;
       case 'florp_devel_is_on':
         $aNotices[] = array( 'warning' => 'FLORP_DEVEL constant is on. Contact your site admin if you think this is not right!' );
@@ -1658,12 +1754,46 @@ class FLORP{
       $this->bDisplayingProfileFormNinjaForm = true;
     } elseif ($this->isFlashmobBlog && $iFormID == $this->iProfileFormNinjaFormIDFlashmob) {
       $this->bDisplayingProfileFormNinjaForm = true;
+    } elseif ($this->isIntfBlog && $iFormID == $this->iProfileFormNinjaFormIDIntf) {
+      $this->bDisplayingProfileFormNinjaForm = true;
     }
     return $aFormSettings;
   }
 
   public function action__displaying_profile_form_nf_end( $iFormID, $aFormSettings, $aFormFields ) {
     $this->bDisplayingProfileFormNinjaForm = false;
+  }
+
+  private function get_intf_poll_cities() {
+    $aLeaders = $this->getFlashmobSubscribers( 'all', true );
+    $aLeadersByID = array();
+    foreach ($aLeaders as $oLeader) {
+      $aLeadersByID[$oLeader->ID] = $oLeader;
+    }
+    $aFlashmobCities = array();
+    foreach ($this->aOptions['aIntfCityPollUsers'] as $mixUserIDOrFlashmobCity) {
+      if (is_int($mixUserIDOrFlashmobCity) || (is_string($mixUserIDOrFlashmobCity) && preg_match('~\d+~', $mixUserIDOrFlashmobCity))) {
+        if (isset($aLeadersByID[$mixUserIDOrFlashmobCity])) {
+          $strFlashmobCity = get_user_meta( $mixUserIDOrFlashmobCity, 'flashmob_city', true );
+          if (empty($strFlashmobCity)) {
+            continue;
+          }
+          $aFlashmobCities[] = $strFlashmobCity;
+        } else {
+          continue;
+        }
+      } else {
+        $aFlashmobCities[] = $mixUserIDOrFlashmobCity;
+      }
+    }
+    if (!empty($this->aOptions['strIntfCityPollExtraCities'])) {
+      $aExtraCities = array_map('trim', explode(',', $this->aOptions['strIntfCityPollExtraCities']));
+      foreach ($aExtraCities as $strFlashmobCity) {
+        $aFlashmobCities[] = $strFlashmobCity;
+      }
+    }
+    sort($aFlashmobCities);
+    return $aFlashmobCities;
   }
 
   public function filter__ninja_forms_localize_fields( $aField ) {
@@ -1679,7 +1809,57 @@ class FLORP{
       return $aField;
     }
 
-    if ($this->isMainBlog) {
+    if (stripos($aField['settings']['container_class'], 'florp-intf') !== false) {
+      // Settings specific to the international signup form //
+
+      // Populate the poll options //
+      if ($aField['settings']['key'] == 'intf_city') {
+        if ($this->bIntfCityPollDisabled) {
+          $aField['settings']['required'] = false;
+          $aField['settings']['container_class'] .= " florp-hidden";
+        } else {
+          $aFlashmobCities = $this->get_intf_poll_cities();
+          if (!empty($aFlashmobCities)) {
+            reset($aField['settings']['options']);
+            $iFirstKey = key($aField['settings']['options']);
+            $aOption = $aField['settings']['options'][$iFirstKey];
+            foreach ($aFlashmobCities as $strFlashmobCity) {
+              $aOption["label"] = $strFlashmobCity;
+              $aOption["value"] = $strFlashmobCity;
+              $aField['settings']['options'][] = $aOption;
+            }
+          }
+        }
+      }
+
+      // Set default value of tshirt preference to unchecked if ordering is disabled //
+      if ($this->aOptions['bIntfTshirtOrderingDisabled'] && $aField['settings']['type'] === 'listcheckbox' && $aField['settings']['key'] === 'preferences') {
+        foreach ($aField['settings']['options'] as $iKey => $aOption) {
+          if ($aOption['value'] === 'flashmob_participant_tshirt') {
+            $aField['settings']['options'][$iKey]['selected'] = 0;
+            break;
+          }
+        }
+      }
+
+      // Hide tshirt payment deadline warning if it's not relevant yet //
+      if ($aField['settings']['type'] === 'html' && isset($aField['settings']['container_class']) && stripos($aField['settings']['container_class'], 'florp-tshirt-after-flashmob-warning') !== false) {
+        $aField['settings']['default'] = str_replace("%%iTshirtOrderDeliveredBeforeFlashmobDdlDate%%", $this->iIntfTshirtOrderDeliveredBeforeFlashmobDdlDate, $aField['settings']['default']);
+        if ($this->iIntfTshirtPaymentWarningDeadlineTimestamp > time()) {
+          $aField['settings']['container_class'] .= " florp-hidden";
+        }
+      }
+
+      // Hide non-profile and non-registration fields //
+      $bHide = true;
+      if (stripos($aField['settings']['container_class'], 'florp-registration-field') !== false
+            || stripos($aField['settings']['container_class'], 'florp-profile-field') !== false) {
+        $bHide = false;
+      }
+      if ($bHide) {
+        $aField['settings']['container_class'] .= " hidden";
+      }
+    } elseif ($this->isMainBlog) {
       // Settings specific to the NF on the Main Blog //
 
       // Replace flashmob date/time in flashmob_organizer single checkbox //
@@ -1977,7 +2157,9 @@ class FLORP{
   }
 
   public function profile_form( $aAttributes ) {
-    if ($this->isMainBlog) {
+    if ($this->isIntfBlog && isset($aAttributes['international'])) {
+      $iNFID = $this->iProfileFormNinjaFormIDIntf;
+    } elseif ($this->isMainBlog) {
       $iNFID = $this->iProfileFormNinjaFormIDMain;
     } elseif ($this->isFlashmobBlog) {
       $iNFID = $this->iProfileFormNinjaFormIDFlashmob;
@@ -2585,6 +2767,7 @@ class FLORP{
   private function archive_current_year_map_options() {
     $iFlashmobYear = $this->aOptions['iFlashmobYear'];
     $this->aOptions['aYearlyMapOptions'][$iFlashmobYear] = $this->get_flashmob_map_options_array_to_archive();
+    // TODO archive aParticipants as well!
     $this->aOptions['aParticipants'] = array();
     $this->save_options();
 
@@ -2681,6 +2864,60 @@ class FLORP{
     return $aMetaTags;
   }
 
+  private function get_tshirt_images( $bInternational = false ) {
+    $aTshirtImages = array();
+    $strPluginDirPath = WP_CONTENT_DIR . '/plugins/flashmob-organizer-profile';
+    $strImagePath = $strPluginDirPath."/img/";
+    $strImagePathEscaped = preg_quote($strImagePath, "~");
+    $aTshirtImageCouples = array();
+    $aTshirtFullImages = array( 'white' => array(), 'black' => array() );
+    $strImageNamePatternPrefix = "";
+    $strImageNamePattern = "t-shirt-*.png";
+    if ($bInternational) {
+      $strImageNamePatternPrefix = "intf-";
+      $strImageNamePattern = "intf-t-shirt-*.png";
+    }
+    foreach ( glob($strImagePath . $strImageNamePattern) as $strImgName) {
+      $aMatches = array();
+      $mixType = false;
+      if (preg_match( '~^('.$strImagePathEscaped.')?'.$strImageNamePatternPrefix.'t-shirt-chest-white-([a-zA-Z0-9_-]+).png$~', $strImgName, $aMatches )) {
+        $strTshirtCitySlug = $aMatches[2];
+        $strType = "white";
+      } elseif (preg_match( '~^('.$strImagePathEscaped.')?'.$strImageNamePatternPrefix.'t-shirt-chest-black-([a-zA-Z0-9_-]+).png$~', $strImgName, $aMatches )) {
+        $strTshirtCitySlug = $aMatches[2];
+        $strType = "black";
+      } elseif (preg_match( '~^('.$strImagePathEscaped.')?'.$strImageNamePatternPrefix.'t-shirt-white-([a-zA-Z0-9_-]+).png$~', $strImgName, $aMatches )) {
+        $strTshirtCitySlug = $aMatches[2];
+        $aTshirtFullImages['white'][$strTshirtCitySlug] = 1;
+        continue;
+      } elseif (preg_match( '~^('.$strImagePathEscaped.')?'.$strImageNamePatternPrefix.'t-shirt-black-([a-zA-Z0-9_-]+).png$~', $strImgName, $aMatches )) {
+        $strTshirtCitySlug = $aMatches[2];
+        $aTshirtFullImages['black'][$strTshirtCitySlug] = 1;
+        continue;
+      }
+      if ($strType) {
+        if (!isset($aTshirtImageCouples[$strTshirtCitySlug])) {
+          $aTshirtImageCouples[$strTshirtCitySlug] = array(
+            'white' => false,
+            'black' => false,
+          );
+        }
+        $aTshirtImageCouples[$strTshirtCitySlug][$strType] = true;
+      }
+    }
+    foreach ($aTshirtImageCouples as $strTshirtCitySlug => $aTypes) {
+      if ($aTypes['white'] && $aTypes['black']) {
+        $aTshirtImages[$strTshirtCitySlug] = 1;
+      }
+    }
+
+    return array(
+      'availability' => $aTshirtImages,
+      'couples' => $aTshirtImageCouples,
+      'full' => $aTshirtFullImages,
+    );
+  }
+
   public function action__wp_enqueue_scripts() {
     $iUserID = get_current_user_id();
     wp_enqueue_script('florp_nf_action_controller', plugins_url('js/florp_nf_action_controller.js', __FILE__), array('jquery'), $this->strVersion, true);
@@ -2709,11 +2946,50 @@ class FLORP{
     }
 
     if ($this->isMainBlog) {
+      $iPopupIDMain = $this->iProfileFormPopupIDMain;
+      $iNFIDMain = $this->iProfileFormNinjaFormIDMain;
+      $bReloadAfterSuccessfulSubmissionMain = $this->bReloadAfterSuccessfulSubmissionMain;
+    } else {
+      $iPopupIDMain = 0;
+      $iNFIDMain = 0;
+      $bReloadAfterSuccessfulSubmissionMain = false;
+    }
+
+    if ($this->isFlashmobBlog) {
+      $iPopupIDFlashmob = $this->iProfileFormPopupIDFlashmob;
+      $iNFIDFlashmob = $this->iProfileFormNinjaFormIDFlashmob;
+      $bReloadAfterSuccessfulSubmissionFlashmob = $this->bReloadAfterSuccessfulSubmissionFlashmob;
+    } else {
+      $iPopupIDFlashmob = 0;
+      $iNFIDFlashmob = 0;
+      $bReloadAfterSuccessfulSubmissionFlashmob = false;
+    }
+
+    if ($this->isIntfBlog) {
+      $iPopupIDIntf = $this->iProfileFormPopupIDIntf;
+      $iNFIDIntf = $this->iProfileFormNinjaFormIDIntf;
+    } else {
+      $iPopupIDIntf = 0;
+      $iNFIDIntf = 0;
+    }
+
+    if ($this->isMainBlog) {
       $strBlogType = 'main';
     } elseif ($this->isFlashmobBlog) {
       $strBlogType = 'flashmob';
     } else {
       $strBlogType = 'other';
+    }
+
+    $aBlogTypes = array();
+    if ($this->isMainBlog) {
+      $aBlogTypes[] = 'main';
+    }
+    if ($this->isFlashmobBlog) {
+      $aBlogTypes[] = 'flashmob';
+    }
+    if ($this->isIntfBlog) {
+      $aBlogTypes[] = 'international';
     }
 
     if ($this->isMainBlog && is_user_logged_in() && $this->get_flashmob_participant_count( get_current_user_id() ) > 0) {
@@ -2722,45 +2998,8 @@ class FLORP{
       $iHasParticipants = 0;
     }
 
-    $aTshirtImages = array();
-    $strPluginDirPath = WP_CONTENT_DIR . '/plugins/flashmob-organizer-profile';
-    $strImagePath = $strPluginDirPath."/img/";
-    $strImagePathEscaped = preg_quote($strImagePath, "~");
-    $aTshirtImageCouples = array();
-    $aTshirtFullImages = array( 'white' => array(), 'black' => array() );
-    foreach ( glob($strImagePath . "t-shirt-*.png") as $strImgName) {
-      $aMatches = array();
-      $mixType = false;
-      if (preg_match( '~^('.$strImagePathEscaped.')?t-shirt-chest-white-([a-zA-Z0-9_-]+).png$~', $strImgName, $aMatches )) {
-        $strTshirtCitySlug = $aMatches[2];
-        $strType = "white";
-      } elseif (preg_match( '~^('.$strImagePathEscaped.')?t-shirt-chest-black-([a-zA-Z0-9_-]+).png$~', $strImgName, $aMatches )) {
-        $strTshirtCitySlug = $aMatches[2];
-        $strType = "black";
-      } elseif (preg_match( '~^('.$strImagePathEscaped.')?t-shirt-white-([a-zA-Z0-9_-]+).png$~', $strImgName, $aMatches )) {
-        $strTshirtCitySlug = $aMatches[2];
-        $aTshirtFullImages['white'][$strTshirtCitySlug] = 1;
-        continue;
-      } elseif (preg_match( '~^('.$strImagePathEscaped.')?t-shirt-black-([a-zA-Z0-9_-]+).png$~', $strImgName, $aMatches )) {
-        $strTshirtCitySlug = $aMatches[2];
-        $aTshirtFullImages['black'][$strTshirtCitySlug] = 1;
-        continue;
-      }
-      if ($strType) {
-        if (!isset($aTshirtImageCouples[$strTshirtCitySlug])) {
-          $aTshirtImageCouples[$strTshirtCitySlug] = array(
-            'white' => false,
-            'black' => false,
-          );
-        }
-        $aTshirtImageCouples[$strTshirtCitySlug][$strType] = true;
-      }
-    }
-    foreach ($aTshirtImageCouples as $strTshirtCitySlug => $aTypes) {
-      if ($aTypes['white'] && $aTypes['black']) {
-        $aTshirtImages[$strTshirtCitySlug] = 1;
-      }
-    }
+    $aTshirtImages = $this->get_tshirt_images();
+    $aTshirtImagesIntf = $this->get_tshirt_images(true);
 
     $aHideFlashmobFields = array();
     $aLeaders = $this->getFlashmobSubscribers( 'all', true );
@@ -2787,35 +3026,51 @@ class FLORP{
     }
 
     $aJS = array(
-      'hide_flashmob_fields'          => $mixHideFlashmobFields,
-      'reload_ok_submission'          => $bReloadAfterSuccessfulSubmission ? 1 : 0,
-      'using_og_map_image'            => $this->aOptions['bUseMapImage'] ? 1 : 0,
-      'blog_type'                     => $strBlogType,
-      'reload_ok_cookie'              => 'florp-form-saved',
-      'florp_trigger_anchor'          => $this->strClickTriggerAnchor,
-      'get_markerInfoHTML_action'     => 'get_markerInfoHTML',
-      'get_mapUserInfo_action'        => 'get_mapUserInfo',
-      'ajaxurl'                       => admin_url( 'admin-ajax.php'),
-      'security'                      => wp_create_nonce( 'srd-florp-security-string' ),
-      'flashmob_city'                 => get_user_meta( $iUserID, 'flashmob_city', true ),
-      'click_trigger_class'           => $this->strClickTriggerClass,
-      'do_trigger_popup_click'        => $bDoTriggerPopupClick,
-      'general_map_options'           => $this->aGeneralMapOptions,
-      'form_id'                       => $iNFID,
-      'logging_in_msg'                => $this->aOptions['strRegistrationSuccessfulMessage'],
-      'popup_id'                      => $iPopupID,
-      'load_maps_lazy'                => $this->aOptions['bLoadMapsLazy'] ? 1 : 0,
-      'load_maps_async'               => $this->aOptions['bLoadMapsAsync'] ? 1 : 0,
-      'load_videos_lazy'              => $this->aOptions['bLoadVideosLazy'] ? 1 : 0,
-      'has_participants'              => $iHasParticipants,
-      'img_path'                      => plugins_url( 'flashmob-organizer-profile/img/' ),
-      'tshirt_imgs_couples'           => $aTshirtImages,
-      'tshirt_imgs_full'              => $aTshirtFullImages,
-      'courses_info_disabled'         => $this->aOptions['iCoursesNumberEnabled'] == 0 ? 1 : 0,
-      'courses_number_enabled'        => intval($this->aOptions['iCoursesNumberEnabled']),
-      'tshirt_ordering_disabled'      => $this->aOptions['bTshirtOrderingDisabled'] ? 1 : 0,
-      'tshirt_ordering_only_disable'  => $this->aOptions['bTshirtOrderingDisabledOnlyDisable'] ? 1 : 0,
-//       'all_imgs'                      => glob($strImagePath . "t-shirt-*.png"),
+      'hide_flashmob_fields'              => $mixHideFlashmobFields,
+      'reload_ok_submission'              => $bReloadAfterSuccessfulSubmission ? 1 : 0, // DEPRECATED //
+      'reload_ok_submission_main'         => $bReloadAfterSuccessfulSubmissionMain ? 1 : 0,
+      'reload_ok_submission_flashmob'     => $bReloadAfterSuccessfulSubmissionFlashmob ? 1 : 0,
+      'using_og_map_image'                => $this->aOptions['bUseMapImage'] ? 1 : 0,
+      'blog_type'                         => $strBlogType, // DEPRECATED //
+      'blog_types'                        => $aBlogTypes,
+      'reload_ok_cookie'                  => 'florp-form-saved',
+      'florp_trigger_anchor'              => $this->strClickTriggerAnchor,
+      'get_markerInfoHTML_action'         => 'get_markerInfoHTML',
+      'get_mapUserInfo_action'            => 'get_mapUserInfo',
+      'ajaxurl'                           => admin_url( 'admin-ajax.php'),
+      'security'                          => wp_create_nonce( 'srd-florp-security-string' ),
+      'flashmob_city'                     => get_user_meta( $iUserID, 'flashmob_city', true ),
+      'click_trigger_class_main'          => $this->strClickTriggerClass,
+      'click_trigger_class_flashmob'      => $this->strClickTriggerClass,
+      'click_trigger_class_intf'          => $this->strClickTriggerClass,
+      'do_trigger_popup_click_main'       => $bDoTriggerPopupClick, // For when registration is in popup //
+      'general_map_options'               => $this->aGeneralMapOptions,
+      'form_id'                           => $iNFID, // DEPRECATED //
+      'form_id_main'                      => $iNFIDMain,
+      'form_id_flashmob'                  => $iNFIDFlashmob,
+      'form_id_intf'                      => $iNFIDIntf,
+      'logging_in_msg'                    => $this->aOptions['strRegistrationSuccessfulMessage'],
+      'popup_id'                          => $iPopupID, // DEPRECATED //
+      'popup_id_main'                     => $iPopupIDMain,
+      'popup_id_flashmob'                 => $iPopupIDFlashmob,
+      'popup_id_intf'                     => $iPopupIDIntf,
+      'load_maps_lazy'                    => $this->aOptions['bLoadMapsLazy'] ? 1 : 0,
+      'load_maps_async'                   => $this->aOptions['bLoadMapsAsync'] ? 1 : 0,
+      'load_videos_lazy'                  => $this->aOptions['bLoadVideosLazy'] ? 1 : 0,
+      'has_participants'                  => $iHasParticipants,
+      'img_path'                          => plugins_url( 'flashmob-organizer-profile/img/' ),
+      'tshirt_imgs_couples'               => $aTshirtImages['availability'],
+      'tshirt_imgs_full'                  => $aTshirtImages['full'],
+      'intf_tshirt_imgs_couples'          => $aTshirtImagesIntf['availability'],
+      'intf_tshirt_imgs_full'             => $aTshirtImagesIntf['full'],
+      'courses_info_disabled'             => $this->aOptions['iCoursesNumberEnabled'] == 0 ? 1 : 0,
+      'courses_number_enabled'            => intval($this->aOptions['iCoursesNumberEnabled']),
+      'tshirt_ordering_disabled'          => $this->aOptions['bTshirtOrderingDisabled'] ? 1 : 0,
+      'tshirt_ordering_only_disable'      => $this->aOptions['bTshirtOrderingDisabledOnlyDisable'] ? 1 : 0,
+      'tshirt_ordering_disabled_intf'     => $this->aOptions['bIntfTshirtOrderingDisabled'] ? 1 : 0,
+      'tshirt_ordering_only_disable_intf' => $this->aOptions['bIntfTshirtOrderingDisabledOnlyDisable'] ? 1 : 0,
+      'intf_city_poll_disabled'           => $this->bIntfCityPollDisabled ? 1 : 0,
+      // 'all_imgs'                          => glob($strImagePath . "t-shirt-*.png"),
     );
     if (is_user_logged_in()) {
       $aJS['user_id'] = $iUserID;
@@ -6049,11 +6304,13 @@ class FLORP{
       $this->save_option_page_options($_POST);
     }
 
-    if (!$this->isMainBlog && strlen($strMainBlogDomain) > 0) {
-      echo "<p>Spoločné nastavenia a nastavenia pre hlavnú stránku sú <a href=\"http://{$strMainBlogDomain}/wp-admin/admin.php?page=florp-main\">tu</a>.</p>";
+    $aVariables = $this->get_options_page_vars();
+
+    if (!$this->isMainBlog && strlen($aVariables['strMainBlogDomain']) > 0) {
+      echo "<p>Spoločné nastavenia a nastavenia pre hlavnú stránku sú <a href=\"http://{$aVariables['strMainBlogDomain']}/wp-admin/admin.php?page=florp-main\">tu</a>.</p>";
     }
-    if (!$this->isFlashmobBlog && strlen($strFlashmobBlogDomain) > 0) {
-      echo "<p>Nastavenia pre flashmobovú stránku sú <a href=\"http://{$strFlashmobBlogDomain}/wp-admin/admin.php?page=florp-main\">tu</a>.</p>";
+    if (!$this->isFlashmobBlog && strlen($aVariables['strFlashmobBlogDomain']) > 0) {
+      echo "<p>Nastavenia pre flashmobovú stránku sú <a href=\"http://{$aVariables['strFlashmobBlogDomain']}/wp-admin/admin.php?page=florp-main\">tu</a>.</p>";
     }
     if (!$this->isMainBlog && !$this->isFlashmobBlog) {
       do_action('florp_options_page_notices');
@@ -6079,8 +6336,6 @@ class FLORP{
       // echo "<pre>" .var_export(wp_get_sites(), true). "</pre>";
       // echo "<pre>" .var_export($this->findCityWebpage( "Bánovce nad Bebravou" ), true). "</pre>";
     }
-
-    $aVariables = $this->get_options_page_vars();
 
     $aVariablesMain = array(
       'optionsMainSite' => $aVariables['optionsMainSite'],
@@ -6446,10 +6701,17 @@ class FLORP{
       $this->save_option_page_options($_POST, true);
     }
 
+    if (defined('FLORP_DEVEL') && FLORP_DEVEL === true) {
+      // echo "<pre>" .var_export( get_users( ['blog_id' => $this->iMainBlogID, 'role' => $this->strUserRoleApproved, 'fields' => 'ID'] ), true). "</pre>";
+      // echo "<pre>" .var_export( $this->aOptions['aIntfCityPollUsers'], true). "</pre>";
+      echo "<pre>" .var_export( $this->aOptions['aIntfParticipants'], true). "</pre>";
+    }
+
     do_action('florp_options_page_notices');
 
     $aVariables = $this->get_options_page_vars();
 
+    $aBooleanOptionsChecked = $aVariables['aBooleanOptionsChecked'];
     // $aVariablesToUse = array(
     //   'optionsIntfSite' => $aVariables['optionsIntfSite'],
     //   'optionNone' => $aVariables['optionNone'],
@@ -6511,18 +6773,138 @@ class FLORP{
         $optionsPagesIntf .= '<option value="'.$iID.'" '.$strSelectedIntf.'>'.$strTitle.'</option>';
       }
 
+      $iFlashmobMonth = $this->aOptions["iIntfFlashmobMonth"];
+      $optionsMonths = "";
+      for ($i = 1; $i <= 12; $i++) {
+        if ($iFlashmobMonth == $i) {
+          $strSelected = 'selected="selected"';
+        } else {
+          $strSelected = '';
+        }
+        $strMonthName = __( date('F', mktime(0, 0, 0, $i, 1, date('Y'))), 'florp' );
+        $optionsMonths .= '<option value="'.$i.'" '.$strSelected.'>'.$strMonthName.'</option>';
+      }
+
+      $iYearNow = intval(date('Y'));
+      $aNumOptionSettings = array(
+        'optionsYears'    => array( 'start' => $iYearNow - 5, 'end' => $iYearNow + 5, 'leadingZero' => false, 'optionKey' => 'iIntfFlashmobYear' ),
+        'optionsDays'     => array( 'start' => 1, 'end' => 31, 'leadingZero' => false, 'optionKey' => 'iIntfFlashmobDay' ),
+        'optionsHours'    => array( 'start' => 0, 'end' => 23, 'leadingZero' => true, 'optionKey' => 'iIntfFlashmobHour' ),
+        'optionsMinutes'  => array( 'start' => 0, 'end' => 59, 'leadingZero' => true, 'optionKey' => 'iIntfFlashmobMinute' ),
+      );
+      $aNumOptions = array();
+      foreach ($aNumOptionSettings as $strOptionKey => $aSettings) {
+        $aNumOptions[$strOptionKey] = '';
+        $iOptionValue = isset($this->aOptions[$aSettings['optionKey']]) ? intval($this->aOptions[$aSettings['optionKey']]) : -1;
+        for ($i = $aSettings['start']; $i <= $aSettings['end']; $i++) {
+          if ($strOptionKey === "optionsYears" && isset($this->aOptions['aYearlyMapOptions'][$i])) {
+            continue;
+          }
+          if ($iOptionValue == $i) {
+            $strSelected = 'selected="selected"';
+          } else {
+            $strSelected = '';
+          }
+          if ($aSettings['leadingZero'] && $i < 10) {
+            $strLabel = "0".$i;
+          } else {
+            $strLabel = $i;
+          }
+          $aNumOptions[$strOptionKey] .= '<option value="'.$i.'" '.$strSelected.'>'.$strLabel.'</option>';
+        }
+      }
+
+      // Get all flashmob cities (current and past) //
+      $aIntfCityPollUsers = array();
+      $aLeaders = $this->getFlashmobSubscribers( 'all', true );
+      foreach ($aLeaders as $oLeader) {
+        $iLeaderID = $oLeader->ID;
+        $strFlashmobCity = get_user_meta( $oLeader->ID, 'flashmob_city', true );
+        if (empty($strFlashmobCity)) {
+          continue;
+        }
+        $strChecked = "";
+        if (in_array($iLeaderID, $this->aOptions['aIntfCityPollUsers'])) {
+          $strChecked = ' checked="checked"';
+        }
+        $aIntfCityPollUsers[$strFlashmobCity] = '<input id="florp_intf_city_poll_user-'.$iLeaderID.'" name="florp_intf_city_poll_users[]" type="checkbox" value="'.$iLeaderID.'"'.$strChecked.'/> <label for="florp_intf_city_poll_user-'.$iLeaderID.'">'.$strFlashmobCity.' ('.$iLeaderID.': '.$oLeader->first_name.' '.$oLeader->last_name.')</label>';
+      }
+      foreach ($this->aOptions['aYearlyMapOptions'] as $iYear => $aUsers) {
+        foreach ($aUsers as $iUserID => $aSubmissionData) {
+          if (!isset($aSubmissionData['flashmob_city'])) {
+            continue;
+          }
+          $strFlashmobCity = $aSubmissionData['flashmob_city'];
+          if (empty($strFlashmobCity)) {
+            continue;
+          }
+          if (isset($aIntfCityPollUsers[$strFlashmobCity])) {
+            continue;
+          }
+          $strChecked = "";
+          if (in_array($strFlashmobCity, $this->aOptions['aIntfCityPollUsers'])) {
+            $strChecked = ' checked="checked"';
+          }
+          $aIntfCityPollUsers[$strFlashmobCity] = '<input id="florp_intf_city_poll_nonuser-'.$strFlashmobCity.'" name="florp_intf_city_poll_users[]" type="checkbox" value="'.$strFlashmobCity.'"'.$strChecked.'/> <label for="florp_intf_city_poll_nonuser-'.$strFlashmobCity.'">'.$strFlashmobCity.' ('.$aSubmissionData['first_name'].' '.$aSubmissionData['last_name'].' [year '.$iYear.'])</label>';
+        }
+      }
+      ksort($aIntfCityPollUsers);
+      $strIntfCityPollUsers = implode("<br>", $aIntfCityPollUsers);
+
+      $strBeforeLoginFormHtmlIntf = $this->get_wp_editor( $this->strBeforeLoginFormHtmlIntf, 'florp_before_login_form_html_intf' );
+      $strParticipantRegisteredMessage = $this->get_wp_editor( $this->aOptions['strIntfParticipantRegisteredMessage'], 'florp_intf_participant_registered_message' );
+      $wpEditorTshirtPaymentWarningNotificationMsg = $this->get_wp_editor( $this->aOptions['strIntfTshirtPaymentWarningNotificationMsg'], 'florp_intf_tshirt_payment_warning_notif_msg' );
+
       $strIntfOptions = str_replace(
         array(
           '%%optionsIntfSite%%',
           '%%optionsNinjaFormsIntf%%',
           '%%optionsPopupsIntf%%',
           '%%optionsPagesIntf%%',
+          "%%iIntfTshirtOrderDeliveredBeforeFlashmobDdl%%",
+          "%%iIntfTshirtOrderDeliveredBeforeFlashmobDdlTime%%",
+          "%%iIntfTshirtPaymentWarningButtonDeadline%%",
+          "%%iIntfTshirtPaymentWarningButtonDeadlineTime%%",
+          "%%iIntfTshirtPaymentWarningDeadline%%",
+          "%%iIntfTshirtPaymentWarningDeadlineTime%%",
+          "%%strIntfParticipantRegisteredSubject%%",
+          "%%strIntfTshirtPaymentWarningNotificationSbj%%",
+          "%%strNewsletterListsIntf%%",
+          "%%tshirtIntfOrderingDisabledChecked%%",
+          "%%tshirtIntfOrderingDisabledOnlyDisableChecked%%",
+          "%%wpEditorBeforeLoginFormHtmlIntf%%",
+          "%%wpEditorIntfParticipantRegisteredMessage%%",
+          "%%wpEditorIntfTshirtPaymentWarningNotificationMsg%%",
+          '%%optionsYears%%', '%%optionsMonths%%', '%%optionsDays%%', '%%optionsHours%%', '%%optionsMinutes%%',
+          "%%iIntfCityPollDeadline%%",
+          "%%iIntfCityPollDdlTime%%",
+          '%%aIntfCityPollUsers%%',
+          '%%strIntfCityPollExtraCities%%',
         ),
         array(
           $aVariables['optionsIntfSite'],
           $optionsNinjaFormsIntf,
           $optionsPopupsIntf,
           $optionsPagesIntf,
+          $this->aOptions["iIntfTshirtOrderDeliveredBeforeFlashmobDdl"],
+          $this->iIntfTshirtOrderDeliveredBeforeFlashmobDdlTime,
+          $this->aOptions["iIntfTshirtPaymentWarningButtonDeadline"],
+          $this->iIntfTshirtPaymentWarningButtonDeadlineTime,
+          $this->aOptions["iIntfTshirtPaymentWarningDeadline"],
+          $this->iIntfTshirtPaymentWarningDeadlineTime,
+          $this->aOptions["strIntfParticipantRegisteredSubject"],
+          $this->aOptions["strIntfTshirtPaymentWarningNotificationSbj"],
+          $this->aOptions["strNewsletterListsIntf"],
+          $aBooleanOptionsChecked['bIntfTshirtOrderingDisabled'],
+          $aBooleanOptionsChecked['bIntfTshirtOrderingDisabledOnlyDisable'],
+          $strBeforeLoginFormHtmlIntf,
+          $strParticipantRegisteredMessage,
+          $wpEditorTshirtPaymentWarningNotificationMsg,
+          $aNumOptions['optionsYears'], $optionsMonths, $aNumOptions['optionsDays'], $aNumOptions['optionsHours'], $aNumOptions['optionsMinutes'],
+          $this->aOptions['iIntfCityPollDeadline'],
+          $this->iIntfCityPollDdlTime,
+          $strIntfCityPollUsers,
+          $this->aOptions['strIntfCityPollExtraCities'],
         ),
         file_get_contents( __DIR__ . "/view/options-international-settings.html" )
       );
@@ -6791,20 +7173,43 @@ class FLORP{
   }
 
   public function action__export_profile_form( $iFormID ) {
-    $this->export_ninja_form( $iFormID, false );
+    if ($this->iProfileFormNinjaFormIDIntf == $iFormID) {
+      $this->export_ninja_form($this->iProfileFormNinjaFormIDIntf, $this->strNinjaFormExportPathIntf);
+    } else {
+      $this->export_ninja_form( $iFormID, false );
+    }
   }
 
   public function action__import_profile_form() {
     if (defined('FLORP_DEVEL') && FLORP_DEVEL === true) { return; }
     if ($this->isMainBlog) {
-      $strExportPath = $this->strNinjaFormExportPathMain;
-      $iCurrentVersion = $this->aOptions['iProfileFormNinjaFormImportVersionMain'];
-    } elseif ($this->isFlashmobBlog) {
-      $strExportPath = $this->strNinjaFormExportPathFlashmob;
-      $iCurrentVersion = $this->aOptions['iProfileFormNinjaFormImportVersionFlashmob'];
-    } else {
-      return;
+      $var_iProfileFormNinjaFormID = "iProfileFormNinjaFormIDMain";
+      if ($this->$var_iProfileFormNinjaFormID != 0) {
+        $var_iProfileFormNinjaFormImportVersion = "iProfileFormNinjaFormImportVersionMain";
+        $strExportPath = $this->strNinjaFormExportPathMain;
+        $this->import_ninja_form($strExportPath, $var_iProfileFormNinjaFormID, $var_iProfileFormNinjaFormImportVersion);
+      }
     }
+    if ($this->isFlashmobBlog) {
+      $var_iProfileFormNinjaFormID = "iProfileFormNinjaFormIDFlashmob";
+      if ($this->$var_iProfileFormNinjaFormID != 0) {
+        $var_iProfileFormNinjaFormImportVersion = "iProfileFormNinjaFormImportVersionFlashmob";
+        $strExportPath = $this->strNinjaFormExportPathFlashmob;
+        $this->import_ninja_form($strExportPath, $var_iProfileFormNinjaFormID, $var_iProfileFormNinjaFormImportVersion);
+      }
+    }
+    if ($this->isIntfBlog) {
+      $var_iProfileFormNinjaFormID = "iProfileFormNinjaFormIDIntf";
+      if ($this->$var_iProfileFormNinjaFormID != 0) {
+        $var_iProfileFormNinjaFormImportVersion = "iProfileFormNinjaFormImportVersionIntf";
+        $strExportPath = $this->strNinjaFormExportPathIntf;
+        $this->import_ninja_form($strExportPath, $var_iProfileFormNinjaFormID, $var_iProfileFormNinjaFormImportVersion);
+      }
+    }
+  }
+
+  private function import_ninja_form($strExportPath, $var_iProfileFormNinjaFormID, $var_iProfileFormNinjaFormImportVersion) {
+    $iCurrentVersion = $this->aOptions[$var_iProfileFormNinjaFormImportVersion];
     if (file_exists($strExportPath)) {
       include_once $strExportPath;
       $aImportedFormData = ${$this->strExportVarName};
@@ -6849,15 +7254,9 @@ class FLORP{
       rename( $strExportPath, $strExportPath.'.'.$iCurrentVersion.'.imported-'.date('Ymd-His'));
 
       // Change the form id and version in aOptions to the new form's id //
-      if ($this->isMainBlog) {
-        $this->iProfileFormNinjaFormIDMain = $iNewFormID;
-        $this->aOptions['iProfileFormNinjaFormIDMain'] = $this->iProfileFormNinjaFormIDMain;
-        $this->aOptions['iProfileFormNinjaFormImportVersionMain'] = $iNewVersion;
-      } elseif ($this->isFlashmobBlog) {
-        $this->iProfileFormNinjaFormIDFlashmob = $iNewFormID;
-        $this->aOptions['iProfileFormNinjaFormIDFlashmob'] = $this->iProfileFormNinjaFormIDFlashmob;
-        $this->aOptions['iProfileFormNinjaFormImportVersionFlashmob'] = $iNewVersion;
-      }
+      $this->$var_iProfileFormNinjaFormID = $iNewFormID;
+      $this->aOptions[$var_iProfileFormNinjaFormID] = $this->$var_iProfileFormNinjaFormID;
+      $this->aOptions[$var_iProfileFormNinjaFormImportVersion] = $iNewVersion;
       $this->save_options();
     }
   }
@@ -7318,7 +7717,7 @@ class FLORP{
 
     if ($bIsBeforeFlashmob) {
       // Before Flashmob //
-      $strSignupLink = $this->getInfoWindowLabel('signup').'<span class="florp-click-trigger florp-click-participant-trigger pum-trigger" data-user-id="'.$aInfoWindowData['iUserID'].'" data-flashmob-city="'.$aInfoWindowData['flashmob_city']['value'].'" data-marker-key="'.$aInfoWindowData['mixMarkerKey'].'" data-div-id="'.$aInfoWindowData['strDivID'].'" style="cursor: pointer;">'.$this->aOptions['strSignupLinkLabel'].'</span><br/>';
+      $strSignupLink = $this->getInfoWindowLabel('signup').'<span class="florp-click-trigger ' . $this->strClickTriggerClassFlashmob . ' pum-trigger" data-user-id="'.$aInfoWindowData['iUserID'].'" data-flashmob-city="'.$aInfoWindowData['flashmob_city']['value'].'" data-marker-key="'.$aInfoWindowData['mixMarkerKey'].'" data-div-id="'.$aInfoWindowData['strDivID'].'" style="cursor: pointer;">'.$this->aOptions['strSignupLinkLabel'].'</span><br/>';
       $strParticipantCount = $this->getInfoWindowLabel('participant_count').$aInfoWindowData['iParticipantCount'];
 
       $strDancers = "";
@@ -7574,6 +7973,78 @@ class FLORP{
       return 1;
     }
 
+    if ($this->isIntfBlog && intval($aFormData['form_id']) === $this->iProfileFormNinjaFormIDIntf) {
+      // Get field values by keys //
+      $aFieldData = array();
+      $aSkipFieldTypes = array( 'recaptcha_logged-out-only', 'recaptcha', 'submit', 'html', 'hr' );
+      foreach ($aFormData["fields"] as $strKey => $aData) {
+        if (in_array($aData['type'], $aSkipFieldTypes)) {
+          continue;
+        }
+        $aFieldData[$aData["key"]] = $aData['value'];
+      }
+      $aFieldData["registered"] = (int) current_time( 'timestamp' );
+      if (!isset($this->aOptions['aIntfParticipants'][$this->aOptions['iIntfFlashmobYear']])) {
+        $this->aOptions['aIntfParticipants'][$this->aOptions['iIntfFlashmobYear']] = array();
+      }
+
+      if (!empty($aFieldData) && in_array('newsletter_subscribe', $aFieldData['preferences'])) {
+        // Subscribe participant to newsletter via REST API //
+        $strAction = 'subscribe';
+        $aData = array(
+          'email'       => $aFieldData['user_email'],
+          'name'        => $aFieldData['first_name'],
+          'surname'     => $aFieldData['last_name'],
+          'send_emails' => true,
+        );
+        if ($aFieldData['gender'] === 'muz' || $aFieldData['gender'] === 'zena') {
+          $aData['gender'] = $aFieldData['gender'] === 'muz' ? 'm' : 'f';
+        }
+        $aFieldData['newsletter_subscription_result'] = '';
+        $bResult = $this->execute_newsletter_rest_api_call( $strAction, $aData );
+        if ($strAction === 'subscribe' && !$bResult['ok'] && isset($bResult['issue']) && $bResult['issue'] === 'email-exists') {
+          $strAction2 = 'subscribers/delete';
+          $aData2 = array( 'email' => $aFieldData['user_email'] );
+          $bResult2 = $this->execute_newsletter_rest_api_call( $strAction2, $aData2 );
+          if ($bResult2['ok']) {
+            $bResult = $this->execute_newsletter_rest_api_call( $strAction, $aData );
+            if (defined('FLORP_DEVEL_REST_API_DEBUG') && FLORP_DEVEL_REST_API_DEBUG === true) {
+              file_put_contents( __DIR__ . "/kk-debug-after-submission-newsletter-rest-api-ok2.log", var_export( $bResult2, true ) );
+            }
+          } else {
+            $aFieldData['newsletter_subscription_result'] = 'error: '.var_export( $bResult2, true ).PHP_EOL;
+            if (defined('FLORP_DEVEL_REST_API_DEBUG') && FLORP_DEVEL_REST_API_DEBUG === true) {
+              file_put_contents( __DIR__ . "/kk-debug-after-submission-newsletter-rest-api-error2.log", var_export( $bResult2, true ) );
+            }
+          }
+        }
+        if (!$bResult['ok']) {
+          $aFieldData['newsletter_subscription_result'] .= 'error: '.var_export( $bResult, true );
+          if (defined('FLORP_DEVEL_REST_API_DEBUG') && FLORP_DEVEL_REST_API_DEBUG === true) {
+            file_put_contents( __DIR__ . "/kk-debug-after-submission-newsletter-rest-api-error.log", var_export( $bResult, true ) );
+          }
+        } else {
+          $aFieldData['newsletter_subscription_result'] = 'ok';
+          if (defined('FLORP_DEVEL_REST_API_DEBUG') && FLORP_DEVEL_REST_API_DEBUG === true) {
+            file_put_contents( __DIR__ . "/kk-debug-after-submission-newsletter-rest-api-ok.log", var_export( $bResult, true ) );
+          }
+        }
+      }
+
+      $this->aOptions['aIntfParticipants'][$this->aOptions['iIntfFlashmobYear']] = array_merge($this->aOptions['aIntfParticipants'][$this->aOptions['iIntfFlashmobYear']], array(
+        $aFieldData['user_email'] => $aFieldData,
+      ));
+      $this->save_options();
+
+      if (strlen(trim($this->aOptions['strIntfParticipantRegisteredMessage'])) > 0) {
+        $strMessageContent = $this->aOptions['strIntfParticipantRegisteredMessage'];
+        $strBlogname = trim(wp_specialchars_decode(get_option('blogname'), ENT_QUOTES));
+        $aHeaders = array('Content-Type: text/html; charset=UTF-8');
+        $this->new_user_notification( $aFieldData['user_email'], '', $aFieldData['user_email'], $strBlogname, $strMessageContent, $this->aOptions['strIntfParticipantRegisteredSubject'], $aHeaders );
+      }
+      return 5;
+    }
+
     if (!$this->isMainBlog || intval($aFormData['form_id']) !== $this->iProfileFormNinjaFormIDMain) {
       // Not the profile form (or the main site at all) //
       return 2;
@@ -7802,8 +8273,12 @@ class FLORP{
   public function action__lwa_before_login_form( $aLwaData ) {
     if ($this->isMainBlog) {
       echo $this->strBeforeLoginFormHtmlMain;
-    } elseif ($this->isFlashmobBlog) {
+    }
+    if ($this->isFlashmobBlog) {
       echo $this->strBeforeLoginFormHtmlFlashmob;
+    }
+    if ($this->isIntfBlog) {
+      echo $this->strBeforeLoginFormHtmlIntf;
     }
   }
 
@@ -7828,6 +8303,10 @@ class FLORP{
     return $this->iProfileFormNinjaFormIDFlashmob;
   }
 
+  public function get_profile_form_id_intf() {
+    return $this->iProfileFormNinjaFormIDIntf;
+  }
+
   public function is_main_blog() {
     return $this->isMainBlog;
   }
@@ -7844,12 +8323,20 @@ class FLORP{
     return $this->aOptions['bTshirtOrderingDisabled'];
   }
 
+  public function is_intf_tshirt_ordering_disabled() {
+    return $this->aOptions['bIntfTshirtOrderingDisabled'];
+  }
+
   public function has_main_only_florp_profile_ninja_form() {
     return $this->aOptions['bOnlyFlorpProfileNinjaFormMain'];
   }
 
   public function has_flashmob_only_florp_profile_ninja_form() {
     return $this->aOptions['bOnlyFlorpProfileNinjaFormFlashmob'];
+  }
+
+  public function is_intf_city_poll_disabled() {
+    return $this->bIntfCityPollDisabled;
   }
 
   public function get_message( $strKey = false, $strDefault = "" ) {
@@ -7874,6 +8361,18 @@ class FLORP{
       return false;
     }
     foreach ($this->aOptions['aParticipants'] as $iUserID => $aParticipants) {
+      if (isset($aParticipants[$strEmail])) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public function intf_participant_exists( $strEmail ) {
+    if (empty($this->aOptions['aIntfParticipants'])) {
+      return false;
+    }
+    foreach ($this->aOptions['aIntfParticipants'] as $iYear => $aParticipants) {
       if (isset($aParticipants[$strEmail])) {
         return true;
       }
@@ -7950,6 +8449,10 @@ function florp_get_profile_form_id_flashmob() {
   global $FLORP;
   return $FLORP->get_profile_form_id_flashmob();
 }
+function florp_get_profile_form_id_intf() {
+  global $FLORP;
+  return $FLORP->get_profile_form_id_intf();
+}
 function florp_is_main_blog() {
   global $FLORP;
   return $FLORP->is_main_blog();
@@ -7966,6 +8469,10 @@ function florp_is_tshirt_ordering_disabled() {
   global $FLORP;
   return $FLORP->is_tshirt_ordering_disabled();
 }
+function florp_is_intf_tshirt_ordering_disabled() {
+  global $FLORP;
+  return $FLORP->is_intf_tshirt_ordering_disabled();
+}
 function florp_has_main_only_florp_profile_ninja_form() {
   global $FLORP;
   return $FLORP->has_main_only_florp_profile_ninja_form();
@@ -7973,6 +8480,10 @@ function florp_has_main_only_florp_profile_ninja_form() {
 function florp_has_flashmob_only_florp_profile_ninja_form() {
   global $FLORP;
   return $FLORP->has_flashmob_only_florp_profile_ninja_form();
+}
+function florp_is_intf_city_poll_disabled() {
+  global $FLORP;
+  return $FLORP->is_intf_city_poll_disabled();
 }
 function florp_profile_form_loader( $aAttributes = array() ) {
   return;
@@ -7994,4 +8505,8 @@ function florp_get_message( $strKey = false, $strDefault = "" ) {
 function florp_flashmob_participant_exists( $strEmail ) {
   global $FLORP;
   return $FLORP->flashmob_participant_exists( $strEmail );
+}
+function florp_intf_participant_exists( $strEmail ) {
+  global $FLORP;
+  return $FLORP->intf_participant_exists( $strEmail );
 }
