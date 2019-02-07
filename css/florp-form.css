@@ -54,6 +54,11 @@ body.state_default nf-field.florp-right.florp-3-col-1{
 body.state_default nf-field.florp-right.florp-3-col-2{
   width: 66%;
 }
+body.state_default nf-field.florp-full-uniform .nf-field-label,
+body.state_default nf-field.florp-full-uniform .nf-field-element{
+  width: 50%;
+}
+
 nf-field .florp-right-button,
 nf-field.florp-right-button{
   float: right;
@@ -292,7 +297,8 @@ body.state_default .florp-newsletter-banner.participants img{
 
 .nf-field-description,
 .nf-form-fields-required,
-.florp-flashmob-info-p{
+.florp-flashmob-info-p,
+.florp-75p{
   font-size: 0.75em;
 }
 

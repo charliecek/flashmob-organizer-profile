@@ -13,6 +13,16 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v4.7.2: charts, intf tshirt imgs, new form =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.7.2)
+- Charts class, chart shortcode for international flashmob city poll
+- New international flashmob tshirt images
+- Changes to international flashmob participant signup NF form
+
+= v4.7.1: info circle position bugfix =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.7.1)
+- Bugfix: wrong info circle position and popup when multiple forms are on the same page
+
 = v4.7.0: International flashmob signup form =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.7.0)
 - Added international flashmob signup form
@@ -215,16 +225,5 @@ Added check for participant t-shirt related fields
 - fixde multicolumn fields on mobiles
 - added variations to site matching
 
-= v4.3.4: fixed preview when shown on the right half of screen =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.3.4)
-fixed preview when shown on the right half of screen
 
-= v4.3.3: Responsive mobile css fixed, Matching own city website =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.3.3)
-- Responsive mobile css fixed
-- Matching own city website
-- Trimming ending slash from website info labels
-- Minor flashmob form change
-
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.3.3)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.3.5)
