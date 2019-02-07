@@ -974,7 +974,7 @@ $aFlorpNinjaFormExportData = array (
       'help_text' => '',
       'manual_key' => '1',
       'drawerDisabled' => false,
-      'label' => 'Mesto',
+      'label' => 'Mesto (kde tancujete)',
       'key' => 'flashmob_city',
       'type' => 'listselect',
       'options' => 
@@ -10936,7 +10936,7 @@ $aFlorpNinjaFormExportData = array (
       'admin_label' => '',
       'help_text' => '<p>Kedykoľvek budete chcieť newsletter zrušiť, môžete tak spraviť kliknutím na odkaz v pätičke ľubovoľného emailu alebo nás kontaktujte na info@salsarueda.dance.</p><p>Vaše informácie budeme rešpektovať a používať výlučne ku kontaktovaniu a zasielaniu noviniek tohoto webu. K vaším údajom bude mať prístup iba majiteľ tohoto webu a nebude ich poskytovať iným osobám.</p><p>Spracovanie týchto údajov nám povoľuje zákon GDPR a tieto údaje budeme uchovávať po dobu existencie tohoto webu alebo kým si Vy nevyžiadate zmazanie z databázy.</p><p>Máte právo byť jednoducho vymazaný z databázy, právo na presun údajov a právo na prístup k informáciám ktoré o vás tento web zhromaždil.</p>',
       'manual_key' => '1',
-      'drawerDisabled' => '',
+      'drawerDisabled' => false,
       'desc_text' => '',
       'label' => 'Preferencie',
       'key' => 'preferences',
@@ -10954,7 +10954,7 @@ $aFlorpNinjaFormExportData = array (
           'label' => 'Chcem pamätné Flashmob tričko',
           'value' => 'flashmob_participant_tshirt',
           'calc' => '0',
-          'selected' => 1,
+          'selected' => 0,
           'order' => 0,
           'settingModel' => 
           array (
@@ -12317,6 +12317,6 @@ $aFlorpNinjaFormExportData = array (
       'subs_expire_time' => '90',
     ),
   ),
-  'version' => 4006012,
-  'timestamp' => 1549408728,
+  'version' => 4007001,
+  'timestamp' => 1549500005,
 ); ?>

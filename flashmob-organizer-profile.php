@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.7.1
+ * Version: 4.7.2
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '4.7.1';
+  private $strVersion = '4.7.2';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iIntfBlogID = 6;
@@ -72,11 +72,15 @@ class FLORP{
   private $bHideFlashmobFields;
   private $aSubscriberTypes = array("flashmob_organizer", "teacher");
   private $bIntfCityPollDisabled = false;
+  private $oFlorpChartInstance;
 
   public function __construct() {
     $this->load_options();
 
     $this->set_variables();
+
+    require_once __DIR__ . "/class.florp.chart.php";
+    $this->oFlorpChartInstance = new FLORP_CHART();
 
     $this->aRegisteredUserCount = array(
       'on-map-only' => -1,
@@ -399,6 +403,7 @@ class FLORP{
     add_shortcode( 'florp-popup-links', array( $this, 'popupLinks' )); // DEPRECATED //
     add_shortcode( 'florp-profile', array( $this, 'main_blog_profile' ));
     add_shortcode( 'florp-leader-participant-list', array( $this, 'leader_participants_table_shortcode' ));
+    add_shortcode( 'florp-intf-chart', array( $this, 'shortcode_intf_chart' ));
     // END SHORTCODES //
 
     // BEGIN FILTERS //
@@ -2241,6 +2246,108 @@ class FLORP{
 
   public function popup_anchor( $aAttributes ) {
     return '<a name="'.$this->strClickTriggerAnchor.'"></a>';
+  }
+
+  public function shortcode_intf_chart( $aAttributes ) {
+    $aAttributes = shortcode_atts(array(
+      'row-height'  => 0,
+      'color'       => '#aaa',
+      'row-name'    => 'Mesto',
+      'col-name'    => 'Počet hlasov',
+      'val-style'   => 'count',
+      // 'val-style'   => 'percentage',
+      // 'type'        => 'PieChart',
+    ), $aAttributes);
+    $aOptions = array(
+      'title'       => 'Mestá',
+      'legend'      => 'none',
+      'height'      => '400',
+      // 'width' => '400',
+    );
+    $aStyleAttributes = array(
+      // 'height' => '400px',
+      'width' => '100%',
+    );
+    $aStyleItems = array();
+    foreach ($aStyleAttributes as $key => $val) {
+      if (isset($aAttributes["div-".$key])) {
+        $aStyleAttributes[$key] = $aAttributes["div-".$key];
+      }
+      $aStyleItems[] = $key.": ".$aStyleAttributes[$key];
+    }
+    $aDivAttributes = array();
+    if (!empty($aStyleItems)) {
+      $aDivAttributes['style'] = implode("; ", $aStyleItems).';';
+    }
+
+    foreach ($aOptions as $key => $val) {
+      if (isset($aAttributes["chart-".$key])) {
+        $aOptions[$key] = $aAttributes["chart-".$key];
+      }
+    }
+
+    $aCities = $this->get_intf_poll_cities();
+    $aCityNumbers = array();
+    foreach ($aCities as $strCity) {
+      $aCityNumbers[$strCity] = 0;
+    }
+
+    $bPercentage = false;
+    if (isset($aAttributes['val-style']) && $aAttributes['val-style'] == 'percentage') {
+      $bPercentage = true;
+      $iTotalCount = 0;
+    }
+
+    foreach ($this->aOptions['aIntfParticipants'][$this->aOptions['iIntfFlashmobYear']] as $aParticipantData) {
+      if (isset($aParticipantData['intf_city']) && !empty($aParticipantData['intf_city']) && 'null' != $aParticipantData['intf_city'] && in_array($aParticipantData['intf_city'], $aCities)) {
+        $aCityNumbers[$aParticipantData['intf_city']]++;
+        if ($bPercentage) {
+          $iTotalCount++;
+        }
+      }
+    }
+    arsort($aCityNumbers);
+
+    $iLimit = 0;
+    if (isset($aAttributes['limit']) && (is_int($aAttributes['limit']) || preg_match('~\d+~', $aAttributes['limit']))) {
+      $iLimit = intval($aAttributes['limit']);
+    }
+    // $iLimit = 3;
+
+    $iCount = 1;
+    $aHeader = [$aAttributes['row-name'], $aAttributes['col-name']];
+    if (isset($aAttributes['color'])) {
+      $aHeader[] = [ "role" => 'style' ];
+    }
+    $aDataTable[] = $aHeader;
+    foreach ($aCityNumbers as $strCity => $iValue) {
+      if ($iValue == 0) {
+        continue;
+      }
+      if ($iLimit > 0 && $iCount > $iLimit) {
+        break;
+      }
+      if ($bPercentage) {
+        $iValue = round((100.0 * $iValue) / $iTotalCount, 2);
+      }
+      $aRow = [$strCity, $iValue];
+      if (isset($aAttributes['color'])) {
+        $aRow[] = $aAttributes['color'];
+      }
+      $aDataTable[] = $aRow;
+      $iCount++;
+    }
+
+    if (isset($aAttributes['row-height']) && $aAttributes['row-height'] > 0) {
+      $aOptions['height'] = ($aAttributes['row-height'] * (count($aDataTable) - 1));
+    }
+    // die(strval(count($aDataTable) - 1));
+    // die(strval($aOptions['height']));
+
+    if (is_null($this->oFlorpChartInstance)) {
+      return '';
+    }
+    return $this->oFlorpChartInstance->get_chart( $aAttributes, $aDivAttributes, $aDataTable, $aOptions );
   }
 
   private function getFlashmobSubscribers( $strType, $bPending = false ) {
