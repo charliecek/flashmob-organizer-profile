@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.7.3
+ * Version: 4.7.4
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '4.7.3';
+  private $strVersion = '4.7.4';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iIntfBlogID = 6;
@@ -73,6 +73,8 @@ class FLORP{
   private $aSubscriberTypes = array("flashmob_organizer", "teacher");
   private $bIntfCityPollDisabled = false;
   private $oFlorpChartInstance;
+  private $bReloadChartOnIntfFormSubmission = true;
+  private $strIntfChartClass = "florp-intf-chart";
 
   public function __construct() {
     $this->load_options();
@@ -418,6 +420,7 @@ class FLORP{
     add_filter( 'ninja_forms_display_form_settings', array( $this, 'filter__displaying_profile_form_nf_start' ), 10, 2 );
     add_filter( 'the_content', array( $this, 'filter__the_content' ), 9999 );
     add_filter( 'us_load_header_settings', array( $this, 'filter__us_load_header_settings' ), 11 );
+    add_filter( 'florp_chart_get_datatable', array( $this, 'filter__get_intf_chart_datatable' ), 10, 3 );
     // END FILTERS //
 
     // BEGIN ACTIONS //
@@ -2248,54 +2251,11 @@ class FLORP{
     return '<a name="'.$this->strClickTriggerAnchor.'"></a>';
   }
 
-  public function shortcode_intf_chart( $aAttributes ) {
-    $aAttributes = shortcode_atts(array(
-      'row-height'  => 0,
-      'color'       => '#aaa',
-      'row-name'    => 'Mesto',
-      'col-name'    => 'Počet hlasov',
-      'val-style'   => 'count',
-      // 'val-style'   => 'percentage',
-      // 'type'        => 'PieChart',
-    ), $aAttributes);
-    $aOptions = array(
-      'title'       => 'Mestá',
-      'legend'      => 'none',
-      'height'      => '400',
-      // 'width' => '400',
-    );
-    $aStyleAttributes = array(
-      // 'height' => '400px',
-      'width' => '100%',
-    );
-    $aStyleItems = array();
-    foreach ($aStyleAttributes as $key => $val) {
-      if (isset($aAttributes["div-".$key])) {
-        $aStyleAttributes[$key] = $aAttributes["div-".$key];
-      }
-      $aStyleItems[] = $key.": ".$aStyleAttributes[$key];
-    }
-    $aDivAttributes = array();
-    if (!empty($aStyleItems)) {
-      $aDivAttributes['style'] = implode("; ", $aStyleItems).';';
-    }
-
-    foreach ($aOptions as $key => $val) {
-      if (isset($aAttributes["chart-".$key])) {
-        $aOptions[$key] = $aAttributes["chart-".$key];
-      }
-    }
-
+  private function getIntfChartDataTable( $aAttributes, $aOptions ) {
     $aCities = $this->get_intf_poll_cities();
     $aCityNumbers = array();
     foreach ($aCities as $strCity) {
       $aCityNumbers[$strCity] = 0;
-    }
-
-    $bPercentage = false;
-    if (isset($aAttributes['val-style']) && $aAttributes['val-style'] == 'percentage') {
-      $bPercentage = true;
-      $iTotalCount = 0;
     }
 
     foreach ($this->aOptions['aIntfParticipants'][$this->aOptions['iIntfFlashmobYear']] as $aParticipantData) {
@@ -2337,6 +2297,54 @@ class FLORP{
       $aDataTable[] = $aRow;
       $iCount++;
     }
+    return $aDataTable;
+  }
+
+  public function shortcode_intf_chart( $aAttributes ) {
+    $aAttributes = shortcode_atts(array(
+      'row-height'  => 0,
+      'color'       => '#aaa',
+      'row-name'    => 'Mesto',
+      'col-name'    => 'Počet hlasov',
+      'val-style'   => 'count',
+      // 'val-style'   => 'percentage',
+      // 'type'        => 'PieChart',
+    ), $aAttributes);
+    $aOptions = array(
+      'title'       => 'Mestá',
+      'legend'      => 'none',
+      'height'      => '400',
+      // 'width' => '400',
+    );
+    $aStyleAttributes = array(
+      // 'height' => '400px',
+      'width' => '100%',
+    );
+    $aStyleItems = array();
+    foreach ($aStyleAttributes as $key => $val) {
+      if (isset($aAttributes["div-".$key])) {
+        $aStyleAttributes[$key] = $aAttributes["div-".$key];
+      }
+      $aStyleItems[] = $key.": ".$aStyleAttributes[$key];
+    }
+    $aDivAttributes = array();
+    if (!empty($aStyleItems)) {
+      $aDivAttributes['style'] = implode("; ", $aStyleItems).';';
+    }
+
+    foreach ($aOptions as $key => $val) {
+      if (isset($aAttributes["chart-".$key])) {
+        $aOptions[$key] = $aAttributes["chart-".$key];
+      }
+    }
+
+    $bPercentage = false;
+    if (isset($aAttributes['val-style']) && $aAttributes['val-style'] == 'percentage') {
+      $bPercentage = true;
+      $iTotalCount = 0;
+    }
+
+    $aDataTable = $this->getIntfChartDataTable($aAttributes, $aOptions);
 
     if (isset($aAttributes['row-height']) && $aAttributes['row-height'] > 0) {
       $aOptions['height'] = ($aAttributes['row-height'] * (count($aDataTable) - 1));
@@ -2347,7 +2355,19 @@ class FLORP{
     if (is_null($this->oFlorpChartInstance)) {
       return '';
     }
-    return $this->oFlorpChartInstance->get_chart( $aAttributes, $aDivAttributes, $aDataTable, $aOptions );
+    return $this->oFlorpChartInstance->get_chart( $aAttributes, $aDivAttributes, $aDataTable, $aOptions, $this->strIntfChartClass );
+  }
+
+  public function filter__get_intf_chart_datatable( $aDataTable, $aChartProperties, $aChartData ) {
+    if (in_array($this->strIntfChartClass, $aChartProperties["containerClasses"])) {
+      $aDataTableLoc = $this->getIntfChartDataTable($aChartData['attrs'], $aChartData['options'], $aChartData['dataTable']);
+      // Only change the output if it's different from the previous value -- this prevents the reloading of charts e.g. on PUM close //
+      if ($aDataTableLoc != $aChartData['dataTable']) {
+        $aDataTable = $aDataTableLoc;
+      }
+    }
+
+    return $aDataTable;
   }
 
   private function getFlashmobSubscribers( $strType, $bPending = false ) {
@@ -3178,6 +3198,8 @@ class FLORP{
       'tshirt_ordering_only_disable_intf' => $this->aOptions['bIntfTshirtOrderingDisabledOnlyDisable'] ? 1 : 0,
       'intf_city_poll_disabled'           => $this->bIntfCityPollDisabled ? 1 : 0,
       // 'all_imgs'                          => glob($strImagePath . "t-shirt-*.png"),
+      'reload_charts_on_intff_submission' => $this->bReloadChartOnIntfFormSubmission ? 1 : 0,
+      'intf_chart_class'                  => $this->strIntfChartClass,
     );
     if (is_user_logged_in()) {
       $aJS['user_id'] = $iUserID;

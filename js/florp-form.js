@@ -161,6 +161,18 @@
       }
     );
   }
+  function florp_reload_intf_charts_on_successful_submission() {
+    if (florp["reload_charts_on_intff_submission"] != 1) {
+      return
+    }
+    if ("undefined" === typeof florp_charts || !florp_charts.hasOwnProperty("length") || florp_charts.length === 0) {
+      return
+    }
+    if ("function" !== typeof florpChartReload) {
+      return
+    }
+    florpChartReload(florp.intf_chart_class)
+  }
   function florp_reload_on_successful_submission(sReloadOkVar) {
     if (florp[sReloadOkVar] != 1) {
       florpReloadMaps();
@@ -1971,6 +1983,7 @@
   jQuery(document).on( 'pumBeforeClose', '#pum-'+florp.popup_id_main+', #pum-'+florp.popup_id_flashmob+', #pum-'+florp.popup_id_intf, florpScrollToAnchor );
   jQuery(document).on( 'pumBeforeClose', '#pum-'+florp.popup_id_main, function() {florp_reload_on_successful_submission("reload_ok_submission_main")} );
   jQuery(document).on( 'pumBeforeClose', '#pum-'+florp.popup_id_flashmob, function() {florp_reload_on_successful_submission("reload_ok_submission_flashmob")} );
+  jQuery(document).on( 'pumBeforeClose', '#pum-'+florp.popup_id_intf, function() {florp_reload_intf_charts_on_successful_submission()} );
 
   jQuery( document ).on( 'nfFormReady', function() {
     florpFixFormClasses();
