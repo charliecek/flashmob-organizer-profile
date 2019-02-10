@@ -13,6 +13,10 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v4.7.3: small visual intf form fixes =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.7.3)
+- small visual intf form fixes
+
 = v4.7.2: charts, intf tshirt imgs, new form =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.7.2)
 - Charts class, chart shortcode for international flashmob city poll
@@ -218,12 +222,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.3.6)
 Added check for participant t-shirt related fields
 
-= v4.3.5: Fixes, improvements =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.3.5)
-- extended jQuery jBox function to remember all instantiated jBoxes
-- fixed jBox position on mobiles
-- fixde multicolumn fields on mobiles
-- added variations to site matching
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.3.5)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.3.6)
