@@ -123,7 +123,7 @@ class LoginWithAjax {
 			add_shortcode('lwa', 'LoginWithAjax::shortcode');
 		}
 	}
-	
+
 	public static function widgets_init(){
 		//Include and register widget
 		include_once('login-with-ajax-widget.php');
@@ -174,7 +174,7 @@ class LoginWithAjax {
 			$user_role = 'null';
 			if ( is_wp_error($loginResult) ) {
         $return['result'] = false;
-        $return['message'] = $loginResult->get_error_message();
+        $return['error'] = florp_get_message('login_error', __( '<strong>ERROR</strong>: Invalid username or password.' )); // $loginResult->get_error_message();
 			} elseif ( strtolower(get_class($loginResult)) == 'wp_user' ) {
 				//User login successful
 				self::$current_user = $loginResult;
@@ -363,7 +363,7 @@ class LoginWithAjax {
 		}
 		return $logout_url;
 	}
-	
+
 	public static function getRegisterLink(){
 	    $register_link = false;
 	    if ( function_exists('bp_get_signup_page') && (empty($_REQUEST['action']) || ($_REQUEST['action'] != 'deactivate' && $_REQUEST['action'] != 'deactivate-selected')) ) { //Buddypress
@@ -588,17 +588,17 @@ class LoginWithAjax {
 	/*
 	 * Auxillary Functions
 	 */
-	
+
 	/**
 	 * Returns the URL for a relative filepath which would be located in either a child, parent or plugin folder in order of priority.
-	 * 
+	 *
 	 * This would search for $template_path within:
 	 * /wp-content/themes/your-child-theme/plugins/login-with-ajax/...
 	 * /wp-content/themes/your-parent-theme/plugins/login-with-ajax/...
 	 * /wp-content/plugins/login-with-ajax/widget/...
-	 * 
+	 *
 	 * It is assumed that the file always exists within the core plugin folder if the others aren't found.
-	 * 
+	 *
 	 * @param string $template_path
 	 * @return string
 	 */
@@ -626,7 +626,7 @@ class LoginWithAjax {
 		    }
 		}
 	}
-	
+
 	/**
 	 * Add template link and JSON callback var to the URL
 	 * @param string $content
@@ -635,7 +635,7 @@ class LoginWithAjax {
 	public static function template_link( $content ){
 		return add_query_arg(array('template'=>self::$template), $content);
 	}
-	
+
 	/**
 	 * Returns a sanitized JSONP response from an array
 	 * @param array $array
@@ -647,7 +647,7 @@ class LoginWithAjax {
 			$return = $_REQUEST['callback']."($return)";
 		}
 		return $return;
-	}	
+	}
 }
 //Set when to init this class
 add_action( 'init', 'LoginWithAjax::init' );

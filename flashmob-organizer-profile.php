@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.7.4
+ * Version: 4.7.5
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '4.7.4';
+  private $strVersion = '4.7.5';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iIntfBlogID = 6;
@@ -586,6 +586,8 @@ class FLORP{
       'strFbAppID'                                => '768253436664320',
       'strRegistrationSuccessfulMessage'          => "Prihlasujeme Vás... Prosíme, počkajte, kým sa stránka znovu načíta.",
       'strLoginSuccessfulMessage'                 => "Prihlásenie prebehlo úspešne, prosíme, počkajte, kým sa stránka znovu načíta.",
+      'strRegistrationErrorMessage'               => "<strong>CHYBA</strong>: Pri registrácii nastala chyba.",
+      'strLoginErrorMessage'                      => "<strong>CHYBA</strong>: Neplatné používateľské meno alebo heslo.",
       'bPreventDirectMediaDownloads'              => false,
       'strNewsletterAPIKey'                       => '',
       'strNewsletterListsMain'                    => '',
@@ -8472,6 +8474,8 @@ class FLORP{
     $aMessages = array(
       'login_success' => $this->aOptions['strLoginSuccessfulMessage'],
       'registration_success' => $this->aOptions['strRegistrationSuccessfulMessage'],
+      'login_error' => $this->aOptions['strLoginErrorMessage'],
+      'registration_error' => $this->aOptions['strRegistrationErrorMessage'],
     );
 
     if ($strKey) {

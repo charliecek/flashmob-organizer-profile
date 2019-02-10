@@ -13,6 +13,10 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+=  v4.7.4: chart reload on intf form submission =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.7.4)
+- Added chart reload on international flashmob NF submission (before PUM close)
+
 = v4.7.3: small visual intf form fixes =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.7.3)
 - small visual intf form fixes
@@ -218,9 +222,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 - fixed leader tshirt preview change to flashmob city
   - instead of user city
 
-= v4.3.6: Added check for participant t-shirt related fields =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.3.6)
-Added check for participant t-shirt related fields
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.3.6)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.4.0)
