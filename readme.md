@@ -17,6 +17,12 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 ## Version history
 
+### v4.7.5: fix LWA error message on failed login
+
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.7.5)
+
+- Fixed empty LWA error message span on failed login
+
 ###  v4.7.4: chart reload on intf form submission
 
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.7.4)
@@ -272,19 +278,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 - refactored get_leader_webpage for multiple use
 - fix: city webpage based on flashmob city, not user city
 
-### v4.4.0: tshirt page with csv download, admin ajax, fixes
 
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.4.0)
-
-- fixed validation on registration form
-- added admin view for ordered tshirts
-  - with button "paid"
-  - with buttons "download CSV - all/unpaid"
-- added button "delete" to admin participant list
-- added possibility of purging info about paid tshirts (DEVEL)
-- added ajax for florp admin pages
-- fixed leader tshirt preview change to flashmob city
-  - instead of user city
-
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.4.0)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.4.1)
