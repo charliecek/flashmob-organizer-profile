@@ -2310,6 +2310,7 @@ class FLORP{
       'row-name'    => 'Mesto',
       'col-name'    => 'Počet hlasov',
       'val-style'   => 'count',
+      'limit'       => 10000,
       // 'val-style'   => 'percentage',
       // 'type'        => 'PieChart',
     ), $aAttributes);
@@ -2348,6 +2349,9 @@ class FLORP{
     }
 
     $aDataTable = $this->getIntfChartDataTable($aAttributes, $aOptions);
+    if (count($aDataTable) <= 1) {
+      return '';
+    }
 
     if (isset($aAttributes['row-height']) && $aAttributes['row-height'] > 0) {
       $aOptions['height'] = ($aAttributes['row-height'] * (count($aDataTable) - 1));
@@ -5697,7 +5701,7 @@ class FLORP{
     echo json_encode($aData);
     wp_die();
   }
-  
+
   public function action__delete_florp_intf_participant_callback() {
 //     wp_die();
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
