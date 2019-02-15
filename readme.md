@@ -17,6 +17,12 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 ## Version history
 
+### v4.7.6: international flashmob participants admin list
+
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.7.6)
+
+- Added International Flashmob participants admin list
+
 ### v4.7.5: fix LWA error message on failed login
 
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.7.5)
@@ -267,16 +273,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 - bugfix: map (pre)view didn't use flashmob_city for "vytvorit"
 
-### v4.4.1: fixes, improvements
 
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.4.1)
-
-- better get_tshirt logic (paid/unpaid/all)
-- added leader and webpage to tshirt data
-- fixed bug: tshirts only for non-pending participants
-- fixed bug: leaders don't have to pay for tshirts
-- refactored get_leader_webpage for multiple use
-- fix: city webpage based on flashmob city, not user city
-
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.4.1)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.4.2)
