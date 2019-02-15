@@ -17,6 +17,15 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 ## Version history
 
+### v4.7.7: Charts: attribute/option fixes, bug fixes.
+
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.7.7)
+
+- Added chart shortcode attributes (some were removed by `shortcode_atts()`)
+- Fixed multiple chart display
+- Fixed percentage-style chart value counting
+- Added responsiveness to charts (redraw on window size change)
+
 ### v4.7.6: international flashmob participants admin list
 
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.7.6)
@@ -267,11 +276,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 - fixed bug with forms when both forms have the same ID
 
-### v4.4.2: map (pre)view bugfix
 
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.4.2)
-
-- bugfix: map (pre)view didn't use flashmob_city for "vytvorit"
-
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.4.2)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.4.3)

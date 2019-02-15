@@ -1,7 +1,7 @@
 <?php
 
 class FLORP_CHART{
-  private $strVersion = "1.0.1";
+  private $strVersion = "1.0.2";
   private $strClass = "florp-chart";
   private $strChartLanguage = 'sk';
   private $strChartVersion = 'current';
