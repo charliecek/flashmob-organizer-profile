@@ -1672,6 +1672,9 @@ class FLORP{
       add_action( 'admin_notices', array( $this, 'action__admin_notices__florp_devel_purge_tshirts_save_is_on' ));
     }
 
+    if (is_admin() && current_user_can( 'activate_plugins' ) && isset($_POST['florp-download-intf-participant-csv'])) {
+      $this->serveParticipantCSV(true);
+    }
     if (is_admin() && current_user_can( 'activate_plugins' ) && isset($_POST['florp-download-participant-csv'])) {
       $this->serveParticipantCSV();
     }
@@ -2311,15 +2314,16 @@ class FLORP{
 
   public function shortcode_intf_chart( $aAttributes ) {
     $aAttributes = shortcode_atts(array(
-      'row-height'  => 0,
-      'color'       => '#aaa',
-      'row-name'    => 'Mesto',
-      'col-name'    => 'Počet hlasov',
-      'val-style'   => 'count', // OR: 'percentage'
-      'limit'       => 0,
-      'chart-title' => null,
-      'chart-height'=> null,
-      'type'        => 'BarChart',
+      'row-height'    => 0,
+      'color'         => '#aaa',
+      'row-name'      => 'Mesto',
+      'col-name'      => 'Počet hlasov',
+      'val-style'     => 'count', // OR: 'percentage'
+      'limit'         => 0,
+      'chart-title'   => null,
+      'chart-height'  => null,
+      'type'          => 'BarChart',
+      'chartAreaLeft' => array( 230 => 35, 270 => 30, 340 => 25, 1000000 => 20 ), // key is max div width for given value //
     ), $aAttributes);
     $aOptions = array(
       'title'           => 'Mestá',
@@ -3620,8 +3624,8 @@ class FLORP{
 
     $strEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Líder</th><th>Profil</th>';
     $aParticipants = $this->get_flashmob_participants( 0, false, true );
-//     echo "<pre>";var_dump($aParticipants);echo "</pre>"; // NOTE DEVEL
-//     echo "<pre>";var_dump($this->get_flashmob_participant_csv('notshirts'));echo "</pre>"; // NOTE DEVEL
+    // echo "<pre>";var_dump($aParticipants);echo "</pre>"; // NOTE DEVEL
+    // echo "<pre>";var_dump($this->get_flashmob_participant_csv('notshirts'));echo "</pre>"; // NOTE DEVEL
 
     if (!empty($aParticipants)) {
       $aReplacements = array(
@@ -3799,14 +3803,14 @@ class FLORP{
       }
     }
     $strEcho .= '</table>';
-    // if (!empty($aParticipants)) {
-    //   $strEcho .= '<form action="" method="post">';
-    //   $strEcho .= '<input type="hidden" name="security" value="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">';
-    //   $strEcho .= '<input type="hidden" name="florp-download-participant-csv" value="1">';
-    //   $strEcho .= '<input id="florp-download-participant-csv-all" class="button button-primary button-large" name="florp-download-participant-csv-all" type="submit" value="Stiahni CSV - všetko" />';
-    //   $strEcho .= '<input id="florp-download-participant-csv-notshirts" class="button button-primary button-large" name="florp-download-participant-csv-notshirts" type="submit" value="Stiahni CSV - bez tričiek" />';
-    //   $strEcho .= '</form>';
-    // }
+    if (!empty($aParticipants)) {
+      $strEcho .= '<form action="" method="post">';
+      $strEcho .= '<input type="hidden" name="security" value="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">';
+      $strEcho .= '<input type="hidden" name="florp-download-intf-participant-csv" value="1">';
+      $strEcho .= '<input id="florp-download-intf-participant-csv-all" class="button button-primary button-large" name="florp-download-intf-participant-csv-all" type="submit" value="Stiahni CSV - všetko" />';
+      $strEcho .= '<input id="florp-download-intf-participant-csv-notshirts" class="button button-primary button-large" name="florp-download-intf-participant-csv-notshirts" type="submit" value="Stiahni CSV - bez tričiek" />';
+      $strEcho .= '</form>';
+    }
     echo $strEcho;
     // echo $this->get_missed_submissions_table( $this->iFlashmobBlogID );
     echo '</div><!-- .wrap -->';
@@ -4159,7 +4163,7 @@ class FLORP{
     echo "<div class=\"wrap\">\n<h1>" . "Leader submission history" . "</h1>\n";
     $aNfSubmissionHistory = $this->get_nf_submissions( false, 'history' );
     if (defined('FLORP_DEVEL') && FLORP_DEVEL === true) {
-//       echo "<pre>";var_dump($aNfSubmissionHistory);echo "</pre>"; // NOTE DEVEL
+      // echo "<pre>";var_dump($aNfSubmissionHistory);echo "</pre>"; // NOTE DEVEL
     }
 
     $aViews = $this->aLeaderSubmissionHistoryViews;
@@ -4469,7 +4473,7 @@ class FLORP{
             }
             $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
             $strType = " (".gettype($mixValue).")";
-//             $strSubmission .= '<strong title="'.$strKey.'">' . $strFieldName . '</strong>: ' . $strValue.$strType.'<br>';
+            // $strSubmission .= '<strong title="'.$strKey.'">' . $strFieldName . '</strong>: ' . $strValue.$strType.'<br>';
             $strEcho .= '<td><strong title="'.$strKey.'">' . $strFieldName . '</strong></td><td>-</td><td>' . $strValue . '</td>';
             $strEcho .= "</tr>\n";
           }
@@ -4516,7 +4520,7 @@ class FLORP{
               $from = "[empty]";
             }
             $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
-//             $strEcho .= "<td><strong title=\"{$strKey}\">{$strFieldName}</strong></td><td>{$from}{$from_type}</td><td>{$to}{$to_type}</td>";
+            // $strEcho .= "<td><strong title=\"{$strKey}\">{$strFieldName}</strong></td><td>{$from}{$from_type}</td><td>{$to}{$to_type}</td>";
             $strEcho .= "<td><strong title=\"{$strKey}\">{$strFieldName}</strong></td><td>{$from}</td><td>{$to}</td>";
             $strEcho .= "</tr>\n";
           }
@@ -4865,11 +4869,11 @@ class FLORP{
         }
       }
     }
-//     echo "<pre>";var_dump($this->aOptions['aNfFieldTypes']);echo "</pre>"; // NOTE DEVEL
-//     echo "<pre>";var_dump($this->aOptions['aNfSubmissions']);echo "</pre>"; // NOTE DEVEL
-//     $this->aOptions['aNfSubmissions'] = $this->aOptionDefaults['aNfSubmissions']; // NOTE DEVEL
-//     $this->aOptions['aNfFieldTypes'] = $this->aOptionDefaults['aNfFieldTypes']; // NOTE DEVEL
-//     $this->save_options();return; // NOTE DEVEL
+    // echo "<pre>";var_dump($this->aOptions['aNfFieldTypes']);echo "</pre>"; // NOTE DEVEL
+    // echo "<pre>";var_dump($this->aOptions['aNfSubmissions']);echo "</pre>"; // NOTE DEVEL
+    // $this->aOptions['aNfSubmissions'] = $this->aOptionDefaults['aNfSubmissions']; // NOTE DEVEL
+    // $this->aOptions['aNfFieldTypes'] = $this->aOptionDefaults['aNfFieldTypes']; // NOTE DEVEL
+    // $this->save_options();return; // NOTE DEVEL
 
     if ($bUseCacheTypes && $this->aOptions['aNfFieldTypes'][$iBlogID]['done']) {
       // OK //
@@ -4910,7 +4914,7 @@ class FLORP{
       $this->aOptions['aNfFieldTypes'][$iBlogID]['done'] = true;
       $this->maybe_save_options($bUseCacheTypes);
     }
-//     echo "<pre>";var_dump($this->aOptions['aNfFieldTypes']);echo "</pre>"; // NOTE DEVEL
+    // echo "<pre>";var_dump($this->aOptions['aNfFieldTypes']);echo "</pre>"; // NOTE DEVEL
 
     if ($bUseCacheSubmissions && $this->aOptions['aNfSubmissions'][$iBlogID]['done']) {
       // OK //
@@ -5248,7 +5252,7 @@ class FLORP{
   private function get_tshirts($strPaidFlag = 'all', $bCSV = false ) {
     $aLeaders = $this->getFlashmobSubscribers( 'flashmob_organizer' );
     $aTshirtsOption = $this->aOptions["aTshirts"];
-//     echo "<pre>";var_dump($aTshirtsOption);echo "</pre>";
+    // echo "<pre>";var_dump($aTshirtsOption);echo "</pre>";
     $aTshirts = array();
     foreach ($aLeaders as $oUser) {
       $aAllMeta = array_map(
@@ -5285,11 +5289,11 @@ class FLORP{
       );
     }
     $aParticipants = $this->get_flashmob_participants( 0, false, false );
-//     echo "<pre>";var_dump($aParticipants);echo "</pre>";
+    // echo "<pre>";var_dump($aParticipants);echo "</pre>";
     foreach ($aParticipants as $iLeaderID => $aParticipantsOfLeader) {
       foreach ($aParticipantsOfLeader as $strEmail => $aParticipantData) {
         if (!in_array("flashmob_participant_tshirt", $aParticipantData["preferences"])) {
-//           echo "<pre>";var_dump($aParticipantData);echo "</pre>"; // NOTE DEVEL
+          // echo "<pre>";var_dump($aParticipantData);echo "</pre>"; // NOTE DEVEL
           continue;
         }
         $aWebpageArgs = array(
@@ -5330,7 +5334,7 @@ class FLORP{
       $bPaid = false;
       if ($aTshirtData["is_leader"]) {
         $bPaid = true;
-//         $bPaid = (isset($aTshirtsOption["leaders"][$aTshirtData["user_id"]]) && isset($aTshirtsOption["leaders"][$aTshirtData["user_id"]]["paid"]) && $aTshirtsOption["leaders"][$aTshirtData["user_id"]]["paid"] === true);
+        // $bPaid = (isset($aTshirtsOption["leaders"][$aTshirtData["user_id"]]) && isset($aTshirtsOption["leaders"][$aTshirtData["user_id"]]["paid"]) && $aTshirtsOption["leaders"][$aTshirtData["user_id"]]["paid"] === true);
       } else {
         $bPaid = (isset($aTshirtsOption["participants"][$aTshirtData["email"]]) && isset($aTshirtsOption["participants"][$aTshirtData["email"]]["paid"]) && $aTshirtsOption["participants"][$aTshirtData["email"]]["paid"] === true);
         if ($bPaid) {
@@ -5359,7 +5363,7 @@ class FLORP{
       }
     }
     uasort($aTshirts, array($this, "tshirt_sort"));
-//     echo "<pre>";var_dump($aTshirts);echo "</pre>";
+    // echo "<pre>";var_dump($aTshirts);echo "</pre>";
     if ($bCSV) {
       if (empty($aTshirts)) {
         return array();
@@ -5416,18 +5420,22 @@ class FLORP{
     }
   }
 
-  private function get_flashmob_participant_csv($sType = 'all') {
+  private function get_flashmob_participant_csv($sType = 'all', $bIntf = false) {
     $aParticipantCSV = array();
-    $aParticipants = $this->get_flashmob_participants();
+    $aParticipants = $bIntf ? $this->aOptions['aIntfParticipants'] : $this->get_flashmob_participants();
 
     // Get participants as a flat array //
     $aParticipantsFlat = array();
     $aPreferences = array();
-    foreach ($aParticipants as $iLeaderID => $aParticipantsOfLeader) {
-      foreach ($aParticipantsOfLeader as $strEmail => $aParticipantData) {
-        $strKey = $strEmail."_".$iLeaderID;
+    foreach ($aParticipants as $iLeaderIDOrYear => $aParticipantsOfLeaderOrYear) {
+      foreach ($aParticipantsOfLeaderOrYear as $strEmail => $aParticipantData) {
+        $strKey = $strEmail."_".$iLeaderIDOrYear;
         $aParticipantsFlat[$strKey] = $aParticipantData;
-        $aParticipantsFlat[$strKey]['leader_user_id'] = $iLeaderID;
+        if ($bIntf) {
+          $aParticipantsFlat[$strKey]['year'] = $iLeaderIDOrYear;
+        } else {
+          $aParticipantsFlat[$strKey]['leader_user_id'] = $iLeaderIDOrYear;
+        }
         $aParticipantsFlat[$strKey]['user_email'] = $strEmail;
         if (isset($aParticipantData['preferences'])) {
           unset($aParticipantsFlat[$strKey]['preferences']);
@@ -5449,7 +5457,11 @@ class FLORP{
     foreach ($aParticipantsFlat as $aParticipantData) {
       foreach ($aParticipantData as $strKey => $mixVal) {
         if (!isset($aHeaders[$strKey])) {
-          $aHeaders[$strKey] = ucfirst(str_replace( array( '_timestamp', '-', '_' ), array( '_date', ': ', ' ' ), $strKey ));
+          if ($strKey == "intf_city") {
+            $aHeaders[$strKey] = "Mesto (anketa)";
+          } else {
+            $aHeaders[$strKey] = ucfirst(str_replace( array( '_timestamp', '-', '_' ), array( '_date', ': ', ' ' ), $strKey ));
+          }
         }
       }
     }
@@ -5507,7 +5519,7 @@ class FLORP{
     return $aParticipantCSV;
   }
 
-  private function serveParticipantCSV() {
+  private function serveParticipantCSV($bIntf = false) {
     $bPassed = check_ajax_referer( 'srd-florp-admin-security-string', 'security', false );
     if (!$bPassed) {
       add_action( 'admin_notices', function() {
@@ -5519,6 +5531,8 @@ class FLORP{
     $aButtonNames = array(
       'florp-download-participant-csv-all',
       'florp-download-participant-csv-notshirts',
+      'florp-download-intf-participant-csv-all',
+      'florp-download-intf-participant-csv-notshirts',
     );
     $strType = "";
     $bFound = false;
@@ -5526,7 +5540,8 @@ class FLORP{
       if (isset($_POST[$strButtonName])) {
         $bFound = true;
         $strType = str_replace( "florp-download-participant-csv-", "", $strButtonName );
-        $aParticipants = $this->get_flashmob_participant_csv($strType);
+        $strType = str_replace( "florp-download-intf-participant-csv-", "", $strType );
+        $aParticipants = $this->get_flashmob_participant_csv($strType, $bIntf);
         break;
       }
     }
@@ -5539,7 +5554,7 @@ class FLORP{
 
     if (!is_array($aParticipants) || empty($aParticipants) || count($aParticipants) === 1) {
       $GLOBALS['florpInfo'] = "";
-//       $GLOBALS['florpInfo'] = '<pre>'.var_export($aParticipants, true).'</pre>'; // NOTE DEVEL
+      // $GLOBALS['florpInfo'] = '<pre>'.var_export($aParticipants, true).'</pre>'; // NOTE DEVEL
 
       $GLOBALS['florpWarningReason'] = '';
       if (is_string($aParticipants)) {
@@ -5551,7 +5566,8 @@ class FLORP{
       return;
     }
 
-    $strFileName = "participants-{$strType}-".current_time('Ymd-His').".csv";
+    $strPrefix = $bIntf ? "international-" : "";
+    $strFileName = $strPrefix."participants-{$strType}-".current_time('Ymd-His').".csv";
 
     // output headers so that the file is downloaded rather than displayed
     header('Content-type: text/csv');
@@ -5629,9 +5645,9 @@ class FLORP{
     if (!is_array($aTshirts) || empty($aTshirts) || count($aTshirts) === 1) {
       $aOrderDates = $this->aOptions['aOrderDates'];
       $GLOBALS['florpInfo'] = "";
-//       $GLOBALS['florpInfo'] = var_export($aOrderDates[$iTimestamp]['orders'], true);
-//       $aTshirtsAll = $this->get_tshirts();
-//       $GLOBALS['florpInfo'] = '<pre>'.var_export($aTshirtsAll, true).'</pre>'; // NOTE DEVEL
+      // $GLOBALS['florpInfo'] = var_export($aOrderDates[$iTimestamp]['orders'], true);
+      // $aTshirtsAll = $this->get_tshirts();
+      // $GLOBALS['florpInfo'] = '<pre>'.var_export($aTshirtsAll, true).'</pre>'; // NOTE DEVEL
 
       $GLOBALS['florpWarningReason'] = '';
       if (is_string($aTshirts)) {
@@ -5676,7 +5692,7 @@ class FLORP{
   }
 
   public function action__delete_florp_participant_callback() {
-//     wp_die();
+    // wp_die();
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
     $aData = $_POST;
@@ -5699,13 +5715,13 @@ class FLORP{
         $aData["message"] = $strErrorMessage;
       }
     }
-//     sleep(3);
+    // sleep(3);
     echo json_encode($aData);
     wp_die();
   }
 
   public function action__delete_florp_intf_participant_callback() {
-//     wp_die();
+    // wp_die();
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
     $aData = $_POST;
@@ -5728,13 +5744,13 @@ class FLORP{
         $aData["message"] = $strErrorMessage;
       }
     }
-//     sleep(3);
+    // sleep(3);
     echo json_encode($aData);
     wp_die();
   }
 
   public function action__florp_tshirt_paid_callback() {
-//     wp_die();
+    // wp_die();
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
     $aData = $_POST;
@@ -5788,7 +5804,7 @@ class FLORP{
   }
 
   public function action__add_order_date_callback() {
-//     wp_die();
+    // wp_die();
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
     $aData = $_POST;
@@ -5850,7 +5866,7 @@ class FLORP{
   }
 
   public function action__florp_tshirt_send_payment_warning_callback() {
-//     wp_die();
+    // wp_die();
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
     $aData = $_POST;
@@ -5908,7 +5924,7 @@ class FLORP{
   }
 
   public function action__florp_tshirt_cancel_order_callback() {
-//     wp_die();
+    // wp_die();
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
     $aData = $_POST;

@@ -81,6 +81,7 @@ function florpChartReload(chartClass) {
               })
               formatter.format(aDataTable, 1)
             }
+            florp_chart_options_object[inputData.containerID] = aDataTable
             chartWrapperLoc.setDataTable(aDataTable)
             chartWrapperLoc.draw()
             window["florpChartReloadAjaxRunning"][chartContainerID] = false
@@ -108,7 +109,7 @@ jQuery(window).resize(function() {
 function florpChartDrawAll() {
   console.info("Drawing charts")
   var $chartDivs = jQuery("."+florp_chart.containerClass)
-  console.log($chartDivs)
+  // console.log($chartDivs)
   $chartDivs.each(function() {
     var $this = jQuery(this)
     var strID = $this.prop('id')
@@ -135,7 +136,21 @@ function florpChartDrawAll() {
       containerId: strID,
     })
 
+    var left = 20
+    var divWidth = $this.width()
+    jQuery.each(chartData.attrs.chartAreaLeft, function(maxWidth, leftVal) {
+        if (divWidth <= maxWidth) {
+            left = Math.max(leftVal, left)
+        }
+    })
+    var width = 95 - left
+    chartWrapperLoc.setOption("chartArea", {left: left+"%", width: width+"%"})
     chartWrapperLoc.draw()
-    florp_charts.push(chartWrapperLoc)
+    var i = $this.data("index")
+    if ("undefined" === typeof i) {
+        i = florp_charts.length
+        $this.data("index", i)
+    }
+    florp_charts[i] = chartWrapperLoc
   })
 }
