@@ -30,7 +30,7 @@ class FLORP_CHART{
 
     $iTimestamp = date('U');
     $strRandomString = wp_generate_password( 5, false );
-    $strID = $strDivID_prefix . $iTimestamp . '_' . $strRandomString;
+    $strID = $iTimestamp . '_' . $strRandomString;
 
     $aChartOptions = array(
       "dataTable" => $aDataTable,
@@ -45,7 +45,7 @@ class FLORP_CHART{
 
     $strChartOptions = json_encode( $aChartOptions );
     $strChartScript = '<script type="text/javascript">
-      if ("undefined" === typeof florp_map_options_object) {
+      if ("undefined" === typeof florp_chart_options_object) {
         var florp_chart_options_object = {};
       }
       florp_chart_options_object["'.$strID.'"] = '.$strChartOptions.';

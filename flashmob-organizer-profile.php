@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.7.6
+ * Version: 4.7.7
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '4.7.6';
+  private $strVersion = '4.7.7';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iIntfBlogID = 6;
@@ -2261,6 +2261,12 @@ class FLORP{
       $aCityNumbers[$strCity] = 0;
     }
 
+    $bPercentage = false;
+    if (isset($aAttributes['val-style']) && $aAttributes['val-style'] == 'percentage') {
+      $bPercentage = true;
+      $iTotalCount = 0;
+    }
+
     foreach ($this->aOptions['aIntfParticipants'][$this->aOptions['iIntfFlashmobYear']] as $aParticipantData) {
       if (isset($aParticipantData['intf_city']) && !empty($aParticipantData['intf_city']) && 'null' != $aParticipantData['intf_city'] && in_array($aParticipantData['intf_city'], $aCities)) {
         $aCityNumbers[$aParticipantData['intf_city']]++;
@@ -2309,15 +2315,18 @@ class FLORP{
       'color'       => '#aaa',
       'row-name'    => 'Mesto',
       'col-name'    => 'Počet hlasov',
-      'val-style'   => 'count',
-      'limit'       => 10000,
-      // 'val-style'   => 'percentage',
-      // 'type'        => 'PieChart',
+      'val-style'   => 'count', // OR: 'percentage'
+      'limit'       => 0,
+      'chart-title' => null,
+      'chart-height'=> null,
+      'type'        => 'BarChart',
     ), $aAttributes);
     $aOptions = array(
-      'title'       => 'Mestá',
-      'legend'      => 'none',
-      'height'      => '400',
+      'title'           => 'Mestá',
+      'legend'          => 'none',
+      'height'          => '400',
+      'chartArea'       => array("left" => "20%", "width" => "75%"),
+      // 'backgroundColor' => 'lightgray',
       // 'width' => '400',
     );
     $aStyleAttributes = array(
@@ -2342,26 +2351,19 @@ class FLORP{
       }
     }
 
-    $bPercentage = false;
-    if (isset($aAttributes['val-style']) && $aAttributes['val-style'] == 'percentage') {
-      $bPercentage = true;
-      $iTotalCount = 0;
-    }
-
     $aDataTable = $this->getIntfChartDataTable($aAttributes, $aOptions);
     if (count($aDataTable) <= 1) {
       return '';
     }
 
     if (isset($aAttributes['row-height']) && $aAttributes['row-height'] > 0) {
-      $aOptions['height'] = ($aAttributes['row-height'] * (count($aDataTable) - 1));
+      $aOptions["bar"] = array("groupWidth" => $aAttributes['row-height']);
     }
-    // die(strval(count($aDataTable) - 1));
-    // die(strval($aOptions['height']));
 
     if (is_null($this->oFlorpChartInstance)) {
       return '';
     }
+
     return $this->oFlorpChartInstance->get_chart( $aAttributes, $aDivAttributes, $aDataTable, $aOptions, $this->strIntfChartClass );
   }
 

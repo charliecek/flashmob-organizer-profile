@@ -101,6 +101,10 @@ function florpChartReload(chartClass) {
   })
 }
 
+jQuery(window).resize(function() {
+  florpChartDrawAll();
+});
+
 function florpChartDrawAll() {
   console.info("Drawing charts")
   var $chartDivs = jQuery("."+florp_chart.containerClass)
