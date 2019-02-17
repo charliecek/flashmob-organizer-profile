@@ -17,6 +17,13 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 ## Version history
 
+### v4.7.8: Chart reload and responsiveness fixes. Int. participant CSV export
+
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.7.8)
+
+- Chart reload and responsiveness fixes
+- International participant CSV export
+
 ### v4.7.7: Charts: attribute/option fixes, bug fixes.
 
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.7.7)
@@ -270,11 +277,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 - tshirt payment notifications
 - admin ajax: added more possibilities, success actions
 
-### v4.4.3: bugfix
 
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.4.3)
-
-- fixed bug with forms when both forms have the same ID
-
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.4.3)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.5.0)
