@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.7.8
+ * Version: 4.7.9
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '4.7.8';
+  private $strVersion = '4.7.9';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iIntfBlogID = 6;
@@ -1005,20 +1005,20 @@ class FLORP{
     // $this->save_options(); // NOTE DEVEL TEMP
 
     //  // NOTE DEVEL TEMP
-//     $this->aOptions['aYearlyMapOptions'][2013][22] = array (
-//       'first_name' => 'Jaroslav',
-//       'last_name' => 'Hluch a team',
-//       'flashmob_city' => 'Bratislava',
-//       'flashmob_number_of_dancers' => '16',
-//       'video_link_type' => 'youtube',
-//       'youtube_link' => 'https://www.youtube.com/watch?v=y_aSUdDk3Cw',
-//       'flashmob_address' => 'Nákupné centrum Polus, Bratislava',
-//       'longitude' => '17.138409',
-//       'latitude' => '48.168235',
-//       'webpage' => 'http://example.com',
-//       'school_webpage' => 'http://norika.sk',
-//       'note' => 'za video ďakujeme Michalovi Hrabovcovi (a teamu).',
-//     );
+    // $this->aOptions['aYearlyMapOptions'][2013][22] = array (
+    //   'first_name' => 'Jaroslav',
+    //   'last_name' => 'Hluch a team',
+    //   'flashmob_city' => 'Bratislava',
+    //   'flashmob_number_of_dancers' => '16',
+    //   'video_link_type' => 'youtube',
+    //   'youtube_link' => 'https://www.youtube.com/watch?v=y_aSUdDk3Cw',
+    //   'flashmob_address' => 'Nákupné centrum Polus, Bratislava',
+    //   'longitude' => '17.138409',
+    //   'latitude' => '48.168235',
+    //   'webpage' => 'http://example.com',
+    //   'school_webpage' => 'http://norika.sk',
+    //   'note' => 'za video ďakujeme Michalovi Hrabovcovi (a teamu).',
+    // );
 
     // Migrate users from Flashmob blog to main blog //
     $this->migrate_subscribers( $this->iFlashmobBlogID, $this->iMainBlogID );
