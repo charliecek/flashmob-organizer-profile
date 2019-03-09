@@ -454,20 +454,93 @@ jQuery( document ).ready(function() {
     })
 
     window.florpToggleButtons = function(checkbox, text, tableId) {
-      console.log(checkbox, text, tableId)
+      var elements = jQuery("span.button.double-check[data-text-default='"+text+"'],span.notice:contains('"+text+"')")
+      if (jQuery(checkbox).is(":checked")) {
+        elements.removeClass("hide")
+        setUnhidden(text, tableId)
+      } else {
+        elements.addClass("hide")
+        setHidden(text, tableId)
+      }
     }
     window.florpToggleNotices = function(checkbox, text, tableId) {
-      console.log(checkbox, text, tableId)
+      var elements = jQuery("span.notice:contains('"+text+"')")
+      if (jQuery(checkbox).is(":checked")) {
+        elements.removeClass("hide")
+        setUnhidden(text, tableId)
+      } else {
+        elements.addClass("hide")
+        setHidden(text, tableId)
+      }
+    }
+    if (buttons.length + notices.length > 0) {
+      jQuery("<span class='buttonTogglerCheckboxWrapper'>Zobraziť: </span>").insertBefore($table)
     }
     buttons.forEach(function(value, i) {
-      var checkboxSpan = jQuery("<span class='buttonTogglerCheckbox'><input type='checkbox' id='button-"+i+"-"+tableIndex+"' onchange='florpToggleButtons(this, \""+value+"\", "+tableIndex+")' /><label for='button-"+i+"-"+tableIndex+"'>"+value+"</label></span>")
-      checkboxSpan.css("float", "left").css("display", "inline-block").insertBefore($table)
+      var checkboxSpan = jQuery("<span class='buttonTogglerCheckboxWrapper'><input type='checkbox' id='button-"+i+"-"+tableIndex+"' checked='checked' onchange='florpToggleButtons(this, \""+value+"\", "+tableIndex+")' /><label for='button-"+i+"-"+tableIndex+"'>"+value+"</label></span>")
+      checkboxSpan.insertBefore($table)
+      if (isHidden(value, tableIndex)) {
+        var checkbox = checkboxSpan.find("input")
+        checkbox.prop("checked", false).trigger("change")
+      }
     })
     notices.forEach(function(value, i) {
-      var checkboxSpan = jQuery("<span class='buttonTogglerCheckbox'><input type='checkbox' id='button-"+i+"-"+tableIndex+"' onchange='florpToggleNotices(this, \""+value+"\", "+tableIndex+")' /><label for='button-"+i+"-"+tableIndex+"'>"+value+"</label></span>")
-      checkboxSpan.css("float", "left").css("display", "inline-block").insertBefore($table)
+      var checkboxSpan = jQuery("<span class='buttonTogglerCheckboxWrapper'><input type='checkbox' id='button-"+i+"-"+tableIndex+"' checked='checked' onchange='florpToggleNotices(this, \""+value+"\", "+tableIndex+")' /><label for='button-"+i+"-"+tableIndex+"'>"+value+"</label></span>")
+      checkboxSpan.insertBefore($table)
+      if (isHidden(value, tableIndex)) {
+        var checkbox = checkboxSpan.find("input")
+        checkbox.prop("checked", false).trigger("change")
+      }
     })
     // console.log($table, buttons, notices)
+
+    function getLocalStorageKey(tableIndex) {
+      return window.location.pathname.split('/').reverse()[0] + window.location.search + "-t"+tableIndex+"-hidden-buttons"
+    }
+    function isHidden(text, tableIndex) {
+      var key = getLocalStorageKey(tableIndex)
+      var hidden = localStorage.getItem(key);
+      if (hidden) {
+        var aHidden = []
+        try {
+          aHidden = JSON.parse(hidden)
+        } catch(e) {}
+        return -1 !== aHidden.indexOf(text)
+      } else {
+        return false
+      }
+    }
+    function setHidden(text, tableIndex) {
+      if (isHidden(text, tableIndex)) {return}
+      var key = getLocalStorageKey(tableIndex)
+      var hidden = localStorage.getItem(key)
+      var aHidden = []
+      if (hidden) {
+        try {
+          aHidden = JSON.parse(hidden)
+        } catch(e) {}
+      }
+      aHidden.push(text)
+      localStorage.setItem(key, JSON.stringify(aHidden))
+    }
+    function setUnhidden(text, tableIndex) {
+      if (!isHidden(text, tableIndex)) {return}
+      var key = getLocalStorageKey(tableIndex)
+      var hidden = localStorage.getItem(key)
+      var aHidden = []
+      if (hidden) {
+        try {
+          aHidden = JSON.parse(hidden)
+        } catch(e) {}
+      } else {
+        return
+      }
+      if (aHidden.length === 0) {return}
+      var i = aHidden.indexOf(text)
+      aHidden.splice(i, 1)
+      localStorage.setItem(key, JSON.stringify(aHidden))
+    }
+
     tableIndex++
   })
 })

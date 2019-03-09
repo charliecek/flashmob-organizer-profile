@@ -6,8 +6,15 @@ span.notice{
   text-align: center;
 }
 
+span.button.hide,
+span.notice.hide{
+  display: none !important;
+}
+
 .buttonTogglerCheckbox{
   margin: 5px;
+  float: left;
+  display: inline-block;
 }
 
 .button-warning{
