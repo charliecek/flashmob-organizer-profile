@@ -3560,7 +3560,7 @@ class FLORP{
         if ($aCancelFlashmobProperties['userDropdownNames'][$iUserID]) {
           $strDataUseInputNames = ' data-use-input-names="'.$aCancelFlashmobProperties['userDropdownNames'][$iUserID].'"';
         }
-        $strButtons = '<br/><span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-user-id="'.$iUserID.'"'.$strDataUseInputNames.' data-sure="0" data-action="'.$aCancelFlashmobProperties['actions'][$iUserID].'" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabel.'</span>';
+        $strButtons = '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-user-id="'.$iUserID.'"'.$strDataUseInputNames.' data-sure="0" data-action="'.$aCancelFlashmobProperties['actions'][$iUserID].'" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabel.'</span>';
         if ($aCancelFlashmobProperties['userDropdowns'][$iUserID]) {
           $strButtons .= " ".$aCancelFlashmobProperties['userDropdowns'][$iUserID];
         }
@@ -3686,7 +3686,7 @@ class FLORP{
         $strDoubleCheckQuestion = "Ste si istý?";
         $strRowID = "florpRow-".$iLeaderID."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
         $strButtonID = "florpButton-".$iLeaderID."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
-        $strButtons = '<br/><span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelDelete.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-leader-id="'.$iLeaderID.'" data-participant-email="'.$strEmail.'" data-sure="0" data-action="delete_florp_participant" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelDelete.'</span>';
+        $strButtons = '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelDelete.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-leader-id="'.$iLeaderID.'" data-participant-email="'.$strEmail.'" data-sure="0" data-action="delete_florp_participant" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelDelete.'</span>';
         $strEcho .= '<tr class="row" data-row-id="'.$strRowID.'">';
         $strEcho .=   '<td>'.$aParticipantData['first_name'].' '.$aParticipantData['last_name'].$strButtons.'</td>';
         $strEcho .=   '<td><a name="'.$aParticipantData['user_email'].'">'.$aParticipantData['user_email'].'</a></td>';
@@ -3794,31 +3794,31 @@ class FLORP{
         if (isset($aParticipantData["paid_fee"])) {
           // Paid fee info //
           $strLabel = "Zaplatil(a) reg. poplatok";
-          $strButtons .= '<br/><span data-button-id="florpButton-paid-fee-'.$iYear.'-'.preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail). '" class="notice notice-success">'.$strLabel.'</span>';
+          $strButtons .= '<span data-button-id="florpButton-paid-fee-'.$iYear.'-'.preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail). '" class="notice notice-success">'.$strLabel.'</span>';
         } else {
           // Delete button //
           $strButtonID = "florpButton-".$iYear."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
           $strButtonLabel = "Zmazať";
-          $strButtons .= '<br/><span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-year="'.$iYear.'" data-participant-email="'.$strEmail.'" data-sure="0" data-action="delete_florp_intf_participant" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabel.'</span>';
+          $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-year="'.$iYear.'" data-participant-email="'.$strEmail.'" data-sure="0" data-action="delete_florp_intf_participant" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabel.'</span>';
           // Paid fee button //
           $strButtonLabel = "Zaplatil(a) reg. poplatok";
           $strButtonID = "florpButton-paid-fee-".$iYear."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
-          $strButtons .= '<br/><span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-year="'.$iYear.'" data-participant-email="'.$strEmail.'" data-sure="0" data-action="florp_intf_participant_paid_fee" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabel.'</span>';
+          $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-year="'.$iYear.'" data-participant-email="'.$strEmail.'" data-sure="0" data-action="florp_intf_participant_paid_fee" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabel.'</span>';
         }
 
         if (isset($aParticipantData["attend"])) {
           // Attendance info //
           $strLabel = $aParticipantData["attend"] == "1" ? "Zúčastní/-il(a) sa" : "Nezúčastní/-il(a) sa";
-          $strButtons .= '<br/><span data-button-id="florpButton-attend'.$aParticipantData["attend"].'-'.$iYear.'-'.preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail). '" class="notice notice-success">'.$strLabel.'</span>';
+          $strButtons .= '<span data-button-id="florpButton-attend'.$aParticipantData["attend"].'-'.$iYear.'-'.preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail). '" class="notice notice-success">'.$strLabel.'</span>';
         } else {
           // Will/Did attend button //
           $strButtonID = "florpButton-attend1-".$iYear."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
           $strButtonLabel = "Zúčastní/-il(a) sa";
-          $strButtons .= '<br/><span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-year="'.$iYear.'" data-participant-email="'.$strEmail.'" data-sure="0" data-action="florp_intf_participant_attend" data-attend="1" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabel.'</span>';
+          $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-year="'.$iYear.'" data-participant-email="'.$strEmail.'" data-sure="0" data-action="florp_intf_participant_attend" data-attend="1" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabel.'</span>';
           // Won't/Didn't attend button //
           $strButtonID = "florpButton-attend0-".$iYear."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
           $strButtonLabel = "Nezúčastní/-il(a) sa";
-          $strButtons .= '<br/><span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-year="'.$iYear.'" data-participant-email="'.$strEmail.'" data-sure="0" data-action="florp_intf_participant_attend" data-attend="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabel.'</span>';
+          $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-year="'.$iYear.'" data-participant-email="'.$strEmail.'" data-sure="0" data-action="florp_intf_participant_attend" data-attend="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabel.'</span>';
         }
 
         $strEcho .= '<tr class="row" data-row-id="'.$strRowID.'">'.PHP_EOL;
@@ -3915,7 +3915,7 @@ class FLORP{
       $strPaymentWarningButtonID = "florpButton".$strIntfPart."-paymentWarning-".$aTshirtData["id"];
       $strCancelOrderButtonID = "florpButton".$strIntfPart."-cancelOrder-".$aTshirtData["id"];
 
-      $strButtons = '<br/>';
+      $strButtons = '';
       if ($aTshirtData["is_leader"]) {
         // no button
         $strButtons = "";
@@ -3934,7 +3934,7 @@ class FLORP{
         $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelPaid.'" data-button-id="'.$strPaidButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp_tshirt_paid" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelPaid.'</span>';
 
         // Cancel button //
-        $strButtons .= '<br/><span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelCancelOrder.'" data-button-id="'.$strCancelOrderButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp_tshirt_cancel_order" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelCancelOrder.'</span>';
+        $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelCancelOrder.'" data-button-id="'.$strCancelOrderButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp_tshirt_cancel_order" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelCancelOrder.'</span>';
 
         // Warning button //
         if (
@@ -3958,7 +3958,7 @@ class FLORP{
             }
           }
           if ($bShow) {
-            $strButtons .= '<br/>';
+            $strButtons .= '';
             if ($aTshirtData["payment_warning_sent"]) {
               $strTitle = "";
               if (isset($aTshirtData["payment_warning_sent_timestamp"])) {
@@ -4123,7 +4123,7 @@ class FLORP{
             foreach ($aButtonData as $strKey => $strValue) {
               $strData .= " data-{$strKey}=\"{$strValue}\"";
             }
-            $strSubsite .= '<br><span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'"'.$strData.' data-action="'.$strAction.'" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabel.'</span>';
+            $strSubsite .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'"'.$strData.' data-action="'.$strAction.'" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabel.'</span>';
           }
         }
         $strEcho .= "<tr class=\"row\" data-row-id=\"{$strRowID}\">";
@@ -5226,10 +5226,10 @@ class FLORP{
         $strCommonIDPart = "missedSubmission-".$iBlogID."-".$aSubmissionData['_form_id']."-".$aSubmissionData['_submission_id']."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
         $strRowID = "florpRow-{$strCommonIDPart}";
         $strButtonID = "florpButton-{$strCommonIDPart}-delete";
-        $strButtons = '<br/><span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelDelete.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-blog-id="'.$iBlogID.'" data-form-id="'.$aSubmissionData['_form_id'].'" data-submission-id="'.$aSubmissionData['_submission_id'].'" data-email="'.$strEmail.'" data-sure="0" data-action="delete_nf_submission" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelDelete.'</span>';
+        $strButtons = '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelDelete.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-blog-id="'.$iBlogID.'" data-form-id="'.$aSubmissionData['_form_id'].'" data-submission-id="'.$aSubmissionData['_submission_id'].'" data-email="'.$strEmail.'" data-sure="0" data-action="delete_nf_submission" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelDelete.'</span>';
         if ($iBlogID === $this->iFlashmobBlogID) {
           $strButtonID = "florpButton-{$strCommonIDPart}-import";
-          $strButtons .= '<br/><span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelImport.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-blog-id="'.$iBlogID.'" data-form-id="'.$aSubmissionData['_form_id'].'" data-submission-id="'.$aSubmissionData['_submission_id'].'" data-email="'.$strEmail.'" data-sure="0" data-action="import_flashmob_nf_submission" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelImport.'</span>';
+          $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelImport.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-blog-id="'.$iBlogID.'" data-form-id="'.$aSubmissionData['_form_id'].'" data-submission-id="'.$aSubmissionData['_submission_id'].'" data-email="'.$strEmail.'" data-sure="0" data-action="import_flashmob_nf_submission" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelImport.'</span>';
         }
         $strEcho .= '<tr class="row missedSubmissionRow" data-row-id="'.$strRowID.'" data-email="'.$aSubmissionData['user_email'].'">';
         $strEcho .=   '<td><a name="'.$aSubmissionData['user_email'].'">'.$aSubmissionData['user_email'].'</a></td>';

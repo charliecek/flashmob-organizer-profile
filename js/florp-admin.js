@@ -434,4 +434,40 @@ jQuery( document ).ready(function() {
     }
     $this.datetimepicker(options)
   })
+
+  var tableIndex = 0
+  jQuery("table").each(function() {
+    var $table = jQuery(this)
+    $table.data("buttonTogglerTableId", tableIndex)
+    var buttons = [], notices = []
+    $table.find("span.button.double-check").each(function() {
+      var $this = jQuery(this), text = $this.data("textDefault")
+      if (buttons.indexOf(text) === -1) {
+        buttons.push(text)
+      }
+    })
+    $table.find("span.notice").each(function() {
+      var $this = jQuery(this), text = $this.text(), i = buttons.indexOf(text)
+      if (i === -1 && notices.indexOf(text) === -1) {
+        notices.push(text)
+      }
+    })
+
+    window.florpToggleButtons = function(checkbox, text, tableId) {
+      console.log(checkbox, text, tableId)
+    }
+    window.florpToggleNotices = function(checkbox, text, tableId) {
+      console.log(checkbox, text, tableId)
+    }
+    buttons.forEach(function(value, i) {
+      var checkboxSpan = jQuery("<span class='buttonTogglerCheckbox'><input type='checkbox' id='button-"+i+"-"+tableIndex+"' onchange='florpToggleButtons(this, \""+value+"\", "+tableIndex+")' /><label for='button-"+i+"-"+tableIndex+"'>"+value+"</label></span>")
+      checkboxSpan.css("float", "left").css("display", "inline-block").insertBefore($table)
+    })
+    notices.forEach(function(value, i) {
+      var checkboxSpan = jQuery("<span class='buttonTogglerCheckbox'><input type='checkbox' id='button-"+i+"-"+tableIndex+"' onchange='florpToggleNotices(this, \""+value+"\", "+tableIndex+")' /><label for='button-"+i+"-"+tableIndex+"'>"+value+"</label></span>")
+      checkboxSpan.css("float", "left").css("display", "inline-block").insertBefore($table)
+    })
+    // console.log($table, buttons, notices)
+    tableIndex++
+  })
 })
