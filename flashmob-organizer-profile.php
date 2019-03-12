@@ -3408,6 +3408,31 @@ class FLORP{
         array( $this, 'leaders_history_table_admin' )
       );
     } elseif ($this->isFlashmobBlog) {
+      $page = add_submenu_page(
+        'florp-main',
+        'Profil organizátora slovenského flashmobu',
+        'Nastavenia profilu',
+        'manage_options',
+        'florp-main',
+        array( $this, 'options_page' )
+      );
+      $page = add_submenu_page(
+        'florp-main',
+        'Zoznam účastníkov',
+        'Zoznam účastníkov',
+        'manage_options',
+        'florp-participants',
+        array( $this, 'participants_table_admin' )
+      );
+      $page = add_submenu_page(
+        'florp-main',
+        'Tričká',
+        'Tričká',
+        'manage_options',
+        'florp-tshirts',
+        array( $this, 'tshirts_table_admin' )
+      );
+
       add_menu_page(
         "Medzinárodný Flashmob",
         'Medzinárodný Flashmob',
@@ -3647,7 +3672,7 @@ class FLORP{
     $strEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Líder</th><th>Profil</th>';
     $aParticipants = $this->get_flashmob_participants( 0, false, true );
     // echo "<pre>";var_dump($aParticipants);echo "</pre>"; // NOTE DEVEL
-    // echo "<pre>";var_dump($this->get_flashmob_participant_csv('notshirts'));echo "</pre>"; // NOTE DEVEL
+    // echo "<pre>";var_dump($this->get_flashmob_participant_csv());echo "</pre>"; // NOTE DEVEL
 
     if (!empty($aParticipants)) {
       $aReplacements = array(
@@ -3705,6 +3730,7 @@ class FLORP{
         $strEcho .=   '<td><a href="'.admin_url('admin.php?page=florp-leaders')."#{$iLeaderID}\">{$oLeader->first_name} {$oLeader->last_name}</a>{$strIsPending}</td>";
         $strEcho .=   '<td>';
         $aTimestamps = array( 'registered', 'tshirt_order_cancelled_timestamp' );
+        $bOrderedTshirt = isset($aParticipantData['preferences']) && is_array($aParticipantData['preferences']) && in_array('Chcem pamätné Flashmob tričko', $aParticipantData['preferences']);
         $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', 'leader_user_id' );
         if (!isset($aParticipantData['leader_notified'])) {
           $aParticipantData['leader_notified'] = false;
@@ -3724,7 +3750,16 @@ class FLORP{
             $strValue = $mixValue;
           }
           $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
-          $strEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>';
+          if (false !== stripos($strKey, 'tshirt') && !$bOrderedTshirt) {
+            // Not relevant //
+            /*
+            echo "<pre>";
+            var_dump($aParticipantData['user_email'], $strKey, $bOrderedTshirt, $aParticipantData['preferences'], is_array($aParticipantData['preferences']), in_array('flashmob_participant_tshirt', $aParticipantData['preferences']));
+            echo "</pre>";
+            //*/
+          } else {
+            $strEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>';
+          }
         }
         $strEcho .=   '</td>';
         $strEcho .= '</tr>';
@@ -3750,7 +3785,7 @@ class FLORP{
     $strEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto (kde tancuje)</th><th>Profil</th>'.PHP_EOL;
     $aParticipants = $this->aOptions['aIntfParticipants'];
     // echo "<pre>";var_dump($aParticipants);echo "</pre>"; // NOTE DEVEL
-    // echo "<pre>";var_dump($this->get_flashmob_participant_csv('notshirts'));echo "</pre>"; // NOTE DEVEL
+    // echo "<pre>";var_dump($this->get_flashmob_participant_csv('all', true));echo "</pre>"; // NOTE DEVEL
 
     if (!empty($aParticipants)) {
       $aReplacements = array(
@@ -3827,6 +3862,7 @@ class FLORP{
         $strEcho .=   '<td>'.$aParticipantData['flashmob_city'].'</td>'.PHP_EOL;
         $aTimestamps = array( 'registered', 'paid_fee', 'attend_set_timestamp' );
         $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city' );
+        $bOrderedTshirt = isset($aParticipantData['preferences']) && is_array($aParticipantData['preferences']) && in_array('Chcem pamätné Flashmob tričko', $aParticipantData['preferences']);
         $strEcho .=   '<td>'.PHP_EOL;
         foreach ($aParticipantData as $strKey => $mixValue) {
           if (!isset($mixValue) || (!is_bool($mixValue) && !is_numeric($mixValue) && empty($mixValue)) || $mixValue === 'null' || in_array( $strKey, $aSkip )) {
@@ -3847,7 +3883,16 @@ class FLORP{
           } else {
             $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
           }
-          $strEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>'.PHP_EOL;
+          if (false !== stripos($strKey, 'tshirt') && !$bOrderedTshirt) {
+            // Not relevant //
+            /*
+            echo "<pre>";
+            var_dump($aParticipantData['user_email'], $strKey, $bOrderedTshirt, $aParticipantData['preferences'], is_array($aParticipantData['preferences']), in_array('flashmob_participant_tshirt', $aParticipantData['preferences']));
+            echo "</pre>";
+            //*/
+          } else {
+            $strEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>'.PHP_EOL;
+          }
         }
         $strEcho .=   '</td>'.PHP_EOL;
         $strEcho .= '</tr>'.PHP_EOL;
@@ -3885,8 +3930,6 @@ class FLORP{
 
     $aOrderDates = $this->get_tshirt_order_dates(false, $bIntf);
 
-    $strIntfPart = $bIntf ? "-intf" : "";
-
     $iUnpaid = 0;
     $iPaid = 0;
     foreach ($aTshirts as $aTshirtData) {
@@ -3910,10 +3953,10 @@ class FLORP{
       foreach ($aTshirtData['properties'] as $strKey => $strValue) {
         $strData .= " data-{$strKey}='{$strValue}'";
       }
-      $strRowID = "florpRow".$strIntfPart."-".$aTshirtData["id"];
-      $strPaidButtonID = "florpButton".$strIntfPart."-paid-".$aTshirtData["id"];
-      $strPaymentWarningButtonID = "florpButton".$strIntfPart."-paymentWarning-".$aTshirtData["id"];
-      $strCancelOrderButtonID = "florpButton".$strIntfPart."-cancelOrder-".$aTshirtData["id"];
+      $strRowID = "florpRow-".$aTshirtData["id"];
+      $strPaidButtonID = "florpButton-paid-".$aTshirtData["id"];
+      $strPaymentWarningButtonID = "florpButton-paymentWarning-".$aTshirtData["id"];
+      $strCancelOrderButtonID = "florpButton-cancelOrder-".$aTshirtData["id"];
 
       $strButtons = '';
       if ($aTshirtData["is_leader"]) {
@@ -3990,7 +4033,7 @@ class FLORP{
       }
       $strEcho .=   '<td>';
       foreach ($aTshirtData['properties'] as $strKey => $strValue) {
-        $strFieldName = $bIntf ? "Mesto (anketa)" : ucfirst( str_replace( '_', ' ', $strKey ) );
+        $strFieldName = ($bIntf && $strKey === 'intf_city') ? "Mesto (anketa)" : ucfirst( str_replace( '_', ' ', $strKey ) );
         $strEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>';
       }
       $strEcho .=   '</td>';
@@ -4010,7 +4053,7 @@ class FLORP{
       $strEcho .= '<input id="florp-download'.$strIntfPart.'-tshirt-csv-paid" class="button button-primary button-large" name="florp-download'.$strIntfPart.'-tshirt-csv-paid" type="submit" value="Stiahni CSV - zaplatené (všetko)" />';
     }
 
-    if (!$bIntf) {
+    if (!$bIntf) {// TODO?
       // Order date table //
       $strEcho .= "<p></p>\n<h1>Dátumy objednávok</h1>";
       $strEcho .= '<table class="widefat striped florpTshirtOrderTable"><th>Dátum</th><th>Typ</th><th>Stiahnuť zahrnuté objednávky (CSV)</th><th>Stiahnuť objednávky po tomto dátume (CSV)</th>';
@@ -5446,14 +5489,14 @@ class FLORP{
     return $aTshirts;
   }
 
-  private function get_tshirts_intf($strPaidFlag = 'all', $bCSV = false ) { // TODO
+  private function get_tshirts_intf($strPaidFlag = 'all', $bCSV = false ) {
     $aParticipants = $this->aOptions['aIntfParticipants'];
-    echo "<pre>";var_dump($aParticipants);echo "</pre>";
+    // echo "<pre>";var_dump($aParticipants);echo "</pre>";
     $aTshirtsOption = $this->aOptions["aTshirtsIntf"];
     // echo "<pre>";var_dump($aTshirtsOption);echo "</pre>";
     foreach ($aParticipants as $iYear => $aParticipantsInYear) {
       foreach ($aParticipantsInYear as $strEmail => $aParticipantData) {
-        if (!in_array("flashmob_participant_tshirt", $aParticipantData["preferences"])) {
+        if (!is_array($aParticipantData["preferences"]) || !in_array("flashmob_participant_tshirt", $aParticipantData["preferences"])) {
           // echo "<pre>";var_dump($aParticipantData);echo "</pre>"; // NOTE DEVEL
           continue;
         }
@@ -5559,15 +5602,24 @@ class FLORP{
     }
   }
 
-  private function get_flashmob_participant_csv($sType = 'all', $bIntf = false) {
+  private function get_flashmob_participant_csv($sType = 'all', $bIntf = false, $iYear = 0) {
     $aParticipantCSV = array();
     $aParticipants = $bIntf ? $this->aOptions['aIntfParticipants'] : $this->get_flashmob_participants();
+    if ($iYear === 0) {
+      $iYear = $this->aOptions['iIntfFlashmobYear'];
+    }
+    // echo '<pre>'.var_export($aParticipants, true).'</pre>'; // NOTE DEVEL
 
     // Get participants as a flat array //
     $aParticipantsFlat = array();
     $aPreferences = array();
     foreach ($aParticipants as $iLeaderIDOrYear => $aParticipantsOfLeaderOrYear) {
+      if ($bIntf && false !== $iYear && $iYear !== $iLeaderIDOrYear) {
+        // Skip that year //
+        continue;
+      }
       foreach ($aParticipantsOfLeaderOrYear as $strEmail => $aParticipantData) {
+        $bOrderedTshirt = isset($aParticipantData['preferences']) && is_array($aParticipantData['preferences']) && in_array('flashmob_participant_tshirt', $aParticipantData['preferences']);
         $strKey = $strEmail."_".$iLeaderIDOrYear;
         $aParticipantsFlat[$strKey] = $aParticipantData;
         if ($bIntf) {
@@ -5584,6 +5636,11 @@ class FLORP{
               $aPreferences[] = $strPreferenceKey;
             }
             $aParticipantsFlat[$strKey][$strPreferenceKey] = true;
+          }
+        }
+        foreach ($aParticipantData as $key => $value) {
+          if (false !== stripos($key, 'tshirt') && !$bOrderedTshirt) {
+            $aParticipantsFlat[$strKey][$key] = "-";
           }
         }
       }

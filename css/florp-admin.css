@@ -7,11 +7,13 @@ span.notice{
 }
 
 span.button.hide,
-span.notice.hide{
+span.notice.hide,
+span.button.forceHide,
+span.notice.forceHide{
   display: none !important;
 }
 
-.buttonTogglerCheckbox{
+.buttonTogglerCheckboxWrapper{
   margin: 5px;
   float: left;
   display: inline-block;

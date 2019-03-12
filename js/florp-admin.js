@@ -21,7 +21,7 @@ jQuery( document ).ready(function() {
     }
     if ("undefined" !== typeof $insertBefore && false !== $insertBefore && $insertBefore.length > 0) {
       if (bReplace) {
-        $insertBefore.children().hide()
+        $insertBefore.children().addClass('forceHide').hide()
       }
       $msg.insertBefore($insertBefore)
     } else {
@@ -119,23 +119,23 @@ jQuery( document ).ready(function() {
                     if (aResponse.message) {
                       fnFlorpShowMessage(aResponse.message, strMessageId+"-ok", "success", 2000, $row, true, function(input) {
                         var $row = input['$row'], aResponse = input['aResponse']
-                        $row.fadeOut(800).addClass("florpRowRemoved")
+                        $row.fadeOut(800, function() {jQuery(this).addClass('forceHide')}).addClass("florpRowRemoved")
                         var $table = $row.parents("table")
                         if ($table.length > 0) {
                           $table.trigger( "florpRowDelete" )
                         }
                         if (aResponse.hideSelector) {
-                          jQuery( aResponse.hideSelector ).fadeOut(800)
+                          jQuery( aResponse.hideSelector ).fadeOut(800, function() {jQuery(this).addClass('forceHide')})
                         }
                       }, {'$row': $row, 'aResponse': aResponse}, $row.first()[0] && $row.first()[0].cells ? $row.first()[0].cells.length : false)
                     } else {
-                      $row.fadeOut(800).addClass("florpRowRemoved")
+                      $row.fadeOut(800, function() {jQuery(this).addClass('forceHide')}).addClass("florpRowRemoved")
                       var $table = $row.parents("table")
                       if ($table.length > 0) {
                         $table.trigger( "florpRowDelete" )
                       }
                       if (aResponse.hideSelector) {
-                        jQuery( aResponse.hideSelector ).fadeOut(800)
+                        jQuery( aResponse.hideSelector ).fadeOut(800, function() {jQuery(this).addClass('forceHide')})
                       }
                     }
                   } else {
@@ -147,7 +147,7 @@ jQuery( document ).ready(function() {
 //                       $table.trigger( "florpRowDelete" )
 //                     }
                     if (aResponse.hideSelector) {
-                      jQuery( aResponse.hideSelector ).fadeOut(800)
+                      jQuery( aResponse.hideSelector ).fadeOut(800, function() {jQuery(this).addClass('forceHide')})
                     }
                     console.warn("No row to fade out!")
                   }
@@ -162,7 +162,7 @@ jQuery( document ).ready(function() {
                         $button.remove()
                       }
                       if (aResponse.hideSelector) {
-                        jQuery( aResponse.hideSelector ).hide()
+                        jQuery( aResponse.hideSelector ).addClass('forceHide').hide()
                       }
                       if (aResponse.insertAfterSelector && jQuery(aResponse.insertAfterSelector).length > 0 && aResponse.insertHtml) {
                         jQuery(aResponse.insertHtml).insertAfter(jQuery(aResponse.insertAfterSelector))
@@ -187,7 +187,7 @@ jQuery( document ).ready(function() {
                       $button.remove()
                     }
                     if (aResponse.hideSelector) {
-                      jQuery( aResponse.hideSelector ).hide()
+                      jQuery( aResponse.hideSelector ).addClass('forceHide').hide()
                     }
                     if (aResponse.insertAfterSelector && jQuery(aResponse.insertAfterSelector).length > 0 && aResponse.insertHtml) {
                       jQuery(aResponse.insertHtml).insertAfter(jQuery(aResponse.insertAfterSelector))
@@ -422,8 +422,8 @@ jQuery( document ).ready(function() {
             // console.log(datePickerInstance);
             var date = $input.datepicker("getDate");
             var timestamp = Math.round(new Date(date).getTime()/1000);
-            console.log(timestamp);
-//             console.log(datePickerInstance)
+            // console.log(timestamp);
+            // console.log(datePickerInstance)
             $altField.val(timestamp);
           } else {
             console.log(dateTimeText)
@@ -485,7 +485,8 @@ jQuery( document ).ready(function() {
       }
     })
     notices.forEach(function(value, i) {
-      var checkboxSpan = jQuery("<span class='buttonTogglerCheckboxWrapper'><input type='checkbox' id='button-"+i+"-"+tableIndex+"' checked='checked' onchange='florpToggleNotices(this, \""+value+"\", "+tableIndex+")' /><label for='button-"+i+"-"+tableIndex+"'>"+value+"</label></span>")
+      var j = buttons.length + i
+      var checkboxSpan = jQuery("<span class='buttonTogglerCheckboxWrapper'><input type='checkbox' id='button-"+j+"-"+tableIndex+"' checked='checked' onchange='florpToggleNotices(this, \""+value+"\", "+tableIndex+")' /><label for='button-"+j+"-"+tableIndex+"'>"+value+"</label></span>")
       checkboxSpan.insertBefore($table)
       if (isHidden(value, tableIndex)) {
         var checkbox = checkboxSpan.find("input")
