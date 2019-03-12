@@ -105,7 +105,7 @@ jQuery( document ).ready(function() {
                 $container = false
               }
               if (aResponse.ok) {
-                console.log(aResponse)
+                // console.log(aResponse)
                 var strButtonIdLocal = aResponse.buttonId
                 clearInterval(window[strButtonIdLocal]["interval"])
                 window[strButtonIdLocal]["interval"] = null
@@ -115,6 +115,7 @@ jQuery( document ).ready(function() {
                 }
                 var $row = jQuery(".row[data-row-id="+aResponse.rowId+"]")
                 if (aResponse.removeRowOnSuccess && aResponse.removeRowOnSuccess === true) {
+                  console.log(aResponse)
                   if ($row.length > 0) {
                     if (aResponse.message) {
                       fnFlorpShowMessage(aResponse.message, strMessageId+"-ok", "success", 2000, $row, true, function(input) {
