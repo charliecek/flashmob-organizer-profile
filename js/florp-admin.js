@@ -448,7 +448,7 @@ jQuery( document ).ready(function() {
       }
     })
     $table.find("span.notice").each(function() {
-      var $this = jQuery(this), text = $this.text(), i = buttons.indexOf(text)
+      var $this = jQuery(this), text = ("undefined" !== typeof $this.data("text") && null !== $this.data("text")) ? $this.data("text") : $this.text(), i = buttons.indexOf(text)
       if (i === -1 && notices.indexOf(text) === -1) {
         notices.push(text)
       }

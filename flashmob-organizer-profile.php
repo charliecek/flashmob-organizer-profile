@@ -3946,7 +3946,7 @@ class FLORP{
     foreach ($aTshirts as $aTshirtData) {
       $strButtons = "";
       $strDoubleCheckQuestion = "Ste si istý?";
-      $strButtonLabelPaid = "Zaplatil";
+      $strButtonLabelPaid = "Zaplatil tričko";
       $strButtonLabelPaymentWarning = "Upozorniť na neskorú platbu";
       $strButtonLabelCancelOrder = "Zrušiť objednávku";
       // We collect the data and button attributes/properties //
@@ -3979,7 +3979,7 @@ class FLORP{
         if (isset($aTshirtData["paid_timestamp"])) {
           $strTitle = ' title="'.date( $this->strDateFormat, $aTshirtData["paid_timestamp"] ).'"';
         }
-        $strButtons .= '<span data-button-id="'.$strPaidButtonID.'" class="notice notice-success"'.$strTitle.'>Zaplatené</span>';
+        $strButtons .= '<span data-button-id="'.$strPaidButtonID.'" class="notice notice-success"'.$strTitle.'>'.$strButtonLabelPaid.'</span>';
         $iPaid++;
       } else {
         $iUnpaid++;
@@ -4018,7 +4018,7 @@ class FLORP{
               if (isset($aTshirtData["payment_warning_sent_timestamp"])) {
                 $strTitle = ' title="'.date( $this->strDateFormat, $aTshirtData["payment_warning_sent_timestamp"] ).'"';
               }
-              $strButtons .= '<span data-button-id="'.$strPaymentWarningButtonID.'" class="notice notice-success"'.$strTitle.'>Upozornený na neskorú platbu</span>';
+              $strButtons .= '<span data-button-id="'.$strPaymentWarningButtonID.'" class="notice notice-success"'.$strTitle.' data-text="'.$strButtonLabelPaymentWarning.'">Upozornený na neskorú platbu</span>';
             } else {
               $strButtons .= '<span class="button double-check'.$strWarningClass.'" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelPaymentWarning.'" data-button-id="'.$strPaymentWarningButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp'.$sIntfActionPart.'_tshirt_send_payment_warning" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelPaymentWarning.'</span>';
             }
@@ -6043,7 +6043,7 @@ class FLORP{
       $strPaymentWarningButtonID = str_replace( "-paid-", "-paymentWarning-", $aData['buttonId']);
       $strCancelOrderButtonID = str_replace( "-paid-", "-cancelOrder-", $aData['buttonId']);
       $aData["hideSelector"] = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strPaymentWarningButtonID}], tr[data-row-id={$aData['rowId']}] span[data-button-id={$strCancelOrderButtonID}]";
-      $aData["replaceButtonHtml"] = '<span data-button-id="'.$aData['buttonId'].'" class="notice notice-success"'.$strTitle.'>Zaplatené</span>';
+      $aData["replaceButtonHtml"] = '<span data-button-id="'.$aData['buttonId'].'" class="notice notice-success"'.$strTitle.'>'.$aData['textDefault'].'</span>';
       if (defined('FLORP_DEVEL') && FLORP_DEVEL === true && defined('FLORP_DEVEL_FAKE_ACTIONS') && FLORP_DEVEL_FAKE_ACTIONS === true) {
         $aData["message"] = "The flashmob participant '{$aData['participantEmail']}' was marked as having paid successfully (NOT: FLORP_DEVEL is on!)";
       } else {
@@ -6097,7 +6097,7 @@ class FLORP{
       $strPaymentWarningButtonID = str_replace( "-paid-", "-paymentWarning-", $aData['buttonId']);
       $strCancelOrderButtonID = str_replace( "-paid-", "-cancelOrder-", $aData['buttonId']);
       $aData["hideSelector"] = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strPaymentWarningButtonID}], tr[data-row-id={$aData['rowId']}] span[data-button-id={$strCancelOrderButtonID}]";
-      $aData["replaceButtonHtml"] = '<span data-button-id="'.$aData['buttonId'].'" class="notice notice-success"'.$strTitle.'>Zaplatené</span>';
+      $aData["replaceButtonHtml"] = '<span data-button-id="'.$aData['buttonId'].'" class="notice notice-success"'.$strTitle.'>'.$aData['textDefault'].'</span>';
       if (defined('FLORP_DEVEL') && FLORP_DEVEL === true && defined('FLORP_DEVEL_FAKE_ACTIONS') && FLORP_DEVEL_FAKE_ACTIONS === true) {
         $aData["message"] = "The flashmob participant '{$aData['participantEmail']}' was marked as having paid successfully (NOT: FLORP_DEVEL is on!)";
       } else {
@@ -6197,7 +6197,7 @@ class FLORP{
       $aData["removeRowOnSuccess"] = false;
       $aData["replaceButton"] = true;
       $strTitle = ' title="'.date( $this->strDateFormat, $iTimestampNow ).'"';
-      $aData["replaceButtonHtml"] = '<span data-button-id="'.$aData['buttonId'].'" class="notice notice-success"'.$strTitle.'>Upozornený na neskorú platbu</span>';
+      $aData["replaceButtonHtml"] = '<span data-button-id="'.$aData['buttonId'].'" class="notice notice-success"'.$strTitle.' data-text="'.$aData['textDefault'].'">Upozornený na neskorú platbu</span>';
 
       $strMessageContent = $this->aOptions['strTshirtPaymentWarningNotificationMsg'];
       $strMessageSubject = $this->aOptions['strTshirtPaymentWarningNotificationSbj'];
@@ -6258,7 +6258,7 @@ class FLORP{
       $aData["removeRowOnSuccess"] = false;
       $aData["replaceButton"] = true;
       $strTitle = ' title="'.date( $this->strDateFormat, $iTimestampNow ).'"';
-      $aData["replaceButtonHtml"] = '<span data-button-id="'.$aData['buttonId'].'" class="notice notice-success"'.$strTitle.'>Upozornený na neskorú platbu</span>';
+      $aData["replaceButtonHtml"] = '<span data-button-id="'.$aData['buttonId'].'" class="notice notice-success"'.$strTitle.' data-text="'.$aData['textDefault'].'">Upozornený na neskorú platbu</span>';
 
       $strMessageContent = $this->aOptions['strTshirtPaymentWarningNotificationMsg'];
       $strMessageSubject = $this->aOptions['strTshirtPaymentWarningNotificationSbj'];
