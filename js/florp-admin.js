@@ -442,7 +442,7 @@ jQuery( document ).ready(function() {
     $table.data("buttonTogglerTableId", tableIndex)
     var buttons = [], notices = []
     $table.find("span.button.double-check").each(function() {
-      var $this = jQuery(this), text = $this.data("textDefault")
+      var $this = jQuery(this), text = ("undefined" !== typeof $this.data("text") && null !== $this.data("text")) ? $this.data("text") : $this.data("textDefault")
       if (buttons.indexOf(text) === -1) {
         buttons.push(text)
       }
@@ -455,7 +455,7 @@ jQuery( document ).ready(function() {
     })
 
     window.florpToggleButtons = function(checkbox, text, tableId) {
-      var elements = jQuery("span.button.double-check[data-text-default='"+text+"'],span.notice[data-text='"+text+"'],span.notice:contains('"+text+"')")
+      var elements = jQuery("span.button.double-check[data-text='"+text+"'],span.button.double-check[data-text-default='"+text+"'],span.notice[data-text='"+text+"'],span.notice:contains('"+text+"')")
       if (jQuery(checkbox).is(":checked")) {
         elements.removeClass("hide")
         setUnhidden(text, tableId)
@@ -494,6 +494,9 @@ jQuery( document ).ready(function() {
         checkbox.prop("checked", false).trigger("change")
       }
     })
+    if (buttons.length + notices.length > 0) {
+      jQuery("<span style='height: 0; clear: both; display: block;'></span>").insertBefore($table)
+    }
     // console.log($table, buttons, notices)
 
     function getLocalStorageKey(tableIndex) {
