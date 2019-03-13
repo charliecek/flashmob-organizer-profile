@@ -1399,6 +1399,9 @@ class FLORP{
         break;
       case 'florp_devel_is_on':
         $aNotices[] = array( 'warning' => 'FLORP_DEVEL constant is on. Contact your site admin if you think this is not right!' );
+        if (defined('FLORP_DEVEL_FAKE_ACTIONS') && FLORP_DEVEL_FAKE_ACTIONS === true) {
+          $aNotices[] = array( 'warning' => 'FLORP_DEVEL_FAKE_ACTIONS constant is on.' );
+        }
         if (defined('FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION') && FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION === true) {
           $aNotices[] = array( 'warning' => 'Flashmob organizer map archivation is off!' );
         }
