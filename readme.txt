@@ -13,6 +13,12 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v4.7.9: Intf buttons: participant fee payment, attendance =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.7.9)
+- Added international flashmob list admin buttons (and callbacks):
+  - participant fee payment
+  - set attendance
+
 = v4.7.8: Chart reload and responsiveness fixes. Int. participant CSV export =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.7.8)
 - Chart reload and responsiveness fixes
@@ -206,12 +212,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
   - added warning icon for it in list of participants, tshirts
 - added participant registration time to CSV
 
-= v4.5.0: tshirt payment notifications, site cloning =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.5.0)
-- site cloning: simple and with external plugin (MUCD)
-- site cloning admin screen
-- tshirt payment notifications
-- admin ajax: added more possibilities, success actions
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.5.0)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.5.1)
