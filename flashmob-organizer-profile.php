@@ -1392,7 +1392,7 @@ class FLORP{
         $aNotices[] = array( 'warning' => 'Could not prevent media files download: could not rename HTACCESS file.' );
         break;
       case 'htaccess_renamed':
-        $aNotices[] = array( 'info' => 'There was a HTACCESS in WP_CONTENT_DIR. It was renamed and replaced by a media download preventing HTACCESS file (by FLORP).' );
+        $aNotices[] = array( 'info' => 'There was an HTACCESS in WP_CONTENT_DIR. It was renamed and replaced by a media download preventing HTACCESS file (by FLORP).' );
         break;
       case 'htaccess_save_failed':
         $aNotices[] = array( 'warning' => 'Could not prevent media files download: could not save HTACCESS file.' );
@@ -5940,7 +5940,7 @@ class FLORP{
 
     $aData = $_POST;
     $strErrorMessage = "Could not remove the international flashmob participant '{$aData['participantEmail']}'";
-    if (!isset($this->aOptions["aIntfParticipants"]) || empty($this->aOptions["aIntfParticipants"])) {
+    if (!isset($this->aOptions["aIntfParticipants"]) || empty($this->aOptions["aIntfParticipants"]) || !isset($aData['year'])) {
       $aData["message"] = $strErrorMessage;
     } else {
       if (isset($this->aOptions["aIntfParticipants"][$aData["year"]]) && isset($this->aOptions["aIntfParticipants"][$aData["year"]][$aData["participantEmail"]])) {
@@ -5969,7 +5969,7 @@ class FLORP{
 
     $aData = $_POST;
     $strErrorMessage = "Could not set attendance of the international flashmob participant '{$aData['participantEmail']}'";
-    if (!isset($this->aOptions["aIntfParticipants"]) || empty($this->aOptions["aIntfParticipants"])) {
+    if (!isset($this->aOptions["aIntfParticipants"]) || empty($this->aOptions["aIntfParticipants"]) || !isset($aData['year'])) {
       $aData["message"] = $strErrorMessage;
     } else {
       if (isset($this->aOptions["aIntfParticipants"][$aData["year"]]) && isset($this->aOptions["aIntfParticipants"][$aData["year"]][$aData["participantEmail"]]) && isset($aData["attend"])) {
@@ -6005,7 +6005,7 @@ class FLORP{
 
     $aData = $_POST;
     $strErrorMessage = "Could not set fee payment status of the international flashmob participant '{$aData['participantEmail']}'";
-    if (!isset($this->aOptions["aIntfParticipants"]) || empty($this->aOptions["aIntfParticipants"])) {
+    if (!isset($this->aOptions["aIntfParticipants"]) || empty($this->aOptions["aIntfParticipants"]) || !isset($aData['year'])) {
       $aData["message"] = $strErrorMessage;
     } else {
       if (isset($this->aOptions["aIntfParticipants"][$aData["year"]]) && isset($this->aOptions["aIntfParticipants"][$aData["year"]][$aData["participantEmail"]])) {
@@ -6240,8 +6240,8 @@ class FLORP{
               $this->aOptions["aTshirts"]["participants"][$aData["email"]] = $aOk;
             }
           }
-          $this->save_options();
           $this->add_option_change("ajax__florp_tshirt_send_payment_warning", "", $aData["email"], false);
+          $this->save_options();
           $aData["message"] = "A payment warning was sent to the flashmob participant '{$aData['email']}'";//." ".var_export($aData, true);
         }
       } else {
@@ -6258,7 +6258,10 @@ class FLORP{
 
     $aData = $_POST;
     $strErrorMessage = "Could not send payment warning to the flashmob participant '{$aData['email']}'";
-    if (!isset($this->aOptions["aTshirtsIntf"]) || empty($this->aOptions["aTshirtsIntf"]) || !isset($this->aOptions['strIntfTshirtPaymentWarningNotificationMsg'], $this->aOptions['strIntfTshirtPaymentWarningNotificationSbj']) || empty($this->aOptions['strIntfTshirtPaymentWarningNotificationMsg']) || empty($this->aOptions['strIntfTshirtPaymentWarningNotificationSbj'])) {
+    if (!isset($this->aOptions["aTshirtsIntf"]) || empty($this->aOptions["aTshirtsIntf"])
+          || !isset($this->aOptions['strIntfTshirtPaymentWarningNotificationMsg'], $this->aOptions['strIntfTshirtPaymentWarningNotificationSbj'])
+          || empty($this->aOptions['strIntfTshirtPaymentWarningNotificationMsg']) || empty($this->aOptions['strIntfTshirtPaymentWarningNotificationSbj'])
+          || !isset($aData['year'])) {
       $aData["message"] = $strErrorMessage;
     } else {
       $iYear = $aData['year'];
@@ -6291,8 +6294,8 @@ class FLORP{
           } else {
             $this->aOptions["aTshirtsIntf"][$iYear][$aData["email"]] = $aOk;
           }
-          $this->save_options();
           $this->add_option_change("ajax__florp_intf_tshirt_send_payment_warning", "", $aData["email"], false);
+          $this->save_options();
           $aData["message"] = "A payment warning was sent to the flashmob participant '{$aData['email']}'";//." ".var_export($aData, true);
         }
       } else {
@@ -6338,25 +6341,26 @@ class FLORP{
   }
 
   public function action__florp_intf_tshirt_cancel_order_callback() {
-    wp_die(); // TODO
+    // wp_die();
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
     $aData = $_POST;
     $strErrorMessage = "Could not cancel the tshirt order of flashmob participant '{$aData['email']}'";
-    if (!isset($this->aOptions["aParticipants"]) || empty($this->aOptions["aParticipants"])) {
+    if (!isset($this->aOptions["aIntfParticipants"]) || empty($this->aOptions["aIntfParticipants"]) || !isset($aData['year'])) {
       $aData["message"] = $strErrorMessage;
     } else {
-      if (isset($this->aOptions["aParticipants"][$aData["leader_id"]]) && isset($this->aOptions["aParticipants"][$aData["leader_id"]][$aData["email"]])) {
-        $aPreferences = $this->aOptions["aParticipants"][$aData["leader_id"]][$aData["email"]]['preferences'];
+      $iYear = $aData['year'];
+      if (isset($this->aOptions["aIntfParticipants"][$iYear]) && isset($this->aOptions["aIntfParticipants"][$iYear][$aData["email"]])) {
+        $aPreferences = $this->aOptions["aIntfParticipants"][$iYear][$aData["email"]]['preferences'];
         if (is_array($aPreferences) && ($iKey = array_search("flashmob_participant_tshirt", $aPreferences)) !== false) {
           $aData["removeRowOnSuccess"] = true;
           $aData["ok"] = true;
           if (defined('FLORP_DEVEL') && FLORP_DEVEL === true && defined('FLORP_DEVEL_FAKE_ACTIONS') && FLORP_DEVEL_FAKE_ACTIONS === true) {
             $aData["message"] = "The tshirt order of flashmob participant '{$aData['email']}' was cancelled successfully (NOT: FLORP_DEVEL is on!)";
           } else {
-            unset($this->aOptions["aParticipants"][$aData["leader_id"]][$aData["email"]]['preferences'][$iKey]);
-            $this->aOptions["aParticipants"][$aData["leader_id"]][$aData["email"]]['tshirt_order_cancelled_timestamp'] = (int) current_time( 'timestamp' );
-            $this->add_option_change("ajax__florp_tshirt_cancel_order", "", $aData["email"], false);
+            unset($this->aOptions["aIntfParticipants"][$iYear][$aData["email"]]['preferences'][$iKey]);
+            $this->aOptions["aIntfParticipants"][$iYear][$aData["email"]]['tshirt_order_cancelled_timestamp'] = (int) current_time( 'timestamp' );
+            $this->add_option_change("ajax__florp_intf_tshirt_cancel_order", "", $aData["email"], false);
             $this->save_options();
             $aData["message"] = "The tshirt order of flashmob participant '{$aData['email']}' was cancelled successfully";
           }
