@@ -440,19 +440,35 @@ jQuery( document ).ready(function() {
   jQuery("table").each(function() {
     var $table = jQuery(this)
     $table.data("buttonTogglerTableId", tableIndex)
-    var buttons = [], notices = []
+    var buttons = [], notices = [], hideByDefault = {}
     $table.find("span.button.double-check").each(function() {
       var $this = jQuery(this), text = ("undefined" !== typeof $this.data("text") && null !== $this.data("text")) ? $this.data("text") : $this.data("textDefault")
       if (buttons.indexOf(text) === -1) {
         buttons.push(text)
+        if ($this.data("hide")) {
+          hideByDefault[text] = true;
+        }
       }
     })
     $table.find("span.notice").each(function() {
       var $this = jQuery(this), text = ("undefined" !== typeof $this.data("text") && null !== $this.data("text")) ? $this.data("text") : $this.text(), i = buttons.indexOf(text)
       if (i === -1 && notices.indexOf(text) === -1) {
         notices.push(text)
+        if ($this.data("hide")) {
+          hideByDefault[text] = true;
+        }
       }
     })
+    if (Object.keys(hideByDefault).length > 0) {
+      var hideTexts = Object.keys(hideByDefault)
+      var key = getLocalStorageKey(tableIndex)
+      var hidden = localStorage.getItem(key)
+      if ("undefined" === typeof hidden || null === hidden) {
+        localStorage.setItem(key, JSON.stringify(hideTexts))
+      }
+    }
+    buttons.sort()
+    notices.sort()
 
     window.florpToggleButtons = function(checkbox, text, tableId) {
       var elements = jQuery("span.button.double-check[data-text='"+text+"'],span.button.double-check[data-text-default='"+text+"'],span.notice[data-text='"+text+"'],span.notice:contains('"+text+"')")
@@ -502,7 +518,7 @@ jQuery( document ).ready(function() {
     function getLocalStorageKey(tableIndex) {
       return window.location.pathname.split('/').reverse()[0] + window.location.search + "-t"+tableIndex+"-hidden-buttons"
     }
-    function isHidden(text, tableIndex) {
+    function isHidden(text, tableIndex, bDefault = false) {
       var key = getLocalStorageKey(tableIndex)
       var hidden = localStorage.getItem(key);
       if (hidden) {
@@ -510,9 +526,12 @@ jQuery( document ).ready(function() {
         try {
           aHidden = JSON.parse(hidden)
         } catch(e) {}
+        if (aHidden.length === 0) {
+          return bDefault
+        }
         return -1 !== aHidden.indexOf(text)
       } else {
-        return false
+        return bDefault
       }
     }
     function setHidden(text, tableIndex) {
