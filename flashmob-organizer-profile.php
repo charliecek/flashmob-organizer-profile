@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.8.0
+ * Version: 4.9.0
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '4.8.0';
+  private $strVersion = '4.9.0';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iIntfBlogID = 6;
@@ -62,6 +62,12 @@ class FLORP{
   private $strUserRolePending = 'florp-pending';
   private $strUserRoleApproved = 'subscriber';
   private $strUserRolePendingName = "Čaká na schválenie";
+  private $strUserRoleRegistrationAdmin = 'florp-registration-admin';
+  private $strUserRoleRegistrationAdminName = "Administrátor registrácií";
+  private $strUserRoleRegistrationAdminSvk = 'florp-registration-admin-svk'; // Is a capability as well //
+  private $strUserRoleRegistrationAdminSvkName = "Administrátor registrácií na SVK flashmob";
+  private $strUserRoleRegistrationAdminIntf = 'florp-registration-admin-intf'; // Is a capability as well //
+  private $strUserRoleRegistrationAdminIntfName = "Administrátor registrácií na medzinárodný flashmob";
   private $strPendingUserPageContentHTML;
   private $strUserApprovedMessage;
   private $strBeforeLoginFormHtmlMain;
@@ -1665,6 +1671,17 @@ class FLORP{
       if (!get_role($this->strUserRolePending)) {
         add_role($this->strUserRolePending, $this->strUserRolePendingName, array());
       }
+      $oRole = get_role($this->strUserRoleRegistrationAdminSvk);
+      if (!$oRole) {
+        $oRole = add_role($this->strUserRoleRegistrationAdminSvk, $this->strUserRoleRegistrationAdminSvkName, array('read', $this->strUserRoleRegistrationAdminSvk));
+      } else {
+        if (!$oRole->has_cap($this->strUserRoleRegistrationAdminSvk)) {
+          $oRole->add_cap($this->strUserRoleRegistrationAdminSvk);
+        }
+        if (!$oRole->has_cap('read')) {
+          $oRole->add_cap('read');
+        }
+      }
     } elseif (get_role($this->strUserRolePending)) {
       $aPendingArgs = array(
         'blog_id' => get_current_blog_id(),
@@ -1673,6 +1690,54 @@ class FLORP{
       $aPendingUsers = get_users( $aPendingArgs );
       if (empty($aPendingUsers)) {
         remove_role($this->strUserRolePending);
+      }
+    }
+    if ($this->isFlashmobBlog) {
+      $oRole = get_role($this->strUserRoleRegistrationAdmin);
+      if (!$oRole) {
+        $oRole = add_role($this->strUserRoleRegistrationAdmin, $this->strUserRoleRegistrationAdminName, array('read', $this->strUserRoleRegistrationAdminSvk, $this->strUserRoleRegistrationAdminIntf));
+      } else {
+        if (!$oRole->has_cap($this->strUserRoleRegistrationAdminSvk)) {
+          $oRole->add_cap($this->strUserRoleRegistrationAdminSvk);
+        }
+        if (!$oRole->has_cap($this->strUserRoleRegistrationAdminIntf)) {
+          $oRole->add_cap($this->strUserRoleRegistrationAdminIntf);
+        }
+        if (!$oRole->has_cap('read')) {
+          $oRole->add_cap('read');
+        }
+      }
+      $oRole = get_role($this->strUserRoleRegistrationAdminSvk);
+      if (!$oRole) {
+        $oRole = add_role($this->strUserRoleRegistrationAdminSvk, $this->strUserRoleRegistrationAdminSvkName, array('read', $this->strUserRoleRegistrationAdminSvk));
+      } else {
+        if (!$oRole->has_cap($this->strUserRoleRegistrationAdminSvk)) {
+          $oRole->add_cap($this->strUserRoleRegistrationAdminSvk);
+        }
+        if (!$oRole->has_cap('read')) {
+          $oRole->add_cap('read');
+        }
+      }
+      $oRole = get_role($this->strUserRoleRegistrationAdminIntf);
+      if (!$oRole) {
+        $oRole = add_role($this->strUserRoleRegistrationAdminIntf, $this->strUserRoleRegistrationAdminIntfName, array('read', $this->strUserRoleRegistrationAdminIntf));
+      } else {
+        if (!$oRole->has_cap($this->strUserRoleRegistrationAdminIntf)) {
+          $oRole->add_cap($this->strUserRoleRegistrationAdminIntf);
+        }
+        if (!$oRole->has_cap('read')) {
+          $oRole->add_cap('read');
+        }
+      }
+    }
+    if ($this->isMainBlog || $this->isFlashmobBlog) {
+      foreach ($GLOBALS['wp_roles']->role_objects as $key => $oRole) {
+        if ($oRole->has_cap('manage_options') && !$oRole->has_cap($this->strUserRoleRegistrationAdminSvk)) {
+          $oRole->add_cap($this->strUserRoleRegistrationAdminSvk);
+        }
+        if ($oRole->has_cap('manage_options') && !$oRole->has_cap($this->strUserRoleRegistrationAdminIntf)) {
+          $oRole->add_cap($this->strUserRoleRegistrationAdminIntf);
+        }
       }
     }
 
@@ -1703,16 +1768,16 @@ class FLORP{
       add_action( 'admin_notices', array( $this, 'action__admin_notices__florp_devel_purge_tshirts_save_is_on' ));
     }
 
-    if (is_admin() && current_user_can( 'activate_plugins' ) && isset($_POST['florp-download-intf-participant-csv'])) {
+    if (is_admin() && current_user_can( $this->strUserRoleRegistrationAdminIntf ) && isset($_POST['florp-download-intf-participant-csv'])) {
       $this->serveParticipantCSV(true);
     }
-    if (is_admin() && current_user_can( 'activate_plugins' ) && isset($_POST['florp-download-participant-csv'])) {
+    if (is_admin() && current_user_can( $this->strUserRoleRegistrationAdminSvk ) && isset($_POST['florp-download-participant-csv'])) {
       $this->serveParticipantCSV();
     }
-    if (is_admin() && current_user_can( 'activate_plugins' ) && isset($_POST['florp-download-intf-tshirt-csv'])) {
+    if (is_admin() && current_user_can( $this->strUserRoleRegistrationAdminIntf ) && isset($_POST['florp-download-intf-tshirt-csv'])) {
       $this->serveTshirtCSV(true);
     }
-    if (is_admin() && current_user_can( 'activate_plugins' ) && isset($_POST['florp-download-tshirt-csv'])) {
+    if (is_admin() && current_user_can( $this->strUserRoleRegistrationAdminSvk ) && isset($_POST['florp-download-tshirt-csv'])) {
       $this->serveTshirtCSV();
     }
 
@@ -3414,7 +3479,7 @@ class FLORP{
         'florp-main',
         'Tričká',
         'Tričká',
-        'manage_options',
+        $this->strUserRoleRegistrationAdminSvk,
         'florp-tshirts',
         array( $this, 'tshirts_table_admin' )
       );
@@ -3455,7 +3520,7 @@ class FLORP{
         'florp-main',
         'Tričká',
         'Tričká',
-        'manage_options',
+        $this->strUserRoleRegistrationAdminSvk,
         'florp-tshirts',
         array( $this, 'tshirts_table_admin' )
       );
@@ -3490,7 +3555,7 @@ class FLORP{
         'florp-international',
         'Tričká',
         'Tričká',
-        'manage_options',
+        $this->strUserRoleRegistrationAdminIntf,
         'florp-intf-tshirts',
         array( $this, 'tshirts_table_admin_intf' )
       );
@@ -4114,7 +4179,7 @@ class FLORP{
         $aParticipantData = $this->aOptions['aIntfParticipants'][$iLeaderIdOrYear][$strEmail];
         $strDataLeaderIdOrYear = 'data-year="'.$iLeaderIdOrYear.'"';
         $strIntfActionPart = "_intf";
-      } else if (!$aTshirtData['is_leader']) {
+      } elseif (!$aTshirtData['is_leader']) {
         $iLeaderIdOrYear = $aTshirtData["leader_id"];
         $aParticipantData = $this->aOptions['aParticipants'][$iLeaderIdOrYear][$strEmail];
         $strDataLeaderIdOrYear = 'data-leader-id="'.$iLeaderIdOrYear.'"';
@@ -8321,7 +8386,7 @@ class FLORP{
   }
 
   public function action__remove_admin_bar() {
-    if (!current_user_can('administrator') && !is_admin()) {
+    if (!current_user_can('administrator') && !current_user_can($this->strUserRoleRegistrationAdminSvk) && !current_user_can($this->strUserRoleRegistrationAdminIntf) && !is_admin()) {
       show_admin_bar( false );
     }
   }
@@ -9450,9 +9515,29 @@ class FLORP{
   }
 
   public function deactivate() {
+    // Clean up roles and capabilities //
     if (get_role($this->strUserRolePending)) {
       remove_role($this->strUserRolePending);
     }
+    if (get_role($this->strUserRoleRegistrationAdmin)) {
+      remove_role($this->strUserRoleRegistrationAdmin);
+    }
+    if (get_role($this->strUserRoleRegistrationAdminSvk)) {
+      remove_role($this->strUserRoleRegistrationAdminSvk);
+    }
+    if (get_role($this->strUserRoleRegistrationAdminIntf)) {
+      remove_role($this->strUserRoleRegistrationAdminIntf);
+    }
+    foreach ($GLOBALS['wp_roles']->role_objects as $key => $oRole) {
+      if ($oRole->has_cap($this->strUserRoleRegistrationAdminSvk)) {
+        $oRole->remove_cap($this->strUserRoleRegistrationAdminSvk);
+      }
+      if ($oRole->has_cap($this->strUserRoleRegistrationAdminIntf)) {
+        $oRole->remove_cap($this->strUserRoleRegistrationAdminIntf);
+      }
+    }
+
+    // Clean up cron jobs //
     $this->remove_crons();
   }
 

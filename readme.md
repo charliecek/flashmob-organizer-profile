@@ -17,6 +17,15 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 ## Version history
 
+### v4.8.0: International flashmob tshirt list
+
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.8.0)
+
+- Fixes and improvements in existing admin screens.
+- Added international flashmob tshirt list.
+- Added admin button hiding.
+- Added ajax buttons to both existing and new participant related admin screens.
+
 ### v4.7.9: Intf buttons: participant fee payment, attendance
 
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.7.9)
@@ -263,18 +272,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 - added tshirt order cancelling
 
-### v4.5.1: tshirt ordering disable, timed tshirt payment warning, bugfix
 
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.5.1)
-
-- added admin css (and .button-warning)
-- added disabling of tshirt ordering
-  - posibility to hide or only disable the checkbox
-- added timed showing of payment warning button where available
-  - 7 days after registration
-- fixed bug: organizer checkbox and flashmob city must be disabled if leader has participants
-  - added warning icon for it in list of participants, tshirts
-- added participant registration time to CSV
-
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.5.1)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.5.2)
