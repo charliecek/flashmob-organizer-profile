@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.7.9
+ * Version: 4.8.0
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '4.7.9';
+  private $strVersion = '4.8.0';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iIntfBlogID = 6;
