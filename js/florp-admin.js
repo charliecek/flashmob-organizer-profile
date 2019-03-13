@@ -455,7 +455,7 @@ jQuery( document ).ready(function() {
     })
 
     window.florpToggleButtons = function(checkbox, text, tableId) {
-      var elements = jQuery("span.button.double-check[data-text-default='"+text+"'],span.notice:contains('"+text+"')")
+      var elements = jQuery("span.button.double-check[data-text-default='"+text+"'],span.notice[data-text='"+text+"'],span.notice:contains('"+text+"')")
       if (jQuery(checkbox).is(":checked")) {
         elements.removeClass("hide")
         setUnhidden(text, tableId)
@@ -465,7 +465,7 @@ jQuery( document ).ready(function() {
       }
     }
     window.florpToggleNotices = function(checkbox, text, tableId) {
-      var elements = jQuery("span.notice:contains('"+text+"')")
+      var elements = jQuery("span.notice[data-text='"+text+"'],span.notice:contains('"+text+"')")
       if (jQuery(checkbox).is(":checked")) {
         elements.removeClass("hide")
         setUnhidden(text, tableId)

@@ -960,6 +960,10 @@ class FLORP{
       $this->aOptions['aTshirtsIntf'][$this->aOptions['iIntfFlashmobYear']] = array();
       $this->save_options();
     }
+    // foreach ($this->aOptions['aIntfParticipants'][2019] as $key => $value) {
+    //   $this->aOptions['aIntfParticipants'][2019][$key]['registered'] -= (7*24*3600);
+    // }
+    // $this->save_options();
     // END options //
   }
 
@@ -2922,7 +2926,7 @@ class FLORP{
   private function archive_current_year_map_options() {
     $iFlashmobYear = $this->aOptions['iFlashmobYear'];
     $this->aOptions['aYearlyMapOptions'][$iFlashmobYear] = $this->get_flashmob_map_options_array_to_archive();
-    // TODO archive aParticipants as well!
+    // TODO archive aParticipants, aIntfParticipants, aTshirts and aTshirtsIntf as well!
     $this->aOptions['aParticipants'] = array();
     $this->save_options();
 
@@ -6246,22 +6250,23 @@ class FLORP{
   }
 
   public function action__florp_intf_tshirt_send_payment_warning_callback() {
-    wp_die(); // TODO
+    // wp_die();
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
     $aData = $_POST;
     $strErrorMessage = "Could not send payment warning to the flashmob participant '{$aData['email']}'";
-    if (!isset($this->aOptions["aTshirts"]) || empty($this->aOptions["aTshirts"]) || !isset($this->aOptions['strTshirtPaymentWarningNotificationMsg'], $this->aOptions['strTshirtPaymentWarningNotificationSbj']) || empty($this->aOptions['strTshirtPaymentWarningNotificationMsg']) || empty($this->aOptions['strTshirtPaymentWarningNotificationSbj'])) {
+    if (!isset($this->aOptions["aTshirtsIntf"]) || empty($this->aOptions["aTshirtsIntf"]) || !isset($this->aOptions['strIntfTshirtPaymentWarningNotificationMsg'], $this->aOptions['strIntfTshirtPaymentWarningNotificationSbj']) || empty($this->aOptions['strIntfTshirtPaymentWarningNotificationMsg']) || empty($this->aOptions['strIntfTshirtPaymentWarningNotificationSbj'])) {
       $aData["message"] = $strErrorMessage;
     } else {
+      $iYear = $aData['year'];
       $iTimestampNow = (int) current_time( 'timestamp' );
       $aData["removeRowOnSuccess"] = false;
       $aData["replaceButton"] = true;
       $strTitle = ' title="'.date( $this->strDateFormat, $iTimestampNow ).'"';
       $aData["replaceButtonHtml"] = '<span data-button-id="'.$aData['buttonId'].'" class="notice notice-success"'.$strTitle.' data-text="'.$aData['textDefault'].'">Upozornený na neskorú platbu</span>';
 
-      $strMessageContent = $this->aOptions['strTshirtPaymentWarningNotificationMsg'];
-      $strMessageSubject = $this->aOptions['strTshirtPaymentWarningNotificationSbj'];
+      $strMessageContent = $this->aOptions['strIntfTshirtPaymentWarningNotificationMsg'];
+      $strMessageSubject = $this->aOptions['strIntfTshirtPaymentWarningNotificationSbj'];
       $strBlogname = trim(wp_specialchars_decode(get_option('blogname'), ENT_QUOTES));
       $aHeaders = array('Content-Type: text/html; charset=UTF-8');
       $bSendResult = wp_mail($aData["email"], $strMessageSubject, $strMessageContent, $aHeaders);
@@ -6275,27 +6280,16 @@ class FLORP{
             "payment_warning_sent" => true,
             "payment_warning_sent-timestamp" => $iTimestampNow,
           );
-          if ($aData["is_leader"] === "1" || $aData["is_leader"] === 1 || $aData["is_leader"] === true) {
-            if (isset($this->aOptions["aTshirts"]["leaders"][$aData["user_id"]])) {
-              $this->aOptions["aTshirts"]["leaders"][$aData["user_id"]] = array_merge(
-                $this->aOptions["aTshirts"]["leaders"][$aData["user_id"]],
-                $aOk
-              );
-            } else {
-              $this->aOptions["aTshirts"]["leaders"][$aData["user_id"]] = $aOk;
-            }
+          if (isset($this->aOptions["aTshirtsIntf"][$iYear][$aData["email"]])) {
+            $this->aOptions["aTshirtsIntf"][$iYear][$aData["email"]] = array_merge(
+              $this->aOptions["aTshirtsIntf"][$iYear][$aData["email"]],
+              $aOk
+            );
           } else {
-            if (isset($this->aOptions["aTshirts"]["participants"][$aData["email"]])) {
-              $this->aOptions["aTshirts"]["participants"][$aData["email"]] = array_merge(
-                $this->aOptions["aTshirts"]["participants"][$aData["email"]],
-                $aOk
-              );
-            } else {
-              $this->aOptions["aTshirts"]["participants"][$aData["email"]] = $aOk;
-            }
+            $this->aOptions["aTshirtsIntf"][$iYear][$aData["email"]] = $aOk;
           }
           $this->save_options();
-          $this->add_option_change("ajax__florp_tshirt_send_payment_warning", "", $aData["email"], false);
+          $this->add_option_change("ajax__florp_intf_tshirt_send_payment_warning", "", $aData["email"], false);
           $aData["message"] = "A payment warning was sent to the flashmob participant '{$aData['email']}'";//." ".var_export($aData, true);
         }
       } else {
