@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 4.9.0
+ * Version: 5.0.0
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '4.9.0';
+  private $strVersion = '5.0.0';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iIntfBlogID = 6;
@@ -427,6 +427,8 @@ class FLORP{
     add_filter( 'the_content', array( $this, 'filter__the_content' ), 9999 );
     add_filter( 'us_load_header_settings', array( $this, 'filter__us_load_header_settings' ), 11 );
     add_filter( 'florp_chart_get_datatable', array( $this, 'filter__get_intf_chart_datatable' ), 10, 3 );
+    add_filter( 'the_posts', array( $this, 'fakepage_intf_participant_form' ), -10);
+    add_filter( 'the_posts', array( $this, 'fakepage_svk_participant_form' ), -10);
     // END FILTERS //
 
     // BEGIN ACTIONS //
@@ -683,6 +685,7 @@ class FLORP{
       'aIntfCityPollUsers'                        => get_users( ['blog_id' => $this->iMainBlogID, 'role' => $this->strUserRoleApproved, 'fields' => 'ID'] ),
       'strIntfCityPollExtraCities'                => '',
       'bTshirtOrdersAdminEnabled'                 => false,
+      'bEditSubmissions'                          => false,
     );
   }
 
@@ -1424,6 +1427,11 @@ class FLORP{
           $aNotices[] = array( 'warning' => 'Flashmob organizer map archivation is off!' );
         }
         break;
+      case 'florp_edit_submissions_is_on':
+        if (defined('FLORP_EDIT_SUBMISSIONS') && FLORP_EDIT_SUBMISSIONS === true) {
+          $aNotices[] = array( 'warning' => 'FLORP_EDIT_SUBMISSIONS constant is on.' );
+        }
+        break;
       case 'florp_devel_purge_participants_save_is_on':
         $aNotices[] = array( 'warning' => 'FLORP_DEVEL_PURGE_PARTICIPANTS_ON_SAVE constant is on. Contact your site admin if you think this is not right!' );
         break;
@@ -1761,6 +1769,9 @@ class FLORP{
     if (is_admin() && current_user_can( 'activate_plugins' ) && defined('FLORP_DEVEL') && FLORP_DEVEL === true) {
       add_action( 'admin_notices', array( $this, 'action__admin_notices__florp_devel_is_on' ));
     }
+    if (is_admin() && current_user_can( 'activate_plugins' ) && defined('FLORP_EDIT_SUBMISSIONS') && FLORP_EDIT_SUBMISSIONS === true) {
+      add_action( 'admin_notices', array( $this, 'action__admin_notices__florp_edit_submissions_is_on' ));
+    }
     if (is_admin() && current_user_can( 'activate_plugins' ) && defined('FLORP_DEVEL_PURGE_PARTICIPANTS_ON_SAVE') && FLORP_DEVEL_PURGE_PARTICIPANTS_ON_SAVE === true) {
       add_action( 'admin_notices', array( $this, 'action__admin_notices__florp_devel_purge_participants_save_is_on' ));
     }
@@ -1808,6 +1819,10 @@ class FLORP{
 
   public function action__admin_notices__florp_devel_is_on() {
     echo $this->get_admin_notices('florp_devel_is_on');
+  }
+
+  public function action__admin_notices__florp_edit_submissions_is_on() {
+    echo $this->get_admin_notices('florp_edit_submissions_is_on');
   }
 
   public function action__admin_notices__florp_devel_purge_participants_save_is_on() {
@@ -1874,6 +1889,21 @@ class FLORP{
   }
 
   public function action__displaying_profile_form_nf_end( $iFormID, $aFormSettings, $aFormFields ) {
+    if (defined('FLORP_DEVEL') && FLORP_DEVEL === true && defined('FLORP_DEVEL_DEBUG_PARTICIPANT_EDIT_FORMS') && FLORP_DEVEL_DEBUG_PARTICIPANT_EDIT_FORMS === true) {
+      $bLoggedIn = is_user_logged_in(); // TODO DEVEL
+      if ($this->bDisplayingProfileFormNinjaForm && $iFormID == $this->iProfileFormNinjaFormIDIntf && $bLoggedIn && $GLOBALS['florp-intf-participant-form-edit']) {
+        $iYear = $_REQUEST['year'];
+        $strEmail = $_REQUEST['email'];
+        $aParticipantData = $this->aOptions['aIntfParticipants'][$iYear][$strEmail];
+        echo "<pre>"; var_dump($aParticipantData); echo "</pre>";
+      }
+      if ($this->bDisplayingProfileFormNinjaForm && $iFormID == $this->iProfileFormNinjaFormIDFlashmob && $bLoggedIn && $GLOBALS['florp-svk-participant-form-edit']) {
+        $iLeaderID = $_REQUEST['leader_id'];
+        $strEmail = $_REQUEST['email'];
+        $aParticipantData = $this->aOptions['aParticipants'][$iLeaderID][$strEmail];
+        echo "<pre>"; var_dump($aParticipantData); echo "</pre>";
+      }
+    }
     $this->bDisplayingProfileFormNinjaForm = false;
   }
 
@@ -2114,6 +2144,102 @@ class FLORP{
       if ($bHide) {
         $aField['settings']['container_class'] .= " hidden";
       }
+    }
+
+    $bParticipantFormEdit = false;
+    $strFieldKey = $aField['settings']['key'];
+    if ($bLoggedIn && $GLOBALS['florp-intf-participant-form-edit']) {
+      $bParticipantFormEdit = false;
+      $iYear = $_REQUEST['year'];
+      $strEmail = $_REQUEST['email'];
+      $aParticipantData = $this->aOptions['aIntfParticipants'][$iYear][$strEmail];
+      $strJsArrayKey = 'florp-intf-participant-form-edit-js';
+      if (isset($aParticipantData[$strFieldKey]) || $strFieldKey === 'submission_editing') {
+        $bParticipantFormEdit = true;
+        $strSubmissionEditingText = "intf,{$iYear},{$strEmail}";
+        if (!is_array($GLOBALS[$strJsArrayKey])) {
+          $GLOBALS[$strJsArrayKey] = array();
+        }
+        if ($strFieldKey === 'preferences') {
+          $GLOBALS[$strJsArrayKey]['tshirt_ordering_disabled_intf'] = 0;
+        }
+        if ($strFieldKey === 'intf_city' && $aParticipantData[$strFieldKey] !== 'null') {
+          $GLOBALS[$strJsArrayKey]['intf_city_poll_disabled'] = 0;
+          $aField['settings']['required'] = true;
+          $aField['settings']['container_class'] = str_replace("florp-hidden", "", $aField['settings']['container_class']);
+          $aFlashmobCities = $this->get_intf_poll_cities();
+          if (!empty($aFlashmobCities)) {
+            reset($aField['settings']['options']);
+            $iFirstKey = key($aField['settings']['options']);
+            $aOption = $aField['settings']['options'][$iFirstKey];
+            foreach ($aFlashmobCities as $strFlashmobCity) {
+              $aOption["label"] = $strFlashmobCity;
+              $aOption["value"] = $strFlashmobCity;
+              $aField['settings']['options'][] = $aOption;
+            }
+          }
+        }
+      }
+
+      if ($aField['settings']['element_class']) {
+        $aField['settings']['element_class'] = str_replace("florp-clear-on-submission", "", $aField['settings']['element_class']);
+      }
+      if ($aField['settings']['container_class']) {
+        $aField['settings']['container_class'] = str_replace("florp-clear-on-submission", "", $aField['settings']['container_class']);
+      }
+    }
+    if ($bLoggedIn && $GLOBALS['florp-svk-participant-form-edit']) {
+      $bParticipantFormEdit = false;
+      $iLeaderID = $_REQUEST['leader_id'];
+      $strEmail = $_REQUEST['email'];
+      $aParticipantData = $this->aOptions['aParticipants'][$iLeaderID][$strEmail];
+      $strJsArrayKey = 'florp-svk-participant-form-edit-js';
+      if (isset($aParticipantData[$strFieldKey]) || $strFieldKey === 'submission_editing') {
+        $bParticipantFormEdit = true;
+        $strSubmissionEditingText = "svk,{$iLeaderID},{$strEmail}";
+        if (!is_array($GLOBALS[$strJsArrayKey])) {
+          $GLOBALS[$strJsArrayKey] = array();
+        }
+        if ($strFieldKey === 'preferences') {
+          $GLOBALS[$strJsArrayKey]['tshirt_ordering_disabled'] = 0;
+        }
+      }
+
+      if ($aField['settings']['element_class']) {
+        $aField['settings']['element_class'] = str_replace("florp-clear-on-submission", "", $aField['settings']['element_class']);
+      }
+      if ($aField['settings']['container_class']) {
+        $aField['settings']['container_class'] = str_replace("florp-clear-on-submission", "", $aField['settings']['container_class']);
+      }
+    }
+
+    if ($bParticipantFormEdit) {
+      switch ($aField['settings']['type']) {
+        case "hidden":
+          if ($strFieldKey === 'submission_editing') {
+            $aField['settings']['default'] = $strSubmissionEditingText;
+            break;
+          }
+        case "email":
+        case "firstname":
+        case "lastname":
+          $aField['settings']['default'] = $aParticipantData[$strFieldKey];
+          break;
+        case 'listradio':
+        case 'listselect':
+          foreach ($aField['settings']['options'] as $iKey => $aOption) {
+            $aField['settings']['options'][$iKey]['selected'] = ($aOption['value'] === $aParticipantData[$strFieldKey]) ? 1 : 0;
+          }
+          break;
+        case 'listcheckbox':
+          foreach ($aParticipantData[$strFieldKey] as $checkedValue) {
+            foreach ($aField['settings']['options'] as $iKey => $aOption) {
+              $aField['settings']['options'][$iKey]['selected'] = ($aOption['value'] === $checkedValue) ? 1 : 0;
+            }
+          }
+          break;
+      }
+      // echo "<pre>"; var_dump($strFieldKey, $aField['settings']['type'], $aParticipantData[$strFieldKey], $aField['settings']['default']); echo "</pre>";
     }
     return $aField;
   }
@@ -3317,6 +3443,13 @@ class FLORP{
       $aJS['user_id'] = $iUserID;
       $aJS['leader_participant_table_class'] = $this->aOptions['strLeaderParticipantsTableClass'];
       $aJS['get_leaderParticipantsTable_action'] = 'get_leaderParticipantsTable';
+
+      if ($GLOBALS['florp-svk-participant-form-edit'] && is_array($GLOBALS['florp-svk-participant-form-edit-js'])) {
+        $aJS = array_merge($aJS, $GLOBALS['florp-svk-participant-form-edit-js']);
+      }
+      if ($GLOBALS['florp-intf-participant-form-edit'] && is_array($GLOBALS['florp-intf-participant-form-edit-js'])) {
+        $aJS = array_merge($aJS, $GLOBALS['florp-intf-participant-form-edit-js']);
+      }
     }
     wp_localize_script( 'florp_form_js', 'florp', $aJS );
 
@@ -3499,7 +3632,8 @@ class FLORP{
         'florp-history',
         array( $this, 'leaders_history_table_admin' )
       );
-    } elseif ($this->isFlashmobBlog) {
+    }
+    if ($this->isFlashmobBlog) {
       $page = add_submenu_page(
         'florp-main',
         'Profil organizátora slovenského flashmobu',
@@ -3524,7 +3658,9 @@ class FLORP{
         'florp-tshirts',
         array( $this, 'tshirts_table_admin' )
       );
+    }
 
+    if ($this->isIntfBlog) {
       add_menu_page(
         "Medzinárodný Flashmob",
         'Medzinárodný Flashmob',
@@ -3559,7 +3695,6 @@ class FLORP{
         'florp-intf-tshirts',
         array( $this, 'tshirts_table_admin_intf' )
       );
-
     }
   }
 
@@ -3844,7 +3979,15 @@ class FLORP{
         }
 
         $strEcho .= '<tr class="row" data-row-id="'.$strRowID.'">';
-        $strEcho .=   '<td>'.$aParticipantData['first_name'].' '.$aParticipantData['last_name'].$strButtons.'</td>';
+        $strEditSubmission = '';
+        if ($this->aOptions['bEditSubmissions'] || (isset($_POST['edit-submissions']) && $_POST['edit-submissions'] === 'on') || (defined('FLORP_EDIT_SUBMISSIONS') && FLORP_EDIT_SUBMISSIONS === true)) {
+          $strDomain = '';
+          if (!$this->isFlashmobBlog) {
+            $strDomain = 'http://flashmob.salsarueda.dance';
+          }
+          $strEditSubmission = ' <span class="submission-edit">(<a href="'.$strDomain.'/edit-svk-participant-submission/?leader_id='.$iLeaderID.'&email='.urlencode($strEmail).'" target="_blank">Edit</a>)</span>';
+        }
+        $strEcho .=   '<td>'.$aParticipantData['first_name'].' '.$aParticipantData['last_name'].$strEditSubmission.$strButtons.'</td>';
         $strEcho .=   '<td><a name="'.$aParticipantData['user_email'].'">'.$aParticipantData['user_email'].'</a></td>';
         $oLeader = get_user_by( 'id', $iLeaderID );
         $strLeadersFlashmobCity = get_user_meta( $iLeaderID, 'flashmob_city', true );
@@ -3860,7 +4003,7 @@ class FLORP{
         }
         $strEcho .=   '<td><a href="'.admin_url('admin.php?page=florp-leaders')."#{$iLeaderID}\">{$oLeader->first_name} {$oLeader->last_name}</a>{$strIsPending}</td>";
         $strEcho .=   '<td>';
-        $aTimestamps = array( 'registered', 'tshirt_order_cancelled_timestamp' );
+        $aTimestamps = array( 'registered', 'tshirt_order_cancelled_timestamp', 'updated_timestamp', 'paid_fee', 'attend_set_timestamp' );
         $bOrderedTshirt = isset($aParticipantData['preferences']) && is_array($aParticipantData['preferences']) && in_array('Chcem pamätné Flashmob tričko', $aParticipantData['preferences']);
         $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', 'leader_user_id' );
         if (!isset($aParticipantData['leader_notified'])) {
@@ -3997,10 +4140,14 @@ class FLORP{
         }
 
         $strEcho .= '<tr class="row" data-row-id="'.$strRowID.'">'.PHP_EOL;
-        $strEcho .=   '<td>'.$aParticipantData['first_name'].' '.$aParticipantData['last_name'].$strButtons.'</td>'.PHP_EOL;
+        $strEditSubmission = '';
+        if ($this->aOptions['bEditSubmissions'] || (isset($_POST['edit-submissions']) && $_POST['edit-submissions'] === 'on') || (defined('FLORP_EDIT_SUBMISSIONS') && FLORP_EDIT_SUBMISSIONS === true)) {
+          $strEditSubmission = ' <span class="submission-edit">(<a href="/edit-intf-participant-submission/?year='.$iYear.'&email='.urlencode($strEmail).'" target="_blank">Edit</a>)</span>';
+        }
+        $strEcho .=   '<td>'.$aParticipantData['first_name'].' '.$aParticipantData['last_name'].$strEditSubmission.$strButtons.'</td>'.PHP_EOL;
         $strEcho .=   '<td><a name="'.$aParticipantData['user_email'].'">'.$aParticipantData['user_email'].'</a></td>'.PHP_EOL;
         $strEcho .=   '<td>'.$aParticipantData['flashmob_city'].'</td>'.PHP_EOL;
-        $aTimestamps = array( 'registered', 'paid_fee', 'attend_set_timestamp' );
+        $aTimestamps = array( 'registered', 'paid_fee', 'attend_set_timestamp', 'updated_timestamp' );
         $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city' );
         $bOrderedTshirt = isset($aParticipantData['preferences']) && is_array($aParticipantData['preferences']) && in_array('Chcem pamätné Flashmob tričko', $aParticipantData['preferences']);
         $strEcho .=   '<td>'.PHP_EOL;
@@ -9027,13 +9174,62 @@ class FLORP{
     if ($this->isFlashmobBlog && intval($aFormData['form_id']) === $this->iProfileFormNinjaFormIDFlashmob) {
       // Get field values by keys //
       $aFieldData = array();
+      $bSubmissionEditing = false;
       $aSkipFieldTypes = array( 'recaptcha_logged-out-only', 'recaptcha', 'submit', 'html', 'hr' );
       foreach ($aFormData["fields"] as $strKey => $aData) {
         if (in_array($aData['type'], $aSkipFieldTypes)) {
           continue;
         }
-        $aFieldData[$aData["key"]] = $aData['value'];
+        if ($aData["key"] === 'submission_editing' && strpos($aData['value'], ',') !== false) {
+          $bSubmissionEditing = true;
+          $aHiddenFieldData = explode(',', $aData['value']);
+          $strEmail = $aHiddenFieldData[2];
+          $iLeaderID = $aHiddenFieldData[1];
+        } else {
+          $aFieldData[$aData["key"]] = $aData['value'];
+        }
       }
+      if ($bSubmissionEditing) {
+        $aParticipantData = $this->aOptions['aParticipants'][$iLeaderID][$strEmail];
+        $aChanged = array();
+        $aChangedFrom = array();
+        $aChangedTo = array();
+        foreach ($aParticipantData as $sKey => $mixValue) {
+          if (isset($aFieldData[$sKey]) && $aFieldData[$sKey] !== $mixValue) {
+            if ($sKey === 'preferences') {
+              // Changes to NL subscription are ignored //
+              if (in_array('newsletter_subscribe', $mixValue) && !in_array('newsletter_subscribe', $aFieldData[$sKey])) {
+                $aFieldData[$sKey][] = 'newsletter_subscribe';
+              } elseif (!in_array('newsletter_subscribe', $mixValue) && in_array('newsletter_subscribe', $aFieldData[$sKey])) {
+                if (in_array('flashmob_participant_tshirt', $aFieldData[$sKey])) {
+                  $aFieldData[$sKey] = array();
+                  $aFieldData[$sKey][] = 'flashmob_participant_tshirt';
+                } else {
+                  $aFieldData[$sKey] = array();
+                }
+              }
+              if (count($aFieldData[$sKey]) === count($mixValue)) {
+                continue;
+              }
+            }
+            $this->aOptions['aParticipants'][$iLeaderID][$strEmail][$sKey] = $aFieldData[$sKey];
+            $aChanged[$sKey] = array(
+              $mixValue,
+              $aFieldData[$sKey]
+            );
+            $aChangedFrom[$sKey] = is_array($mixValue) ? ('['.implode(',', $mixValue).']') : $mixValue;
+            $aChangedTo[$sKey] = is_array($aFieldData[$sKey]) ? ('['.implode(',', $aFieldData[$sKey]).']') : $aFieldData[$sKey];
+          }
+        }
+        if (count($aChanged) > 0) {
+          $this->aOptions['aParticipants'][$iLeaderID][$strEmail]['updated_timestamp'] = $iTimestampNow = (int) current_time( 'timestamp' );
+          $this->add_option_change("svk-participant-$iLeaderID-$strEmail", $aChangedFrom, $aChangedTo, false);
+          $this->save_options();
+        }
+        // file_put_contents( __DIR__ . "/kk-debug-after-submission-editing-svk.log", var_export( $aChanged, true ) );
+        return 6;
+      }
+
       $aFieldData["registered"] = (int) current_time( 'timestamp' );
       $iUserID = $aFieldData['leader_user_id'];
       if (!isset($this->aOptions['aParticipants'][$iUserID])) {
@@ -9100,13 +9296,62 @@ class FLORP{
     if ($this->isIntfBlog && intval($aFormData['form_id']) === $this->iProfileFormNinjaFormIDIntf) {
       // Get field values by keys //
       $aFieldData = array();
+      $bSubmissionEditing = false;
       $aSkipFieldTypes = array( 'recaptcha_logged-out-only', 'recaptcha', 'submit', 'html', 'hr' );
       foreach ($aFormData["fields"] as $strKey => $aData) {
         if (in_array($aData['type'], $aSkipFieldTypes)) {
           continue;
         }
-        $aFieldData[$aData["key"]] = $aData['value'];
+        if ($aData["key"] === 'submission_editing' && strpos($aData['value'], ',') !== false) {
+          $bSubmissionEditing = true;
+          $aHiddenFieldData = explode(',', $aData['value']);
+          $strEmail = $aHiddenFieldData[2];
+          $iYear = $aHiddenFieldData[1];
+        } else {
+          $aFieldData[$aData["key"]] = $aData['value'];
+        }
       }
+      if ($bSubmissionEditing) {
+        $aParticipantData = $this->aOptions['aIntfParticipants'][$iYear][$strEmail];
+        $aChanged = array();
+        $aChangedFrom = array();
+        $aChangedTo = array();
+        foreach ($aParticipantData as $sKey => $mixValue) {
+          if (isset($aFieldData[$sKey]) && $aFieldData[$sKey] !== $mixValue) {
+            if ($sKey === 'preferences') {
+              // Changes to NL subscription are ignored //
+              if (in_array('newsletter_subscribe', $mixValue) && !in_array('newsletter_subscribe', $aFieldData[$sKey])) {
+                $aFieldData[$sKey][] = 'newsletter_subscribe';
+              } elseif (!in_array('newsletter_subscribe', $mixValue) && in_array('newsletter_subscribe', $aFieldData[$sKey])) {
+                if (in_array('flashmob_participant_tshirt', $aFieldData[$sKey])) {
+                  $aFieldData[$sKey] = array();
+                  $aFieldData[$sKey][] = 'flashmob_participant_tshirt';
+                } else {
+                  $aFieldData[$sKey] = array();
+                }
+              }
+              if (count($aFieldData[$sKey]) === count($mixValue)) {
+                continue;
+              }
+            }
+            $this->aOptions['aIntfParticipants'][$iYear][$strEmail][$sKey] = $aFieldData[$sKey];
+            $aChanged[$sKey] = array(
+              $mixValue,
+              $aFieldData[$sKey]
+            );
+            $aChangedFrom[$sKey] = is_array($mixValue) ? ('['.implode(',', $mixValue).']') : $mixValue;
+            $aChangedTo[$sKey] = is_array($aFieldData[$sKey]) ? ('['.implode(',', $aFieldData[$sKey]).']') : $aFieldData[$sKey];
+          }
+        }
+        if (count($aChanged) > 0) {
+          $this->aOptions['aIntfParticipants'][$iYear][$strEmail]['updated_timestamp'] = $iTimestampNow = (int) current_time( 'timestamp' );
+          $this->add_option_change("intf-participant-$iYear-$strEmail", $aChangedFrom, $aChangedTo, false);
+          $this->save_options();
+        }
+        // file_put_contents( __DIR__ . "/kk-debug-after-submission-editing-intf.log", var_export( $aChanged, true ) );
+        return 7;
+      }
+
       $aFieldData["registered"] = (int) current_time( 'timestamp' );
       if (!isset($this->aOptions['aIntfParticipants'][$this->aOptions['iIntfFlashmobYear']])) {
         $this->aOptions['aIntfParticipants'][$this->aOptions['iIntfFlashmobYear']] = array();
@@ -9504,6 +9749,75 @@ class FLORP{
       }
     }
     return false;
+  }
+
+  public function fakepage_intf_participant_form( $aPosts ) {
+    $bLoggedIn = is_user_logged_in();
+    if (!$bLoggedIn || !current_user_can( $this->strUserRoleRegistrationAdminIntf || !$this->isIntfBlog)) {
+      return $aPosts;
+    }
+    $strContent = "[florp-form international=1]";
+    if (!$_REQUEST['year'] || !$_REQUEST['email'] || !$this->aOptions['aIntfParticipants'][$_REQUEST['year']] || !$this->aOptions['aIntfParticipants'][$_REQUEST['year']][$_REQUEST['email']]) {
+      $strContent = "No such registration!";
+    }
+
+    return $this->fakepage( $aPosts, "edit-intf-participant-submission", "Edit international flashmob participant's submission", $strContent, 'florp-intf-participant-form-edit' );
+  }
+
+  public function fakepage_svk_participant_form( $aPosts ) {
+    $bLoggedIn = is_user_logged_in();
+    if (!$bLoggedIn || !current_user_can( $this->strUserRoleRegistrationAdminSvk ) || !$this->isFlashmobBlog) {
+      return $aPosts;
+    }
+    $strContent = "[florp-form]";
+    if (!$_REQUEST['leader_id'] || !$_REQUEST['email'] || !$this->aOptions['aParticipants'][$_REQUEST['leader_id']] || !$this->aOptions['aParticipants'][$_REQUEST['leader_id']][$_REQUEST['email']]) {
+      $strContent = "No such registration!";
+    }
+
+    return $this->fakepage( $aPosts, "edit-svk-participant-submission", "Edit Slovak flashmob participant's submission", $strContent, 'florp-svk-participant-form-edit' );
+  }
+
+  private function fakepage( $aPosts, $sUrl, $sTitle, $sContent, $sGlobalsKey ) {
+      global $wp;
+      global $wp_query;
+
+      if ( !$GLOBALS['florp-fakepage-'.$sUrl] && (strtolower($wp->request) === $sUrl || $wp->query_vars['page_id'] === $sUrl) ) {
+        // stop interferring with other $aPosts arrays on this page (only works if the sidebar is rendered *after* the main page)
+        $GLOBALS['florp-fakepage-'.$sUrl] = true;
+
+        $GLOBALS[$sGlobalsKey] = true;
+
+        // create a fake virtual page
+        $oPost = new stdClass;
+        $oPost->post_author = 1;
+        $oPost->post_name = $sUrl;
+        $oPost->guid = get_bloginfo('wpurl') . '/' . $sUrl;
+        $oPost->post_title = $sTitle;
+        $oPost->post_content = $sContent;
+        $oPost->ID = -1;
+        $oPost->post_type = 'page';
+        $oPost->post_status = 'static';
+        $oPost->comment_status = 'closed';
+        $oPost->ping_status = 'open';
+        $oPost->comment_count = 0;
+        $oPost->post_date = current_time('mysql');
+        $oPost->post_date_gmt = current_time('mysql', 1);
+        $aPosts = NULL;
+        $aPosts[] = $oPost;
+
+        // make wpQuery believe this is a real page too
+        $wp_query->is_page = true;
+        $wp_query->is_singular = true;
+        $wp_query->is_home = false;
+        $wp_query->is_archive = false;
+        $wp_query->is_category = false;
+        $wp_query->is_attachment = false;
+        unset($wp_query->query["error"]);
+        $wp_query->query_vars["error"] = "";
+        $wp_query->is_404 = false;
+      }
+
+      return $aPosts;
   }
 
   public function activate() {

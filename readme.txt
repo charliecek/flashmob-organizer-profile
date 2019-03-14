@@ -13,6 +13,10 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v4.9.0: Flashmob Admin user roles =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.9.0)
+- Added Flashmob Administrator user roles and capabilities
+
 = v4.8.0: International flashmob tshirt list =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.8.0)
 - Fixes and improvements in existing admin screens.
@@ -204,9 +208,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 - added replacement of flashmobbers tab (ajax)
 - added fadeOut on profile success message
 
-= v4.5.2: added tshirt order cancelling =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.5.2)
-- added tshirt order cancelling
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.5.2)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.5.3)

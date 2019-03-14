@@ -214,6 +214,8 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
       } elseif ((florp_is_flashmob_blog() && $form_id == florp_get_profile_form_id_flashmob())
              || (florp_is_intf_blog() && $form_id == florp_get_profile_form_id_intf())) {
         $bIsIntfForm = ($form_id == florp_get_profile_form_id_intf());
+        $bSubmissionEditing = false;
+        $aSubmissionEditing = array();
         $bGenderOK = false;
         $aKeyToValue = array();
         $aKeyToLabel = array();
@@ -225,6 +227,10 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
           if (!empty($field_value['label'])) {
             $aKeyToLabel[$strKey] = $field_value['label'];
           }
+          if ($strKey === 'submission_editing' && strpos($strValue, ',') !== false) {
+            $bSubmissionEditing = true;
+            $aSubmissionEditing = explode(',', $strValue);
+          }
         }
         foreach ($data['fields'] as $field_id => $field_value ) {
           $strKey = $field_value['key'];
@@ -234,7 +240,15 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
             case "user_email":
               $strValue = trim( $strValue );
               // if (email_exists( $strValue ) || (!$bIsIntfForm && florp_flashmob_participant_exists( $strValue )) || ($bIsIntfForm && florp_intf_participant_exists( $strValue ))) {
-              if ((!$bIsIntfForm && (email_exists( $strValue ) || florp_flashmob_participant_exists( $strValue ))) || ($bIsIntfForm && florp_intf_participant_exists( $strValue ))) {
+              if ($bSubmissionEditing) {
+                // $data[ 'errors' ][ 'form' ][] = '<pre>'.var_export($aKeyToValue['submission_editing'], true).'</pre>';
+                // $data[ 'errors' ][ 'form' ][] = '<pre>'.var_export($aSubmissionEditing, true).'</pre>';
+                if ($strValue !== $aSubmissionEditing[2]) {
+                  $data[ 'errors' ][ 'form' ][$strKey] = 'Email sa nesmie meniť';
+                } elseif (($bIsIntfForm && !florp_intf_participant_exists( $strValue )) || (!$bIsIntfForm && !florp_flashmob_participant_exists( $strValue ))) {
+                  $data[ 'errors' ][ 'form' ][$strKey] = 'Email nebol rozpoznaný';
+                }
+              } elseif ((!$bIsIntfForm && (email_exists( $strValue ) || florp_flashmob_participant_exists( $strValue ))) || ($bIsIntfForm && florp_intf_participant_exists( $strValue ))) {
                 $data[ 'errors' ][ 'form' ][$strKey] = 'Zadaný e-mail už je zaregistrovaný'; //__( 'The submitted email is in use already', 'florp' ); // Zadaný e-mail už je zaregistrovaný
               }
               break;
@@ -257,7 +271,7 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
         }
 //         $data[ 'errors' ][ 'form' ][] = '<pre>'.var_export($aKeyToLabel, true).'</pre>';
         if (isset($aKeyToValue['preferences']) && is_array($aKeyToValue['preferences']) && in_array("flashmob_participant_tshirt", $aKeyToValue['preferences'])) {
-          if ((!$bIsIntfForm && florp_is_tshirt_ordering_disabled()) || ($bIsIntfForm && florp_is_intf_tshirt_ordering_disabled())) {
+          if (!$bSubmissionEditing && ((!$bIsIntfForm && florp_is_tshirt_ordering_disabled()) || ($bIsIntfForm && florp_is_intf_tshirt_ordering_disabled()))) {
             $data[ 'errors' ][ 'form' ]['tshirt_ordering_disabled'] = 'Objednávanie tričiek je zastavené. Žiaľ, nejaká chyba Vám umožnila si vybrať tričko. Prosíme, zrušte si objednávku trička, aby ste mohli dokončiť prihlásenie. Ak sa objednávka trička nedá zrušiť, prosíme, obnovte si stránku.';
           } else {
             $aRequiredFields = array(
@@ -282,9 +296,9 @@ final class NF_Actions_Florp extends NF_Abstracts_Action
             }
           }
         }
-//         $data[ 'errors' ][ 'form' ][] = '<pre>'.var_export($data['fields'], true).'</pre>';
-//         $data[ 'errors' ][ 'form' ][] = '<pre>'.var_export($aKeyToValue, true).'</pre>';
-//         $data[ 'errors' ][ 'form' ][] = 'DEVEL STOP';
+        // $data[ 'errors' ][ 'form' ][] = '<pre>'.var_export($data['fields'], true).'</pre>';
+        // $data[ 'errors' ][ 'form' ][] = '<pre>'.var_export($aKeyToValue, true).'</pre>';
+        // $data[ 'errors' ][ 'form' ][] = 'DEVEL STOP';
       } elseif ((florp_has_main_only_florp_profile_ninja_form() && florp_is_main_blog()) || (florp_has_flashmob_only_florp_profile_ninja_form() && florp_is_flashmob_blog())) {
         $data[ 'errors' ][ 'form' ]['old_form'] = 'Prosíme, obnovte si stránku. Odkedy ste si ju načítali, nastali zmeny, bez ktorých tento formulár nemôžeme odoslať.';
       }

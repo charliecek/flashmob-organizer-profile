@@ -42,7 +42,8 @@ $aFlorpNinjaFormExportData = array (
       13 => 'flashmob_participant_tshirt_size',
       14 => 'flashmob_participant_tshirt_color',
       15 => 'antispamova_ochrana_1528848098448',
-      16 => 'save_button',
+      16 => 'submission_editing',
+      17 => 'save_button',
     ),
     'drawerDisabled' => false,
     'unique_field_error' => 'A form with this value has already been submitted.',
@@ -12038,7 +12039,7 @@ $aFlorpNinjaFormExportData = array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
-      'order' => 17,
+      'order' => 16,
       'container_class' => 'florp-class florp-antispam florp-registration-field florp-intf',
       'element_class' => '',
       'size' => 'visible',
@@ -12046,6 +12047,20 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Antispamová ochrana',
       'key' => 'antispamova_ochrana_1528848098448',
       'type' => 'recaptcha_logged-out-only',
+    ),
+    286 => 
+    array (
+      'objectType' => 'Field',
+      'objectDomain' => 'fields',
+      'editActive' => false,
+      'order' => 17,
+      'type' => 'hidden',
+      'label' => 'Hidden: Submission Editing',
+      'key' => 'submission_editing',
+      'default' => '0',
+      'admin_label' => '',
+      'manual_key' => true,
+      'drawerDisabled' => false,
     ),
     274 => 
     array (
@@ -12318,6 +12333,6 @@ $aFlorpNinjaFormExportData = array (
       'subs_expire_time' => '90',
     ),
   ),
-  'version' => 4007002,
-  'timestamp' => 1549579675,
+  'version' => 4009000,
+  'timestamp' => 1552528077,
 ); ?>

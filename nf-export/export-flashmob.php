@@ -27,7 +27,8 @@ $aFlorpNinjaFormExportData = array (
       13 => 'flashmob_participant_tshirt_color',
       14 => 'leader_user_id',
       15 => 'antispamova_ochrana_1528848098448',
-      16 => 'save_button',
+      16 => 'submission_editing',
+      17 => 'save_button',
     ),
     'fieldsMarkedRequired' => 'Polia označené <span class="ninja-forms-req-symbol">*</span> sú povinné',
     'currency' => '',
@@ -11960,12 +11961,26 @@ $aFlorpNinjaFormExportData = array (
       'key' => 'antispamova_ochrana_1528848098448',
       'type' => 'recaptcha_logged-out-only',
     ),
-    246 => 
+    287 => 
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
       'editActive' => false,
       'order' => 17,
+      'type' => 'hidden',
+      'label' => 'Hidden: Submission Editing',
+      'key' => 'submission_editing',
+      'default' => '0',
+      'admin_label' => '',
+      'drawerDisabled' => false,
+      'manual_key' => true,
+    ),
+    246 => 
+    array (
+      'objectType' => 'Field',
+      'objectDomain' => 'fields',
+      'editActive' => false,
+      'order' => 18,
       'processing_label' => 'Processing',
       'container_class' => 'florp-class florp-registration-field florp-button-wrapper',
       'element_class' => 'florp_uloz_profil florp-button button',
@@ -12231,6 +12246,6 @@ $aFlorpNinjaFormExportData = array (
       'payment_total_type' => '',
     ),
   ),
-  'version' => 4006010,
-  'timestamp' => 1543455975,
+  'version' => 4009000,
+  'timestamp' => 1552528119,
 ); ?>
