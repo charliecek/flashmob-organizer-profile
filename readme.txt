@@ -13,6 +13,10 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v5.0.0: Participant form submission editing =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.0.0)
+- Participant form submission editing.
+
 = v4.9.0: Flashmob Admin user roles =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.9.0)
 - Added Flashmob Administrator user roles and capabilities
@@ -203,10 +207,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 - BEGIN/END blocks for better code folding
 - added page/form/popup/site IDs to admin dropdowns
 
-= v4.5.3: replacement of flashmobbers tab, profile success msg fadeOut =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.5.3)
-- added replacement of flashmobbers tab (ajax)
-- added fadeOut on profile success message
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.5.3)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.5.4)
