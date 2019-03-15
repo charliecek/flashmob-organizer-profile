@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 5.0.0
+ * Version: 5.1.0
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '5.0.0';
+  private $strVersion = '5.1.0';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iIntfBlogID = 6;
@@ -5695,9 +5695,9 @@ class FLORP{
   private function get_tshirts_csv( $aTshirts, $bIntf = false, $bCSVHeaderOnly = false ) {
     $aReturn = array();
     if ($bIntf) {
-      $aHeaderRow = array("Meno", "Email", "Mesto", "Typ", "Rok", "Webstránka", "Veľkosť trička", "Typ trička", "Farba trička", "Čas registrácie (účastník)", "Zaplatil tričko", "Čas označenia za zaplatené", "Upozornenie na platbu", "Čas upozornenia na platbu", "Tričko odovzdané", "Čas odovzdania trička");
+      $aHeaderRow = array("Meno", "Email", "Mesto", "Typ", "Rok", "Veľkosť trička", "Typ trička", "Farba trička", "Čas registrácie (účastník)", "Zaplatil tričko", "Čas označenia za zaplatené", "Upozornenie na platbu", "Čas upozornenia na platbu", "Tričko odovzdané", "Čas odovzdania trička", "Zaplatil reg. popl.", "Čas zaplatenia reg. popl.");
     } else {
-      $aHeaderRow = array("Meno", "Email", "Mesto", "Typ", "Líder", "Webstránka", "Veľkosť trička", "Typ trička", "Farba trička", "Čas registrácie (účastník)", "Zaplatil tričko", "Čas označenia za zaplatené", "Upozornenie na platbu", "Čas upozornenia na platbu", "Tričko odovzdané", "Čas odovzdania trička");
+      $aHeaderRow = array("Meno", "Email", "Mesto", "Typ", "Líder", "Webstránka", "Veľkosť trička", "Typ trička", "Farba trička", "Čas registrácie (účastník)", "Zaplatil tričko", "Čas označenia za zaplatené", "Upozornenie na platbu", "Čas upozornenia na platbu", "Tričko odovzdané", "Čas odovzdania trička", "Zaplatil reg. popl.", "Čas zaplatenia reg. popl.");
     }
     if ($this->aOptions['bTshirtOrdersAdminEnabled']) {
       $aHeaderRow[] = "Čas odoslania objednávky";
@@ -5713,7 +5713,11 @@ class FLORP{
         $aTshirtData["flashmob_city"],
         $aTshirtData["type"],
         $bIntf ? $aTshirtData["year"] : $aTshirtData["leader"],
-        $aTshirtData["properties"]["webpage"],
+      );
+      if (!$bIntf) {
+        $aRow[] = $aTshirtData["properties"]["webpage"];
+      }
+      $aRow = array_merge($aRow, array(
         $aTshirtData["properties"]["tshirt_size"],
         $aTshirtData["properties"]["tshirt_gender"],
         $aTshirtData["properties"]["tshirt_color"],
@@ -5724,7 +5728,9 @@ class FLORP{
         (!$bIntf && $aTshirtData["is_leader"]) ? "-" : ($aTshirtData["payment_warning_sent"] && $aTshirtData["payment_warning_sent_timestamp"] ? date('Y-m-d H:i:s', $aTshirtData["payment_warning_sent_timestamp"] ) : "-"),
         ($aTshirtData["is_delivered"] ? "1" : "0"),
         ($aTshirtData["is_delivered"] && $aTshirtData["delivered_timestamp"] ? date('Y-m-d H:i:s', $aTshirtData["delivered_timestamp"] ) : "-"),
-      );
+        (!$bIntf && $aTshirtData["is_leader"]) ? "-" : (isset($aTshirtData["paid_fee"]) ? $aTshirtData["paid_fee"] : "-"),
+        (!$bIntf && $aTshirtData["is_leader"]) ? "-" : ((isset($aTshirtData["paid_fee_timestamp"]) && is_int($aTshirtData["paid_fee_timestamp"])) ? date('Y-m-d H:i:s', $aTshirtData["paid_fee_timestamp"] ) : "-"),
+      ));
       if ($this->aOptions['bTshirtOrdersAdminEnabled']) {
         $aRow[] = $aTshirtData["properties"]["order_sent"];
       }
@@ -5807,6 +5813,8 @@ class FLORP{
           "type" => "Účastník",
           "leader" => "{$oLeader->first_name} {$oLeader->last_name}",
           "registered_timestamp" => isset($aParticipantData["registered"]) ? $aParticipantData["registered"] : 0,
+          "paid_fee" => isset($aParticipantData["paid_fee"]) ? "1" : "0",
+          "paid_fee_timestamp" => isset($aParticipantData["paid_fee"]) ? $aParticipantData["paid_fee"] : "-",
           "properties" => array(
             "webpage" => $this->get_leader_webpage($aWebpageArgs),
             "tshirt_size" => isset($aParticipantData['flashmob_participant_tshirt_size']) ? $aParticipantData['flashmob_participant_tshirt_size'] : "n/a",
@@ -5899,6 +5907,8 @@ class FLORP{
           "flashmob_city" => $aParticipantData['flashmob_city'],
           "type" => "Účastník",
           "registered_timestamp" => isset($aParticipantData["registered"]) ? $aParticipantData["registered"] : 0,
+          "paid_fee" => isset($aParticipantData["paid_fee"]) ? "1" : "0",
+          "paid_fee_timestamp" => isset($aParticipantData["paid_fee"]) ? $aParticipantData["paid_fee"] : "-",
           "properties" => array(
             "tshirt_size" => isset($aParticipantData['flashmob_participant_tshirt_size']) ? $aParticipantData['flashmob_participant_tshirt_size'] : "n/a",
             "tshirt_gender" => isset($aParticipantData['flashmob_participant_tshirt_gender']) ? $aParticipantData['flashmob_participant_tshirt_gender'] : "n/a",
@@ -6007,6 +6017,7 @@ class FLORP{
   private function get_flashmob_participant_csv($sType = 'all', $bIntf = false, $iYear = 0) {
     $aParticipantCSV = array();
     $aParticipants = $bIntf ? $this->aOptions['aIntfParticipants'] : $this->get_flashmob_participants();
+    $aTshirtsAll = $bIntf ? $this->aOptions['aTshirtsIntf'] : $this->aOptions['aTshirts'];
     if ($iYear === 0) {
       $iYear = $this->aOptions['iIntfFlashmobYear'];
     }
@@ -6020,10 +6031,23 @@ class FLORP{
         // Skip that year //
         continue;
       }
+      if ($bIntf) {
+        $sKey = $iLeaderIDOrYear;
+      }
       foreach ($aParticipantsOfLeaderOrYear as $strEmail => $aParticipantData) {
+        if (!$bIntf) {
+          $sKey = $aParticipantData['is_leader'] ? 'leaders' : 'participants';
+        }
+        $aTshirtData = [];
+        if (isset($aTshirtsAll[$sKey], $aTshirtsAll[$sKey][$strEmail]) && is_array($aTshirtsAll[$sKey][$strEmail])) {
+          $aTshirtData = $aTshirtsAll[$sKey][$strEmail];
+        }
         $bOrderedTshirt = isset($aParticipantData['preferences']) && is_array($aParticipantData['preferences']) && in_array('flashmob_participant_tshirt', $aParticipantData['preferences']);
         $strKey = $strEmail."_".$iLeaderIDOrYear;
         $aParticipantsFlat[$strKey] = $aParticipantData;
+        if (isset($aParticipantsFlat[$strKey]['submission_editing'])) {
+          unset($aParticipantsFlat[$strKey]['submission_editing']);
+        }
         if ($bIntf) {
           $aParticipantsFlat[$strKey]['year'] = $iLeaderIDOrYear;
         } else {
@@ -6044,6 +6068,15 @@ class FLORP{
           if (false !== stripos($key, 'tshirt') && !$bOrderedTshirt) {
             $aParticipantsFlat[$strKey][$key] = "-";
           }
+        }
+        // Tshirt payment info: //
+        if (isset($aTshirtData["paid"])) {
+          $aParticipantsFlat[$strKey]['paid_tshirt'] = $aTshirtData['paid'];
+          if (isset($aTshirtData["paid-timestamp"])) {
+            $aParticipantsFlat[$strKey]['paid_tshirt_timestamp'] = $aTshirtData['paid-timestamp'];
+          }
+        } else {
+          $aParticipantsFlat[$strKey]['paid_tshirt'] = false;
         }
       }
     }
@@ -6094,7 +6127,18 @@ class FLORP{
           if (is_bool($mixVal)) {
             $strValue = $mixVal ? "1" : "0";
           } elseif (preg_match('~_timestamp$~', $strFieldKey) || in_array($strFieldKey, $aTimestamps)) {
-            $strValue = date( $this->strDateFormat, $mixVal );
+            if (is_int($mixVal)) {
+              $strValue = date( $this->strDateFormat, $mixVal );
+            } elseif (is_string($mixVal)) {
+              if (preg_match('~^[0-9]+$~', $mixVal)) {
+                $strValue = date( $this->strDateFormat, intval($mixVal) );
+              } else {
+                $strValue = $mixVal;
+              }
+            } else {
+              $strValue = '-';
+              // $strValue = var_export($mixVal, true);
+            }
           } else {
             $strValue = strval($mixVal);
           }
