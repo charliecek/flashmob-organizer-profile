@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 5.3.0
+ * Version: 5.3.1
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '5.3.0';
+  private $strVersion = '5.3.1';
   private $strSuperAdminMail = 'charliecek@gmail.com';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
@@ -5742,9 +5742,9 @@ class FLORP{
   private function get_tshirts_csv( $aTshirts, $bIntf = false, $bCSVHeaderOnly = false ) {
     $aReturn = array();
     if ($bIntf) {
-      $aHeaderRow = array("Meno", "Email", "Mesto", "Typ", "Rok", "Veľkosť trička", "Typ trička", "Farba trička", "Čas registrácie (účastník)", "Zaplatil tričko", "Čas označenia za zaplatené", "Upozornenie na platbu", "Čas upozornenia na platbu", "Tričko odovzdané", "Čas odovzdania trička", "Zaplatil reg. popl.", "Čas zaplatenia reg. popl.");
+      $aHeaderRow = array("Meno", "Email", "Mesto", "Typ", "Rok", "Veľkosť trička", "Typ trička", "Farba trička", "Čas registrácie (účastník)", "Zaplatil tričko", "Čas označenia za zaplatené", "Výsledok notif. o zapl. trička", "Upozornenie na platbu", "Čas upozornenia na platbu", "Tričko odovzdané", "Čas odovzdania trička", "Zaplatil reg. popl.", "Čas zaplatenia reg. popl.", "Výsledok notif. o zapl. reg. popl.");
     } else {
-      $aHeaderRow = array("Meno", "Email", "Mesto", "Typ", "Líder", "Webstránka", "Veľkosť trička", "Typ trička", "Farba trička", "Čas registrácie (účastník)", "Zaplatil tričko", "Čas označenia za zaplatené", "Upozornenie na platbu", "Čas upozornenia na platbu", "Tričko odovzdané", "Čas odovzdania trička", "Zaplatil reg. popl.", "Čas zaplatenia reg. popl.");
+      $aHeaderRow = array("Meno", "Email", "Mesto", "Typ", "Líder", "Webstránka", "Veľkosť trička", "Typ trička", "Farba trička", "Čas registrácie (účastník)", "Zaplatil tričko", "Čas označenia za zaplatené", "Výsledok notif. o zapl. trička", "Upozornenie na platbu", "Čas upozornenia na platbu", "Tričko odovzdané", "Čas odovzdania trička", "Zaplatil reg. popl.", "Čas zaplatenia reg. popl.", "Výsledok notif. o zapl. reg. popl.");
     }
     if ($this->aOptions['bTshirtOrdersAdminEnabled']) {
       $aHeaderRow[] = "Čas odoslania objednávky";
@@ -5771,12 +5771,14 @@ class FLORP{
         (!$bIntf && $aTshirtData["is_leader"]) ? "-" : (isset($aTshirtData["registered_timestamp"]) && $aTshirtData["registered_timestamp"] > 0 ? date('Y-m-d H:i:s', $aTshirtData["registered_timestamp"] ) : "-"),
         (!$bIntf && $aTshirtData["is_leader"]) ? "-" : ($aTshirtData["is_paid"] ? "1" : "0"),
         (!$bIntf && $aTshirtData["is_leader"]) ? "-" : ($aTshirtData["is_paid"] && $aTshirtData["paid_timestamp"] ? date('Y-m-d H:i:s', $aTshirtData["paid_timestamp"] ) : "-"),
+        ((!$bIntf && $aTshirtData["is_leader"]) || !isset($aTshirtData['paid_tshirt_notification_result']) || $aTshirtData['paid_tshirt_notification_result'] === "-") ? "-" : ($aTshirtData["paid_tshirt_notification_result"] ? "1" : "0"),
         (!$bIntf && $aTshirtData["is_leader"]) ? "-" : ($aTshirtData["payment_warning_sent"] ? "1" : "0"),
         (!$bIntf && $aTshirtData["is_leader"]) ? "-" : ($aTshirtData["payment_warning_sent"] && $aTshirtData["payment_warning_sent_timestamp"] ? date('Y-m-d H:i:s', $aTshirtData["payment_warning_sent_timestamp"] ) : "-"),
         ($aTshirtData["is_delivered"] ? "1" : "0"),
         ($aTshirtData["is_delivered"] && $aTshirtData["delivered_timestamp"] ? date('Y-m-d H:i:s', $aTshirtData["delivered_timestamp"] ) : "-"),
         (!$bIntf && $aTshirtData["is_leader"]) ? "-" : (isset($aTshirtData["paid_fee"]) ? $aTshirtData["paid_fee"] : "-"),
         (!$bIntf && $aTshirtData["is_leader"]) ? "-" : ((isset($aTshirtData["paid_fee_timestamp"]) && is_int($aTshirtData["paid_fee_timestamp"])) ? date('Y-m-d H:i:s', $aTshirtData["paid_fee_timestamp"] ) : "-"),
+        ((!$bIntf && $aTshirtData["is_leader"]) || !isset($aTshirtData['paid_fee_notification_result']) || $aTshirtData['paid_fee_notification_result'] === "-") ? "-" : ($aTshirtData["paid_fee_notification_result"] ? "1" : "0"),
       ));
       if ($this->aOptions['bTshirtOrdersAdminEnabled']) {
         $aRow[] = $aTshirtData["properties"]["order_sent"];
@@ -5862,6 +5864,7 @@ class FLORP{
           "registered_timestamp" => isset($aParticipantData["registered"]) ? $aParticipantData["registered"] : 0,
           "paid_fee" => isset($aParticipantData["paid_fee"]) ? "1" : "0",
           "paid_fee_timestamp" => isset($aParticipantData["paid_fee"]) ? $aParticipantData["paid_fee"] : "-",
+          "paid_fee_notification_result" => isset($aParticipantData["paid_fee_notification_result"]) ? $aParticipantData["paid_fee_notification_result"] : "-",
           "properties" => array(
             "webpage" => $this->get_leader_webpage($aWebpageArgs),
             "tshirt_size" => isset($aParticipantData['flashmob_participant_tshirt_size']) ? $aParticipantData['flashmob_participant_tshirt_size'] : "n/a",
@@ -5901,6 +5904,10 @@ class FLORP{
         $aTshirts[$key]["is_delivered"] = $bDelivered;
         if ($bDelivered) {
           $aTshirts[$key]["delivered_timestamp"] = $aTshirtsOption["participants"][$aTshirtData["email"]]['delivered-timestamp'];
+        }
+
+        if (isset($aTshirtsOption["participants"][$aTshirtData["email"]]['paid_tshirt_notification_result'])) {
+          $aTshirts[$key]['paid_tshirt_notification_result'] = $aTshirtsOption["participants"][$aTshirtData["email"]]['paid_tshirt_notification_result'];
         }
       }
       $aTshirts[$key]["is_paid"] = $bPaid;
@@ -5956,6 +5963,7 @@ class FLORP{
           "registered_timestamp" => isset($aParticipantData["registered"]) ? $aParticipantData["registered"] : 0,
           "paid_fee" => isset($aParticipantData["paid_fee"]) ? "1" : "0",
           "paid_fee_timestamp" => isset($aParticipantData["paid_fee"]) ? $aParticipantData["paid_fee"] : "-",
+          "paid_fee_notification_result" => isset($aParticipantData["paid_fee_notification_result"]) ? $aParticipantData["paid_fee_notification_result"] : "-",
           "properties" => array(
             "tshirt_size" => isset($aParticipantData['flashmob_participant_tshirt_size']) ? $aParticipantData['flashmob_participant_tshirt_size'] : "n/a",
             "tshirt_gender" => isset($aParticipantData['flashmob_participant_tshirt_gender']) ? $aParticipantData['flashmob_participant_tshirt_gender'] : "n/a",
@@ -5985,6 +5993,10 @@ class FLORP{
       $aTshirts[$key]["is_delivered"] = $bDelivered;
       if ($bDelivered) {
         $aTshirts[$key]["delivered_timestamp"] = $aTshirtsOption[$aTshirtData['year']][$aTshirtData["email"]]['delivered-timestamp'];
+      }
+
+      if (isset($aTshirtsOption[$aTshirtData['year']][$aTshirtData["email"]]['paid_tshirt_notification_result'])) {
+        $aTshirts[$key]['paid_tshirt_notification_result'] = $aTshirtsOption[$aTshirtData['year']][$aTshirtData["email"]]['paid_tshirt_notification_result'];
       }
 
       if ($this->aOptions['bTshirtOrdersAdminEnabled']) {
@@ -6121,6 +6133,9 @@ class FLORP{
           $aParticipantsFlat[$strKey]['paid_tshirt'] = $aTshirtData['paid'];
           if (isset($aTshirtData["paid-timestamp"])) {
             $aParticipantsFlat[$strKey]['paid_tshirt_timestamp'] = $aTshirtData['paid-timestamp'];
+          }
+          if (isset($aTshirtData["paid_tshirt_notification_result"])) {
+            $aParticipantsFlat[$strKey]['paid_tshirt_notification_result'] = $aTshirtData['paid_tshirt_notification_result'];
           }
         } else {
           $aParticipantsFlat[$strKey]['paid_tshirt'] = false;

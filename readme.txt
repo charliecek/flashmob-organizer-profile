@@ -13,6 +13,11 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v5.3.0: Payment OK notifications =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.3.0)
+- Payment OK notifications.
+- Option changes saving bugfix.
+
 = v5.2.0: Attendance removal button. Adding danger button class =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.2.0)
 - Added attendance removal button.
@@ -199,11 +204,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 - added missing option labels
 - new flashmob form
 
-= v4.5.6: Form check, 2017 reimport, leader history admin table =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.5.6)
-- added check to prevent submission to archived forms (main, flashmob)
-- reimport users from 2017 correctly
-- added history view in admin for yearly map options (leaders)
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.5.6)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.5.7)
