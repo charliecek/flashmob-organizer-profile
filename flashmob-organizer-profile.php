@@ -82,6 +82,7 @@ class FLORP{
   private $oFlorpChartInstance;
   private $bReloadChartOnIntfFormSubmission = true;
   private $strIntfChartClass = "florp-intf-chart";
+  private $aPaymentOKNotificationReasons = array( 'paid_fee' => "registračný poplatok", "paid_tshirt" => "objednané tričko" );
 
   public function __construct() {
     $this->load_options();
@@ -765,6 +766,8 @@ class FLORP{
       'florp_courses_number_enabled'                  => 'iCoursesNumberEnabled',
       'florp_tshirt_payment_warning_notif_sbj'        => 'strTshirtPaymentWarningNotificationSbj',
       'florp_tshirt_payment_warning_notif_msg'        => 'strTshirtPaymentWarningNotificationMsg',
+      'florp_payment_ok_notif_sbj'                    => 'strPaymentOKNotificationSbj',
+      'florp_payment_ok_notif_msg'                    => 'strPaymentOKNotificationMsg',
       'florp_tshirt_ordering_disabled'                => 'bTshirtOrderingDisabled',
       'florp_tshirt_ordering_only_disable'            => 'bTshirtOrderingDisabledOnlyDisable',
       'florp_only_florp_profile_nf_flashmob'          => 'bOnlyFlorpProfileNinjaFormFlashmob',
@@ -883,6 +886,8 @@ class FLORP{
         'aHideFlashmobFieldsForUsers',
         'aUnhideFlashmobFieldsForUsers',
         'bTshirtOrdersAdminEnabled',
+        'strPaymentOKNotificationSbj',
+        'strPaymentOKNotificationMsg',
       ),
       'flashmob'  => array(
         'iFlashmobBlogID',
@@ -899,6 +904,8 @@ class FLORP{
         'strParticipantRemovedSubject',
         'strTshirtPaymentWarningNotificationSbj',
         'strTshirtPaymentWarningNotificationMsg',
+        'strPaymentOKNotificationSbj',
+        'strPaymentOKNotificationMsg',
         'bTshirtOrderingDisabled',
         'bTshirtOrderingDisabledOnlyDisable',
         'bOnlyFlorpProfileNinjaFormFlashmob',
@@ -918,6 +925,8 @@ class FLORP{
         'iIntfTshirtPaymentWarningButtonDeadline',
         'iIntfTshirtPaymentWarningDeadline',
         'strIntfTshirtPaymentWarningNotificationSbj',
+        'strPaymentOKNotificationSbj',
+        'strPaymentOKNotificationMsg',
         'strNewsletterListsIntf',
         'strBeforeLoginFormHtmlIntf',
         'iIntfFlashmobYear',
@@ -1384,6 +1393,7 @@ class FLORP{
     $this->iIntfCityPollDdlDate = date('d.m.Y', $this->iIntfCityPollDdlTimestamp + $iTimeZoneOffset*3600);
     $this->bIntfCityPollDisabled = ($this->iIntfCityPollDdlTimestamp <= time());
 
+    $this->strPaymentOKNotificationReasons = '"' . implode ( '" | "', $this->aPaymentOKNotificationReasons ) . '"';
 
     $this->set_variables_per_subsite();
   }
@@ -6372,7 +6382,12 @@ class FLORP{
     );
     $iCurrentUserID = get_current_user_id();
     $aChangedOptions['_user_id'] = $iCurrentUserID;
-    $this->aOptions['aOptionChanges'][time()] = $aChangedOptions;
+    $iTimeNow = time();
+    while (isset($this->aOptions['aOptionChanges'][$iTimeNow])) {
+      $iTimeNow++;
+    }
+    $this->aOptions['aOptionChanges'][$iTimeNow] = $aChangedOptions;
+
     if ($bSave) {
       $this->save_options();
     }
@@ -6593,8 +6608,13 @@ class FLORP{
         } else {
           $this->aOptions["aParticipants"][$aData["leaderId"]][$aData["participantEmail"]]["paid_fee"] = $iTimestampNow;
           $this->add_option_change("ajax__florp_participant_paid_fee", "", $aData["leaderId"].": ".$aData["participantEmail"], false);
-          $this->save_options();
           $aData["message"] = "The Slovak flashmob participant {$aData['participantEmail']}'s payment status was set successfully";
+
+          $aSendRes = $this->maybeSendPaymentOKNotification( 'paid_fee', $aData["participantEmail"]);
+          $this->aOptions["aParticipants"][$aData["leaderId"]][$aData["participantEmail"]]["paid_fee_notification_result"] = $aSendRes['res'];
+          $this->add_option_change("ajax__florp_participant_paid_fee_notification", "", $aData["participantEmail"] . ": {$aSendRes['message']}", false);
+          $this->save_options();
+          $aData["message"] .= ". " . $aSendRes["message"];
         }
       } else {
         $aData["message"] = $strErrorMessage;
@@ -6628,8 +6648,13 @@ class FLORP{
         } else {
           $this->aOptions["aIntfParticipants"][$aData["year"]][$aData["participantEmail"]]["paid_fee"] = $iTimestampNow;
           $this->add_option_change("ajax__florp_intf_participant_paid_fee", "", $aData["year"].": ".$aData["participantEmail"], false);
-          $this->save_options();
           $aData["message"] = "The international flashmob participant {$aData['participantEmail']}'s payment status was set successfully";
+
+          $aSendRes = $this->maybeSendPaymentOKNotification( 'paid_fee', $aData["participantEmail"]);
+          $this->aOptions["aIntfParticipants"][$aData["year"]][$aData["participantEmail"]]["paid_fee_notification_result"] = $aSendRes['res'];
+          $this->add_option_change("ajax__florp_intf_participant_paid_fee_notification", "", $aData["participantEmail"] . ": {$aSendRes['message']}", false);
+          $this->save_options();
+          $aData["message"] .= ". " . $aSendRes["message"];
         }
       } else {
         $aData["message"] = $strErrorMessage;
@@ -6661,9 +6686,11 @@ class FLORP{
       if (defined('FLORP_DEVEL') && FLORP_DEVEL === true && defined('FLORP_DEVEL_FAKE_ACTIONS') && FLORP_DEVEL_FAKE_ACTIONS === true) {
         $aData["message"] = "The flashmob participant '{$aData['participantEmail']}' was marked as having paid successfully (NOT: FLORP_DEVEL is on!)";
       } else {
+        $aSendRes = $this->maybeSendPaymentOKNotification( 'paid_tshirt', $aData["email"]);
         $aOk = array(
           "paid" => true,
           "paid-timestamp" => $iTimestampNow,
+          "paid_tshirt_notification_result" => $aSendRes['res'],
         );
         if ($aData["is_leader"] === "1" || $aData["is_leader"] === 1 || $aData["is_leader"] === true) {
           if (isset($this->aOptions["aTshirts"]["leaders"][$aData["user_id"]])) {
@@ -6685,8 +6712,11 @@ class FLORP{
           }
         }
         $this->add_option_change("ajax__florp_tshirt_paid", "", $aData["email"], false);
+        $this->add_option_change("ajax__florp_tshirt_paid_notification", "", $aData["email"] . ": {$aSendRes['message']}", false);
         $this->save_options();
+
         $aData["message"] = "The flashmob participant '{$aData['participantEmail']}' was marked as having paid successfully";//." ".var_export($aData, true);
+        $aData["message"] .= ". " . $aSendRes["message"];
       }
     }
     echo json_encode($aData);
@@ -6715,9 +6745,11 @@ class FLORP{
       if (defined('FLORP_DEVEL') && FLORP_DEVEL === true && defined('FLORP_DEVEL_FAKE_ACTIONS') && FLORP_DEVEL_FAKE_ACTIONS === true) {
         $aData["message"] = "The flashmob participant '{$aData['participantEmail']}' was marked as having paid successfully (NOT: FLORP_DEVEL is on!)";
       } else {
+        $aSendRes = $this->maybeSendPaymentOKNotification( 'paid_tshirt', $aData["email"]);
         $aOk = array(
           "paid" => true,
           "paid-timestamp" => $iTimestampNow,
+          "paid_tshirt_notification_result" => $aSendRes['res'],
         );
         if (isset($this->aOptions["aTshirtsIntf"][$iYear][$aData["email"]])) {
           $this->aOptions["aTshirtsIntf"][$iYear][$aData["email"]] = array_merge(
@@ -6728,8 +6760,11 @@ class FLORP{
           $this->aOptions["aTshirtsIntf"][$iYear][$aData["email"]] = $aOk;
         }
         $this->add_option_change("ajax__florp_intf_tshirt_paid", "", $aData["email"], false);
+        $this->add_option_change("ajax__florp_intf_tshirt_paid_notification", "", $aData["email"] . ": {$aSendRes['message']}", false);
         $this->save_options();
+
         $aData["message"] = "The flashmob participant '{$aData['participantEmail']}' was marked as having paid successfully";//." ".var_export($aData, true);
+        $aData["message"] .= ". " . $aSendRes["message"];
       }
     }
     echo json_encode($aData);
@@ -6887,6 +6922,49 @@ class FLORP{
     }
     echo json_encode($aData);
     wp_die();
+  }
+
+  private function maybeSendPaymentOKNotification( $sReasonKey = "", $strEmail = "" ) {
+    $aReturn = array(
+      'res' => false,
+      'message' => "Notification message could not be sent.",
+    );
+    if (empty($sReasonKey)) {
+      $aReturn['message'] .= " No reason key was set!";
+      return $aReturn;
+    } elseif (empty($strEmail)) {
+      $aReturn['message'] .= " No email was given!";
+      return $aReturn;
+    } elseif (!isset($this->aPaymentOKNotificationReasons[$sReasonKey])) {
+      $aReturn['message'] .= " Invalid reason key was set: {$sReasonKey}!";
+      return $aReturn;
+    }
+
+    $strReason = $this->aPaymentOKNotificationReasons[$sReasonKey];
+    if (isset($this->aOptions['strPaymentOKNotificationSbj'], $this->aOptions['strPaymentOKNotificationMsg']) && !empty($this->aOptions['strPaymentOKNotificationSbj']) && !empty($this->aOptions['strPaymentOKNotificationSbj'])) {
+      // OK to send //
+      $strMessageContent = str_replace( '%REASON%', $strReason, $this->aOptions['strPaymentOKNotificationMsg']);
+      $strMessageSubject = str_replace( '%REASON%', $strReason, $this->aOptions['strPaymentOKNotificationSbj']);
+      $aHeaders = array('Content-Type: text/html; charset=UTF-8');
+      $bSendResult = wp_mail($strEmail, $strMessageSubject, $strMessageContent, $aHeaders);
+
+      if ($bSendResult) {
+        $aReturn['res'] = true;
+        $aReturn['message'] = "Payment OK notification was sent successfully to '{$strEmail}'.";
+      } else {
+        $aReturn['message'] .= " There was an error while sending.";
+      }
+      return $aReturn;
+    } else {
+      if (!isset($this->aOptions['strPaymentOKNotificationSbj']) || empty($this->aOptions['strPaymentOKNotificationSbj'])) {
+        $aReturn['message'] .= " Payment notification subject is not set!";
+      }
+      if (!isset($this->aOptions['strPaymentOKNotificationMsg']) || empty($this->aOptions['strPaymentOKNotificationMsg'])) {
+        $aReturn['message'] .= " Payment notification text is not set!";
+      }
+      return $aReturn;
+    }
+    return $aReturn;
   }
 
   public function action__florp_tshirt_send_payment_warning_callback() {
@@ -7943,6 +8021,8 @@ class FLORP{
     $strParticipantRegisteredMessage = $this->get_wp_editor( $this->aOptions['strParticipantRegisteredMessage'], 'florp_participant_registered_message' );
     $strParticipantRemovedMessage = $this->get_wp_editor( $this->aOptions['strParticipantRemovedMessage'], 'florp_participant_removed_message' );
     $wpEditorTshirtPaymentWarningNotificationMsg = $this->get_wp_editor( $this->aOptions['strTshirtPaymentWarningNotificationMsg'], 'florp_tshirt_payment_warning_notif_msg' );
+    $wpEditorPaymentOKNotificationMsg = $this->get_wp_editor( $this->aOptions['strPaymentOKNotificationMsg'], 'florp_payment_ok_notif_msg' );
+
 
     return str_replace(
       array( '%%reloadCheckedFlashmob%%',
@@ -7956,6 +8036,7 @@ class FLORP{
         '%%wpEditorParticipantRegisteredMessage%%',
         '%%strParticipantRegisteredSubject%%',
         '%%strTshirtPaymentWarningNotificationSbj%%', '%%wpEditorTshirtPaymentWarningNotificationMsg%%',
+        '%%strPaymentOKNotificationSbj%%', '%%wpEditorPaymentOKNotificationMsg%%', '%%strPaymentOKNotificationReasons%%',
         '%%wpEditorParticipantRemovedMessage%%',
         '%%strParticipantRemovedSubject%%',
         '%%tshirtOrderingDisabledChecked%%', '%%tshirtOrderingDisabledOnlyDisableChecked%%',
@@ -7974,6 +8055,7 @@ class FLORP{
         $strParticipantRegisteredMessage,
         $this->aOptions['strParticipantRegisteredSubject'],
         $this->aOptions['strTshirtPaymentWarningNotificationSbj'], $wpEditorTshirtPaymentWarningNotificationMsg,
+        $this->aOptions['strPaymentOKNotificationSbj'], $wpEditorPaymentOKNotificationMsg, $this->strPaymentOKNotificationReasons,
         $strParticipantRemovedMessage,
         $this->aOptions['strParticipantRemovedSubject'],
         $aBooleanOptionsChecked['bTshirtOrderingDisabled'], $aBooleanOptionsChecked['bTshirtOrderingDisabledOnlyDisable'],
@@ -8044,6 +8126,7 @@ class FLORP{
 
     $strMarkerInfoWindowTemplateOrganizer = $this->get_wp_editor( $this->aOptions['strMarkerInfoWindowTemplateOrganizer'], 'florp_infowindow_template_organizer' );
     $strMarkerInfoWindowTemplateTeacher = $this->get_wp_editor( $this->aOptions['strMarkerInfoWindowTemplateTeacher'], 'florp_infowindow_template_teacher' );
+    $wpEditorPaymentOKNotificationMsg = $this->get_wp_editor( $this->aOptions['strPaymentOKNotificationMsg'], 'florp_payment_ok_notif_msg' );
 
     $aInfoWindowLabelSlugs = array( 'organizer', 'teacher', 'signup', 'participant_count', 'year', 'dancers', 'school', 'note', 'web', 'facebook', /*'embed_code', 'courses_info'*/ );
     $strInfoWindowLabels = "";
@@ -8090,6 +8173,7 @@ class FLORP{
         '%%strGoogleMapsKey%%', '%%strGoogleMapsKeyStatic%%', '%%strFbAppID%%', '%%preventDirectMediaDownloadsChecked%%', '%%strNewsletterAPIKey%%',
         '%%strSignupLinkLabel%%', '%%strInfoWindowLabels%%',
         '%%wpEditorMarkerInfoWindowTemplateOrganizer%%', '%%wpEditorMarkerInfoWindowTemplateTeacher%%',
+        '%%strPaymentOKNotificationSbj%%', '%%wpEditorPaymentOKNotificationMsg%%', '%%strPaymentOKNotificationReasons%%',
         '%%aHideFlashmobFieldsForUsers%%', '%%aUnhideFlashmobFieldsForUsers%%' ),
       array( $optionsNewsletterSite,
         $aBooleanOptionsChecked['bLoadMapsAsync'],
@@ -8099,6 +8183,7 @@ class FLORP{
         $this->aOptions['strGoogleMapsKey'], $this->aOptions['strGoogleMapsKeyStatic'], $this->aOptions['strFbAppID'], $aBooleanOptionsChecked['bPreventDirectMediaDownloads'], $this->aOptions['strNewsletterAPIKey'],
         $this->aOptions['strSignupLinkLabel'], $strInfoWindowLabels,
         $strMarkerInfoWindowTemplateOrganizer, $strMarkerInfoWindowTemplateTeacher,
+        $this->aOptions['strPaymentOKNotificationSbj'], $wpEditorPaymentOKNotificationMsg, $this->strPaymentOKNotificationReasons,
         $strHideFlashmobFieldsForUsers, $strUnhideFlashmobFieldsForUsers ),
       file_get_contents( __DIR__ . "/view/options-svk-common.html" )
     );
@@ -8264,6 +8349,7 @@ class FLORP{
       $strBeforeLoginFormHtmlIntf = $this->get_wp_editor( $this->strBeforeLoginFormHtmlIntf, 'florp_before_login_form_html_intf' );
       $strParticipantRegisteredMessage = $this->get_wp_editor( $this->aOptions['strIntfParticipantRegisteredMessage'], 'florp_intf_participant_registered_message' );
       $wpEditorTshirtPaymentWarningNotificationMsg = $this->get_wp_editor( $this->aOptions['strIntfTshirtPaymentWarningNotificationMsg'], 'florp_intf_tshirt_payment_warning_notif_msg' );
+      $wpEditorPaymentOKNotificationMsg = $this->get_wp_editor( $this->aOptions['strPaymentOKNotificationMsg'], 'florp_payment_ok_notif_msg' );
 
       $strIntfOptions = str_replace(
         array(
@@ -8290,6 +8376,7 @@ class FLORP{
           "%%iIntfCityPollDdlTime%%",
           '%%aIntfCityPollUsers%%',
           '%%strIntfCityPollExtraCities%%',
+          '%%strPaymentOKNotificationSbj%%', '%%wpEditorPaymentOKNotificationMsg%%', '%%strPaymentOKNotificationReasons%%',
         ),
         array(
           $aVariables['optionsIntfSite'],
@@ -8315,6 +8402,7 @@ class FLORP{
           $this->iIntfCityPollDdlTime,
           $strIntfCityPollUsers,
           $this->aOptions['strIntfCityPollExtraCities'],
+          $this->aOptions['strPaymentOKNotificationSbj'], $wpEditorPaymentOKNotificationMsg, $this->strPaymentOKNotificationReasons,
         ),
         file_get_contents( __DIR__ . "/view/options-international-settings.html" )
       );

@@ -126,7 +126,7 @@
   <td>
     %%wpEditorMarkerInfoWindowTemplateOrganizer%%
     <span style="width: 100%;">Placeholdre: <code>%%flashmob_city%%</code>, <code>%%organizer%%</code>*, <code>%%signup%%</code>**, <code>%%participant_count%%</code>*, <code>%%year%%</code>*, <code>%%school%%</code>*, <code>%%web%%</code>*, <code>%%flashmob%%</code>*, <code>%%dancers%%</code>*, <code>%%note%%</code>*, <code>%%embed_code%%</code></span><br>
-    <span style="width: 100%;">*,**: Pozor: nepridávaj zalomenie riadkov (&lt;br&gt;, &lt;br /&gt;) pred a za placeholdre s hviezdičkou - ak sa zamenia za prázdny text, ostane po nich prázdny riadok!</span><br>
+    <span style="width: 100%;">*,**: Pozor: nepridávajte zalomenie riadkov (&lt;br&gt;, &lt;br /&gt;) pred a za placeholdre s hviezdičkou - ak sa zamenia za prázdny text, ostane po nich prázdny riadok!</span><br>
     <span style="width: 100%;">**: Za placeholdre s 2 hviezdičkami sa pridáva automaticky ešte jedno zalomenie riadku (&lt;br&gt;, &lt;br /&gt;).</span><br>
   </td>
 </tr>
@@ -137,6 +137,29 @@
   <td style="border-top: 1px lightgray dashed;">
     %%wpEditorMarkerInfoWindowTemplateTeacher%%
     <span style="width: 100%;">Placeholdre: <code>%%courses_city%%</code>, <code>%%teacher%%</code>*, <code>%%school%%</code>*, <code>%%courses_info%%</code></span><br>
-    <span style="width: 100%;">*Pozor: nepridávaj zalomenie riadkov (&lt;br&gt;, &lt;br /&gt;) pred a za placeholdre s hviezdičkou - ak sa zamenia za prázdny text, ostane po nich prázdny riadok!
+    <span style="width: 100%;">*Pozor: nepridávajte zalomenie riadkov (&lt;br&gt;, &lt;br /&gt;) pred a za placeholdre s hviezdičkou - ak sa zamenia za prázdny text, ostane po nich prázdny riadok!
   </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right; border-top: 1px lightgray dashed;">
+    <label for="florp_payment_ok_notif_sbj">Predmet notifikácie o úspešnej platbe</label>
+  </th>
+  <td style="border-top: 1px lightgray dashed;">
+    <input id="florp_payment_ok_notif_sbj" name="florp_payment_ok_notif_sbj" type="text" value="%%strPaymentOKNotificationSbj%%" style="width: 100%;" />
+    <span style="width: 100%;">Placeholdre: <code>%REASON%</code> (%%strPaymentOKNotificationReasons%%)</span>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th style="width: 47%; padding: 0 1%; text-align: right;">
+    Text notifikácie o úspešnej platbe
+  </th>
+  <td style="border-top: 1px lightgray dashed;">
+    %%wpEditorPaymentOKNotificationMsg%%
+    <span style="width: 100%;">Placeholdre: <code>%REASON%</code> (%%strPaymentOKNotificationReasons%%)</span>
+  </td>
+</tr>
+<tr style="width: 98%; padding:  5px 1%;">
+  <th colspan="2">
+    <span style="font-size: smaller;">Pozor: Predmet a text notifikácie o úspešnej platbe sú položky zdieľané všetkými podstránkami. Ak ich zmeníte tu, zmenia sa aj inde.</span>
+  </th>
 </tr>
