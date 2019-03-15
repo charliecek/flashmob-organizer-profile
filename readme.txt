@@ -13,6 +13,12 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v5.2.0: Attendance removal button. Adding danger button class =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.2.0)
+- Added attendance removal button.
+- Added danger button class for removal/cancel buttons.
+- Minor refactoring.
+
 = v5.1.0: added both payment info to both CSV types =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.1.0)
 - Added both payment info to both CSV types.
@@ -199,10 +205,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 - reimport users from 2017 correctly
 - added history view in admin for yearly map options (leaders)
 
-= v4.5.5: admin table filter, readme =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.5.5)
-- added admin table filter
-- added readme.txt
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.5.5)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.5.6)

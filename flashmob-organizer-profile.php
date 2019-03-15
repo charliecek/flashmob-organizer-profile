@@ -3518,9 +3518,7 @@ class FLORP{
   }
 
   public function action__remove_admin_menu_items() {
-    $oUser = wp_get_current_user();
-    $strAdminEmail = get_option('admin_email');
-    if( $oUser && isset($oUser->user_email) && $strAdminEmail !== $oUser->user_email ) {
+    if( !$this->isFlorpBlogAdmin() ) {
       $aMenuPages = array(
         'ninja-forms' => array(
           'admin.php?page=ninja-forms#new-form',
@@ -3546,6 +3544,9 @@ class FLORP{
   private function isFlorpBlogAdmin( $email = false ) {
     if (false === $email) {
       $oUser = wp_get_current_user();
+      if (0 === $oUser->ID) {
+        return false;
+      }
       $email = $oUser->user_email;
     }
     return $email === $this->strSuperAdminMail || $email === get_option('admin_email');
@@ -3902,7 +3903,7 @@ class FLORP{
   }
 
   private function isEditSubmissionsEnabled() {
-    return $this->aOptions['bEditSubmissions'] || (isset($_POST['edit-submissions']) && $_POST['edit-submissions'] === 'on') || (defined('FLORP_EDIT_SUBMISSIONS') && FLORP_EDIT_SUBMISSIONS === true);
+    return $this->aOptions['bEditSubmissions'] || (isset($_REQUEST['edit-submissions']) && $_REQUEST['edit-submissions'] === 'on') || (defined('FLORP_EDIT_SUBMISSIONS') && FLORP_EDIT_SUBMISSIONS === true);
   }
 
   public function participants_table_admin() {
@@ -4169,7 +4170,7 @@ class FLORP{
 
         $strEcho .= '<tr class="row" data-row-id="'.$strRowID.'">'.PHP_EOL;
         $strEditSubmission = '';
-        if ($this->aOptions['bEditSubmissions'] || (isset($_POST['edit-submissions']) && $_POST['edit-submissions'] === 'on') || (defined('FLORP_EDIT_SUBMISSIONS') && FLORP_EDIT_SUBMISSIONS === true)) {
+        if ($this->isEditSubmissionsEnabled()) {
           $strEditSubmission = ' <span class="submission-edit">(<a href="/edit-intf-participant-submission/?year='.$iYear.'&email='.urlencode($strEmail).'" target="_blank">Edit</a>)</span>';
         }
         $strEcho .=   '<td>'.$aParticipantData['first_name'].' '.$aParticipantData['last_name'].$strEditSubmission.$strButtons.'</td>'.PHP_EOL;
