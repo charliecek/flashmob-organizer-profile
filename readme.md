@@ -17,6 +17,12 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 ## Version history
 
+### v5.3.1: Added payment OK notification result to CSVs
+
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.3.1)
+
+- Added payment OK notification result to CSVs.
+
 ### v5.3.0: Payment OK notifications
 
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.3.0)
@@ -257,16 +263,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 - some refactoring
 - JS: admin datetime picker
 
-### v4.5.7: payment deadlines, missed submissions, fixes
 
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.5.7)
-
-- css fix: gap after preferences
-- added payment deadline options and related logic
-- added missed submissions (visible by blog admin only)
-- refactored maybe_unserialize_array method
-- added missing option labels
-- new flashmob form
-
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.5.7)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.6.0)
