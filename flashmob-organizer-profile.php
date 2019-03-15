@@ -6516,7 +6516,7 @@ class FLORP{
         $aData["replaceButton"] = true;
         $strLabelForHiding = "Zúčastní/-il(a) sa";
         if ($aData["attend"] === 'remove') {
-          $aData["message"] = "The Slovak flashmob participant {$aData['participantEmail']}'s attendance was removed successfully";
+          $aData["message"] = "The international flashmob participant {$aData['participantEmail']}'s attendance was removed successfully";
           $strOtherButtonID1 = str_replace( "-attend-remove-", "-attend1-", $aData['buttonId']);
           $strOtherButtonID0 = str_replace( "-attend-remove-", "-attend0-", $aData['buttonId']);
           $aData["hideSelector"] = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strOtherButtonID0}], tr[data-row-id={$aData['rowId']}] span[data-button-id={$strOtherButtonID1}]";
