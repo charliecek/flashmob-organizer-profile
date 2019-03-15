@@ -657,6 +657,8 @@ class FLORP{
       'iCoursesNumberEnabled'                     => 1,
       'strTshirtPaymentWarningNotificationSbj'    => 'Chýba nám platba za objednané tričko',
       'strTshirtPaymentWarningNotificationMsg'    => '<p>Prosíme, pošlite platbu za objednané tričko.</p><p>Váš SalsaRueda.Dance team</p>',
+      'strPaymentOKNotificationSbj'               => 'Prišla nám platba za %REASON%',
+      'strPaymentOKNotificationMsg'               => '<p>Prišla nám platba za %REASON%.</p><p>Ďakujeme,</p><p>Váš SalsaRueda.Dance team</p>',
       'bTshirtOrderingDisabled'                   => false,
       'bTshirtOrderingDisabledOnlyDisable'        => false,
       'bOnlyFlorpProfileNinjaFormFlashmob'        => true,
@@ -8112,7 +8114,7 @@ class FLORP{
     if (defined('FLORP_DEVEL') && FLORP_DEVEL === true) {
       // echo "<pre>" .var_export( get_users( ['blog_id' => $this->iMainBlogID, 'role' => $this->strUserRoleApproved, 'fields' => 'ID'] ), true). "</pre>";
       // echo "<pre>" .var_export( $this->aOptions['aIntfCityPollUsers'], true). "</pre>";
-      echo "<pre>" .var_export( $this->aOptions['aIntfParticipants'], true). "</pre>";
+      // echo "<pre>" .var_export( $this->aOptions['aIntfParticipants'], true). "</pre>";
     }
 
     do_action('florp_options_page_notices');
