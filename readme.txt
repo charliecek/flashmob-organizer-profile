@@ -13,6 +13,12 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v5.1.0: added both payment info to both CSV types =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.1.0)
+- Added both payment info to both CSV types.
+- Removed webpage header from INTF tshirt CSV.
+- Fixed date evaluation for non-int timestamps.
+
 = v5.0.0: Participant form submission editing =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.0.0)
 - Participant form submission editing.
@@ -198,14 +204,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 - added admin table filter
 - added readme.txt
 
-= v4.5.4: form export versioning, refactoring =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.5.4)
-- added participant registration date import
-- added form export/import versioning
-- added ninja form export on form save
-- moved participant tshirt related options to flashmob options
-- BEGIN/END blocks for better code folding
-- added page/form/popup/site IDs to admin dropdowns
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.5.4)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.5.5)

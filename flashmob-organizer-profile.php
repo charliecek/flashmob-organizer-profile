@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 5.1.0
+ * Version: 5.2.0
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,8 @@
 
 class FLORP{
 
-  private $strVersion = '5.1.0';
+  private $strVersion = '5.2.0';
+  private $strSuperAdminMail = 'charliecek@gmail.com';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
   private $iIntfBlogID = 6;
@@ -3542,9 +3543,16 @@ class FLORP{
     }
   }
 
+  private function isFlorpBlogAdmin( $email = false ) {
+    if (false === $email) {
+      $oUser = wp_get_current_user();
+      $email = $oUser->user_email;
+    }
+    return $email === $this->strSuperAdminMail || $email === get_option('admin_email');
+  }
+
   public function action__add_options_page() {
-    $oUser = wp_get_current_user();
-    if ($oUser->user_email === 'charliecek@gmail.com' || $oUser->user_email === get_option('admin_email')) {
+    if ($this->isFlorpBlogAdmin()) {
       add_menu_page(
         "FLORP Admin",
         'FLORP Admin',
@@ -3893,6 +3901,10 @@ class FLORP{
     echo '</div><!-- .wrap -->';
   }
 
+  private function isEditSubmissionsEnabled() {
+    return $this->aOptions['bEditSubmissions'] || (isset($_POST['edit-submissions']) && $_POST['edit-submissions'] === 'on') || (defined('FLORP_EDIT_SUBMISSIONS') && FLORP_EDIT_SUBMISSIONS === true);
+  }
+
   public function participants_table_admin() {
     echo "<div class=\"wrap\"><h1>" . "Zoznam účastníkov slovenského flashmobu" . "</h1>";
 
@@ -3948,7 +3960,7 @@ class FLORP{
           // Delete button //
           $strButtonLabel = "Zmazať";
           $strButtonID = "florpButton-".$iLeaderID."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
-          $strButtons = '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-leader-id="'.$iLeaderID.'" data-participant-email="'.$strEmail.'" data-sure="0" data-action="delete_florp_participant" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabel.'</span>';
+          $strButtons = '<span class="button double-check button-danger" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-leader-id="'.$iLeaderID.'" data-participant-email="'.$strEmail.'" data-sure="0" data-action="delete_florp_participant" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'" data-hide="1">'.$strButtonLabel.'</span>';
 
           // Paid fee button //
           $strButtonLabel = "Zaplatil(a) reg. poplatok";
@@ -3965,6 +3977,14 @@ class FLORP{
           $strLabelForHiding = "Zúčastní/-il(a) sa";
           $strLabel = $aParticipantData["attend"] == "1" ? $strLabelForHiding : "Nezúčastní/-il(a) sa";
           $strButtons .= '<span data-button-id="florpButton-attend'.$aParticipantData["attend"].'-'.$iLeaderID.'-'.preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail). '" class="notice notice-success"'.$strTitle.' data-text="'.$strLabelForHiding.'">'.$strLabel.'</span>';
+
+          if ($this->isEditSubmissionsEnabled()) {
+            // Remove attendance button //
+            $strButtonID = "florpButton-attend-remove-".$iLeaderID."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
+            $strButtonLabel = "Odstrániť info o účasti";
+            $strLabelForHiding = "Zúčastní/-il(a) sa";
+            $strButtons .= '<span class="button double-check button-danger" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-leader-id="'.$iLeaderID.'" data-participant-email="'.$strEmail.'" data-sure="0" data-action="florp_participant_attend" data-attend="remove" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'" data-text="'.$strLabelForHiding.'">'.$strButtonLabel.'</span>';
+          }
         } else {
           // Will/Did attend button //
           $strButtonID = "florpButton-attend1-".$iLeaderID."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
@@ -3980,7 +4000,7 @@ class FLORP{
 
         $strEcho .= '<tr class="row" data-row-id="'.$strRowID.'">';
         $strEditSubmission = '';
-        if ($this->aOptions['bEditSubmissions'] || (isset($_POST['edit-submissions']) && $_POST['edit-submissions'] === 'on') || (defined('FLORP_EDIT_SUBMISSIONS') && FLORP_EDIT_SUBMISSIONS === true)) {
+        if ($this->isEditSubmissionsEnabled()) {
           $strDomain = '';
           if (!$this->isFlashmobBlog) {
             $strDomain = 'http://flashmob.salsarueda.dance';
@@ -4109,7 +4129,7 @@ class FLORP{
           // Delete button //
           $strButtonID = "florpButton-".$iYear."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
           $strButtonLabel = "Zmazať";
-          $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-year="'.$iYear.'" data-participant-email="'.$strEmail.'" data-sure="0" data-action="delete_florp_intf_participant" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabel.'</span>';
+          $strButtons .= '<span class="button double-check button-danger" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-year="'.$iYear.'" data-participant-email="'.$strEmail.'" data-sure="0" data-action="delete_florp_intf_participant" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'" data-hide="1">'.$strButtonLabel.'</span>';
 
           // Paid fee button //
           $strButtonLabel = "Zaplatil(a) reg. poplatok";
@@ -4126,6 +4146,14 @@ class FLORP{
           $strLabelForHiding = "Zúčastní/-il(a) sa";
           $strLabel = $aParticipantData["attend"] == "1" ? $strLabelForHiding : "Nezúčastní/-il(a) sa";
           $strButtons .= '<span data-button-id="florpButton-attend'.$aParticipantData["attend"].'-'.$iYear.'-'.preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail). '" class="notice notice-success"'.$strTitle.' data-text="'.$strLabelForHiding.'">'.$strLabel.'</span>';
+
+          if ($this->isEditSubmissionsEnabled()) {
+            // Remove attendance button //
+            $strButtonID = "florpButton-attend-remove-".$iLeaderID."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
+            $strButtonLabel = "Odstrániť info o účasti";
+            $strLabelForHiding = "Zúčastní/-il(a) sa";
+            $strButtons .= '<span class="button double-check button-danger" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-year="'.$iYear.'" data-participant-email="'.$strEmail.'" data-sure="0" data-action="florp_intf_participant_attend" data-attend="remove" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'" data-text="'.$strLabelForHiding.'">'.$strButtonLabel.'</span>';
+          }
         } else {
           // Will/Did attend button //
           $strButtonID = "florpButton-attend1-".$iYear."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
@@ -4270,7 +4298,7 @@ class FLORP{
         $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelPaid.'" data-button-id="'.$strPaidButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp'.$sIntfActionPart.'_tshirt_paid" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelPaid.'</span>';
 
         // Cancel button //
-        $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelCancelOrder.'" data-button-id="'.$strCancelOrderButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp'.$sIntfActionPart.'_tshirt_cancel_order" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelCancelOrder.'</span>';
+        $strButtons .= '<span class="button double-check button-danger" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelCancelOrder.'" data-button-id="'.$strCancelOrderButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp'.$sIntfActionPart.'_tshirt_cancel_order" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'" data-hide="1">'.$strButtonLabelCancelOrder.'</span>';
 
         // Warning button //
         if (
@@ -4356,6 +4384,13 @@ class FLORP{
           $strLabelForHiding = "Zúčastní/-il(a) sa";
           $strLabel = $aParticipantData["attend"] == "1" ? $strLabelForHiding : "Nezúčastní/-il(a) sa";
           $strButtons .= '<span data-button-id="florpButton-attend'.$aParticipantData["attend"].'-'.$iLeaderIdOrYear.'-'.preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail). '" class="notice notice-success"'.$strTitle.' data-text="'.$strLabelForHiding.'" '.$strDataHide.'>'.$strLabel.'</span>';
+          if ($this->isEditSubmissionsEnabled()) {
+            // Remove attendance button //
+            $strButtonID = "florpButton-attend-remove-".$iLeaderIdOrYear."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
+            $strButtonLabel = "Odstrániť info o účasti";
+            $strLabelForHiding = "Zúčastní/-il(a) sa";
+            $strButtons .= '<span class="button double-check button-danger" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" '.$strDataLeaderIdOrYear.' data-participant-email="'.$strEmail.'" data-sure="0" data-action="florp'.$strIntfActionPart.'_participant_attend" data-attend="remove" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'" data-text="'.$strLabelForHiding.'" '.$strDataHide.'>'.$strButtonLabel.'</span>';
+          }
         } else {
           // Will/Did attend button //
           $strButtonID = "florpButton-attend1-".$iLeaderIdOrYear."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
@@ -5594,8 +5629,7 @@ class FLORP{
     if (false === $aMissedSubmissions || empty($aMissedSubmissions)) {
       return "";
     }
-    $oUser = wp_get_current_user();
-    if ($oUser->user_email !== 'charliecek@gmail.com' && $oUser->user_email !== get_option('admin_email')) {
+    if ($this->isFlorpBlogAdmin()) {
       return "";
     }
 
@@ -6413,20 +6447,49 @@ class FLORP{
         $strTitle = ' title="'.date( $this->strDateFormat, $iTimestampNow ).'"';
         $aData["removeRowOnSuccess"] = false;
         $aData["replaceButton"] = true;
-        $aData["ok"] = true;
-        $strReplaceWith = ($aData["attend"] == "1") ? "-attend0-" : "-attend1-";
-        $strOtherButtonID = str_replace( "-attend{$aData['attend']}-", $strReplaceWith, $aData['buttonId']);
-        $aData["hideSelector"] = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strOtherButtonID}]";
         $strLabelForHiding = "Zúčastní/-il(a) sa";
-        $aData["replaceButtonHtml"] = '<span data-button-id="'.$aData['buttonId'].'" class="notice notice-success"'.$strTitle.' data-text="'.$strLabelForHiding.'">'.$aData['textDefault'].'</span>';
-        if (defined('FLORP_DEVEL') && FLORP_DEVEL === true && defined('FLORP_DEVEL_FAKE_ACTIONS') && FLORP_DEVEL_FAKE_ACTIONS === true) {
-          $aData["message"] = "The Slovak flashmob participant {$aData['participantEmail']}'s attendance was set successfully (NOT: FLORP_DEVEL is on!)";
+        if ($aData["attend"] === 'remove') {
+          $aData["message"] = "The Slovak flashmob participant {$aData['participantEmail']}'s attendance was removed successfully";
+          $strOtherButtonID1 = str_replace( "-attend-remove-", "-attend1-", $aData['buttonId']);
+          $strOtherButtonID0 = str_replace( "-attend-remove-", "-attend0-", $aData['buttonId']);
+          $aData["hideSelector"] = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strOtherButtonID0}], tr[data-row-id={$aData['rowId']}] span[data-button-id={$strOtherButtonID1}]";
+          $aData["replaceButtonHtml"] = '<span data-button-id="'.$aData['buttonId'].'" class="notice notice-success" data-text="'.$strLabelForHiding.'">Attendance removed. Refresh to see buttons.</span>';
+          if (defined('FLORP_DEVEL') && FLORP_DEVEL === true && defined('FLORP_DEVEL_FAKE_ACTIONS') && FLORP_DEVEL_FAKE_ACTIONS === true) {
+            $aData["ok"] = true;
+            $aData["message"] .= " (NOT: FLORP_DEVEL is on!)";
+          } else {
+            $aValues = array();
+            if (isset($this->aOptions["aParticipants"][$aData["leaderId"]][$aData["participantEmail"]]["attend"])) {
+              $aValues[] = $this->aOptions["aParticipants"][$aData["leaderId"]][$aData["participantEmail"]]["attend"];
+              unset($this->aOptions["aParticipants"][$aData["leaderId"]][$aData["participantEmail"]]["attend"]);
+            }
+            if (isset($this->aOptions["aParticipants"][$aData["leaderId"]][$aData["participantEmail"]]["attend_set_timestamp"])) {
+              $aValues[] = $this->aOptions["aParticipants"][$aData["leaderId"]][$aData["participantEmail"]]["attend_set_timestamp"];
+              unset($this->aOptions["aParticipants"][$aData["leaderId"]][$aData["participantEmail"]]["attend_set_timestamp"]);
+            }
+            if (empty($aValues)) {
+              $aData["message"] = $strErrorMessage . ": no attendance had been set.";
+            } else {
+              $aData["ok"] = true;
+              $this->add_option_change("ajax__florp_participant_attend", $aValues, "removed (".$aData["leaderId"].": ".$aData["participantEmail"].")", false);
+              $this->save_options();
+            }
+          }
         } else {
-          $this->aOptions["aParticipants"][$aData["leaderId"]][$aData["participantEmail"]]["attend"] = $aData["attend"];
-          $this->aOptions["aParticipants"][$aData["leaderId"]][$aData["participantEmail"]]["attend_set_timestamp"] = $iTimestampNow;
-          $this->add_option_change("ajax__florp_participant_attend", "", $aData["attend"] . " (".$aData["leaderId"].": ".$aData["participantEmail"].")", false);
-          $this->save_options();
+          $aData["ok"] = true;
           $aData["message"] = "The Slovak flashmob participant {$aData['participantEmail']}'s attendance was set successfully";
+          $strReplaceWith = ($aData["attend"] == "1") ? "-attend0-" : "-attend1-";
+          $strOtherButtonID = str_replace( "-attend{$aData['attend']}-", $strReplaceWith, $aData['buttonId']);
+          $aData["hideSelector"] = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strOtherButtonID}]";
+          $aData["replaceButtonHtml"] = '<span data-button-id="'.$aData['buttonId'].'" class="notice notice-success"'.$strTitle.' data-text="'.$strLabelForHiding.'">'.$aData['textDefault'].'</span>';
+          if (defined('FLORP_DEVEL') && FLORP_DEVEL === true && defined('FLORP_DEVEL_FAKE_ACTIONS') && FLORP_DEVEL_FAKE_ACTIONS === true) {
+            $aData["message"] .= " (NOT: FLORP_DEVEL is on!)";
+          } else {
+            $this->aOptions["aParticipants"][$aData["leaderId"]][$aData["participantEmail"]]["attend"] = $aData["attend"];
+            $this->aOptions["aParticipants"][$aData["leaderId"]][$aData["participantEmail"]]["attend_set_timestamp"] = $iTimestampNow;
+            $this->add_option_change("ajax__florp_participant_attend", "", $aData["attend"] . " (".$aData["leaderId"].": ".$aData["participantEmail"].")", false);
+            $this->save_options();
+          }
         }
       } else {
         $aData["message"] = $strErrorMessage;
@@ -6451,20 +6514,49 @@ class FLORP{
         $strTitle = ' title="'.date( $this->strDateFormat, $iTimestampNow ).'"';
         $aData["removeRowOnSuccess"] = false;
         $aData["replaceButton"] = true;
-        $aData["ok"] = true;
-        $strReplaceWith = ($aData["attend"] == "1") ? "-attend0-" : "-attend1-";
-        $strOtherButtonID = str_replace( "-attend{$aData['attend']}-", $strReplaceWith, $aData['buttonId']);
-        $aData["hideSelector"] = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strOtherButtonID}]";
         $strLabelForHiding = "Zúčastní/-il(a) sa";
-        $aData["replaceButtonHtml"] = '<span data-button-id="'.$aData['buttonId'].'" class="notice notice-success"'.$strTitle.' data-text="'.$strLabelForHiding.'">'.$aData['textDefault'].'</span>';
-        if (defined('FLORP_DEVEL') && FLORP_DEVEL === true && defined('FLORP_DEVEL_FAKE_ACTIONS') && FLORP_DEVEL_FAKE_ACTIONS === true) {
-          $aData["message"] = "The international flashmob participant {$aData['participantEmail']}'s attendance was set successfully (NOT: FLORP_DEVEL is on!)";
+        if ($aData["attend"] === 'remove') {
+          $aData["message"] = "The Slovak flashmob participant {$aData['participantEmail']}'s attendance was removed successfully";
+          $strOtherButtonID1 = str_replace( "-attend-remove-", "-attend1-", $aData['buttonId']);
+          $strOtherButtonID0 = str_replace( "-attend-remove-", "-attend0-", $aData['buttonId']);
+          $aData["hideSelector"] = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strOtherButtonID0}], tr[data-row-id={$aData['rowId']}] span[data-button-id={$strOtherButtonID1}]";
+          $aData["replaceButtonHtml"] = '<span data-button-id="'.$aData['buttonId'].'" class="notice notice-success" data-text="'.$strLabelForHiding.'">Attendance removed. Refresh to see buttons.</span>';
+          if (defined('FLORP_DEVEL') && FLORP_DEVEL === true && defined('FLORP_DEVEL_FAKE_ACTIONS') && FLORP_DEVEL_FAKE_ACTIONS === true) {
+            $aData["ok"] = true;
+            $aData["message"] .= " (NOT: FLORP_DEVEL is on!)";
+          } else {
+            $aValues = array();
+            if (isset($this->aOptions["aIntfParticipants"][$aData["year"]][$aData["participantEmail"]]["attend"])) {
+              $aValues[] = $this->aOptions["aIntfParticipants"][$aData["year"]][$aData["participantEmail"]]["attend"];
+              unset($this->aOptions["aIntfParticipants"][$aData["year"]][$aData["participantEmail"]]["attend"]);
+            }
+            if (isset($this->aOptions["aIntfParticipants"][$aData["year"]][$aData["participantEmail"]]["attend_set_timestamp"])) {
+              $aValues[] = $this->aOptions["aIntfParticipants"][$aData["year"]][$aData["participantEmail"]]["attend_set_timestamp"];
+              unset($this->aOptions["aIntfParticipants"][$aData["year"]][$aData["participantEmail"]]["attend_set_timestamp"]);
+            }
+            if (empty($aValues)) {
+              $aData["message"] = $strErrorMessage . ": no attendance had been set.";
+            } else {
+              $aData["ok"] = true;
+              $this->add_option_change("ajax__florp_intf_participant_attend", $aValues, "removed (".$aData["year"].": ".$aData["participantEmail"].")", false);
+              $this->save_options();
+            }
+          }
         } else {
-          $this->aOptions["aIntfParticipants"][$aData["year"]][$aData["participantEmail"]]["attend"] = $aData["attend"];
-          $this->aOptions["aIntfParticipants"][$aData["year"]][$aData["participantEmail"]]["attend_set_timestamp"] = $iTimestampNow;
-          $this->add_option_change("ajax__florp_intf_participant_attend", "", $aData["attend"] . " (".$aData["year"].": ".$aData["participantEmail"].")", false);
-          $this->save_options();
+          $aData["ok"] = true;
+          $strReplaceWith = ($aData["attend"] == "1") ? "-attend0-" : "-attend1-";
+          $strOtherButtonID = str_replace( "-attend{$aData['attend']}-", $strReplaceWith, $aData['buttonId']);
+          $aData["hideSelector"] = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strOtherButtonID}]";
+          $aData["replaceButtonHtml"] = '<span data-button-id="'.$aData['buttonId'].'" class="notice notice-success"'.$strTitle.' data-text="'.$strLabelForHiding.'">'.$aData['textDefault'].'</span>';
           $aData["message"] = "The international flashmob participant {$aData['participantEmail']}'s attendance was set successfully";
+          if (defined('FLORP_DEVEL') && FLORP_DEVEL === true && defined('FLORP_DEVEL_FAKE_ACTIONS') && FLORP_DEVEL_FAKE_ACTIONS === true) {
+            $aData["message"] .= " (NOT: FLORP_DEVEL is on!)";
+          } else {
+            $this->aOptions["aIntfParticipants"][$aData["year"]][$aData["participantEmail"]]["attend"] = $aData["attend"];
+            $this->aOptions["aIntfParticipants"][$aData["year"]][$aData["participantEmail"]]["attend_set_timestamp"] = $iTimestampNow;
+            $this->add_option_change("ajax__florp_intf_participant_attend", "", $aData["attend"] . " (".$aData["year"].": ".$aData["participantEmail"].")", false);
+            $this->save_options();
+          }
         }
       } else {
         $aData["message"] = $strErrorMessage;

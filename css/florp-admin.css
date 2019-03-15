@@ -25,6 +25,12 @@ span.notice.forceHide{
     border-color: #eea236 !important;
 }
 
+.button-danger{
+    color: #fff !important;
+    background-color: #dc3545 !important;
+    border-color: #eea236 !important;
+}
+
 tr.florpFilterHeaderRow,
 th.florpFilterHeaderCell{
   margin: 0;
