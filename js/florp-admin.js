@@ -340,7 +340,8 @@ jQuery( document ).ready(function() {
 
       var bInsertAfterFirstRow = false
       var $firstRow = $rows.first()
-      var iColumns = $firstRow.find("th").length
+      var $firstRowCells = $firstRow.find("th")
+      var iColumns = $firstRowCells.length
       $countInfo = jQuery('<span class="tableCountInfo florpFilterTable'+it+'"></span>')
       var iRowCount
       if (iColumns > 0) {
@@ -349,7 +350,8 @@ jQuery( document ).ready(function() {
         iRowCount = $rows.length - 1
         $table.data("rowCount", iRowCount)
       } else {
-        iColumns = $firstRow.find("td").length
+        $firstRowCells = $firstRow.find("td")
+        iColumns = $firstRowCells.length
         $table.data("hasHeader", 0)
         var iRowCount = $rows.length
         $table.data("rowCount", iRowCount)
@@ -375,7 +377,8 @@ jQuery( document ).ready(function() {
         if (bInsertAfterFirstRow) {
           strPlaceholder = ' placeholder="Filter: '+jQuery($firstRow.find("th")[i]).text()+'"'
         }
-        filterRowHtml += '<th class="florpFilterHeaderCell">'
+        var classes = $firstRowCells[i].classList.toString()
+        filterRowHtml += '<th class="florpFilterHeaderCell '+classes+'">'
         filterRowHtml += '<input class="florpFilterInput" type="text" data-florp-filter-table-id="'+it+'" data-florp-filter-column-id="'+i+'"'+strPlaceholder+'/>'
         filterRowHtml += "</th>"
       }
@@ -440,6 +443,40 @@ jQuery( document ).ready(function() {
   jQuery("table").each(function() {
     var $table = jQuery(this)
     $table.data("buttonTogglerTableId", tableIndex)
+
+    // BEGIN: Column toggling //
+    var columnClasses = []
+    $table.find("td.column, th.column").each(function() {
+      this.classList.forEach(function (cl) {
+        if (cl.indexOf("column-") === 0 && columnClasses.indexOf(cl) === -1) {
+          columnClasses.push(cl)
+        }
+      })
+    })
+    var $insertColTogglersBefore = jQuery("span.tableCountInfo.florpFilterTable" + tableIndex)
+    if ($insertColTogglersBefore.length === 0) {
+      $insertColTogglersBefore = $table
+    }
+    if (columnClasses.length > 0) {
+      var $colTogglerRow = jQuery("<span class='columnTogglerRow'></span>")
+      $colTogglerRow.insertBefore($insertColTogglersBefore)
+      jQuery("<span class='columnTogglerCheckboxWrapper'>Zobraziť stĺpce: </span>").appendTo($colTogglerRow)
+    }
+    columnClasses.forEach(function(value, i) {
+      var label = value.replace("column-", "")
+      var label = label.charAt(0).toUpperCase() + label.slice(1)
+      var checkboxSpan = jQuery("<span class='columnTogglerCheckboxWrapper'><input type='checkbox' id='"+value+"-"+tableIndex+"' checked='checked' onchange='window.florpToggleColumns(this, \""+value+"\", "+tableIndex+")' /><label for='"+value+"-"+tableIndex+"'>"+label+"</label></span>")
+      checkboxSpan.appendTo($colTogglerRow)
+      if (window.florpIsHidden(value, tableIndex, "columns")) {
+        var checkbox = checkboxSpan.find("input")
+        checkbox.prop("checked", false).trigger("change")
+      }
+    })
+    // if (columnClasses.length > 0) {
+    //   jQuery("<span style='height: 0; clear: both; display: block;'></span>").insertBefore($insertColTogglersBefore)
+    // }
+    // END: Column toggling //
+
     var buttons = [], notices = [], hideByDefault = {}
     $table.find("span.button.double-check").each(function() {
       var $this = jQuery(this), text = ("undefined" !== typeof $this.data("text") && null !== $this.data("text")) ? $this.data("text") : $this.data("textDefault")
@@ -459,9 +496,10 @@ jQuery( document ).ready(function() {
         }
       }
     })
+
     if (Object.keys(hideByDefault).length > 0) {
       var hideTexts = Object.keys(hideByDefault)
-      var key = getLocalStorageKey(tableIndex)
+      var key = window.florpGetLocalStorageKey(tableIndex, "buttons")
       var hidden = localStorage.getItem(key)
       if ("undefined" === typeof hidden || null === hidden) {
         localStorage.setItem(key, JSON.stringify(hideTexts))
@@ -470,101 +508,112 @@ jQuery( document ).ready(function() {
     buttons.sort()
     notices.sort()
 
-    window.florpToggleButtons = function(checkbox, text, tableId) {
-      var elements = jQuery("span.button.double-check[data-text='"+text+"'],span.button.double-check[data-text-default='"+text+"'],span.notice[data-text='"+text+"'],span.notice:contains('"+text+"')")
-      if (jQuery(checkbox).is(":checked")) {
-        elements.removeClass("hide")
-        setUnhidden(text, tableId)
-      } else {
-        elements.addClass("hide")
-        setHidden(text, tableId)
-      }
-    }
-    window.florpToggleNotices = function(checkbox, text, tableId) {
-      var elements = jQuery("span.notice[data-text='"+text+"'],span.notice:contains('"+text+"')")
-      if (jQuery(checkbox).is(":checked")) {
-        elements.removeClass("hide")
-        setUnhidden(text, tableId)
-      } else {
-        elements.addClass("hide")
-        setHidden(text, tableId)
-      }
-    }
     if (buttons.length + notices.length > 0) {
-      jQuery("<span class='buttonTogglerCheckboxWrapper'>Zobraziť: </span>").insertBefore($table)
+      var $btnTogglerRow = jQuery("<span class='buttonTogglerRow'></span>")
+      $btnTogglerRow.insertBefore($insertColTogglersBefore)
+      jQuery("<span class='buttonTogglerCheckboxWrapper'>Zobraziť: </span>").appendTo($btnTogglerRow)
     }
     buttons.forEach(function(value, i) {
-      var checkboxSpan = jQuery("<span class='buttonTogglerCheckboxWrapper'><input type='checkbox' id='button-"+i+"-"+tableIndex+"' checked='checked' onchange='florpToggleButtons(this, \""+value+"\", "+tableIndex+")' /><label for='button-"+i+"-"+tableIndex+"'>"+value+"</label></span>")
-      checkboxSpan.insertBefore($table)
-      if (isHidden(value, tableIndex)) {
+      var checkboxSpan = jQuery("<span class='buttonTogglerCheckboxWrapper'><input type='checkbox' id='button-"+i+"-"+tableIndex+"' checked='checked' onchange='window.florpToggleButtons(this, \""+value+"\", "+tableIndex+")' /><label for='button-"+i+"-"+tableIndex+"'>"+value+"</label></span>")
+      checkboxSpan.appendTo($btnTogglerRow)
+      if (window.florpIsHidden(value, tableIndex, "buttons")) {
         var checkbox = checkboxSpan.find("input")
         checkbox.prop("checked", false).trigger("change")
       }
     })
     notices.forEach(function(value, i) {
       var j = buttons.length + i
-      var checkboxSpan = jQuery("<span class='buttonTogglerCheckboxWrapper'><input type='checkbox' id='button-"+j+"-"+tableIndex+"' checked='checked' onchange='florpToggleNotices(this, \""+value+"\", "+tableIndex+")' /><label for='button-"+j+"-"+tableIndex+"'>"+value+"</label></span>")
-      checkboxSpan.insertBefore($table)
-      if (isHidden(value, tableIndex)) {
+      var checkboxSpan = jQuery("<span class='buttonTogglerCheckboxWrapper'><input type='checkbox' id='button-"+j+"-"+tableIndex+"' checked='checked' onchange='window.florpToggleNotices(this, \""+value+"\", "+tableIndex+")' /><label for='button-"+j+"-"+tableIndex+"'>"+value+"</label></span>")
+      checkboxSpan.appendTo($btnTogglerRow)
+      if (window.florpIsHidden(value, tableIndex, "buttons")) {
         var checkbox = checkboxSpan.find("input")
         checkbox.prop("checked", false).trigger("change")
       }
     })
-    if (buttons.length + notices.length > 0) {
-      jQuery("<span style='height: 0; clear: both; display: block;'></span>").insertBefore($table)
-    }
+    jQuery("<span style='height: 0; clear: both; display: block;'></span>").insertBefore($table)
     // console.log($table, buttons, notices)
-
-    function getLocalStorageKey(tableIndex) {
-      return window.location.pathname.split('/').reverse()[0] + window.location.search + "-t"+tableIndex+"-hidden-buttons"
-    }
-    function isHidden(text, tableIndex, bDefault = false) {
-      var key = getLocalStorageKey(tableIndex)
-      var hidden = localStorage.getItem(key);
-      if (hidden) {
-        var aHidden = []
-        try {
-          aHidden = JSON.parse(hidden)
-        } catch(e) {}
-        if (aHidden.length === 0) {
-          return bDefault
-        }
-        return -1 !== aHidden.indexOf(text)
-      } else {
-        return bDefault
-      }
-    }
-    function setHidden(text, tableIndex) {
-      if (isHidden(text, tableIndex)) {return}
-      var key = getLocalStorageKey(tableIndex)
-      var hidden = localStorage.getItem(key)
-      var aHidden = []
-      if (hidden) {
-        try {
-          aHidden = JSON.parse(hidden)
-        } catch(e) {}
-      }
-      aHidden.push(text)
-      localStorage.setItem(key, JSON.stringify(aHidden))
-    }
-    function setUnhidden(text, tableIndex) {
-      if (!isHidden(text, tableIndex)) {return}
-      var key = getLocalStorageKey(tableIndex)
-      var hidden = localStorage.getItem(key)
-      var aHidden = []
-      if (hidden) {
-        try {
-          aHidden = JSON.parse(hidden)
-        } catch(e) {}
-      } else {
-        return
-      }
-      if (aHidden.length === 0) {return}
-      var i = aHidden.indexOf(text)
-      aHidden.splice(i, 1)
-      localStorage.setItem(key, JSON.stringify(aHidden))
-    }
 
     tableIndex++
   })
 })
+
+window.florpToggleButtons = function(checkbox, text, tableId) {
+  var elements = jQuery("table.florpFilterTable"+tableId).find("span.button.double-check[data-text='"+text+"'],span.button.double-check[data-text-default='"+text+"'],span.notice[data-text='"+text+"'],span.notice:contains('"+text+"')")
+  if (jQuery(checkbox).is(":checked")) {
+    elements.removeClass("hide")
+    window.florpSetUnhidden(text, tableId, "buttons")
+  } else {
+    elements.addClass("hide")
+    window.florpSetHidden(text, tableId, "buttons")
+  }
+}
+window.florpToggleNotices = function(checkbox, text, tableId) {
+  var elements = jQuery("table.florpFilterTable"+tableId).find("span.notice[data-text='"+text+"'],span.notice:contains('"+text+"')")
+  if (jQuery(checkbox).is(":checked")) {
+    elements.removeClass("hide")
+    window.florpSetUnhidden(text, tableId, "buttons")
+  } else {
+    elements.addClass("hide")
+    window.florpSetHidden(text, tableId, "buttons")
+  }
+}
+window.florpToggleColumns = function(checkbox, cl, tableId) {
+  var elements = jQuery("table.florpFilterTable"+tableId).find("td."+cl+",th."+cl)
+  if (jQuery(checkbox).is(":checked")) {
+    elements.removeClass("hide")
+    window.florpSetUnhidden(cl, tableId, "columns")
+  } else {
+    elements.addClass("hide")
+    window.florpSetHidden(cl, tableId, "columns")
+  }
+}
+
+window.florpGetLocalStorageKey = function(tableIndex, what = "buttons") {
+  return window.location.pathname.split('/').reverse()[0] + window.location.search + "-t"+tableIndex+"-hidden-" + what
+}
+window.florpIsHidden = function(text, tableIndex, what = "buttons", bDefault = false) {
+  var key = window.florpGetLocalStorageKey(tableIndex, what)
+  var hidden = localStorage.getItem(key);
+  if (hidden) {
+    var aHidden = []
+    try {
+      aHidden = JSON.parse(hidden)
+    } catch(e) {}
+    if (aHidden.length === 0) {
+      return bDefault
+    }
+    return -1 !== aHidden.indexOf(text)
+  } else {
+    return bDefault
+  }
+}
+window.florpSetHidden = function(text, tableIndex, what = "buttons") {
+  if (window.florpIsHidden(text, tableIndex, what)) {return}
+  var key = window.florpGetLocalStorageKey(tableIndex, what)
+  var hidden = localStorage.getItem(key)
+  var aHidden = []
+  if (hidden) {
+    try {
+      aHidden = JSON.parse(hidden)
+    } catch(e) {}
+  }
+  aHidden.push(text)
+  localStorage.setItem(key, JSON.stringify(aHidden))
+}
+window.florpSetUnhidden = function(text, tableIndex, what = "buttons") {
+  if (!window.florpIsHidden(text, tableIndex, what)) {return}
+  var key = window.florpGetLocalStorageKey(tableIndex, what)
+  var hidden = localStorage.getItem(key)
+  var aHidden = []
+  if (hidden) {
+    try {
+      aHidden = JSON.parse(hidden)
+    } catch(e) {}
+  } else {
+    return
+  }
+  if (aHidden.length === 0) {return}
+  var i = aHidden.indexOf(text)
+  aHidden.splice(i, 1)
+  localStorage.setItem(key, JSON.stringify(aHidden))
+}

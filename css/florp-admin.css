@@ -6,6 +6,8 @@ span.notice{
   text-align: center;
 }
 
+td.column.hide,
+th.column.hide,
 span.button.hide,
 span.notice.hide,
 span.button.forceHide,
@@ -13,10 +15,24 @@ span.notice.forceHide{
   display: none !important;
 }
 
+.columnTogglerRow,
+.buttonTogglerRow {
+  display: block;
+}
+.columnTogglerRow {
+  width: 100%;
+}
+.buttonTogglerRow {
+  width: calc(100% - 11em);
+}
+
+.columnTogglerCheckboxWrapper,
 .buttonTogglerCheckboxWrapper{
   margin: 5px;
-  float: left;
   display: inline-block;
+}
+.buttonTogglerCheckboxWrapper{
+  float: left;
 }
 
 .button-warning{

@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 5.3.1
+ * Version: 5.4.0
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '5.3.1';
+  private $strVersion = '5.4.0';
   private $strSuperAdminMail = 'charliecek@gmail.com';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
@@ -658,6 +658,7 @@ class FLORP{
       'iCoursesNumberEnabled'                     => 1,
       'strTshirtPaymentWarningNotificationSbj'    => 'Chýba nám platba za objednané tričko',
       'strTshirtPaymentWarningNotificationMsg'    => '<p>Prosíme, pošlite platbu za objednané tričko.</p><p>Váš SalsaRueda.Dance team</p>',
+      'bPaymentOKNotificationEnabled'             => false,
       'strPaymentOKNotificationSbj'               => 'Prišla nám platba za %REASON%',
       'strPaymentOKNotificationMsg'               => '<p>Prišla nám platba za %REASON%.</p><p>Ďakujeme,</p><p>Váš SalsaRueda.Dance team</p>',
       'bTshirtOrderingDisabled'                   => false,
@@ -766,6 +767,7 @@ class FLORP{
       'florp_courses_number_enabled'                  => 'iCoursesNumberEnabled',
       'florp_tshirt_payment_warning_notif_sbj'        => 'strTshirtPaymentWarningNotificationSbj',
       'florp_tshirt_payment_warning_notif_msg'        => 'strTshirtPaymentWarningNotificationMsg',
+      'florp_payment_ok_notif_enabled'                => 'bPaymentOKNotificationEnabled',
       'florp_payment_ok_notif_sbj'                    => 'strPaymentOKNotificationSbj',
       'florp_payment_ok_notif_msg'                    => 'strPaymentOKNotificationMsg',
       'florp_tshirt_ordering_disabled'                => 'bTshirtOrderingDisabled',
@@ -820,6 +822,7 @@ class FLORP{
       'bIntfTshirtOrderingDisabledOnlyDisable',
       'bIntfTshirtOrderingDisabled',
       'bTshirtOrdersAdminEnabled',
+      'bPaymentOKNotificationEnabled',
     );
     $this->aArrayOptions = array(
       'aHideFlashmobFieldsForUsers',
@@ -886,6 +889,7 @@ class FLORP{
         'aHideFlashmobFieldsForUsers',
         'aUnhideFlashmobFieldsForUsers',
         'bTshirtOrdersAdminEnabled',
+        'bPaymentOKNotificationEnabled',
         'strPaymentOKNotificationSbj',
         'strPaymentOKNotificationMsg',
       ),
@@ -904,6 +908,7 @@ class FLORP{
         'strParticipantRemovedSubject',
         'strTshirtPaymentWarningNotificationSbj',
         'strTshirtPaymentWarningNotificationMsg',
+        'bPaymentOKNotificationEnabled',
         'strPaymentOKNotificationSbj',
         'strPaymentOKNotificationMsg',
         'bTshirtOrderingDisabled',
@@ -925,6 +930,7 @@ class FLORP{
         'iIntfTshirtPaymentWarningButtonDeadline',
         'iIntfTshirtPaymentWarningDeadline',
         'strIntfTshirtPaymentWarningNotificationSbj',
+        'bPaymentOKNotificationEnabled',
         'strPaymentOKNotificationSbj',
         'strPaymentOKNotificationMsg',
         'strNewsletterListsIntf',
@@ -3625,7 +3631,7 @@ class FLORP{
         'florp-main',
         'Zoznam účastníkov',
         'Zoznam účastníkov',
-        'manage_options',
+        $this->strUserRoleRegistrationAdminSvk,
         'florp-participants',
         array( $this, 'participants_table_admin' )
       );
@@ -3667,7 +3673,7 @@ class FLORP{
         'florp-main',
         'Zoznam účastníkov',
         'Zoznam účastníkov',
-        'manage_options',
+        $this->strUserRoleRegistrationAdminSvk,
         'florp-participants',
         array( $this, 'participants_table_admin' )
       );
@@ -3704,7 +3710,7 @@ class FLORP{
         'florp-international',
         'Zoznam účastníkov',
         'Zoznam účastníkov',
-        'manage_options',
+        $this->strUserRoleRegistrationAdminIntf,
         'florp-intf-participants',
         array( $this, 'participants_table_admin_intf' )
       );
@@ -3921,7 +3927,7 @@ class FLORP{
   public function participants_table_admin() {
     echo "<div class=\"wrap\"><h1>" . "Zoznam účastníkov slovenského flashmobu" . "</h1>";
 
-    $strEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Líder</th><th>Profil</th>';
+    $strEcho = '<table class="widefat striped"><th class="column column-meno">Meno</th><th class="column column-email">Email</th><th class="column column-mesto">Mesto</th><th class="column column-lider">Líder</th><th class="column column-profil">Profil</th>';
     $aParticipants = $this->get_flashmob_participants( 0, false, true );
     // echo "<pre>";var_dump($aParticipants);echo "</pre>"; // NOTE DEVEL
     // echo "<pre>";var_dump($this->get_flashmob_participant_csv());echo "</pre>"; // NOTE DEVEL
@@ -4020,8 +4026,8 @@ class FLORP{
           }
           $strEditSubmission = ' <span class="submission-edit">(<a href="'.$strDomain.'/edit-svk-participant-submission/?leader_id='.$iLeaderID.'&email='.urlencode($strEmail).'" target="_blank">Edit</a>)</span>';
         }
-        $strEcho .=   '<td>'.$aParticipantData['first_name'].' '.$aParticipantData['last_name'].$strEditSubmission.$strButtons.'</td>';
-        $strEcho .=   '<td><a name="'.$aParticipantData['user_email'].'">'.$aParticipantData['user_email'].'</a></td>';
+        $strEcho .=   '<td class="column column-meno">'.$aParticipantData['first_name'].' '.$aParticipantData['last_name'].$strEditSubmission.$strButtons.'</td>';
+        $strEcho .=   '<td class="column column-email"><a name="'.$aParticipantData['user_email'].'">'.$aParticipantData['user_email'].'</a></td>';
         $oLeader = get_user_by( 'id', $iLeaderID );
         $strLeadersFlashmobCity = get_user_meta( $iLeaderID, 'flashmob_city', true );
         $strWarning = "";
@@ -4029,13 +4035,13 @@ class FLORP{
           $strTitle = " title=\"Pozor: pri registrácii účastníka mal líder nastavené mesto flashmobu na  {$aParticipantData['flashmob_city']}!\"";
           $strWarning = ' <span '.$strTitle.' class="dashicons dashicons-warning"></span>';
         }
-        $strEcho .=   '<td>'.$strLeadersFlashmobCity.$strWarning.'</td>';
+        $strEcho .=   '<td class="column column-mesto">'.$strLeadersFlashmobCity.$strWarning.'</td>';
         $strIsPending = "";
         if (in_array( $this->strUserRolePending, (array) $oLeader->roles )) {
           $strIsPending = " ({$this->strUserRolePendingName})";
         }
-        $strEcho .=   '<td><a href="'.admin_url('admin.php?page=florp-leaders')."#{$iLeaderID}\">{$oLeader->first_name} {$oLeader->last_name}</a>{$strIsPending}</td>";
-        $strEcho .=   '<td>';
+        $strEcho .=   '<td class="column column-lider"><a href="'.admin_url('admin.php?page=florp-leaders')."#{$iLeaderID}\">{$oLeader->first_name} {$oLeader->last_name}</a>{$strIsPending}</td>";
+        $strEcho .=   '<td class="column column-profil">';
         $aTimestamps = array( 'registered', 'tshirt_order_cancelled_timestamp', 'updated_timestamp', 'paid_fee', 'attend_set_timestamp' );
         $bOrderedTshirt = isset($aParticipantData['preferences']) && is_array($aParticipantData['preferences']) && in_array('Chcem pamätné Flashmob tričko', $aParticipantData['preferences']);
         $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', 'leader_user_id' );
@@ -4089,7 +4095,7 @@ class FLORP{
   public function participants_table_admin_intf() {
     echo "<div class=\"wrap\"><h1>" . "Zoznam účastníkov medzinárodného flashmobu" . "</h1>";
 
-    $strEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto (kde tancuje)</th><th>Profil</th>'.PHP_EOL;
+    $strEcho = '<table class="widefat striped"><th class="column column-meno">Meno</th><th class="column column-email">Email</th><th class="column column-mesto">Mesto (kde tancuje)</th><th class="column column-profil">Profil</th>'.PHP_EOL;
     $aParticipants = $this->aOptions['aIntfParticipants'];
     // echo "<pre>";var_dump($aParticipants);echo "</pre>"; // NOTE DEVEL
     // echo "<pre>";var_dump($this->get_flashmob_participant_csv('all', true));echo "</pre>"; // NOTE DEVEL
@@ -4185,13 +4191,13 @@ class FLORP{
         if ($this->isEditSubmissionsEnabled()) {
           $strEditSubmission = ' <span class="submission-edit">(<a href="/edit-intf-participant-submission/?year='.$iYear.'&email='.urlencode($strEmail).'" target="_blank">Edit</a>)</span>';
         }
-        $strEcho .=   '<td>'.$aParticipantData['first_name'].' '.$aParticipantData['last_name'].$strEditSubmission.$strButtons.'</td>'.PHP_EOL;
-        $strEcho .=   '<td><a name="'.$aParticipantData['user_email'].'">'.$aParticipantData['user_email'].'</a></td>'.PHP_EOL;
-        $strEcho .=   '<td>'.$aParticipantData['flashmob_city'].'</td>'.PHP_EOL;
+        $strEcho .=   '<td class="column column-meno">'.$aParticipantData['first_name'].' '.$aParticipantData['last_name'].$strEditSubmission.$strButtons.'</td>'.PHP_EOL;
+        $strEcho .=   '<td class="column column-email"><a name="'.$aParticipantData['user_email'].'">'.$aParticipantData['user_email'].'</a></td>'.PHP_EOL;
+        $strEcho .=   '<td class="column column-mesto">'.$aParticipantData['flashmob_city'].'</td>'.PHP_EOL;
         $aTimestamps = array( 'registered', 'paid_fee', 'attend_set_timestamp', 'updated_timestamp' );
         $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city' );
         $bOrderedTshirt = isset($aParticipantData['preferences']) && is_array($aParticipantData['preferences']) && in_array('Chcem pamätné Flashmob tričko', $aParticipantData['preferences']);
-        $strEcho .=   '<td>'.PHP_EOL;
+        $strEcho .=   '<td class="column column-profil">'.PHP_EOL;
         foreach ($aParticipantData as $strKey => $mixValue) {
           if (!isset($mixValue) || (!is_bool($mixValue) && !is_numeric($mixValue) && empty($mixValue)) || $mixValue === 'null' || in_array( $strKey, $aSkip )) {
             continue;
@@ -4254,8 +4260,8 @@ class FLORP{
     }
     // echo "<pre>"; var_dump($aTshirts); echo "</pre>"; // NOTE DEVEL
 
-    $strHeaderLeaderOrYear = $bIntf ? "<th>Rok</th>" : "<th>Líder</th>";
-    $strEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Typ</th>'.$strHeaderLeaderOrYear.'<th>Vlastnosti</th>';
+    $strHeaderLeaderOrYear = $bIntf ? "<th class=\"column column-rok\">Rok</th>" : "<th class=\"column column-lider\">Líder</th>";
+    $strEcho = '<table class="widefat striped"><th class="column column-meno">Meno</th><th class="column column-email">Email</th><th class="column column-mesto">Mesto</th><th class="column column-typ">Typ</th>'.$strHeaderLeaderOrYear.'<th class="column column-vlastnosti">Vlastnosti</th>';
 
     $sIntfActionPart = $bIntf ? "_intf" : "";
     $sIntfBtnIdPart = $bIntf ? "-intf" : "";
@@ -4420,22 +4426,22 @@ class FLORP{
       // END Participant administration buttons //
 
       $strEcho .= '<tr class="row" data-row-id="'.$strRowID.'">';
-      $strEcho .=   '<td>'.$aTshirtData['name'].$strButtons.'</td>';
-      $strEcho .=   '<td><a name="'.$aTshirtData['email'].'">'.$aTshirtData['email'].'</a></td>';
+      $strEcho .=   '<td class="column column-meno">'.$aTshirtData['name'].$strButtons.'</td>';
+      $strEcho .=   '<td class="column column-email"><a name="'.$aTshirtData['email'].'">'.$aTshirtData['email'].'</a></td>';
 
       $strWarning = "";
       if (!$bIntf && isset($aTshirtData['flashmob_city_at_registration'])) {
         $strTitle = " title=\"Pozor: pri registrácii účastníka mal líder nastavené mesto flashmobu na  {$aTshirtData['flashmob_city_at_registration']}!\"";
         $strWarning = ' <span '.$strTitle.' class="dashicons dashicons-warning"></span>';
       }
-      $strEcho .=   '<td>'.$aTshirtData['flashmob_city'].$strWarning.'</td>';
-      $strEcho .=   '<td>'.$aTshirtData['type'].'</td>';
+      $strEcho .=   '<td class="column column-mesto">'.$aTshirtData['flashmob_city'].$strWarning.'</td>';
+      $strEcho .=   '<td class="column column-typ">'.$aTshirtData['type'].'</td>';
       if ($bIntf) {
-        $strEcho .=   '<td>'.$aTshirtData['year'].'</td>';
+        $strEcho .=   '<td class="column column-rok">'.$aTshirtData['year'].'</td>';
       } else {
-        $strEcho .=   '<td>'.$aTshirtData['leader'].'</td>';
+        $strEcho .=   '<td class="column column-lider">'.$aTshirtData['leader'].'</td>';
       }
-      $strEcho .=   '<td>';
+      $strEcho .=   '<td class="column column-vlastnosti">';
       foreach ($aTshirtData['properties'] as $strKey => $strValue) {
         $strFieldName = ($bIntf && $strKey === 'intf_city') ? "Mesto (anketa)" : ucfirst( str_replace( '_', ' ', $strKey ) );
         $strEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>';
@@ -6956,7 +6962,7 @@ class FLORP{
     }
 
     $strReason = $this->aPaymentOKNotificationReasons[$sReasonKey];
-    if (isset($this->aOptions['strPaymentOKNotificationSbj'], $this->aOptions['strPaymentOKNotificationMsg']) && !empty($this->aOptions['strPaymentOKNotificationSbj']) && !empty($this->aOptions['strPaymentOKNotificationSbj'])) {
+    if ($this->aOptions["bPaymentOKNotificationEnabled"] && isset($this->aOptions['strPaymentOKNotificationSbj'], $this->aOptions['strPaymentOKNotificationMsg']) && !empty($this->aOptions['strPaymentOKNotificationSbj']) && !empty($this->aOptions['strPaymentOKNotificationSbj'])) {
       // OK to send //
       $strMessageContent = str_replace( '%REASON%', $strReason, $this->aOptions['strPaymentOKNotificationMsg']);
       $strMessageSubject = str_replace( '%REASON%', $strReason, $this->aOptions['strPaymentOKNotificationSbj']);
@@ -6971,6 +6977,9 @@ class FLORP{
       }
       return $aReturn;
     } else {
+      if (!$this->aOptions["bPaymentOKNotificationEnabled"]) {
+        $aReturn['message'] .= " Payment notifications are disabled!";
+      }
       if (!isset($this->aOptions['strPaymentOKNotificationSbj']) || empty($this->aOptions['strPaymentOKNotificationSbj'])) {
         $aReturn['message'] .= " Payment notification subject is not set!";
       }
@@ -8051,7 +8060,7 @@ class FLORP{
         '%%wpEditorParticipantRegisteredMessage%%',
         '%%strParticipantRegisteredSubject%%',
         '%%strTshirtPaymentWarningNotificationSbj%%', '%%wpEditorTshirtPaymentWarningNotificationMsg%%',
-        '%%strPaymentOKNotificationSbj%%', '%%wpEditorPaymentOKNotificationMsg%%', '%%strPaymentOKNotificationReasons%%',
+        '%%paymentOKNotificationEnabledChecked%%', '%%strPaymentOKNotificationSbj%%', '%%wpEditorPaymentOKNotificationMsg%%', '%%strPaymentOKNotificationReasons%%',
         '%%wpEditorParticipantRemovedMessage%%',
         '%%strParticipantRemovedSubject%%',
         '%%tshirtOrderingDisabledChecked%%', '%%tshirtOrderingDisabledOnlyDisableChecked%%',
@@ -8070,7 +8079,7 @@ class FLORP{
         $strParticipantRegisteredMessage,
         $this->aOptions['strParticipantRegisteredSubject'],
         $this->aOptions['strTshirtPaymentWarningNotificationSbj'], $wpEditorTshirtPaymentWarningNotificationMsg,
-        $this->aOptions['strPaymentOKNotificationSbj'], $wpEditorPaymentOKNotificationMsg, $this->strPaymentOKNotificationReasons,
+        $aBooleanOptionsChecked['bPaymentOKNotificationEnabled'], $this->aOptions['strPaymentOKNotificationSbj'], $wpEditorPaymentOKNotificationMsg, $this->strPaymentOKNotificationReasons,
         $strParticipantRemovedMessage,
         $this->aOptions['strParticipantRemovedSubject'],
         $aBooleanOptionsChecked['bTshirtOrderingDisabled'], $aBooleanOptionsChecked['bTshirtOrderingDisabledOnlyDisable'],
@@ -8188,7 +8197,7 @@ class FLORP{
         '%%strGoogleMapsKey%%', '%%strGoogleMapsKeyStatic%%', '%%strFbAppID%%', '%%preventDirectMediaDownloadsChecked%%', '%%strNewsletterAPIKey%%',
         '%%strSignupLinkLabel%%', '%%strInfoWindowLabels%%',
         '%%wpEditorMarkerInfoWindowTemplateOrganizer%%', '%%wpEditorMarkerInfoWindowTemplateTeacher%%',
-        '%%strPaymentOKNotificationSbj%%', '%%wpEditorPaymentOKNotificationMsg%%', '%%strPaymentOKNotificationReasons%%',
+        '%%paymentOKNotificationEnabledChecked%%', '%%strPaymentOKNotificationSbj%%', '%%wpEditorPaymentOKNotificationMsg%%', '%%strPaymentOKNotificationReasons%%',
         '%%aHideFlashmobFieldsForUsers%%', '%%aUnhideFlashmobFieldsForUsers%%' ),
       array( $optionsNewsletterSite,
         $aBooleanOptionsChecked['bLoadMapsAsync'],
@@ -8198,7 +8207,7 @@ class FLORP{
         $this->aOptions['strGoogleMapsKey'], $this->aOptions['strGoogleMapsKeyStatic'], $this->aOptions['strFbAppID'], $aBooleanOptionsChecked['bPreventDirectMediaDownloads'], $this->aOptions['strNewsletterAPIKey'],
         $this->aOptions['strSignupLinkLabel'], $strInfoWindowLabels,
         $strMarkerInfoWindowTemplateOrganizer, $strMarkerInfoWindowTemplateTeacher,
-        $this->aOptions['strPaymentOKNotificationSbj'], $wpEditorPaymentOKNotificationMsg, $this->strPaymentOKNotificationReasons,
+        $aBooleanOptionsChecked['bPaymentOKNotificationEnabled'], $this->aOptions['strPaymentOKNotificationSbj'], $wpEditorPaymentOKNotificationMsg, $this->strPaymentOKNotificationReasons,
         $strHideFlashmobFieldsForUsers, $strUnhideFlashmobFieldsForUsers ),
       file_get_contents( __DIR__ . "/view/options-svk-common.html" )
     );
@@ -8391,7 +8400,7 @@ class FLORP{
           "%%iIntfCityPollDdlTime%%",
           '%%aIntfCityPollUsers%%',
           '%%strIntfCityPollExtraCities%%',
-          '%%strPaymentOKNotificationSbj%%', '%%wpEditorPaymentOKNotificationMsg%%', '%%strPaymentOKNotificationReasons%%',
+          '%%paymentOKNotificationEnabledChecked%%', '%%strPaymentOKNotificationSbj%%', '%%wpEditorPaymentOKNotificationMsg%%', '%%strPaymentOKNotificationReasons%%',
         ),
         array(
           $aVariables['optionsIntfSite'],
@@ -8417,7 +8426,7 @@ class FLORP{
           $this->iIntfCityPollDdlTime,
           $strIntfCityPollUsers,
           $this->aOptions['strIntfCityPollExtraCities'],
-          $this->aOptions['strPaymentOKNotificationSbj'], $wpEditorPaymentOKNotificationMsg, $this->strPaymentOKNotificationReasons,
+          $aBooleanOptionsChecked['bPaymentOKNotificationEnabled'], $this->aOptions['strPaymentOKNotificationSbj'], $wpEditorPaymentOKNotificationMsg, $this->strPaymentOKNotificationReasons,
         ),
         file_get_contents( __DIR__ . "/view/options-international-settings.html" )
       );
