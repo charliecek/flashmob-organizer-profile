@@ -13,6 +13,11 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v5.4.0: Admin table column toggling. Payment OK notification toggling. =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.4.0)
+- Added admin table column toggling (for mobile usability).
+- Added possibility to enable / disable payment OK notifications.
+
 = v5.3.1: Added payment OK notification result to CSVs =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.3.1)
 - Added payment OK notification result to CSVs.
@@ -193,11 +198,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
   - participant count on leaders list
 - bugfix: forms without version were imported in spite of no change
 
-= v4.6.0: tshirt order date send dates =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.0)
-- added tshirt order date send dates (adding, csv)
-- some refactoring
-- JS: admin datetime picker
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.6.0)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.6.1)
