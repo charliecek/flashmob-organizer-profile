@@ -6,17 +6,23 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 5.4.1
+ * Version: 5.5.0
  * Requires at least: 4.8
- * Tested up to: 4.9.8
+ * Tested up to: 5.2.2
  * Requires PHP: 5.6
  * License: GPLv3
  * License URI: https://www.gnu.org/licenses/gpl.html
  */
 
+require_once(__DIR__ . "/qr-code-3.6/vendor/autoload.php");
+
+use Endroid\QrCode\ErrorCorrectionLevel;
+use Endroid\QrCode\LabelAlignment;
+use Endroid\QrCode\QrCode;
+
 class FLORP{
 
-  private $strVersion = '5.4.1';
+  private $strVersion = '5.5.0';
   private $strSuperAdminMail = 'charliecek@gmail.com';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
@@ -7883,6 +7889,7 @@ class FLORP{
       // echo "<pre>" .var_export($this->findCityWebpage( "Bánovce nad Bebravou" ), true). "</pre>";
       // echo "<pre>" .var_export($this->archive_current_year_svk_flashmob(true), true). "</pre>";
       // echo "<pre>" .var_export($this->aOptions['aYearlySvkFlashmobOptions'], true). "</pre>";
+      // echo "<pre>" .var_export($this->get_qr_code("http://flashmob.salsarueda.dance/"), true). "</pre>";
     }
 
     $aVariablesMain = array(
@@ -9583,6 +9590,12 @@ class FLORP{
         $strMessageContent = $this->aOptions['strParticipantRegisteredMessage'];
         $strBlogname = trim(wp_specialchars_decode(get_option('blogname'), ENT_QUOTES));
         $aHeaders = array('Content-Type: text/html; charset=UTF-8');
+
+        // TODO:
+        // generate a unique participant URL, e.g.: http://flashmob.salsarueda.dance/svk-participant/?lid=1&email=mail%40jozefbalint.sk
+        // create fake page for it
+        // generate a qr code to this url
+        // and send it as attachment
         $this->new_user_notification( $aFieldData['user_email'], '', $aFieldData['user_email'], $strBlogname, $strMessageContent, $this->aOptions['strParticipantRegisteredSubject'], $aHeaders );
       }
       return 1;
@@ -10172,6 +10185,43 @@ class FLORP{
     }
   }
 
+  private function get_qr_code($strText, $strOutputFname = "qrcode", $iSize = 300, $strFormat = "png", $bOutputAsString = false, $strLogoPath = "", $iLogoWidth = 0, $iLogoHeight = 0) {
+    // Create a basic QR code
+    $qrCode = new QrCode($strText);
+    $qrCode->setSize($iSize);
+
+    // Set advanced options
+    $qrCode->setWriterByName($strFormat);
+    $qrCode->setMargin(10);
+    $qrCode->setEncoding('UTF-8');
+    $qrCode->setErrorCorrectionLevel(new ErrorCorrectionLevel(ErrorCorrectionLevel::HIGH));
+    $qrCode->setForegroundColor(['r' => 0, 'g' => 0, 'b' => 0, 'a' => 0]);
+    $qrCode->setBackgroundColor(['r' => 255, 'g' => 255, 'b' => 255, 'a' => 0]);
+    if (isset($strLogoPath) && strlen($strLogoPath) > 0 && $iLogoWidth > 0 && $iLogoHeight > 0) {
+      $qrCode->setLogoPath($strLogoPath);
+      $qrCode->setLogoSize($iLogoWidth, $iLogoHeight);
+    }
+    $qrCode->setRoundBlockSize(true);
+    $qrCode->setValidateResult(false);
+    $qrCode->setWriterOptions(['exclude_xml_declaration' => true]);
+
+    // Directly output the QR code
+    if ($bOutputAsString) {
+      return $qrCode->writeString();
+    }
+
+    $aUploadDir = wp_upload_dir();
+    $strQrDir = $aUploadDir["basedir"] . "/florp-qr-code";
+    if (!file_exists($strQrDir)) {
+      mkdir($strQrDir);
+    }
+
+    // Save it to a file
+    $strOutputPath = $strQrDir . '/' . $strOutputFname . '.' . $strFormat;
+    $qrCode->writeFile($strOutputPath);
+
+    return $strOutputPath;
+  }
 
 }
 

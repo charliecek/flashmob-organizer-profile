@@ -13,6 +13,12 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v5.4.1: Checked option archiving =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.4.1)
+- Checked SVK and international flashmob archiving.
+- New main profile form export.
+- Removed a few extra comments.
+
 = v5.4.0: Admin table column toggling. Payment OK notification toggling. =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.4.0)
 - Added admin table column toggling (for mobile usability).
@@ -191,12 +197,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 - done some option refactoring
 - added option change logging
 
-= v4.6.1: form import bugfix, admin view improvements =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.1)
-- small admin view improvements:
-  - table filter count
-  - participant count on leaders list
-- bugfix: forms without version were imported in spite of no change
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.6.1)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.6.2)
