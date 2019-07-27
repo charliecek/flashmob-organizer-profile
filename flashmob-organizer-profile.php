@@ -4302,6 +4302,209 @@ class FLORP{
     return $this->tshirts_table_admin(true);
   }
 
+  private function get_tshirts_table_admin_row_buttons($aTshirtData, $strRowID, $bIntf = false) {
+    $strDoubleCheckQuestion = "Ste si istý?";
+    $strButtonLabelPaid = "Zaplatil tričko";
+    $strButtonLabelPaymentWarning = "Upozorniť na neskorú platbu";
+    $strButtonLabelCancelOrder = "Zrušiť objednávku";
+    $strButtonLabelDelivered = "Tričko odovzdané";
+    // We collect the data and button attributes/properties //
+    $strData = "";
+    foreach ($aTshirtData as $strKey => $mixValue) {
+      if ($strKey === "properties" || in_array($strKey, array("id"))) {
+        continue;
+      } elseif (is_bool($mixValue)) {
+        $strValue = $mixValue ? '1' : '0';
+      } else {
+        $strValue = $mixValue;
+      }
+      $strValue = str_replace("'", "\'", $strValue);
+      $strData .= " data-{$strKey}='{$strValue}'";
+    }
+    foreach ($aTshirtData['properties'] as $strKey => $strValue) {
+      $strValue = str_replace("'", "\'", $strValue);
+      $strData .= " data-{$strKey}='{$strValue}'";
+    }
+
+    $strPaidButtonID = "florpButton-paid-".$aTshirtData["id"];
+    $strPaymentWarningButtonID = "florpButton-paymentWarning-".$aTshirtData["id"];
+    $strCancelOrderButtonID = "florpButton-cancelOrder-".$aTshirtData["id"];
+    $strDeliveredButtonID = "florpButton-tshirtDelivered-".$aTshirtData["id"];
+
+    $strButtons = "";
+    if ($aTshirtData["is_leader"]) {
+      // no button
+    } elseif ($aTshirtData["is_paid"]) {
+      $strTitle = "";
+      if (isset($aTshirtData["paid_timestamp"])) {
+        $strTitle = ' title="'.date( $this->strDateFormat, $aTshirtData["paid_timestamp"] ).'"';
+      }
+      $strButtons .= '<span data-button-id="'.$strPaidButtonID.'" class="notice notice-success"'.$strTitle.'>'.$strButtonLabelPaid.'</span>';
+    } else {
+
+      // Paid button //
+      $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelPaid.'" data-button-id="'.$strPaidButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp'.$sIntfActionPart.'_tshirt_paid" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelPaid.'</span>';
+
+      // Cancel button //
+      $strButtons .= '<span class="button double-check button-danger" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelCancelOrder.'" data-button-id="'.$strCancelOrderButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp'.$sIntfActionPart.'_tshirt_cancel_order" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'" data-hide="1">'.$strButtonLabelCancelOrder.'</span>';
+
+      // Warning button //
+      if (
+          (!$bIntf && isset($this->aOptions['strTshirtPaymentWarningNotificationMsg'], $this->aOptions['strTshirtPaymentWarningNotificationSbj']) && !empty($this->aOptions['strTshirtPaymentWarningNotificationMsg']) && !empty($this->aOptions['strTshirtPaymentWarningNotificationSbj']))
+          || ($bIntf && isset($this->aOptions['strIntfTshirtPaymentWarningNotificationMsg'], $this->aOptions['strIntfTshirtPaymentWarningNotificationSbj']) && !empty($this->aOptions['strIntfTshirtPaymentWarningNotificationMsg']) && !empty($this->aOptions['strIntfTshirtPaymentWarningNotificationSbj']))
+        ) {
+        $strWarningClass = "";
+        $bShow = true;
+        if (
+          (!$bIntf && $this->aOptions['iTshirtPaymentWarningButtonDeadline'] > -1 && $this->iTshirtPaymentWarningButtonDeadlineTimestamp <= time())
+          || ($bIntf && $this->aOptions['iIntfTshirtPaymentWarningButtonDeadline'] > -1 && $this->iIntfTshirtPaymentWarningButtonDeadlineTimestamp <= time())
+        ) {
+          // Show //
+          $strWarningClass = " button-warning";
+        } elseif (isset($aTshirtData["registered_timestamp"]) && $aTshirtData["registered_timestamp"] > 0) {
+          $iTimestampNow = (int) current_time( 'timestamp' );
+          if ($iTimestampNow - $aTshirtData["registered_timestamp"] > (7*24*3600)) {
+            $strWarningClass = " button-warning";
+          } else {
+            $bShow = false;
+          }
+        }
+        if ($bShow) {
+          $strButtons .= '';
+          if ($aTshirtData["payment_warning_sent"]) {
+            $strTitle = "";
+            if (isset($aTshirtData["payment_warning_sent_timestamp"])) {
+              $strTitle = ' title="'.date( $this->strDateFormat, $aTshirtData["payment_warning_sent_timestamp"] ).'"';
+            }
+            $strButtons .= '<span data-button-id="'.$strPaymentWarningButtonID.'" class="notice notice-success"'.$strTitle.' data-text="'.$strButtonLabelPaymentWarning.'">Upozornený na neskorú platbu</span>';
+          } else {
+            $strButtons .= '<span class="button double-check'.$strWarningClass.'" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelPaymentWarning.'" data-button-id="'.$strPaymentWarningButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp'.$sIntfActionPart.'_tshirt_send_payment_warning" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelPaymentWarning.'</span>';
+          }
+        }
+      }
+    }
+
+    // Delivered button //
+    if ($aTshirtData["is_delivered"]) {
+      $strTitle = "";
+      if (isset($aTshirtData["delivered_timestamp"])) {
+        $strTitle = ' title="'.date( $this->strDateFormat, $aTshirtData["delivered_timestamp"] ).'"';
+      }
+      $strButtons .= '<span data-button-id="'.$strDeliveredButtonID.'" class="notice notice-success"'.$strTitle.'>'.$strButtonLabelDelivered.'</span>';
+    } else {
+      $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelDelivered.'" data-button-id="'.$strDeliveredButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp'.$sIntfActionPart.'_tshirt_delivered" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelDelivered.'</span>';
+    }
+
+    // BEGIN Participant administration buttons //
+    $strEmail = $aTshirtData["email"];
+    if ($bIntf) {
+      $iLeaderIdOrYear = $aTshirtData["year"];
+      $aParticipantData = $this->aOptions['aIntfParticipants'][$iLeaderIdOrYear][$strEmail];
+      $strDataLeaderIdOrYear = 'data-year="'.$iLeaderIdOrYear.'"';
+      $strIntfActionPart = "_intf";
+    } elseif (!$aTshirtData['is_leader']) {
+      $iLeaderIdOrYear = $aTshirtData["leader_id"];
+      $aParticipantData = $this->aOptions['aParticipants'][$iLeaderIdOrYear][$strEmail];
+      $strDataLeaderIdOrYear = 'data-leader-id="'.$iLeaderIdOrYear.'"';
+      $strIntfActionPart = "";
+    }
+    $strDataHide = 'data-hide="1"';
+
+    if ($bIntf || !$aTshirtData['is_leader']) {
+      if (isset($aParticipantData["paid_fee"])) {
+        // Paid fee info //
+        $strTitle = ' title="'.date( $this->strDateFormat, $aParticipantData["paid_fee"] ).'"';
+        $strLabel = "Zaplatil(a) reg. poplatok";
+        $strButtons .= '<span data-button-id="florpButton-paid-fee-'.$iLeaderIdOrYear.'-'.preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail). '" class="notice notice-success"'.$strTitle.' '.$strDataHide.'>'.$strLabel.'</span>';
+      } else {
+        // Paid fee button //
+        $strButtonLabel = "Zaplatil(a) reg. poplatok";
+        $strButtonID = "florpButton-paid-fee-".$iLeaderIdOrYear."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
+        $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" '.$strDataLeaderIdOrYear.' data-participant-email="'.$strEmail.'" data-sure="0" data-action="florp'.$strIntfActionPart.'_participant_paid_fee" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'" '.$strDataHide.'>'.$strButtonLabel.'</span>';
+      }
+
+      if (isset($aParticipantData["attend"])) {
+        // Attendance info //
+        $strTitle = "";
+        if (isset($aParticipantData["attend_set_timestamp"])) {
+          $strTitle = ' title="'.date( $this->strDateFormat, $aParticipantData["attend_set_timestamp"] ).'"';
+        }
+        $strLabelForHiding = "Zúčastní/-il(a) sa";
+        $strLabel = $aParticipantData["attend"] == "1" ? $strLabelForHiding : "Nezúčastní/-il(a) sa";
+        $strButtons .= '<span data-button-id="florpButton-attend'.$aParticipantData["attend"].'-'.$iLeaderIdOrYear.'-'.preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail). '" class="notice notice-success"'.$strTitle.' data-text="'.$strLabelForHiding.'" '.$strDataHide.'>'.$strLabel.'</span>';
+        if ($this->isEditSubmissionsEnabled()) {
+          // Remove attendance button //
+          $strButtonID = "florpButton-attend-remove-".$iLeaderIdOrYear."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
+          $strButtonLabel = "Odstrániť info o účasti";
+          $strLabelForHiding = "Zúčastní/-il(a) sa";
+          $strButtons .= '<span class="button double-check button-danger" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" '.$strDataLeaderIdOrYear.' data-participant-email="'.$strEmail.'" data-sure="0" data-action="florp'.$strIntfActionPart.'_participant_attend" data-attend="remove" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'" data-text="'.$strLabelForHiding.'" '.$strDataHide.'>'.$strButtonLabel.'</span>';
+        }
+      } else {
+        // Will/Did attend button //
+        $strButtonID = "florpButton-attend1-".$iLeaderIdOrYear."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
+        $strButtonLabel = "Zúčastní/-il(a) sa";
+        $strLabelForHiding = $strButtonLabel;
+        $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" '.$strDataLeaderIdOrYear.' data-participant-email="'.$strEmail.'" data-sure="0" data-action="florp'.$strIntfActionPart.'_participant_attend" data-attend="1" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'" data-text="'.$strLabelForHiding.'" '.$strDataHide.'>'.$strButtonLabel.'</span>';
+
+        // Won't/Didn't attend button //
+        $strButtonID = "florpButton-attend0-".$iLeaderIdOrYear."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
+        $strButtonLabel = "Nezúčastní/-il(a) sa";
+        $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" '.$strDataLeaderIdOrYear.' data-participant-email="'.$strEmail.'" data-sure="0" data-action="florp'.$strIntfActionPart.'_participant_attend" data-attend="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'" data-text="'.$strLabelForHiding.'" '.$strDataHide.'>'.$strButtonLabel.'</span>';
+      }
+    }
+    // END Participant administration buttons //
+
+    return $strButtons;
+  }
+
+  private function get_tshirts_table_admin_row($aTshirtData, $bIntf = false) {
+    $iUnpaid = 0;
+    $iPaid = 0;
+    $strEcho = "";
+
+    $strRowID = "florpRow-".$aTshirtData["id"];
+
+    $strButtons = $this->get_tshirts_table_admin_row_buttons($aTshirtData, $strRowID, $bIntf);
+
+    if ($aTshirtData["is_leader"]) {
+      $iPaid++;
+    } elseif ($aTshirtData["is_paid"]) {
+      $iPaid++;
+    } else {
+      $iUnpaid++;
+    }
+
+    $strEcho .= '<tr class="row" data-row-id="'.$strRowID.'">';
+    $strEcho .=   '<td class="column column-meno">'.$aTshirtData['name'].$strButtons.'</td>';
+    $strEcho .=   '<td class="column column-email"><a name="'.$aTshirtData['email'].'">'.$aTshirtData['email'].'</a></td>';
+
+    $strWarning = "";
+    if (!$bIntf && isset($aTshirtData['flashmob_city_at_registration'])) {
+      $strTitle = " title=\"Pozor: pri registrácii účastníka mal líder nastavené mesto flashmobu na  {$aTshirtData['flashmob_city_at_registration']}!\"";
+      $strWarning = ' <span '.$strTitle.' class="dashicons dashicons-warning"></span>';
+    }
+    $strEcho .=   '<td class="column column-mesto">'.$aTshirtData['flashmob_city'].$strWarning.'</td>';
+    $strEcho .=   '<td class="column column-typ">'.$aTshirtData['type'].'</td>';
+    if ($bIntf) {
+      $strEcho .=   '<td class="column column-rok">'.$aTshirtData['year'].'</td>';
+    } else {
+      $strEcho .=   '<td class="column column-lider">'.$aTshirtData['leader'].'</td>';
+    }
+    $strEcho .=   '<td class="column column-vlastnosti">';
+    foreach ($aTshirtData['properties'] as $strKey => $strValue) {
+      $strFieldName = ($bIntf && $strKey === 'intf_city') ? "Mesto (anketa)" : ucfirst( str_replace( '_', ' ', $strKey ) );
+      $strEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>';
+    }
+    $strEcho .=   '</td>';
+    $strEcho .= '</tr>';
+
+    return array(
+      "echo" => $strEcho,
+      "iPaid" => $iPaid,
+      "iUnpaid" => $iUnpaid,
+    );
+  }
+
   public function tshirts_table_admin($bIntf = false) {
     echo "<div class=\"wrap\">\n<h1>" . "Tričká" . "</h1>\n";
 
@@ -4321,185 +4524,10 @@ class FLORP{
     $iUnpaid = 0;
     $iPaid = 0;
     foreach ($aTshirts as $aTshirtData) {
-      $strButtons = "";
-      $strDoubleCheckQuestion = "Ste si istý?";
-      $strButtonLabelPaid = "Zaplatil tričko";
-      $strButtonLabelPaymentWarning = "Upozorniť na neskorú platbu";
-      $strButtonLabelCancelOrder = "Zrušiť objednávku";
-      $strButtonLabelDelivered = "Tričko odovzdané";
-      // We collect the data and button attributes/properties //
-      $strData = "";
-      foreach ($aTshirtData as $strKey => $mixValue) {
-        if ($strKey === "properties" || in_array($strKey, array("id"))) {
-          continue;
-        } elseif (is_bool($mixValue)) {
-          $strValue = $mixValue ? '1' : '0';
-        } else {
-          $strValue = $mixValue;
-        }
-        $strValue = str_replace("'", "\'", $strValue);
-        $strData .= " data-{$strKey}='{$strValue}'";
-      }
-      foreach ($aTshirtData['properties'] as $strKey => $strValue) {
-        $strValue = str_replace("'", "\'", $strValue);
-        $strData .= " data-{$strKey}='{$strValue}'";
-      }
-      $strRowID = "florpRow-".$aTshirtData["id"];
-      $strPaidButtonID = "florpButton-paid-".$aTshirtData["id"];
-      $strPaymentWarningButtonID = "florpButton-paymentWarning-".$aTshirtData["id"];
-      $strCancelOrderButtonID = "florpButton-cancelOrder-".$aTshirtData["id"];
-      $strDeliveredButtonID = "florpButton-tshirtDelivered-".$aTshirtData["id"];
-
-      $strButtons = '';
-      if ($aTshirtData["is_leader"]) {
-        // no button
-        $strButtons = "";
-        $iPaid++;
-      } elseif ($aTshirtData["is_paid"]) {
-        $strTitle = "";
-        if (isset($aTshirtData["paid_timestamp"])) {
-          $strTitle = ' title="'.date( $this->strDateFormat, $aTshirtData["paid_timestamp"] ).'"';
-        }
-        $strButtons .= '<span data-button-id="'.$strPaidButtonID.'" class="notice notice-success"'.$strTitle.'>'.$strButtonLabelPaid.'</span>';
-        $iPaid++;
-      } else {
-        $iUnpaid++;
-
-        // Paid button //
-        $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelPaid.'" data-button-id="'.$strPaidButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp'.$sIntfActionPart.'_tshirt_paid" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelPaid.'</span>';
-
-        // Cancel button //
-        $strButtons .= '<span class="button double-check button-danger" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelCancelOrder.'" data-button-id="'.$strCancelOrderButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp'.$sIntfActionPart.'_tshirt_cancel_order" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'" data-hide="1">'.$strButtonLabelCancelOrder.'</span>';
-
-        // Warning button //
-        if (
-            (!$bIntf && isset($this->aOptions['strTshirtPaymentWarningNotificationMsg'], $this->aOptions['strTshirtPaymentWarningNotificationSbj']) && !empty($this->aOptions['strTshirtPaymentWarningNotificationMsg']) && !empty($this->aOptions['strTshirtPaymentWarningNotificationSbj']))
-            || ($bIntf && isset($this->aOptions['strIntfTshirtPaymentWarningNotificationMsg'], $this->aOptions['strIntfTshirtPaymentWarningNotificationSbj']) && !empty($this->aOptions['strIntfTshirtPaymentWarningNotificationMsg']) && !empty($this->aOptions['strIntfTshirtPaymentWarningNotificationSbj']))
-          ) {
-          $strWarningClass = "";
-          $bShow = true;
-          if (
-            (!$bIntf && $this->aOptions['iTshirtPaymentWarningButtonDeadline'] > -1 && $this->iTshirtPaymentWarningButtonDeadlineTimestamp <= time())
-            || ($bIntf && $this->aOptions['iIntfTshirtPaymentWarningButtonDeadline'] > -1 && $this->iIntfTshirtPaymentWarningButtonDeadlineTimestamp <= time())
-          ) {
-            // Show //
-            $strWarningClass = " button-warning";
-          } elseif (isset($aTshirtData["registered_timestamp"]) && $aTshirtData["registered_timestamp"] > 0) {
-            $iTimestampNow = (int) current_time( 'timestamp' );
-            if ($iTimestampNow - $aTshirtData["registered_timestamp"] > (7*24*3600)) {
-              $strWarningClass = " button-warning";
-            } else {
-              $bShow = false;
-            }
-          }
-          if ($bShow) {
-            $strButtons .= '';
-            if ($aTshirtData["payment_warning_sent"]) {
-              $strTitle = "";
-              if (isset($aTshirtData["payment_warning_sent_timestamp"])) {
-                $strTitle = ' title="'.date( $this->strDateFormat, $aTshirtData["payment_warning_sent_timestamp"] ).'"';
-              }
-              $strButtons .= '<span data-button-id="'.$strPaymentWarningButtonID.'" class="notice notice-success"'.$strTitle.' data-text="'.$strButtonLabelPaymentWarning.'">Upozornený na neskorú platbu</span>';
-            } else {
-              $strButtons .= '<span class="button double-check'.$strWarningClass.'" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelPaymentWarning.'" data-button-id="'.$strPaymentWarningButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp'.$sIntfActionPart.'_tshirt_send_payment_warning" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelPaymentWarning.'</span>';
-            }
-          }
-        }
-      }
-
-      // Delivered button //
-      if ($aTshirtData["is_delivered"]) {
-        $strTitle = "";
-        if (isset($aTshirtData["delivered_timestamp"])) {
-          $strTitle = ' title="'.date( $this->strDateFormat, $aTshirtData["delivered_timestamp"] ).'"';
-        }
-        $strButtons .= '<span data-button-id="'.$strDeliveredButtonID.'" class="notice notice-success"'.$strTitle.'>'.$strButtonLabelDelivered.'</span>';
-      } else {
-        $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabelDelivered.'" data-button-id="'.$strDeliveredButtonID.'" data-row-id="'.$strRowID.'" '.$strData.' data-action="florp'.$sIntfActionPart.'_tshirt_delivered" data-sure="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'">'.$strButtonLabelDelivered.'</span>';
-      }
-
-      // BEGIN Participant administration buttons //
-      $strEmail = $aTshirtData["email"];
-      if ($bIntf) {
-        $iLeaderIdOrYear = $aTshirtData["year"];
-        $aParticipantData = $this->aOptions['aIntfParticipants'][$iLeaderIdOrYear][$strEmail];
-        $strDataLeaderIdOrYear = 'data-year="'.$iLeaderIdOrYear.'"';
-        $strIntfActionPart = "_intf";
-      } elseif (!$aTshirtData['is_leader']) {
-        $iLeaderIdOrYear = $aTshirtData["leader_id"];
-        $aParticipantData = $this->aOptions['aParticipants'][$iLeaderIdOrYear][$strEmail];
-        $strDataLeaderIdOrYear = 'data-leader-id="'.$iLeaderIdOrYear.'"';
-        $strIntfActionPart = "";
-      }
-      $strDataHide = 'data-hide="1"';
-
-      if ($bIntf || !$aTshirtData['is_leader']) {
-        if (isset($aParticipantData["paid_fee"])) {
-          // Paid fee info //
-          $strTitle = ' title="'.date( $this->strDateFormat, $aParticipantData["paid_fee"] ).'"';
-          $strLabel = "Zaplatil(a) reg. poplatok";
-          $strButtons .= '<span data-button-id="florpButton-paid-fee-'.$iLeaderIdOrYear.'-'.preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail). '" class="notice notice-success"'.$strTitle.' '.$strDataHide.'>'.$strLabel.'</span>';
-        } else {
-          // Paid fee button //
-          $strButtonLabel = "Zaplatil(a) reg. poplatok";
-          $strButtonID = "florpButton-paid-fee-".$iLeaderIdOrYear."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
-          $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" '.$strDataLeaderIdOrYear.' data-participant-email="'.$strEmail.'" data-sure="0" data-action="florp'.$strIntfActionPart.'_participant_paid_fee" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'" '.$strDataHide.'>'.$strButtonLabel.'</span>';
-        }
-
-        if (isset($aParticipantData["attend"])) {
-          // Attendance info //
-          $strTitle = "";
-          if (isset($aParticipantData["attend_set_timestamp"])) {
-            $strTitle = ' title="'.date( $this->strDateFormat, $aParticipantData["attend_set_timestamp"] ).'"';
-          }
-          $strLabelForHiding = "Zúčastní/-il(a) sa";
-          $strLabel = $aParticipantData["attend"] == "1" ? $strLabelForHiding : "Nezúčastní/-il(a) sa";
-          $strButtons .= '<span data-button-id="florpButton-attend'.$aParticipantData["attend"].'-'.$iLeaderIdOrYear.'-'.preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail). '" class="notice notice-success"'.$strTitle.' data-text="'.$strLabelForHiding.'" '.$strDataHide.'>'.$strLabel.'</span>';
-          if ($this->isEditSubmissionsEnabled()) {
-            // Remove attendance button //
-            $strButtonID = "florpButton-attend-remove-".$iLeaderIdOrYear."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
-            $strButtonLabel = "Odstrániť info o účasti";
-            $strLabelForHiding = "Zúčastní/-il(a) sa";
-            $strButtons .= '<span class="button double-check button-danger" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" '.$strDataLeaderIdOrYear.' data-participant-email="'.$strEmail.'" data-sure="0" data-action="florp'.$strIntfActionPart.'_participant_attend" data-attend="remove" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'" data-text="'.$strLabelForHiding.'" '.$strDataHide.'>'.$strButtonLabel.'</span>';
-          }
-        } else {
-          // Will/Did attend button //
-          $strButtonID = "florpButton-attend1-".$iLeaderIdOrYear."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
-          $strButtonLabel = "Zúčastní/-il(a) sa";
-          $strLabelForHiding = $strButtonLabel;
-          $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" '.$strDataLeaderIdOrYear.' data-participant-email="'.$strEmail.'" data-sure="0" data-action="florp'.$strIntfActionPart.'_participant_attend" data-attend="1" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'" data-text="'.$strLabelForHiding.'" '.$strDataHide.'>'.$strButtonLabel.'</span>';
-
-          // Won't/Didn't attend button //
-          $strButtonID = "florpButton-attend0-".$iLeaderIdOrYear."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
-          $strButtonLabel = "Nezúčastní/-il(a) sa";
-          $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" '.$strDataLeaderIdOrYear.' data-participant-email="'.$strEmail.'" data-sure="0" data-action="florp'.$strIntfActionPart.'_participant_attend" data-attend="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'" data-text="'.$strLabelForHiding.'" '.$strDataHide.'>'.$strButtonLabel.'</span>';
-        }
-      }
-      // END Participant administration buttons //
-
-      $strEcho .= '<tr class="row" data-row-id="'.$strRowID.'">';
-      $strEcho .=   '<td class="column column-meno">'.$aTshirtData['name'].$strButtons.'</td>';
-      $strEcho .=   '<td class="column column-email"><a name="'.$aTshirtData['email'].'">'.$aTshirtData['email'].'</a></td>';
-
-      $strWarning = "";
-      if (!$bIntf && isset($aTshirtData['flashmob_city_at_registration'])) {
-        $strTitle = " title=\"Pozor: pri registrácii účastníka mal líder nastavené mesto flashmobu na  {$aTshirtData['flashmob_city_at_registration']}!\"";
-        $strWarning = ' <span '.$strTitle.' class="dashicons dashicons-warning"></span>';
-      }
-      $strEcho .=   '<td class="column column-mesto">'.$aTshirtData['flashmob_city'].$strWarning.'</td>';
-      $strEcho .=   '<td class="column column-typ">'.$aTshirtData['type'].'</td>';
-      if ($bIntf) {
-        $strEcho .=   '<td class="column column-rok">'.$aTshirtData['year'].'</td>';
-      } else {
-        $strEcho .=   '<td class="column column-lider">'.$aTshirtData['leader'].'</td>';
-      }
-      $strEcho .=   '<td class="column column-vlastnosti">';
-      foreach ($aTshirtData['properties'] as $strKey => $strValue) {
-        $strFieldName = ($bIntf && $strKey === 'intf_city') ? "Mesto (anketa)" : ucfirst( str_replace( '_', ' ', $strKey ) );
-        $strEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>';
-      }
-      $strEcho .=   '</td>';
-      $strEcho .= '</tr>';
+      $aRow = $this->get_tshirts_table_admin_row($aTshirtData, $bIntf);
+      $strEcho .= $aRow["echo"];
+      $iUnpaid += $aRow["iUnpaid"];
+      $iPaid += $aRow["iPaid"];
     }
     $strEcho .= '</table>';
     $strEcho .= '<form action="" method="post">';
