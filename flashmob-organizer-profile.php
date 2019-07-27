@@ -20,6 +20,10 @@ use Endroid\QrCode\ErrorCorrectionLevel;
 use Endroid\QrCode\LabelAlignment;
 use Endroid\QrCode\QrCode;
 
+// TODO:
+// create fake page for participant url
+// add a note about it in the settings page
+
 class FLORP{
 
   private $strVersion = '5.5.0';
@@ -89,6 +93,14 @@ class FLORP{
   private $bReloadChartOnIntfFormSubmission = true;
   private $strIntfChartClass = "florp-intf-chart";
   private $aPaymentOKNotificationReasons = array( 'paid_fee' => "registračný poplatok", "paid_tshirt" => "objednané tričko" );
+  private $fakePageEditSvkParticipantSubmission = "edit-svk-participant-submission";
+  private $fakePageEditSvkParticipantSubmissionGlobalID = "florp-svk-participant-form-edit";
+  private $fakePageEditIntfParticipantSubmission = "edit-intf-participant-submission";
+  private $fakePageEditIntfParticipantSubmissionGlobalID = "florp-intf-participant-form-edit";
+  private $fakePageSvkParticipant = "svk-participant";
+  private $fakePageSvkParticipantGlobalID = "florp-svk-participant";
+  private $fakePageIntfParticipant = "intf-participant";
+  private $fakePageIntfParticipantGlobalID = "florp-intf-participant";
 
   public function __construct() {
     $this->load_options();
@@ -437,6 +449,8 @@ class FLORP{
     add_filter( 'florp_chart_get_datatable', array( $this, 'filter__get_intf_chart_datatable' ), 10, 3 );
     add_filter( 'the_posts', array( $this, 'fakepage_intf_participant_form' ), -10);
     add_filter( 'the_posts', array( $this, 'fakepage_svk_participant_form' ), -10);
+    add_filter( 'the_posts', array( $this, 'fakepage_intf_participant' ), -10);
+    add_filter( 'the_posts', array( $this, 'fakepage_svk_participant' ), -10);
     // END FILTERS //
 
     // BEGIN ACTIONS //
@@ -611,8 +625,8 @@ class FLORP{
       'strBeforeLoginFormHtmlMain'                => '',
       'strBeforeLoginFormHtmlFlashmob'            => '',
       'strBeforeLoginFormHtmlIntf'                => '',
-      'strGoogleMapsKeyStatic'                    => 'AIzaSyC_g9bY9qgW7mA0L1EupZ4SDYrBQWWi-V0',
-      'strGoogleMapsKey'                          => 'AIzaSyBaPowbVdIBpJqo_yhEfLn1v60EWbow6ZY',
+      'strGoogleMapsKeyStatic'                    => '',
+      'strGoogleMapsKey'                          => '',
       'strFbAppID'                                => '768253436664320',
       'strRegistrationSuccessfulMessage'          => "Prihlasujeme Vás... Prosíme, počkajte, kým sa stránka znovu načíta.",
       'strLoginSuccessfulMessage'                 => "Prihlásenie prebehlo úspešne, prosíme, počkajte, kým sa stránka znovu načíta.",
@@ -1918,13 +1932,13 @@ class FLORP{
   public function action__displaying_profile_form_nf_end( $iFormID, $aFormSettings, $aFormFields ) {
     if (defined('FLORP_DEVEL') && FLORP_DEVEL === true && defined('FLORP_DEVEL_DEBUG_PARTICIPANT_EDIT_FORMS') && FLORP_DEVEL_DEBUG_PARTICIPANT_EDIT_FORMS === true) {
       $bLoggedIn = is_user_logged_in();
-      if ($this->bDisplayingProfileFormNinjaForm && $iFormID == $this->iProfileFormNinjaFormIDIntf && $bLoggedIn && $GLOBALS['florp-intf-participant-form-edit']) {
+      if ($this->bDisplayingProfileFormNinjaForm && $iFormID == $this->iProfileFormNinjaFormIDIntf && $bLoggedIn && $GLOBALS[$this->fakePageEditIntfParticipantSubmissionGlobalID]) {
         $iYear = $_REQUEST['year'];
         $strEmail = $_REQUEST['email'];
         $aParticipantData = $this->aOptions['aIntfParticipants'][$iYear][$strEmail];
         echo "<pre>"; var_dump($aParticipantData); echo "</pre>";
       }
-      if ($this->bDisplayingProfileFormNinjaForm && $iFormID == $this->iProfileFormNinjaFormIDFlashmob && $bLoggedIn && $GLOBALS['florp-svk-participant-form-edit']) {
+      if ($this->bDisplayingProfileFormNinjaForm && $iFormID == $this->iProfileFormNinjaFormIDFlashmob && $bLoggedIn && $GLOBALS[$this->fakePageEditSvkParticipantSubmissionGlobalID]) {
         $iLeaderID = $_REQUEST['leader_id'];
         $strEmail = $_REQUEST['email'];
         $aParticipantData = $this->aOptions['aParticipants'][$iLeaderID][$strEmail];
@@ -2175,12 +2189,12 @@ class FLORP{
 
     $bParticipantFormEdit = false;
     $strFieldKey = $aField['settings']['key'];
-    if ($bLoggedIn && $GLOBALS['florp-intf-participant-form-edit']) {
+    if ($bLoggedIn && $GLOBALS[$this->fakePageEditIntfParticipantSubmissionGlobalID]) {
       $bParticipantFormEdit = false;
       $iYear = $_REQUEST['year'];
       $strEmail = $_REQUEST['email'];
       $aParticipantData = $this->aOptions['aIntfParticipants'][$iYear][$strEmail];
-      $strJsArrayKey = 'florp-intf-participant-form-edit-js';
+      $strJsArrayKey = $this->fakePageEditIntfParticipantSubmissionGlobalID . '-js';
       if (isset($aParticipantData[$strFieldKey]) || $strFieldKey === 'submission_editing') {
         $bParticipantFormEdit = true;
         $strSubmissionEditingText = "intf,{$iYear},{$strEmail}";
@@ -2215,12 +2229,12 @@ class FLORP{
         $aField['settings']['container_class'] = str_replace("florp-clear-on-submission", "", $aField['settings']['container_class']);
       }
     }
-    if ($bLoggedIn && $GLOBALS['florp-svk-participant-form-edit']) {
+    if ($bLoggedIn && $GLOBALS[$this->fakePageEditSvkParticipantSubmissionGlobalID]) {
       $bParticipantFormEdit = false;
       $iLeaderID = $_REQUEST['leader_id'];
       $strEmail = $_REQUEST['email'];
       $aParticipantData = $this->aOptions['aParticipants'][$iLeaderID][$strEmail];
-      $strJsArrayKey = 'florp-svk-participant-form-edit-js';
+      $strJsArrayKey = $this->fakePageEditSvkParticipantSubmissionGlobalID . '-js';
       if (isset($aParticipantData[$strFieldKey]) || $strFieldKey === 'submission_editing') {
         $bParticipantFormEdit = true;
         $strSubmissionEditingText = "svk,{$iLeaderID},{$strEmail}";
@@ -3502,11 +3516,11 @@ class FLORP{
       $aJS['leader_participant_table_class'] = $this->aOptions['strLeaderParticipantsTableClass'];
       $aJS['get_leaderParticipantsTable_action'] = 'get_leaderParticipantsTable';
 
-      if ($GLOBALS['florp-svk-participant-form-edit'] && is_array($GLOBALS['florp-svk-participant-form-edit-js'])) {
-        $aJS = array_merge($aJS, $GLOBALS['florp-svk-participant-form-edit-js']);
+      if ($GLOBALS[$this->fakePageEditSvkParticipantSubmissionGlobalID] && is_array($GLOBALS[$this->fakePageEditSvkParticipantSubmissionGlobalID . '-js'])) {
+        $aJS = array_merge($aJS, $GLOBALS[$this->fakePageEditSvkParticipantSubmissionGlobalID . '-js']);
       }
-      if ($GLOBALS['florp-intf-participant-form-edit'] && is_array($GLOBALS['florp-intf-participant-form-edit-js'])) {
-        $aJS = array_merge($aJS, $GLOBALS['florp-intf-participant-form-edit-js']);
+      if ($GLOBALS[$this->fakePageEditIntfParticipantSubmissionGlobalID] && is_array($GLOBALS[$this->fakePageEditIntfParticipantSubmissionGlobalID . '-js'])) {
+        $aJS = array_merge($aJS, $GLOBALS[$this->fakePageEditIntfParticipantSubmissionGlobalID . '-js']);
       }
     }
     wp_localize_script( 'florp_form_js', 'florp', $aJS );
@@ -4063,7 +4077,7 @@ class FLORP{
           if (!$this->isFlashmobBlog) {
             $strDomain = 'http://flashmob.salsarueda.dance';
           }
-          $strEditSubmission = ' <span class="submission-edit">(<a href="'.$strDomain.'/edit-svk-participant-submission/?leader_id='.$iLeaderID.'&email='.urlencode($strEmail).'" target="_blank">Edit</a>)</span>';
+          $strEditSubmission = ' <span class="submission-edit">(<a href="'.$strDomain.'/' . $this->fakePageEditSvkParticipantSubmission . '/?leader_id='.$iLeaderID.'&email='.urlencode($strEmail).'" target="_blank">Edit</a>)</span>';
         }
         $strEcho .=   '<td class="column column-meno">'.$aParticipantData['first_name'].' '.$aParticipantData['last_name'].$strEditSubmission.$strButtons.'</td>';
         $strEcho .=   '<td class="column column-email"><a name="'.$aParticipantData['user_email'].'">'.$aParticipantData['user_email'].'</a></td>';
@@ -4228,7 +4242,7 @@ class FLORP{
         $strEcho .= '<tr class="row" data-row-id="'.$strRowID.'">'.PHP_EOL;
         $strEditSubmission = '';
         if ($this->isEditSubmissionsEnabled()) {
-          $strEditSubmission = ' <span class="submission-edit">(<a href="/edit-intf-participant-submission/?year='.$iYear.'&email='.urlencode($strEmail).'" target="_blank">Edit</a>)</span>';
+          $strEditSubmission = ' <span class="submission-edit">(<a href="/' . $this->fakePageEditIntfParticipantSubmission . '/?year='.$iYear.'&email='.urlencode($strEmail).'" target="_blank">Edit</a>)</span>';
         }
         $strEcho .=   '<td class="column column-meno">'.$aParticipantData['first_name'].' '.$aParticipantData['last_name'].$strEditSubmission.$strButtons.'</td>'.PHP_EOL;
         $strEcho .=   '<td class="column column-email"><a name="'.$aParticipantData['user_email'].'">'.$aParticipantData['user_email'].'</a></td>'.PHP_EOL;
@@ -8359,8 +8373,12 @@ class FLORP{
         $aNumOptions[$strOptionKey] = '';
         $iOptionValue = isset($this->aOptions[$aSettings['optionKey']]) ? intval($this->aOptions[$aSettings['optionKey']]) : -1;
         for ($i = $aSettings['start']; $i <= $aSettings['end']; $i++) {
-          if ($strOptionKey === "optionsYears" && isset($this->aOptions['aYearlyMapOptions'][$i])) {
-            continue;
+          if ($strOptionKey === "optionsYears") {
+            if (defined('FLORP_DEVEL') && FLORP_DEVEL === true) {
+              // Anything allowed.
+            } elseif ($this->aOptions['aYearlyMapOptions'][$i] < $this->aOptions[$aSettings['optionKey']]) {
+              continue;
+            }
           }
           if ($iOptionValue == $i) {
             $strSelected = 'selected="selected"';
@@ -9424,12 +9442,12 @@ class FLORP{
     $this->save_options();
   }
 
-  private function new_user_notification( $user_login, $password, $user_email, $blogname, $message = false, $subject = false, $mixHeaders = '' ){
+  private function new_user_notification( $user_login, $password, $user_email, $blogname, $message = false, $subject = false, $mixHeaders = '', $aAttachments = array() ){
     //Copied out of /wp-includes/pluggable.php
 
     if (class_exists('LoginWithAjax')) {
       // $this->add_log( 'new_user_notification_lwa', array( time() => array( $user_login, $password, $user_email, $blogname, $message, $subject, $mixHeaders ) ) );
-      LoginWithAjax::new_user_notification( $user_login, $password, $user_email, $blogname, $message, $subject, $mixHeaders );
+      LoginWithAjax::new_user_notification( $user_login, $password, $user_email, $blogname, $message, $subject, $mixHeaders, $aAttachments );
       return;
     }
     // $this->add_log( 'new_user_notification_this', array( time() => array( $user_login, $password, $user_email, $blogname, $message, $subject, $mixHeaders ) ) );
@@ -9445,7 +9463,7 @@ class FLORP{
     $subject = str_replace('%BLOGNAME%', $blogname, $subject);
     $subject = str_replace('%BLOGURL%', home_url(), $subject);
 
-    wp_mail($user_email, $subject, $message, $mixHeaders);
+    wp_mail($user_email, $subject, $message, $mixHeaders, $aAttachments);
   }
 
   public function action__update_user_profile( $aFormData ) {
@@ -9591,12 +9609,19 @@ class FLORP{
         $strBlogname = trim(wp_specialchars_decode(get_option('blogname'), ENT_QUOTES));
         $aHeaders = array('Content-Type: text/html; charset=UTF-8');
 
-        // TODO:
-        // generate a unique participant URL, e.g.: http://flashmob.salsarueda.dance/svk-participant/?lid=1&email=mail%40jozefbalint.sk
-        // create fake page for it
-        // generate a qr code to this url
-        // and send it as attachment
-        $this->new_user_notification( $aFieldData['user_email'], '', $aFieldData['user_email'], $strBlogname, $strMessageContent, $this->aOptions['strParticipantRegisteredSubject'], $aHeaders );
+        // Create a unique QR code for the participant and send it as attachment //
+        $strParticipantDefinition = bin2hex(implode( "|", array(
+          $this->aOptions['iFlashmobYear'],
+          $iUserID,
+          $aFieldData['user_email']
+        )));
+        $strParticipantUrl = home_url("/" . $this->fakePageSvkParticipant . "/?id=" . $strParticipantDefinition);
+        $strOutputFname = date('YmdHis') . "-" . $strParticipantDefinition;
+        $strQrCodePath = $this->get_qr_code($strParticipantUrl, $strOutputFname);
+        // TODO maybe use logo (but add it to this plugin's img folder): $this->get_qr_code($strParticipantUrl, $strOutputFname, 500, "png", "false", $strLogoPath, $iLogoWidth, $iLogoHeight);
+        $aAttachments = array($strQrCodePath);
+
+        $this->new_user_notification( $aFieldData['user_email'], '', $aFieldData['user_email'], $strBlogname, $strMessageContent, $this->aOptions['strParticipantRegisteredSubject'], $aHeaders, $aAttachments );
       }
       return 1;
     }
@@ -9717,7 +9742,19 @@ class FLORP{
         $strMessageContent = $this->aOptions['strIntfParticipantRegisteredMessage'];
         $strBlogname = trim(wp_specialchars_decode(get_option('blogname'), ENT_QUOTES));
         $aHeaders = array('Content-Type: text/html; charset=UTF-8');
-        $this->new_user_notification( $aFieldData['user_email'], '', $aFieldData['user_email'], $strBlogname, $strMessageContent, $this->aOptions['strIntfParticipantRegisteredSubject'], $aHeaders );
+
+        // Create a unique QR code for the participant and send it as attachment //
+        $strParticipantDefinition = bin2hex(implode( "|", array(
+          $this->aOptions['iIntfFlashmobYear'],
+          $aFieldData['user_email']
+        )));
+        $strParticipantUrl = home_url("/" . $this->fakePageIntfParticipant . "/?id=" . $strParticipantDefinition);
+        $strOutputFname = date('YmdHis') . "-" . $strParticipantDefinition;
+        $strQrCodePath = $this->get_qr_code($strParticipantUrl, $strOutputFname);
+        // TODO maybe use logo (but add it to this plugin's img folder): $this->get_qr_code($strParticipantUrl, $strOutputFname, 500, "png", "false", $strLogoPath, $iLogoWidth, $iLogoHeight);
+        $aAttachments = array($strQrCodePath);
+
+        $this->new_user_notification( $aFieldData['user_email'], '', $aFieldData['user_email'], $strBlogname, $strMessageContent, $this->aOptions['strIntfParticipantRegisteredSubject'], $aHeaders, $aAttachments );
       }
       return 5;
     }
@@ -10069,7 +10106,7 @@ class FLORP{
       $strContent = "No such registration!";
     }
 
-    return $this->fakepage( $aPosts, "edit-intf-participant-submission", "Edit international flashmob participant's submission", $strContent, 'florp-intf-participant-form-edit' );
+    return $this->fakepage( $aPosts, $this->fakePageEditIntfParticipantSubmission, "Edit international flashmob participant's submission", $strContent, $this->fakePageEditIntfParticipantSubmissionGlobalID );
   }
 
   public function fakepage_svk_participant_form( $aPosts ) {
@@ -10082,7 +10119,88 @@ class FLORP{
       $strContent = "No such registration!";
     }
 
-    return $this->fakepage( $aPosts, "edit-svk-participant-submission", "Edit Slovak flashmob participant's submission", $strContent, 'florp-svk-participant-form-edit' );
+    return $this->fakepage( $aPosts, $this->fakePageEditSvkParticipantSubmission, "Edit Slovak flashmob participant's submission", $strContent, $this->fakePageEditSvkParticipantSubmissionGlobalID );
+  }
+
+  public function fakepage_svk_participant( $aPosts ) {
+    $bLoggedIn = is_user_logged_in();
+    if (!$bLoggedIn || !current_user_can( $this->strUserRoleRegistrationAdminSvk ) || !$this->isFlashmobBlog) {
+      return $aPosts;
+    }
+
+    $bFound = true;
+    $bMalformed = false;
+
+    if (!$_REQUEST['id']) {
+      $bFound = false;
+    } else {
+      $strParticipantDefinition = hex2bin( $_REQUEST['id'] );
+      $aParts = explode( "|", $strParticipantDefinition );
+      if (count($aParts) !== 3) {
+        $bFound = false;
+        $bMalformed = true;
+      } else {
+        $aParticipantDefinition = array(
+          'year' => intval($aParts[0]),
+          'leader_id' => intval($aParts[1]),
+          'email' => $aParts[2],
+        );
+        if ($this->aOptions['iFlashmobYear'] !== $aParticipantDefinition['year']
+            || !$this->aOptions['aParticipants'][$aParticipantDefinition['leader_id']] || !$this->aOptions['aParticipants'][$aParticipantDefinition['leader_id']][$aParticipantDefinition['email']]) {
+          $bFound = false;
+        }
+      }
+    }
+
+    if ($bFound) {
+      $strContent = "Hello world"; // TODO
+    } elseif ($bMalformed) {
+      $strContent = "Malformed URL!";
+    } else {
+      $strContent = "No such registration!";
+    }
+
+    return $this->fakepage( $aPosts, $this->fakePageSvkParticipant, "Slovak flashmob participant", $strContent, $this->fakePageSvkParticipantGlobalID );
+  }
+
+  public function fakepage_intf_participant( $aPosts ) {
+    $bLoggedIn = is_user_logged_in();
+    if (!$bLoggedIn || !current_user_can( $this->strUserRoleRegistrationAdminIntf || !$this->isIntfBlog)) {
+      return $aPosts;
+    }
+
+    $bFound = true;
+    $bMalformed = false;
+
+    if (!$_REQUEST['id']) {
+      $bFound = false;
+    } else {
+      $strParticipantDefinition = hex2bin( $_REQUEST['id'] );
+      $aParts = explode( "|", $strParticipantDefinition );
+      if (count($aParts) !== 2) {
+        $bFound = false;
+        $bMalformed = true;
+      } else {
+        $aParticipantDefinition = array(
+          'year' => intval($aParts[0]),
+          'email' => $aParts[1],
+        );
+        if ($this->aOptions['iIntfFlashmobYear'] !== $aParticipantDefinition['year']
+            || !$this->aOptions['aIntfParticipants'][$aParticipantDefinition['year']] || !$this->aOptions['aIntfParticipants'][$aParticipantDefinition['year']][$aParticipantDefinition['email']]) {
+          $bFound = false;
+        }
+      }
+    }
+
+    if ($bFound) {
+      $strContent = "Hello world"; // TODO
+    } elseif ($bMalformed) {
+      $strContent = "Malformed URL!";
+    } else {
+      $strContent = "No such registration!";
+    }
+
+    return $this->fakepage( $aPosts, $this->fakePageIntfParticipant, "International flashmob participant", $strContent, $this->fakePageIntfParticipantGlobalID );
   }
 
   private function fakepage( $aPosts, $sUrl, $sTitle, $sContent, $sGlobalsKey ) {
@@ -10185,7 +10303,7 @@ class FLORP{
     }
   }
 
-  private function get_qr_code($strText, $strOutputFname = "qrcode", $iSize = 300, $strFormat = "png", $bOutputAsString = false, $strLogoPath = "", $iLogoWidth = 0, $iLogoHeight = 0) {
+  private function get_qr_code($strText, $strOutputFname = "qrcode", $iSize = 500, $strFormat = "png", $bOutputAsString = false, $strLogoPath = "", $iLogoWidth = 0, $iLogoHeight = 0) {
     // Create a basic QR code
     $qrCode = new QrCode($strText);
     $qrCode->setSize($iSize);
