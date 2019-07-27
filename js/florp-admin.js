@@ -440,7 +440,7 @@ jQuery( document ).ready(function() {
   })
 
   var tableIndex = 0
-  jQuery("table").each(function() {
+  jQuery("table:not(.noFilter)").each(function() {
     var $table = jQuery(this)
     $table.data("buttonTogglerTableId", tableIndex)
 

@@ -97,10 +97,10 @@ class FLORP{
   private $fakePageEditSvkParticipantSubmissionGlobalID = "florp-svk-participant-form-edit";
   private $fakePageEditIntfParticipantSubmission = "edit-intf-participant-submission";
   private $fakePageEditIntfParticipantSubmissionGlobalID = "florp-intf-participant-form-edit";
-  private $fakePageSvkParticipant = "svk-participant";
-  private $fakePageSvkParticipantGlobalID = "florp-svk-participant";
-  private $fakePageIntfParticipant = "intf-participant";
-  private $fakePageIntfParticipantGlobalID = "florp-intf-participant";
+  private $fakePageSvkParticipantCheckin = "svkfp";
+  private $fakePageSvkParticipantCheckinGlobalID = "florp-svk-participant-checkin";
+  private $fakePageIntfParticipantCheckin = "intfp";
+  private $fakePageIntfParticipantCheckinGlobalID = "florp-intf-participant-checkin";
 
   public function __construct() {
     $this->load_options();
@@ -449,8 +449,8 @@ class FLORP{
     add_filter( 'florp_chart_get_datatable', array( $this, 'filter__get_intf_chart_datatable' ), 10, 3 );
     add_filter( 'the_posts', array( $this, 'fakepage_intf_participant_form' ), -10);
     add_filter( 'the_posts', array( $this, 'fakepage_svk_participant_form' ), -10);
-    add_filter( 'the_posts', array( $this, 'fakepage_intf_participant' ), -10);
-    add_filter( 'the_posts', array( $this, 'fakepage_svk_participant' ), -10);
+    add_filter( 'the_posts', array( $this, 'fakepage_intf_participant_checkin' ), -10);
+    add_filter( 'the_posts', array( $this, 'fakepage_svk_participant_checkin' ), -10);
     // END FILTERS //
 
     // BEGIN ACTIONS //
@@ -3356,6 +3356,11 @@ class FLORP{
   }
 
   public function action__wp_enqueue_scripts() {
+    if ($GLOBALS[$this->fakePageSvkParticipantCheckinGlobalID] || $GLOBALS[$this->fakePageIntfParticipantCheckinGlobalID]) {
+      $this->action__admin_enqueue_scripts( "florp-fakepage" );
+      return;
+    }
+
     $iUserID = get_current_user_id();
     wp_enqueue_script('florp_nf_action_controller', plugins_url('js/florp_nf_action_controller.js', __FILE__), array('jquery'), $this->strVersion, true);
     wp_enqueue_script('florp_form_js', plugins_url('js/florp-form.js', __FILE__), array('jquery'), $this->strVersion, true);
@@ -3530,6 +3535,7 @@ class FLORP{
 
   public function action__admin_enqueue_scripts( $strHook ) {
     $aPermittedHooks = array(
+      'florp-fakepage',
       // 'toplevel_page_florp-main',
       'slovensky-flashmob_page_florp-leaders',
       'slovensky-flashmob_page_florp-participants',
@@ -3544,6 +3550,13 @@ class FLORP{
       'medzinarodny-flashmob_page_florp-intf-tshirts',
     );
     if (in_array($strHook, $aPermittedHooks)) {
+      if ($strHook === 'florp-fakepage') {
+        // TODO: enqueue wp table styles
+        // wp_register_style( 'wp_admin_css', "http://salsarueda.dance/wpsite/wp-admin/load-styles.php?c=1&dir=ltr&load%5B%5D=dashicons,admin-bar,common,forms,admin-menu,dashboard,list-tables,edit,revisions,media,themes,about,nav-menus,wp-pointer,widgets&load%5B%5D=,site-icon,l10n,buttons,wp-auth-check,wp-jquery-ui-dialog,wp-color-picker,media-views", false, get_bloginfo( 'version' ) );
+        wp_register_style( 'wp_admin_css', admin_url( "/load-styles.php?c=1&dir=ltr&load%5B%5D=list-tables,buttons" ), false, get_bloginfo( 'version' ) );
+        wp_enqueue_style( 'wp_admin_css' );
+      }
+
       wp_enqueue_script('florp_admin_js', plugins_url('js/florp-admin.js', __FILE__), array('jquery'), $this->strVersion, true);
 
       wp_register_style( 'florp_admin_css', plugins_url('css/florp-admin.css', __FILE__), false, $this->strVersion );
@@ -4302,12 +4315,52 @@ class FLORP{
     return $this->tshirts_table_admin(true);
   }
 
-  private function get_tshirts_table_admin_row_buttons($aTshirtData, $strRowID, $bIntf = false) {
+  private function get_participant_checkin_table_no_tshirt($aParticipantData, $bIntf = false) {
+    return "<pre>".var_export($aParticipantData, true)."</pre>";
+  }
+
+  private function get_participant_checkin_table($aTshirtData, $bIntf = false) {
+    $strRowID = "florpRow-".$aTshirtData["id"];
+
+    $strButtons = $this->get_tshirts_table_admin_row_buttons($aTshirtData, $strRowID, $bIntf, false);
+
+    $strFlashmobCityWarning = "";
+    if (!$bIntf && isset($aTshirtData['flashmob_city_at_registration'])) {
+      $strTitle = " title=\"Pozor: pri registrácii účastníka mal líder nastavené mesto flashmobu na  {$aTshirtData['flashmob_city_at_registration']}!\"";
+      $strFlashmobCityWarning = ' <span '.$strTitle.' class="dashicons dashicons-warning"></span>';
+    }
+
+    $strEcho = '<div class="wp-core-ui">';
+    $strEcho .= '<table class="widefat striped noFilter">';
+    $strEcho .=   '<tr class="row" data-row-id="'.$strRowID.'">';
+    $strEcho .=     '<td class="column">';
+    $strEcho .=       "<strong>Meno</strong>: " . $aTshirtData['name'] . "<br>" . PHP_EOL;
+    $strEcho .=       "<strong>Email</strong>: " . $aTshirtData['email'] . "<br>" . PHP_EOL;
+    $strEcho .=       "<strong>Mesto</strong>: " . $aTshirtData['flashmob_city'] . "<br>" . PHP_EOL;
+    foreach ($aTshirtData['properties'] as $strKey => $strValue) {
+      $strFieldName = ($bIntf && $strKey === 'intf_city') ? "Mesto (anketa)" : ucfirst( str_replace( '_', ' ', $strKey ) );
+      $strEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>';
+    }
+    $strEcho .=       $strButtons;
+    $strEcho .=     '</td>';
+    $strEcho .=   '</tr>';
+    $strEcho .= '</table>';
+    $strEcho .= '</div>';
+
+    return $strEcho;
+  }
+
+  private function get_tshirts_table_admin_row_buttons($aTshirtData, $strRowID, $bIntf = false, $bBackend = true) {
     $strDoubleCheckQuestion = "Ste si istý?";
     $strButtonLabelPaid = "Zaplatil tričko";
-    $strButtonLabelPaymentWarning = "Upozorniť na neskorú platbu";
+    if ($bBackend) {
+      $strButtonLabelPaymentWarning = "Upozorniť na neskorú platbu";
+    }
     $strButtonLabelCancelOrder = "Zrušiť objednávku";
     $strButtonLabelDelivered = "Tričko odovzdané";
+
+    $sIntfActionPart = $bIntf ? "_intf" : "";
+
     // We collect the data and button attributes/properties //
     $strData = "";
     foreach ($aTshirtData as $strKey => $mixValue) {
@@ -4355,7 +4408,9 @@ class FLORP{
         ) {
         $strWarningClass = "";
         $bShow = true;
-        if (
+        if (!$bBackend) {
+          $bShow = false;
+        } elseif (
           (!$bIntf && $this->aOptions['iTshirtPaymentWarningButtonDeadline'] > -1 && $this->iTshirtPaymentWarningButtonDeadlineTimestamp <= time())
           || ($bIntf && $this->aOptions['iIntfTshirtPaymentWarningButtonDeadline'] > -1 && $this->iIntfTshirtPaymentWarningButtonDeadlineTimestamp <= time())
         ) {
@@ -4442,14 +4497,16 @@ class FLORP{
       } else {
         // Will/Did attend button //
         $strButtonID = "florpButton-attend1-".$iLeaderIdOrYear."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
-        $strButtonLabel = "Zúčastní/-il(a) sa";
+        $strButtonLabel = "Zúčastnil(a) sa";
         $strLabelForHiding = $strButtonLabel;
         $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" '.$strDataLeaderIdOrYear.' data-participant-email="'.$strEmail.'" data-sure="0" data-action="florp'.$strIntfActionPart.'_participant_attend" data-attend="1" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'" data-text="'.$strLabelForHiding.'" '.$strDataHide.'>'.$strButtonLabel.'</span>';
 
-        // Won't/Didn't attend button //
-        $strButtonID = "florpButton-attend0-".$iLeaderIdOrYear."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
-        $strButtonLabel = "Nezúčastní/-il(a) sa";
-        $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" '.$strDataLeaderIdOrYear.' data-participant-email="'.$strEmail.'" data-sure="0" data-action="florp'.$strIntfActionPart.'_participant_attend" data-attend="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'" data-text="'.$strLabelForHiding.'" '.$strDataHide.'>'.$strButtonLabel.'</span>';
+        if ($bBackend) {
+          // Won't/Didn't attend button //
+          $strButtonID = "florpButton-attend0-".$iLeaderIdOrYear."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
+          $strButtonLabel = "Nezúčastní/-il(a) sa";
+          $strButtons .= '<span class="button double-check" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" '.$strDataLeaderIdOrYear.' data-participant-email="'.$strEmail.'" data-sure="0" data-action="florp'.$strIntfActionPart.'_participant_attend" data-attend="0" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'" data-text="'.$strLabelForHiding.'" '.$strDataHide.'>'.$strButtonLabel.'</span>';
+        }
       }
     }
     // END Participant administration buttons //
@@ -4518,7 +4575,6 @@ class FLORP{
     $strHeaderLeaderOrYear = $bIntf ? "<th class=\"column column-rok\">Rok</th>" : "<th class=\"column column-lider\">Líder</th>";
     $strEcho = '<table class="widefat striped"><th class="column column-meno">Meno</th><th class="column column-email">Email</th><th class="column column-mesto">Mesto</th><th class="column column-typ">Typ</th>'.$strHeaderLeaderOrYear.'<th class="column column-vlastnosti">Vlastnosti</th>';
 
-    $sIntfActionPart = $bIntf ? "_intf" : "";
     $sIntfBtnIdPart = $bIntf ? "-intf" : "";
 
     $iUnpaid = 0;
@@ -9637,13 +9693,13 @@ class FLORP{
         $strBlogname = trim(wp_specialchars_decode(get_option('blogname'), ENT_QUOTES));
         $aHeaders = array('Content-Type: text/html; charset=UTF-8');
 
-        // Create a unique QR code for the participant and send it as attachment //
-        $strParticipantDefinition = bin2hex(implode( "|", array(
+        // Create a unique check-in QR code for the participant and send it as attachment //
+        $strParticipantDefinition = $this->encode(implode( "|", array(
           $this->aOptions['iFlashmobYear'],
           $iUserID,
           $aFieldData['user_email']
         )));
-        $strParticipantUrl = home_url("/" . $this->fakePageSvkParticipant . "/?id=" . $strParticipantDefinition);
+        $strParticipantUrl = home_url("/" . $this->fakePageSvkParticipantCheckin . "/?id=" . $strParticipantDefinition);
         $strOutputFname = date('YmdHis') . "-" . $strParticipantDefinition;
         $strQrCodePath = $this->get_qr_code($strParticipantUrl, $strOutputFname);
         // TODO maybe use logo (but add it to this plugin's img folder): $this->get_qr_code($strParticipantUrl, $strOutputFname, 500, "png", "false", $strLogoPath, $iLogoWidth, $iLogoHeight);
@@ -9771,12 +9827,12 @@ class FLORP{
         $strBlogname = trim(wp_specialchars_decode(get_option('blogname'), ENT_QUOTES));
         $aHeaders = array('Content-Type: text/html; charset=UTF-8');
 
-        // Create a unique QR code for the participant and send it as attachment //
-        $strParticipantDefinition = bin2hex(implode( "|", array(
+        // Create a unique check-in QR code for the participant and send it as attachment //
+        $strParticipantDefinition = $this->encode(implode( "|", array(
           $this->aOptions['iIntfFlashmobYear'],
           $aFieldData['user_email']
         )));
-        $strParticipantUrl = home_url("/" . $this->fakePageIntfParticipant . "/?id=" . $strParticipantDefinition);
+        $strParticipantUrl = home_url("/" . $this->fakePageIntfParticipantCheckin . "/?id=" . $strParticipantDefinition);
         $strOutputFname = date('YmdHis') . "-" . $strParticipantDefinition;
         $strQrCodePath = $this->get_qr_code($strParticipantUrl, $strOutputFname);
         // TODO maybe use logo (but add it to this plugin's img folder): $this->get_qr_code($strParticipantUrl, $strOutputFname, 500, "png", "false", $strLogoPath, $iLogoWidth, $iLogoHeight);
@@ -10150,7 +10206,7 @@ class FLORP{
     return $this->fakepage( $aPosts, $this->fakePageEditSvkParticipantSubmission, "Edit Slovak flashmob participant's submission", $strContent, $this->fakePageEditSvkParticipantSubmissionGlobalID );
   }
 
-  public function fakepage_svk_participant( $aPosts ) {
+  public function fakepage_svk_participant_checkin( $aPosts ) {
     $bLoggedIn = is_user_logged_in();
     if (!$bLoggedIn || !current_user_can( $this->strUserRoleRegistrationAdminSvk ) || !$this->isFlashmobBlog) {
       return $aPosts;
@@ -10162,7 +10218,7 @@ class FLORP{
     if (!$_REQUEST['id']) {
       $bFound = false;
     } else {
-      $strParticipantDefinition = hex2bin( $_REQUEST['id'] );
+      $strParticipantDefinition = $this->decode( $_REQUEST['id'] );
       $aParts = explode( "|", $strParticipantDefinition );
       if (count($aParts) !== 3) {
         $bFound = false;
@@ -10180,18 +10236,38 @@ class FLORP{
       }
     }
 
+    $aTshirts = $this->get_tshirts('all', false, false);
+    $strID = "participant-".$aParticipantDefinition['leader_id']."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $aParticipantDefinition['email']);
+
+    $aTshirtData = false;
+    $aParticipantData = false;
+    if (empty($aTshirts) || !isset($aTshirts[$strID])) {
+      $aParticipants = $this->get_flashmob_participants( 0, false, false );
+      if (!isset($aParticipants[$aParticipantDefinition['leader_id']]) || !isset($aParticipants[$aParticipantDefinition['leader_id']][$aParticipantDefinition['email']])) {
+        $bFound = false;
+      } else {
+        $aParticipantData = $aParticipants[$aParticipantDefinition['leader_id']][$aParticipantDefinition['email']];
+      }
+    } else {
+      $aTshirtData = $aTshirts[$strID];
+    }
+
     if ($bFound) {
-      $strContent = "Hello world"; // TODO
+      if ($aTshirtData) {
+        $strContent = $this->get_participant_checkin_table($aTshirtData, false);
+      } else {
+        $strContent = $this->get_participant_checkin_table_no_tshirt($aParticipantData, false);
+      }
     } elseif ($bMalformed) {
       $strContent = "Malformed URL!";
     } else {
       $strContent = "No such registration!";
     }
 
-    return $this->fakepage( $aPosts, $this->fakePageSvkParticipant, "Slovak flashmob participant", $strContent, $this->fakePageSvkParticipantGlobalID );
+    return $this->fakepage( $aPosts, $this->fakePageSvkParticipantCheckin, "Slovak flashmob participant", $strContent, $this->fakePageSvkParticipantCheckinGlobalID );
   }
 
-  public function fakepage_intf_participant( $aPosts ) {
+  public function fakepage_intf_participant_checkin( $aPosts ) {
     $bLoggedIn = is_user_logged_in();
     if (!$bLoggedIn || !current_user_can( $this->strUserRoleRegistrationAdminIntf || !$this->isIntfBlog)) {
       return $aPosts;
@@ -10203,7 +10279,7 @@ class FLORP{
     if (!$_REQUEST['id']) {
       $bFound = false;
     } else {
-      $strParticipantDefinition = hex2bin( $_REQUEST['id'] );
+      $strParticipantDefinition = $this->decode( $_REQUEST['id'] );
       $aParts = explode( "|", $strParticipantDefinition );
       if (count($aParts) !== 2) {
         $bFound = false;
@@ -10220,15 +10296,38 @@ class FLORP{
       }
     }
 
+    $aTshirts = $this->get_tshirts('all', false, true);
+    $strID = "intf-participant-".$aParticipantDefinition['year']."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $aParticipantDefinition['email']);
+    // $strID = "participant-".$iLeaderID."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
+    // $aParticipants = $this->get_flashmob_participants( 0, false, true );
+    // if (!isset($aParticipants[]))
+
+    $aTshirtData = false;
+    $aParticipantData = false;
+    if (empty($aTshirts) || !isset($aTshirts[$strID])) {
+      $aParticipants = $this->aOptions['aIntfParticipants'];
+      if (!isset($aParticipants[$aParticipantDefinition['year']]) || !isset($aParticipants[$aParticipantDefinition['year']][$aParticipantDefinition['email']])) {
+        $bFound = false;
+      } else {
+        $aParticipantData = $aParticipants[$aParticipantDefinition['year']][$aParticipantDefinition['email']];
+      }
+    } else {
+      $aTshirtData = $aTshirts[$strID];
+    }
+
     if ($bFound) {
-      $strContent = "Hello world"; // TODO
+      if ($aTshirtData) {
+        $strContent = $this->get_participant_checkin_table($aTshirtData, true);
+      } else {
+        $strContent = $this->get_participant_checkin_table_no_tshirt($aParticipantData, true);
+      }
     } elseif ($bMalformed) {
       $strContent = "Malformed URL!";
     } else {
       $strContent = "No such registration!";
     }
 
-    return $this->fakepage( $aPosts, $this->fakePageIntfParticipant, "International flashmob participant", $strContent, $this->fakePageIntfParticipantGlobalID );
+    return $this->fakepage( $aPosts, $this->fakePageIntfParticipantCheckin, "International flashmob participant", $strContent, $this->fakePageIntfParticipantCheckinGlobalID );
   }
 
   private function fakepage( $aPosts, $sUrl, $sTitle, $sContent, $sGlobalsKey ) {
@@ -10367,6 +10466,14 @@ class FLORP{
     $qrCode->writeFile($strOutputPath);
 
     return $strOutputPath;
+  }
+
+  private function encode($strInput) {
+    return rtrim(strtr(base64_encode(gzdeflate($strInput, 9)), '+/', '-_'), '=');
+  }
+
+  private function decode($strInput) {
+    return gzinflate(base64_decode(strtr($strInput, '-_', '+/')));
   }
 
 }
