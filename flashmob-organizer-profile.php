@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 5.4.0
+ * Version: 5.4.1
  * Requires at least: 4.8
  * Tested up to: 4.9.8
  * Requires PHP: 5.6
@@ -16,7 +16,7 @@
 
 class FLORP{
 
-  private $strVersion = '5.4.0';
+  private $strVersion = '5.4.1';
   private $strSuperAdminMail = 'charliecek@gmail.com';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
@@ -562,7 +562,8 @@ class FLORP{
       'strLeaderParticipantsTableClass'           => "florp-leader-participants-table",
       'bParticipantRegistrationProcessed'         => false,
       'bLeadersFrom2017Reimported'                => false,
-      'aYearlyMapOptions'                         => array(),
+      'aYearlyMapOptions'                         => array(), // SVK flashmob
+      'aYearlySvkFlashmobOptions'                 => array(), // SVK flashmob
       'aOptionChanges'                            => array(),
       'aNfSubmissions'                            => $aNfSubmissions,
       'aNfFieldTypes'                             => $aNfFieldTypes,
@@ -616,9 +617,9 @@ class FLORP{
       'strNewsletterListsMain'                    => '',
       'strNewsletterListsFlashmob'                => '',
       'aParticipants'                             => array(),
-      'aIntfParticipants'                         => array(),
+      'aIntfParticipants'                         => array(), // per year
       'aTshirts'                                  => array( "leaders" => array(), "participants" => array() ),
-      'aTshirtsIntf'                              => array(),
+      'aTshirtsIntf'                              => array(), // per year
       'aOrderDates'                               => array(),
       'strParticipantRegisteredSubject'           => 'Boli ste prihásený na flashmob',
       'strParticipantRegisteredMessage'           => '<p>Ďakujeme, že ste sa prihlásili na flashmob!</p>
@@ -832,6 +833,7 @@ class FLORP{
     $this->aOptionKeysByBlog = array(
       'main'      => array(
         'aYearlyMapOptions',
+        'aYearlySvkFlashmobOptions',
         'aParticipants',
         'aTshirts',
         'aTshirtsIntf',
@@ -946,7 +948,7 @@ class FLORP{
         'strIntfCityPollExtraCities',
       ),
     );
-    $this->aSeparateOptionKeys = array( 'logs', 'aParticipants', 'aIntfParticipants', 'aTshirts', 'aTshirtsIntf', 'aYearlyMapOptions', 'aOrderDates', 'aOptionChanges', 'aNfSubmissions', 'aNfFieldTypes' );
+    $this->aSeparateOptionKeys = array( 'logs', 'aParticipants', 'aIntfParticipants', 'aTshirts', 'aTshirtsIntf', 'aYearlyMapOptions', 'aYearlySvkFlashmobOptions', 'aOrderDates', 'aOptionChanges', 'aNfSubmissions', 'aNfFieldTypes' );
 
     // Get options and set defaults //
     if (empty($this->aOptions)) {
@@ -1909,7 +1911,7 @@ class FLORP{
 
   public function action__displaying_profile_form_nf_end( $iFormID, $aFormSettings, $aFormFields ) {
     if (defined('FLORP_DEVEL') && FLORP_DEVEL === true && defined('FLORP_DEVEL_DEBUG_PARTICIPANT_EDIT_FORMS') && FLORP_DEVEL_DEBUG_PARTICIPANT_EDIT_FORMS === true) {
-      $bLoggedIn = is_user_logged_in(); // TODO DEVEL
+      $bLoggedIn = is_user_logged_in();
       if ($this->bDisplayingProfileFormNinjaForm && $iFormID == $this->iProfileFormNinjaFormIDIntf && $bLoggedIn && $GLOBALS['florp-intf-participant-form-edit']) {
         $iYear = $_REQUEST['year'];
         $strEmail = $_REQUEST['email'];
@@ -3148,11 +3150,40 @@ class FLORP{
     return $aMapOptions;
   }
 
-  private function archive_current_year_map_options() {
+  // Archive SVK flashmob fields //
+  private function archive_current_year_svk_flashmob($bTest = true) {
+    $aMapOptions = $this->archive_current_year_map_options($bTest);
+    $aFlashmobOptions = array(
+      'aParticipants' => $this->aOptions['aParticipants'],
+      'aTshirts' => $this->aOptions['aTshirts'],
+      'aOrderDates' => $this->aOptions['aOrderDates'],
+    );
+
+    if ($bTest) {
+      // return the data that would be archived //
+      return array_merge($aFlashmobOptions, array(
+        'mapOptions' => $aMapOptions,
+        // 'aNfSubmissions' => $this->aOptions['aNfSubmissions'],
+        // 'aNfFieldTypes' => $this->aOptions['aNfFieldTypes'],
+      ));
+    }
+
     $iFlashmobYear = $this->aOptions['iFlashmobYear'];
-    $this->aOptions['aYearlyMapOptions'][$iFlashmobYear] = $this->get_flashmob_map_options_array_to_archive();
-    // TODO archive aParticipants, aIntfParticipants, aTshirts and aTshirtsIntf as well!
-    $this->aOptions['aParticipants'] = array();
+    $this->aYearlySvkFlashmobOptions[$iFlashmobYear] = $aFlashmobOptions;
+    $this->save_options();
+
+    // return the option keys that should be initialized from the defaults //
+    return array_merge(array_keys($aFlashmobOptions), array('aNfSubmissions', 'aNfFieldTypes', 'aUnhideFlashmobFieldsForUsers', 'aHideFlashmobFieldsForUsers'));
+  }
+
+  private function archive_current_year_map_options($bTest = true) {
+    $bMapOptions = $this->get_flashmob_map_options_array_to_archive();
+    if ($bTest) {
+      return $bMapOptions;
+    }
+
+    $iFlashmobYear = $this->aOptions['iFlashmobYear'];
+    $this->aOptions['aYearlyMapOptions'][$iFlashmobYear] = $bMapOptions;
     $this->save_options();
 
     // clean user meta //
@@ -3183,6 +3214,8 @@ class FLORP{
         }
       }
     }
+
+    return true;
   }
 
   public function getMapImage() {
@@ -4242,7 +4275,6 @@ class FLORP{
       $strEcho .= '</form>';
     }
     echo $strEcho;
-    // echo $this->get_missed_submissions_table( $this->iFlashmobBlogID );
     echo '</div><!-- .wrap -->';
   }
 
@@ -7845,8 +7877,12 @@ class FLORP{
       // echo "<pre>" .var_export($this->get_logs(), true). "</pre>";
       // foreach($this->aOptions['aParticipants'] as $i => $a) {foreach($a as $e => $ap) {$this->aOptions['aParticipants'][$i][$e]['leader_notified']=false;}}; $this->save_options();
       // echo "<pre>" .var_export($this->aOptions['aParticipants'], true). "</pre>";
+      // echo "<pre>" .var_export($this->aOptions['aIntfParticipants'], true). "</pre>";
+      // echo "<pre>" .var_export($this->aOptions['aTshirtsIntf'], true). "</pre>";
       // echo "<pre>" .var_export(wp_get_sites(), true). "</pre>";
       // echo "<pre>" .var_export($this->findCityWebpage( "Bánovce nad Bebravou" ), true). "</pre>";
+      // echo "<pre>" .var_export($this->archive_current_year_svk_flashmob(true), true). "</pre>";
+      // echo "<pre>" .var_export($this->aOptions['aYearlySvkFlashmobOptions'], true). "</pre>";
     }
 
     $aVariablesMain = array(
@@ -8442,12 +8478,14 @@ class FLORP{
   }
 
   private function save_option_page_options( $aPostedOptions, $bInternational = false ) {
+    $aOptionsToReinitFromDefaults = array();
     if ($bInternational) {
       $aKeysToSave = $this->aOptionKeysByBlog['international'];
+      // NOTE: no need to archive any international flashmob data, because all feelds are per year already. //
     } elseif ($this->isMainBlog) {
       $aKeysToSave = $this->aOptionKeysByBlog['main'];
 
-      // Archive current flashmob year's data //
+      // Archive current flashmob year's data unless the currently set flashmob date is in the future //
       if (!$this->bHideFlashmobFields) {
         // Trying to archive after the saved flashmob date //
         $iFlashmobYearCurrent = intval($this->aOptions['iFlashmobYear']);
@@ -8462,12 +8500,12 @@ class FLORP{
           // Flashmob year was changed //
           if (defined('FLORP_DEVEL') && FLORP_DEVEL === true && defined('FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION') && FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION === true) {
             // NOT ARCHIVING //
-            $GLOBALS["florpArchivedMapOptions"] = var_export($this->get_flashmob_map_options_array_to_archive(), true);
+            $GLOBALS["florpArchivedData"] = var_export($this->archive_current_year_svk_flashmob(true), true);
             add_action( 'florp_options_page_notices', function() {
-              echo '<div class="notice notice-info"><p><code>(FLORP_DEVEL && FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION == true)</code> => nearchivujem flashmobové mapy.</p><p>Archivované dáta by však vyzerali nasledovne:</p><pre>' .$GLOBALS["florpArchivedMapOptions"]. '</pre></div>'.PHP_EOL;
+              echo '<div class="notice notice-info"><p><code>(FLORP_DEVEL && FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION == true)</code> => nearchivujem dáta svk flashmobu.</p><p>Archivované dáta by však vyzerali nasledovne:</p><pre>' .$GLOBALS["florpArchivedData"]. '</pre></div>'.PHP_EOL;
             });
           } else {
-            $this->archive_current_year_map_options();
+            $aOptionsToReinitFromDefaults = $this->archive_current_year_svk_flashmob(false);
             $GLOBALS['iFlorpFlashmobYearCurrent'] = $iFlashmobYearCurrent;
             add_action( 'florp_options_page_notices', function() {
               echo '<div class="notice notice-success"><p>Dáta flashmobu z roku '.$GLOBALS['iFlorpFlashmobYearCurrent'].' boli archivované.</p></div>'.PHP_EOL;
@@ -8557,6 +8595,12 @@ class FLORP{
     }
     if (defined('FLORP_DEVEL_PURGE_TSHIRTS_ON_SAVE') && FLORP_DEVEL_PURGE_TSHIRTS_ON_SAVE === true ) {
       $this->aOptions['aTshirts'] = $this->aOptionDefaults["aTshirts"];
+    }
+
+    if (is_array($aOptionsToReinitFromDefaults) && count($aOptionsToReinitFromDefaults) > 0) {
+      foreach ($aOptionsToReinitFromDefaults as $strOptionKey) {
+        $this->aOptions[$strOptionKey] = $this->aOptionDefaults[$strOptionKey];
+      }
     }
 
     $this->save_options();
