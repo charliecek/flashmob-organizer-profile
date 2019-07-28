@@ -147,7 +147,7 @@
   }
 
   function florpRescrapeFbOgMapImage() {
-    if (-1 === inArray("main", florp.blog_types) || florp.using_og_map_image != 1) {
+    if (-1 === jQuery.inArray("main", florp.blog_types) || florp.using_og_map_image != 1) {
       return
     }
     jQuery.post(
