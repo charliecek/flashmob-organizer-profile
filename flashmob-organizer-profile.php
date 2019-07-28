@@ -21,9 +21,7 @@ use Endroid\QrCode\LabelAlignment;
 use Endroid\QrCode\QrCode;
 
 // TODO:
-// check svk participant ajax - with tshirt
 // check svk participant ajax - no tshirt
-// add a note about it in the settings page
 
 class FLORP{
 
@@ -2445,10 +2443,10 @@ class FLORP{
     } elseif ($this->isFlashmobBlog) {
       $iNFID = $this->iProfileFormNinjaFormIDFlashmob;
     } else {
-      return '';
+      $iNFID = 0;
     }
     if ($iNFID === 0) {
-      return '';
+      return ''; // . "<pre>" . var_export(array($aAttributes, $this->isIntfBlog, $this->isMainBlog, $this->isFlashmobBlog, $iNFID), true) . "</pre>";
     }
     $strShortcodeOutput = do_shortcode( '[ninja_form id='.$iNFID.']' );
     return '<div id="'.$this->strProfileFormWrapperID.'">' . $strShortcodeOutput.'</div>';
@@ -4598,7 +4596,7 @@ class FLORP{
 
       $strRow = '<strong>' . $strFieldName . '</strong>: ' . $strValue.'<br>';
 
-      if (in_array($strKey, array("tshirt_size", "tshirt_gender", "tshirt_color"))) {
+      if (in_array($strKey, array("tshirt_size", "tshirt_gender", "tshirt_color", "webpage"))) {
         $strEchoBeforeButtons .= $strRow;
       } else {
         $strEchoAfterButtons .= $strRow;
@@ -4664,9 +4662,13 @@ class FLORP{
       $strData .= " data-{$strKey}='{$strValue}'";
     }
     foreach ($aTshirtData['properties'] as $strKey => $strValue) {
+      if ($strKey === "webpage") {
+        $strValue = htmlentities($strValue);
+      }
       $strValue = str_replace("'", "\'", $strValue);
       $strData .= " data-{$strKey}='{$strValue}'";
     }
+    $strData .= " data-participant-email='{$aTshirtData["email"]}'";
 
     $strPaidButtonID = "florpButton-paid-".$aTshirtData["id"];
     $strPaymentWarningButtonID = "florpButton-paymentWarning-".$aTshirtData["id"];
@@ -4674,6 +4676,8 @@ class FLORP{
     $strDeliveredButtonID = "florpButton-tshirtDelivered-".$aTshirtData["id"];
 
     $strButtons = "";
+    // $strButtons .= "<pre>".var_export($strData, true)."</pre>";
+    // email
     if ($aTshirtData["is_leader"]) {
       // no button
     } elseif ($aTshirtData["is_paid"]) {
