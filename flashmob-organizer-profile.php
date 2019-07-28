@@ -21,7 +21,11 @@ use Endroid\QrCode\LabelAlignment;
 use Endroid\QrCode\QrCode;
 
 // TODO:
-// create fake page for participant url
+// add info to participant check-in (with tshirt, both svk and intf): submission edit link, gender, dance level, registered
+// hide info to participant check-in (no tshirt, both svk and intf): year
+// check intf participant ajax - no tshirt
+// check svk participant ajax - with tshirt
+// check svk participant ajax - no tshirt
 // add a note about it in the settings page
 
 class FLORP{
@@ -3546,7 +3550,7 @@ class FLORP{
       if ($strHook === 'florp-fakepage') {
         // TODO: enqueue wp table styles
         // wp_register_style( 'wp_admin_css', "http://salsarueda.dance/wpsite/wp-admin/load-styles.php?c=1&dir=ltr&load%5B%5D=dashicons,admin-bar,common,forms,admin-menu,dashboard,list-tables,edit,revisions,media,themes,about,nav-menus,wp-pointer,widgets&load%5B%5D=,site-icon,l10n,buttons,wp-auth-check,wp-jquery-ui-dialog,wp-color-picker,media-views", false, get_bloginfo( 'version' ) );
-        wp_register_style( 'wp_admin_css', admin_url( "/load-styles.php?c=1&dir=ltr&load%5B%5D=list-tables,buttons" ), false, get_bloginfo( 'version' ) );
+        wp_register_style( 'wp_admin_css', admin_url( "/load-styles.php?c=1&dir=ltr&load%5B%5D=forms,list-tables,buttons,media,media-views" ), false, get_bloginfo( 'version' ) );
         wp_enqueue_style( 'wp_admin_css' );
       }
 
@@ -4138,7 +4142,7 @@ class FLORP{
     $strButtons = $this->get_participants_table_admin_buttons_svk($aParticipantData, $strRowID, false);
 
     $strEcho = '<div class="wp-core-ui">';
-    $strEcho .= '<table class="widefat striped noFilter">';
+    $strEcho .= '<table class="widefat participantCheckinTable striped noFilter">';
     $strEcho .= '<tr class="row" data-row-id="'.$strRowID.'">';
     $strEditSubmission = '';
     if ($this->isEditSubmissionsEnabled()) {
@@ -4410,7 +4414,7 @@ class FLORP{
     $strButtons = $this->get_participants_table_admin_buttons_intf($aParticipantData, $strRowID, false);
 
     $strEcho = '<div class="wp-core-ui">';
-    $strEcho .= '<table class="widefat striped noFilter">';
+    $strEcho .= '<table class="widefat participantCheckinTable striped noFilter">';
     $strEcho .= '<tr class="row" data-row-id="'.$strRowID.'">'.PHP_EOL;
     $strEditSubmission = '';
     if ($this->isEditSubmissionsEnabled()) {
@@ -4521,7 +4525,7 @@ class FLORP{
     }
 
     $strEcho = '<div class="wp-core-ui">';
-    $strEcho .= '<table class="widefat striped noFilter">';
+    $strEcho .= '<table class="widefat participantCheckinTable striped noFilter">';
     $strEcho .=   '<tr class="row" data-row-id="'.$strRowID.'">';
     $strEcho .=     '<td class="column">';
     $strEcho .=       "<strong>Meno</strong>: " . $aTshirtData['name'] . "<br>" . PHP_EOL;
@@ -10421,6 +10425,7 @@ class FLORP{
         $strContent = $this->get_participant_checkin_table($aTshirtData, false);
       } else {
         $aParticipantData['leader_user_id'] = $aParticipantDefinition['leader_user_id'];
+        $aParticipantData['user_email'] = $aParticipantDefinition['email'];
         $strContent = $this->get_participant_checkin_table_no_tshirt($aParticipantData, false);
       }
     } elseif ($bMalformed) {
@@ -10485,6 +10490,7 @@ class FLORP{
         $strContent = $this->get_participant_checkin_table($aTshirtData, true);
       } else {
         $aParticipantData['year'] = $aParticipantDefinition['year'];
+        $aParticipantData['user_email'] = $aParticipantDefinition['email'];
         $strContent = $this->get_participant_checkin_table_no_tshirt($aParticipantData, true);
       }
     } elseif ($bMalformed) {
