@@ -2,20 +2,20 @@
 $aFlorpNinjaFormExportData = array (
   'form_settings' => 
   array (
+    'objectType' => 'Form Setting',
+    'editActive' => true,
     'title' => 'Rueda flashmob participant signup form',
-    'created_at' => '2018-04-18 10:50:13',
+    'created_at' => '2019-07-29 03:31:47',
     'form_title' => 'Rueda flashmob participant signup form',
     'default_label_pos' => 'left',
     'show_title' => '0',
     'clear_complete' => '0',
     'hide_complete' => '0',
     'logged_in' => '0',
-    'seq_num' => NULL,
-    'objectType' => 'Form Setting',
-    'editActive' => '1',
+    'seq_num' => '6',
     'key' => '',
     'unique_field_error' => 'A form with this value has already been submitted.',
-    'drawerDisabled' => '',
+    'drawerDisabled' => false,
     'formContentData' => 
     array (
       0 => 'html_1528847274101',
@@ -33,8 +33,7 @@ $aFlorpNinjaFormExportData = array (
       12 => 'flashmob_participant_tshirt_size',
       13 => 'flashmob_participant_tshirt_color',
       14 => 'leader_user_id',
-      15 => 'antispamova_ochrana_1528848098448',
-      16 => 'save_button',
+      15 => 'save_button',
     ),
     'fieldsMarkedRequired' => 'Polia označené <span class="ninja-forms-req-symbol">*</span> sú povinné',
     'currency' => '',
@@ -54,6 +53,9 @@ $aFlorpNinjaFormExportData = array (
     'add_submit' => '1',
     'element_class' => '',
     'wrapper_class' => '',
+    'allow_public_link' => 0,
+    'embed_form' => '',
+    'changeDateErrorMsg' => '',
   ),
   'field_settings' => 
   array (
@@ -61,8 +63,8 @@ $aFlorpNinjaFormExportData = array (
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
-      'order' => '1',
+      'editActive' => false,
+      'order' => 1,
       'default' => '<p>Zadané údaje nie sú nikde zverejnené.<br></p>',
       'container_class' => 'florp-class florp-registration-field',
       'element_class' => '',
@@ -70,13 +72,15 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'HTML',
       'key' => 'html_1528847274101',
       'type' => 'html',
+      'field_label' => 'HTML',
+      'field_key' => 'html_1528847274101',
     ),
     413 => 
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
-      'order' => '2',
+      'editActive' => false,
+      'order' => 2,
       'label_pos' => 'default',
       'required' => '1',
       'default' => '',
@@ -93,13 +97,16 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Meno',
       'key' => 'first_name',
       'type' => 'firstname',
+      'field_label' => 'Meno',
+      'field_key' => 'first_name',
+      'value' => '',
     ),
     414 => 
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
-      'order' => '3',
+      'editActive' => false,
+      'order' => 3,
       'label_pos' => 'default',
       'required' => '1',
       'default' => '',
@@ -116,13 +123,16 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Priezvisko',
       'key' => 'last_name',
       'type' => 'lastname',
+      'field_label' => 'Priezvisko',
+      'field_key' => 'last_name',
+      'value' => '',
     ),
     415 => 
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
-      'order' => '4',
+      'editActive' => false,
+      'order' => 4,
       'label_pos' => 'default',
       'required' => '1',
       'default' => '',
@@ -139,13 +149,16 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Email',
       'key' => 'user_email',
       'type' => 'email',
+      'field_label' => 'Email',
+      'field_key' => 'user_email',
+      'value' => '',
     ),
     416 => 
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
-      'order' => '5',
+      'editActive' => false,
+      'order' => 5,
       'label_pos' => 'left',
       'required' => '1',
       'options' => 
@@ -308,13 +321,15 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Pohlavie',
       'key' => 'gender',
       'type' => 'listradio',
+      'field_label' => 'Pohlavie',
+      'field_key' => 'gender',
     ),
     417 => 
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
-      'order' => '6',
+      'editActive' => false,
+      'order' => 6,
       'label_pos' => 'left',
       'required' => '0',
       'options' => 
@@ -863,13 +878,15 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Tanečná úroveň',
       'key' => 'dance_level',
       'type' => 'listselect',
+      'field_label' => 'Tanečná úroveň',
+      'field_key' => 'dance_level',
     ),
     418 => 
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
-      'order' => '7',
+      'editActive' => false,
+      'order' => 7,
       'label_pos' => 'left',
       'required' => '1',
       'options' => 
@@ -10826,13 +10843,15 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Mesto',
       'key' => 'flashmob_city',
       'type' => 'listselect',
+      'field_label' => 'Mesto',
+      'field_key' => 'flashmob_city',
     ),
     419 => 
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
-      'order' => '8',
+      'editActive' => false,
+      'order' => 8,
       'label_pos' => 'left',
       'required' => '',
       'options' => 
@@ -10996,13 +11015,15 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Preferencie',
       'key' => 'preferences',
       'type' => 'listcheckbox',
+      'field_label' => 'Preferencie',
+      'field_key' => 'preferences',
     ),
     420 => 
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
-      'order' => '9',
+      'editActive' => false,
+      'order' => 9,
       'default' => '<p class="florp-newsletter-banner participants">  <a href="http://festivaly.salsarueda.dance/newsletters/nl-latest.html" target="_blank"><img src="/wpsite/wp-content/plugins/flashmob-organizer-profile/img/newsletter-banner.jpg" alt="newsletter" title="newsletter"></a></p>',
       'container_class' => 'florp-class florp-right florp-registration-field florp-mobile',
       'element_class' => '',
@@ -11010,13 +11031,15 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'HTML - newsletter banner Mobile',
       'key' => 'html_-_newsletter_banner_mobile_1535795671381',
       'type' => 'html',
+      'field_label' => 'HTML - newsletter banner Mobile',
+      'field_key' => 'html_-_newsletter_banner_mobile_1535795671381',
     ),
     421 => 
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
-      'order' => '10',
+      'editActive' => false,
+      'order' => 10,
       'default' => '<p><b>Upozornenie!</b> Tričká objednané po %%iTshirtOrderDeliveredBeforeFlashmobDdlDate%% budú dodané po flashmobe.</p>',
       'container_class' => 'florp-class florp-left florp-preference-field_flashmob_participant_tshirt florp-tshirt-after-flashmob-warning',
       'element_class' => '',
@@ -11024,13 +11047,15 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Upozornenie',
       'key' => 'upozornenie_1537461842330',
       'type' => 'html',
+      'field_label' => 'Upozornenie',
+      'field_key' => 'upozornenie_1537461842330',
     ),
     422 => 
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
-      'order' => '11',
+      'editActive' => false,
+      'order' => 11,
       'default' => '<p class="florp-newsletter-banner participants">
   <a href="http://festivaly.salsarueda.dance/newsletters/nl-latest.html" target="_blank"><img src="/wpsite/wp-content/plugins/flashmob-organizer-profile/img/newsletter-banner.jpg" alt="newsletter" title="newsletter"/></a>
 </p>',
@@ -11040,13 +11065,15 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'HTML - newsletter banner',
       'key' => 'html_-_newsletter_banner_1533390855929',
       'type' => 'html',
+      'field_label' => 'HTML - newsletter banner',
+      'field_key' => 'html_-_newsletter_banner_1533390855929',
     ),
     423 => 
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
-      'order' => '12',
+      'editActive' => false,
+      'order' => 12,
       'label_pos' => 'default',
       'required' => '',
       'options' => 
@@ -11209,13 +11236,15 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Typ trička',
       'key' => 'flashmob_participant_tshirt_gender',
       'type' => 'listradio',
+      'field_label' => 'Typ trička',
+      'field_key' => 'flashmob_participant_tshirt_gender',
     ),
     424 => 
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
-      'order' => '13',
+      'editActive' => false,
+      'order' => 13,
       'label_pos' => 'left',
       'required' => '',
       'options' => 
@@ -11764,13 +11793,15 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Veľkosť trička',
       'key' => 'flashmob_participant_tshirt_size',
       'type' => 'listselect',
+      'field_label' => 'Veľkosť trička',
+      'field_key' => 'flashmob_participant_tshirt_size',
     ),
     425 => 
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
-      'order' => '14',
+      'editActive' => false,
+      'order' => 14,
       'label_pos' => 'left',
       'required' => '',
       'options' => 
@@ -11933,13 +11964,15 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Farba trička',
       'key' => 'flashmob_participant_tshirt_color',
       'type' => 'listradio',
+      'field_label' => 'Farba trička',
+      'field_key' => 'flashmob_participant_tshirt_color',
     ),
     426 => 
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
-      'order' => '15',
+      'editActive' => false,
+      'order' => 15,
       'default' => '0',
       'admin_label' => 'leader_user_id',
       'manual_key' => '1',
@@ -11947,27 +11980,15 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'User ID',
       'key' => 'leader_user_id',
       'type' => 'hidden',
-    ),
-    427 => 
-    array (
-      'objectType' => 'Field',
-      'objectDomain' => 'fields',
-      'editActive' => '',
-      'order' => '16',
-      'container_class' => 'florp-class florp-antispam florp-registration-field',
-      'element_class' => '',
-      'size' => 'visible',
-      'drawerDisabled' => '',
-      'label' => 'Antispamová ochrana',
-      'key' => 'antispamova_ochrana_1528848098448',
-      'type' => 'recaptcha_logged-out-only',
+      'field_label' => 'User ID',
+      'field_key' => 'leader_user_id',
     ),
     428 => 
     array (
       'objectType' => 'Field',
       'objectDomain' => 'fields',
-      'editActive' => '',
-      'order' => '17',
+      'editActive' => false,
+      'order' => 17,
       'processing_label' => 'Processing',
       'container_class' => 'florp-class florp-registration-field florp-button-wrapper',
       'element_class' => 'florp_uloz_profil florp-button button',
@@ -11976,6 +11997,8 @@ $aFlorpNinjaFormExportData = array (
       'label' => 'Ulož',
       'key' => 'save_button',
       'type' => 'submit',
+      'field_label' => 'Ulož',
+      'field_key' => 'save_button',
     ),
   ),
   'action_settings' => 
@@ -12234,5 +12257,5 @@ $aFlorpNinjaFormExportData = array (
     ),
   ),
   'version' => 5005000,
-  'timestamp' => 1564329934,
+  'timestamp' => 1564529580,
 ); ?>

@@ -2447,7 +2447,7 @@ class FLORP{
       return ''; // . "<pre>" . var_export(array($aAttributes, $this->isIntfBlog, $this->isMainBlog, $this->isFlashmobBlog, $iNFID), true) . "</pre>";
     }
     $strShortcodeOutput = do_shortcode( '[ninja_form id='.$iNFID.']' );
-    return '<div id="'.$this->strProfileFormWrapperID.'">' . $strShortcodeOutput.'</div>';
+    return '<div id="'.$this->strProfileFormWrapperID.'">' . $strShortcodeOutput.'</div>'; // . "<pre>" . var_export(array($aAttributes, $this->isIntfBlog, $this->isMainBlog, $this->isFlashmobBlog, $iNFID), true) . "</pre>";
   }
 
   public function profile_form_loader( $aAttributes ) {
@@ -10571,7 +10571,7 @@ class FLORP{
         $strContent = "No such registration!";
       }
     }
-    
+
     return $this->fakepage( $aPosts, $this->fakePageSvkParticipantCheckin, "Slovak flashmob participant", $strContent, $this->fakePageSvkParticipantCheckinGlobalID );
   }
 
