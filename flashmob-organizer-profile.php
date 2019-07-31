@@ -709,6 +709,7 @@ class FLORP{
       'strIntfCityPollExtraCities'                => '',
       'bTshirtOrdersAdminEnabled'                 => false,
       'bEditSubmissions'                          => false,
+      'aSvkFlashmobMapVideoAllYears'              => array(),
     );
   }
 
@@ -815,6 +816,7 @@ class FLORP{
       'florp_intf_city_poll_deadline'                 => 'iIntfCityPollDeadline',
       'florp_intf_city_poll_users'                    => 'aIntfCityPollUsers',
       'florp_intf_city_poll_extra_cities'             => 'strIntfCityPollExtraCities',
+      'florp_svk_flashmob_map_video_all_years'        => 'aSvkFlashmobMapVideoAllYears',
     );
     $aDeprecatedKeys = array(
       // new => old //
@@ -846,6 +848,7 @@ class FLORP{
       'aHideFlashmobFieldsForUsers',
       'aUnhideFlashmobFieldsForUsers',
       'aIntfCityPollUsers',
+      'aSvkFlashmobMapVideoAllYears',
     );
     $this->aOptionKeysByBlog = array(
       'main'      => array(
@@ -936,6 +939,7 @@ class FLORP{
         'iTshirtPaymentWarningDeadline',
         'iTshirtPaymentWarningButtonDeadline',
         'iTshirtOrderDeliveredBeforeFlashmobDdl',
+        'aSvkFlashmobMapVideoAllYears',
       ),
       'international' => array(
         'iIntfBlogID',
@@ -3041,6 +3045,20 @@ class FLORP{
           } else {
             $aMapOptionsArray[$iKey] = $aOptions;
           }
+        }
+      }
+
+      // If there is a video override defined for a given city's map of all years, use it //
+      foreach ($aMapOptionsArray as $key => $aMapOptions) {
+        $strFlashmobCity = $aMapOptions["flashmob_city"];
+        $strFlashmobCityID = str_replace( " ", "_", strtolower( $this->removeAccents( $strFlashmobCity ) ) );
+        if (isset($this->aOptions['aSvkFlashmobMapVideoAllYears'][$strFlashmobCityID]) && !empty($this->aOptions['aSvkFlashmobMapVideoAllYears'][$strFlashmobCityID])) {
+          $aMapOptionsArray[$key]["video_link"] = $this->aOptions['aSvkFlashmobMapVideoAllYears'][$strFlashmobCityID];
+          unset($aMapOptionsArray[$key]["year"]);
+          unset($aMapOptionsArray[$key]["latitude"]);
+          unset($aMapOptionsArray[$key]["longitude"]);
+          unset($aMapOptionsArray[$key]["flashmob_number_of_dancers"]);
+          $aMapOptionsArray[$key]["flashmob_address"] = $aMapOptionsArray[$key]["flashmob_city"];
         }
       }
     } else {
@@ -8476,6 +8494,60 @@ class FLORP{
     $wpEditorTshirtPaymentWarningNotificationMsg = $this->get_wp_editor( $this->aOptions['strTshirtPaymentWarningNotificationMsg'], 'florp_tshirt_payment_warning_notif_msg' );
     $wpEditorPaymentOKNotificationMsg = $this->get_wp_editor( $this->aOptions['strPaymentOKNotificationMsg'], 'florp_payment_ok_notif_msg' );
 
+    // Get all cities and create input fields for them - CURRENT YEAR //
+    $strCityTemplate = '<label for="florp_svk_flashmob_map_video_all_years_%%id%%" style="width:19%; display:inline-block;">%%flashmob_city%%:</label><input id="florp_svk_flashmob_map_video_all_years_%%id%%" name="florp_svk_flashmob_map_video_all_years[%%id%%]" type="text" value="%%link%%" style="width: 80%;" title="%%flashmob_city%%" />';
+    $aCityRows = array();
+    $aLeaders = $this->getFlashmobSubscribers( 'all', true );
+    foreach ($aLeaders as $oLeader) {
+      $iLeaderID = $oLeader->ID;
+      $strFlashmobCity = get_user_meta( $oLeader->ID, 'flashmob_city', true );
+      if (empty($strFlashmobCity)) {
+        continue;
+      }
+
+      $id = str_replace( " ", "_", strtolower( $this->removeAccents( $strFlashmobCity ) ) );
+
+      $strLink = "";
+      if (isset($this->aOptions['aSvkFlashmobMapVideoAllYears'][$id])) {
+        $strLink = $this->aOptions['aSvkFlashmobMapVideoAllYears'][$id];
+      }
+
+      $aCityRows[$strFlashmobCity] = str_replace(
+        array("%%id%%", "%%flashmob_city%%", "%%link%%"),
+        array($id, $strFlashmobCity, $strLink),
+        $strCityTemplate
+      );
+    }
+    // Get all cities and create input fields for them - PAST YEARS //
+    foreach ($this->aOptions['aYearlyMapOptions'] as $iYear => $aUsers) {
+      foreach ($aUsers as $iUserID => $aSubmissionData) {
+        if (!isset($aSubmissionData['flashmob_city'])) {
+          continue;
+        }
+        $strFlashmobCity = $aSubmissionData['flashmob_city'];
+        if (empty($strFlashmobCity)) {
+          continue;
+        }
+        if (isset($aCityRows[$strFlashmobCity])) {
+          continue;
+        }
+
+        $id = str_replace( " ", "_", strtolower( $this->removeAccents( $strFlashmobCity ) ) );
+
+        $strLink = "";
+        if (isset($this->aOptions['aSvkFlashmobMapVideoAllYears'][$id])) {
+          $strLink = $this->aOptions['aSvkFlashmobMapVideoAllYears'][$id];
+        }
+
+        $aCityRows[$strFlashmobCity] = str_replace(
+          array("%%id%%", "%%flashmob_city%%", "%%link%%"),
+          array($id, $strFlashmobCity, $strLink),
+          $strCityTemplate
+        );
+      }
+    }
+    ksort($aCityRows);
+    $strSvkFlashmobMapVideoAllYears = implode("<br>", $aCityRows);
 
     return str_replace(
       array( '%%reloadCheckedFlashmob%%',
@@ -8496,7 +8568,8 @@ class FLORP{
         '%%bOnlyFlorpProfileNinjaFormFlashmob%%',
         '%%iTshirtPaymentWarningDeadline%%', '%%iTshirtPaymentWarningDeadlineTime%%',
         '%%iTshirtPaymentWarningButtonDeadline%%', '%%iTshirtPaymentWarningButtonDeadlineTime%%',
-        '%%iTshirtOrderDeliveredBeforeFlashmobDdl%%', '%%iTshirtOrderDeliveredBeforeFlashmobDdlTime%%' ),
+        '%%iTshirtOrderDeliveredBeforeFlashmobDdl%%', '%%iTshirtOrderDeliveredBeforeFlashmobDdlTime%%',
+        '%%strSvkFlashmobMapVideoAllYears%%' ),
       array( $aBooleanOptionsChecked['bReloadAfterSuccessfulSubmissionFlashmob'],
         $aBooleanOptionsChecked['bUseMapImage'],
         $optionsNinjaFormsFlashmob,
@@ -8515,7 +8588,8 @@ class FLORP{
         $aBooleanOptionsChecked['bOnlyFlorpProfileNinjaFormFlashmob'],
         $this->aOptions['iTshirtPaymentWarningDeadline'], $this->iTshirtPaymentWarningDeadlineTime,
         $this->aOptions['iTshirtPaymentWarningButtonDeadline'], $this->iTshirtPaymentWarningButtonDeadlineTime,
-        $this->aOptions['iTshirtOrderDeliveredBeforeFlashmobDdl'], $this->iTshirtOrderDeliveredBeforeFlashmobDdlTime ),
+        $this->aOptions['iTshirtOrderDeliveredBeforeFlashmobDdl'], $this->iTshirtOrderDeliveredBeforeFlashmobDdlTime,
+        $strSvkFlashmobMapVideoAllYears ),
       file_get_contents( __DIR__ . "/view/options-svk-flashmob.html" )
     );
   }
@@ -9563,9 +9637,10 @@ class FLORP{
     }
 
     $aVideoRegexes = array(
-      "youtube"   => '~^https?://(www\.|m\.)?(youtube\.com/watch\?v=|youtu.be/)(.+)$~i',
-      "facebook"  => '~^https?://(www.)?facebook.com/[a-zA-Z0-9]+/videos/[a-zA-Z0-9]+/?$~i',
-      "vimeo"     => '~^https?://(www.)?vimeo.com/([0-9]+)/?$~i',
+      "youtubePlaylist" => '~^https?://(www\.|m\.)?(youtube\.com/watch\?v=[^&]+&list=|youtube\.com/watch\?list=|youtube\.com/playlist\?list=)([^&]+)(.*?)$~i',
+      "youtube"         => '~^https?://(www\.|m\.)?(youtube\.com/watch\?v=|youtu.be/)(.+)$~i',
+      "facebook"        => '~^https?://(www.)?facebook.com/[a-zA-Z0-9]+/videos/[a-zA-Z0-9]+/?$~i',
+      "vimeo"           => '~^https?://(www.)?vimeo.com/([0-9]+)/?$~i',
     );
     $aVideoRegexMatchesAll = array("other" => array());
     $strVideoLink = (isset($aInfoWindowData['video_link']) && isset($aInfoWindowData['video_link']['value'])) ? trim($aInfoWindowData['video_link']['value']) : "";
@@ -9578,14 +9653,31 @@ class FLORP{
           break;
         }
       }
+
+      if ($strVideoLinkType === "other") {
+        $strFlashmobCity = $aInfoWindowData['flashmob_city']['value'];
+        $strFlashmobCityID = str_replace( " ", "_", strtolower( $this->removeAccents( $strFlashmobCity ) ) );
+        if (isset($this->aOptions['aSvkFlashmobMapVideoAllYears'][$strFlashmobCityID]) && $this->aOptions['aSvkFlashmobMapVideoAllYears'][$strFlashmobCityID] === $strVideoLink) {
+          $strVideoLinkType = "youtubePlaylist";
+          $aVideoRegexMatchesAll[$strVideoLinkType] = array( 3 => $strVideoLink );
+        }
+      }
     }
 
     $aVideoRegexMatches = $aVideoRegexMatchesAll[$strVideoLinkType];
     if ($strVideoLinkType == "other") {
       $strEmbedCode = "";
+    } elseif ($strVideoLinkType === "youtubePlaylist") {
+      if (!isset($aVideoRegexMatches[3]) || empty($aVideoRegexMatches[3])) {
+        $strEmbedCode = "";
+        // $strEmbedCode = "<pre>" . var_export($aVideoRegexMatches, true) . "</pre>";
+      } else {
+        $strEmbedCode = $this->getInfoWindowLabel('embed_code').'<iframe width="280" height="160" src="https://www.youtube.com/embed/videoseries?list='.$aVideoRegexMatches[3].'" frameborder="0" allowfullscreen=""></iframe>';
+      }
     } elseif ($strVideoLinkType === "youtube") {
       if (!isset($aVideoRegexMatches[3]) || empty($aVideoRegexMatches[3])) {
         $strEmbedCode = "";
+        // $strEmbedCode = "<pre>" . var_export($aVideoRegexMatches, true) . "</pre>";
       } else {
         $strYoutubeVideoParams = $aVideoRegexMatches[3];
         // Try to explode by &amp; and if it's not present, explode by & //
