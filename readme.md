@@ -17,6 +17,14 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 ## Version history
 
+### v5.6.0: All-years-map video override, YT playlists.
+
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.6.0)
+
+- Added option to override a city's video shown on the flashmob map of all years.
+- Added YT playlist embedding support.
+- Removed reCaptcha fields from participant forms.
+
 ### v5.5.0: Participant check-in QR code.
 
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.5.0)
@@ -254,15 +262,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
   - lat, lng present caused address to be ignored
   - preview map refresh on organizer checkbox change
 
-### v4.6.3: flashmob cancel, tshirt_disabled check, fixes
 
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.3)
-
-- added submission check for tshirt_disabled option
-- added ajax call to cancel flashmob and/or move or delete participants
-- added admin js to florp-option-changes screen
-- added admin ajax button option to reload page
-- fixed default field value setting on successful submission
-
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.6.3)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.6.4)
