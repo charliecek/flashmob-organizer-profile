@@ -13,6 +13,14 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v5.5.0: Participant check-in QR code. =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.5.0)
+- Added QR code generator that adds participants' check-in url as attachment to their confirmation mail.
+- Added hashed check-in url generation.
+- Refactored admin table creation so buttons can be reused.
+- Added check-in pages (svk/international, with/-out tshirt).
+- Fixed some bugs.
+
 = v5.4.1: Checked option archiving =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.4.1)
 - Checked SVK and international flashmob archiving.
@@ -192,10 +200,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 - added admin ajax button option to reload page
 - fixed default field value setting on successful submission
 
-= v4.6.2: option refactoring, logging =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.2)
-- done some option refactoring
-- added option change logging
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.6.2)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.6.3)
