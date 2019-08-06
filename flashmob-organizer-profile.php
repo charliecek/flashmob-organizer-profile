@@ -8278,6 +8278,7 @@ class FLORP{
       // $aMapOptions = $this->get_flashmob_map_options_array(true, 0);
       // echo "<pre>" .var_export($aMapOptions, true). "</pre>";
       // echo "<pre>" .var_export($this->aOptions['aYearlyMapOptions'], true). "</pre>";
+      // echo "<pre>" .var_export($this->aOptions['aYearlyMapOptions'][2017][31]['video_link'], true). "</pre>";
       // echo "<pre>" .var_export($this->getFlashmobSubscribers('subscriber_only'), true). "</pre>";
       // echo "<pre>" .var_export($this->getFlashmobSubscribers('flashmob_organizer'), true). "</pre>";
       // echo "<pre>" .var_export($this->getFlashmobSubscribers('teacher'), true). "</pre>";
@@ -8822,7 +8823,7 @@ class FLORP{
           if ($strOptionKey === "optionsYears") {
             if (defined('FLORP_DEVEL') && FLORP_DEVEL === true) {
               // Anything allowed.
-            } elseif ($this->aOptions['aYearlyMapOptions'][$i] < $this->aOptions[$aSettings['optionKey']]) {
+            } elseif ($i < $this->aOptions[$aSettings['optionKey']]) {
               continue;
             }
           }
@@ -9399,40 +9400,10 @@ class FLORP{
 
   private function removeAccents($strString) {
     return strtr( $strString, array(
-      'ľ' => 'l',
-      'Ľ' => 'L',
-      'ĺ' => 'l',
-      'Ĺ' => 'L',
-      'š' => 's',
-      'Š' => 'S',
-      'č' => 'c',
-      'Č' => 'C',
-      'ť' => 't',
-      'Ť' => 'T',
-      'ž' => 'z',
-      'Ž' => 'Z',
-      'ý' => 'y',
-      'Ý' => 'Y',
-      'á' => 'a',
-      'Á' => 'A',
-      'ä' => 'a',
-      'Ä' => 'A',
-      'í' => 'i',
-      'Í' => 'I',
-      'é' => 'e',
-      'É' => 'E',
-      'ú' => 'u',
-      'Ú' => 'U',
-      'ň' => 'n',
-      'Ň' => 'N',
-      'ô' => 'o',
-      'Ô' => 'O',
-      'ó' => 'o',
-      'Ó' => 'O',
-      'ř' => 'r',
-      'Ř' => 'R',
-      'ŕ' => 'r',
-      'Ŕ' => 'R',
+      'ľ' => 'l', 'Ľ' => 'L', 'ĺ' => 'l', 'Ĺ' => 'L', 'š' => 's', 'Š' => 'S', 'č' => 'c', 'Č' => 'C', 'ť' => 't',
+      'Ť' => 'T', 'ž' => 'z', 'Ž' => 'Z', 'ý' => 'y', 'Ý' => 'Y', 'á' => 'a', 'Á' => 'A', 'ä' => 'a', 'Ä' => 'A',
+      'í' => 'i', 'Í' => 'I', 'é' => 'e', 'É' => 'E', 'ú' => 'u', 'Ú' => 'U', 'ň' => 'n', 'Ň' => 'N', 'ô' => 'o',
+      'Ô' => 'O', 'ó' => 'o', 'Ó' => 'O', 'ř' => 'r', 'Ř' => 'R', 'ŕ' => 'r', 'Ŕ' => 'R',
     ));
   }
 
@@ -9722,7 +9693,7 @@ class FLORP{
       }
     } elseif ($strVideoLinkType === "facebook") {
       $strFacebookLink = htmlentities(urlencode($strVideoLink));
-      $strEmbedCode = $this->getInfoWindowLabel('embed_code').'<iframe src="https://www.facebook.com/plugins/video.php?href='.$strFacebookLink.'&show_text=0&width=560" width="280" height="160" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowTransparency="true" allowFullScreen="true"></iframe>';//.'<pre>'.$strFacebookLink.'</pre>';
+      $strEmbedCode = $this->getInfoWindowLabel('embed_code').'<iframe src="https://www.facebook.com/plugins/video.php?show_text=0&width=280&href='.$strFacebookLink.'" width="280" height="160" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowTransparency="true" allowFullScreen="true"></iframe>';//.'<pre>'.$strFacebookLink.'</pre>';
     } elseif ($strVideoLinkType === "vimeo") {
       if (!isset($aVideoRegexMatches[2]) || empty($aVideoRegexMatches[2])) {
         $strEmbedCode = "";
