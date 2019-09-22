@@ -9498,7 +9498,7 @@ class FLORP{
         case "vytvorit":
           $strSubDomainPage = $this->findCityWebpage( $aData['flashmob_city'] );
           if ($strSubDomainPage) {
-            $strSchoolWebpage = $strSubDomainPage;
+            $strWebpage = $strSubDomainPage;
           } elseif (!$aData["bInfoWindow"]) {
             return "(vytvorit)";
           }
@@ -9506,7 +9506,7 @@ class FLORP{
           break;
       }
     }
-    $strWeb = ''; // In new maps - webpage and school name is not connected //
+    $strWeb = '';
     if (!empty($strWebpage)) {
       if ($aData["bReturnAnchor"]) {
         $strWebLabel = preg_replace( '~^https?://(www\.)?|/$~', "", $strWebpage );
@@ -9518,29 +9518,36 @@ class FLORP{
         $strWeb = $strWebpage;
       }
     }
-    if ($this->aOptions["iCoursesNumberEnabled"] == 0 || empty($aData['school_name'])) {
-      if (!empty($strSchoolWebpage)) {
-        if ($aData["bReturnAnchor"]) {
-          $strSchoolWebpageLabel = preg_replace( '~^https?://(www\.)?|/$~', "", $strSchoolWebpage );
-          $strWeb = '<a href="'.$strSchoolWebpage.'" target="_blank">'.$strSchoolWebpageLabel.'</a>';
-          if ($aData["bInfoWindow"]) {
-            $strWeb = $this->getInfoWindowLabel('web') . $strWeb;
-          }
-        } else {
-          $strWeb = $strSchoolWebpage;
-        }
-      }
-    }
     return $strWeb;
   }
 
   private function getMarkerInfoWindowContent( $aInfoWindowData ) {
     $bHideLeaderInfo = isset($aInfoWindowData['hide_leader_info']) && isset($aInfoWindowData['hide_leader_info']['value']) && $aInfoWindowData['hide_leader_info']['value'] == '1';
     $bIsBeforeFlashmob = ($aInfoWindowData['strMapType'] === 'flashmob_organizer' && ($aInfoWindowData['iCurrentYear'] == '1' || (isset($aInfoWindowData['iIsPreview']) && $aInfoWindowData['iIsPreview'] == '1')) && $aInfoWindowData['iBeforeFlashmob'] == '1');
-    if (empty($aInfoWindowData['user_webpage']['value'])) {
+
+    $strUserWebpage = $aInfoWindowData['user_webpage']['value'];
+    if (!empty($strUserWebpage)) {
+      if ($bHideLeaderInfo) {
+        $strUserWebpage = "";
+      } elseif ($strUserWebpage === "vytvorit") {
+        $strUserWebpage = $this->findCityWebpage( $aInfoWindowData['flashmob_city']['value'] );
+        if ($strUserWebpage === "(vytvorit)") {
+          $strUserWebpage = "";
+        }
+      } elseif ($strUserWebpage === "vlastna") {
+        if (!empty($aInfoWindowData['custom_webpage']['value'])) {
+          $strUserWebpage = $aInfoWindowData['custom_webpage']['value'];
+        } else {
+          $strUserWebpage = "";
+        }
+      } elseif ($strUserWebpage === "flashmob") {
+        $strUserWebpage = "http://flashmob.salsarueda.dance";
+      }
+    }
+    if (empty($strUserWebpage)) {
       $strOrganizer = $this->getInfoWindowLabel('organizer').$aInfoWindowData['first_name']['value'] . " " . $aInfoWindowData['last_name']['value'];
     } else {
-      $strOrganizer = $this->getInfoWindowLabel('organizer').'<a href="'.$aInfoWindowData['user_webpage']['value'].'" target="_blank">'.$aInfoWindowData['first_name']['value'] . " " . $aInfoWindowData['last_name']['value'].'</a>';
+      $strOrganizer = $this->getInfoWindowLabel('organizer').'<a href="'.$strUserWebpage.'" target="_blank">'.$aInfoWindowData['first_name']['value'] . " " . $aInfoWindowData['last_name']['value'].'</a>';
     }
     // $strOrganizer .= var_export($aInfoWindowData, true);
 
@@ -9566,7 +9573,7 @@ class FLORP{
           break;
         case "vytvorit":
           $strSubDomainPage = $this->findCityWebpage( $aInfoWindowData['flashmob_city']['value'] );
-          if ($strSubDomainPage) {
+          if ($strSubDomainPage && $strSubDomainPage !== "(vytvorit)") {
             $strSchoolWebpage = $strSubDomainPage;
           }
         default:
