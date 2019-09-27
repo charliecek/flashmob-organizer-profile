@@ -2980,6 +2980,9 @@ class FLORP{
       $aCurrentYearOptions = $this->get_flashmob_map_options_array(true, 0);
       $aVideoFields = array('facebook_link', 'youtube_link', 'vimeo_link', 'embed_code');
       foreach ($aCurrentYearOptions as $iUserID => $aOptions) {
+        if (!isset($aOptions['flashmob_city'])) {
+          $aOptions['flashmob_city'] = $aOptions['school_city'];
+        }
         $strCity = $aOptions['flashmob_city'];
         if (!empty($strCity)) {
           $strCity = strtolower($strCity);
@@ -3005,6 +3008,9 @@ class FLORP{
       }
       foreach ($this->aOptions["aYearlyMapOptions"] as $iYear => $aMapOptionsForYear) {
         foreach ($aMapOptionsForYear as $iUserID => $aOptions) {
+          if (!isset($aOptions['flashmob_city'])) {
+            $aOptions['flashmob_city'] = $aOptions['school_city'];
+          }
           $strCity = $aOptions['flashmob_city'];
           if (!empty($strCity)) {
             $strCity = strtolower($strCity);
