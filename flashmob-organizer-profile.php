@@ -3012,6 +3012,7 @@ class FLORP{
             $aOptions['flashmob_city'] = $aOptions['school_city'];
           }
           $strCity = $aOptions['flashmob_city'];
+          $aOptions['year'] = $iYear;
           if (!empty($strCity)) {
             $strCity = strtolower($strCity);
             $bVideo = false;
@@ -3024,14 +3025,12 @@ class FLORP{
             if (!in_array($strCity, $aSchoolCities)) {
               if ($bVideo) {
                 $aSchoolCities[] = $strCity;
-                $aOptions['year'] = $iYear;
                 if (isset($aMapOptionsArray[$iUserID])) {
                   $aMapOptionsArray[] = $aOptions;
                 } else {
                   $aMapOptionsArray[$iUserID] = $aOptions;
                 }
               } elseif (!isset($aSchoolCitiesNoVideo[$strCity])) {
-                $aOptions['year'] = $iYear;
                 $iKey = $iUserID;
                 while (isset($aMapOptionsNoVideo[$iKey])) {
                   $iKey++;
