@@ -2537,11 +2537,13 @@ class FLORP{
       $iTotalCount = 0;
     }
 
-    foreach ($this->aOptions['aIntfParticipants'][$this->aOptions['iIntfFlashmobYear']] as $aParticipantData) {
-      if (isset($aParticipantData['intf_city']) && !empty($aParticipantData['intf_city']) && 'null' != $aParticipantData['intf_city'] && in_array($aParticipantData['intf_city'], $aCities)) {
-        $aCityNumbers[$aParticipantData['intf_city']]++;
-        if ($bPercentage) {
-          $iTotalCount++;
+    if (is_array($this->aOptions['aIntfParticipants'][$this->aOptions['iIntfFlashmobYear']]) && !empty($this->aOptions['aIntfParticipants'][$this->aOptions['iIntfFlashmobYear']])) {
+      foreach ($this->aOptions['aIntfParticipants'][$this->aOptions['iIntfFlashmobYear']] as $aParticipantData) {
+        if (isset($aParticipantData['intf_city']) && !empty($aParticipantData['intf_city']) && 'null' != $aParticipantData['intf_city'] && in_array($aParticipantData['intf_city'], $aCities)) {
+          $aCityNumbers[$aParticipantData['intf_city']]++;
+          if ($bPercentage) {
+            $iTotalCount++;
+          }
         }
       }
     }
@@ -4523,11 +4525,13 @@ class FLORP{
     if (!empty($aParticipants)) {
       $aParticipantsFlat = array();
       $iYear = $this->aOptions['iIntfFlashmobYear'];
-      foreach ($aParticipants[$iYear] as $strEmail => $aParticipantData) {
-        $strKey = $strEmail."_".$iYear;
-        $aParticipantsFlat[$strKey] = $aParticipantData;
-        $aParticipantsFlat[$strKey]['year'] = $iYear;
-        $aParticipantsFlat[$strKey]['user_email'] = $strEmail;
+      if (is_array($aParticipants[$iYear]) && !empty($aParticipants[$iYear])) {
+        foreach ($aParticipants[$iYear] as $strEmail => $aParticipantData) {
+          $strKey = $strEmail."_".$iYear;
+          $aParticipantsFlat[$strKey] = $aParticipantData;
+          $aParticipantsFlat[$strKey]['year'] = $iYear;
+          $aParticipantsFlat[$strKey]['user_email'] = $strEmail;
+        }
       }
       uasort($aParticipantsFlat, array($this, "participant_sort"));
 
