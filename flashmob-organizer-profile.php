@@ -4881,7 +4881,9 @@ class FLORP{
     $strEcho .=   '<td class="column column-mesto">'.$aTshirtData['flashmob_city'].$strWarning.'</td>';
     $strEcho .=   '<td class="column column-typ">'.$aTshirtData['type'].'</td>';
     if ($bIntf) {
-      $strEcho .=   '<td class="column column-rok">'.$aTshirtData['year'].'</td>';
+      if (isset($_GET["all_years"]) && $_GET["all_years"] === "1") {
+        $strEcho .=   '<td class="column column-rok">'.$aTshirtData['year'].'</td>';
+      }
     } else {
       $strEcho .=   '<td class="column column-lider">'.$aTshirtData['leader'].'</td>';
     }
@@ -4910,7 +4912,12 @@ class FLORP{
     }
     // echo "<pre>"; var_dump($aTshirts); echo "</pre>"; // NOTE DEVEL
 
-    $strHeaderLeaderOrYear = $bIntf ? "<th class=\"column column-rok\">Rok</th>" : "<th class=\"column column-lider\">Líder</th>";
+    $strHeaderLeaderOrYear = "";
+    if (!$bIntf) {
+      $strHeaderLeaderOrYear = "<th class=\"column column-lider\">Líder</th>";
+    } elseif (isset($_GET["all_years"]) && $_GET["all_years"] === "1") {
+      $strHeaderLeaderOrYear = "<th class=\"column column-rok\">Rok</th>";
+    }
     $strEcho = '<table class="widefat striped"><th class="column column-meno">Meno</th><th class="column column-email">Email</th><th class="column column-mesto">Mesto</th><th class="column column-typ">Typ</th>'.$strHeaderLeaderOrYear.'<th class="column column-vlastnosti">Vlastnosti</th>';
 
     $sIntfBtnIdPart = $bIntf ? "-intf" : "";
@@ -4919,6 +4926,9 @@ class FLORP{
     $iPaid = 0;
     foreach ($aTshirts as $aTshirtData) {
       $aRow = $this->get_tshirts_table_admin_row($aTshirtData, $bIntf);
+      if ($bIntf && (!isset($_GET["all_years"]) || $_GET["all_years"] !== "1") && $aTshirtData['year'] != $this->aOptions['iIntfFlashmobYear']) {
+        continue;
+      }
       $strEcho .= $aRow["echo"];
       $iUnpaid += $aRow["iUnpaid"];
       $iPaid += $aRow["iPaid"];
@@ -6221,6 +6231,9 @@ class FLORP{
       return $aReturn;
     }
     foreach ($aTshirts as $aTshirtData) {
+      if ($bIntf && (!isset($_GET["all_years"]) || $_GET["all_years"] !== "1") && $aTshirtData['year'] !== $this->aOptions['iIntfFlashmobYear']) {
+        continue;
+      }
       $aRow = array(
         $aTshirtData["name"],
         $aTshirtData["email"],
