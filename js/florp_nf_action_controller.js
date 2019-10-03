@@ -121,7 +121,11 @@ function add_florp_action_controllers() {
                   $this.prop("checked", false).trigger('change')
                 }
               } else if ($this.val() === "flashmob_participant_tshirt" && florp.tshirt_ordering_disabled !== "1") {
-                $this.prop("checked", true).trigger('change')
+                if (formID == florp.form_id_intf) {
+                  $this.prop("checked", false).trigger('change')
+                } else {
+                  $this.prop("checked", true).trigger('change')
+                }
               }
             } else if ($this.is("input") && $this.prop("type") !== "radio") {
               if ($this.val().length > 0) {
