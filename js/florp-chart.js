@@ -44,9 +44,10 @@ function florpChartReload(chartClass) {
           try {
             var oResponse = JSON.parse(response),
                 inputData = oResponse.chartProperties,
-                aDataTable = oResponse.dataTable,
+                aDataTable = JSON.parse(JSON.stringify(oResponse.dataTable)),
                 // aOptions = oResponse.options,
                 chartWrapperLoc = florp_charts[inputData.wrapperIndex]
+            // console.log(oResponse);
 
             if ("object" !== typeof chartWrapperLoc || "function" !== typeof chartWrapperLoc.setDataTable || "function" !== typeof chartWrapperLoc.draw) {
               console.warn("Invalid or empty chart wrapper")
@@ -64,6 +65,17 @@ function florpChartReload(chartClass) {
               console.debug(oResponse)
               window["florpChartReloadAjaxRunning"][chartContainerID] = false
               return
+            } else if (aDataTable.length === 1) {
+              if (inputData.hasOwnProperty("containerID") && florp_chart_options_object.hasOwnProperty(inputData["containerID"]) && florp_chart_options_object[inputData["containerID"]].attrs.type === "PieChart") {
+                // nothing - pie chart handles empty data table well
+              } else {
+                // Add fake empty row so the chart renders
+                var emptyRow = ["", 0]
+                for (var i = 0; i < aDataTable[0].length - 2; i++) {
+                  emptyRow.push(null)
+                }
+                aDataTable.push(emptyRow)
+              }
             }
             var $chartContainerLoc = jQuery(chartWrapperLoc.getContainer())
             if ("function" !== typeof $chartContainerLoc.data) {
@@ -81,7 +93,7 @@ function florpChartReload(chartClass) {
               })
               formatter.format(aDataTable, 1)
             }
-            florp_chart_options_object[inputData.containerID] = aDataTable
+            florp_chart_options_object[inputData.containerID].dataTable = oResponse.dataTable
             chartWrapperLoc.setDataTable(aDataTable)
             chartWrapperLoc.draw()
             window["florpChartReloadAjaxRunning"][chartContainerID] = false
@@ -115,12 +127,20 @@ function florpChartDrawAll() {
     var strID = $this.prop('id')
     console.info("Drawing chart "+strID)
     var valStyle = $this.data('valStyle')
-    var chartData = florp_chart_options_object[strID]
+    var chartData = JSON.parse(JSON.stringify(florp_chart_options_object[strID]))
     if ("undefined" === typeof chartData) {
       console.warn("undefined chart data for "+strID)
       return
     }
     var dataTable = chartData.dataTable
+    if (dataTable.length === 1 && chartData.attrs.type !== "PieChart") {
+      // Add fake empty row so the chart renders
+      var emptyRow = ["", 0]
+      for (var i = 0; i < dataTable[0].length - 2; i++) {
+        emptyRow.push(null)
+      }
+      dataTable.push(emptyRow)
+    }
     if (valStyle === 'percentage') {
       dataTable = google.visualization.arrayToDataTable(dataTable)
       var formatter = new google.visualization.NumberFormat({

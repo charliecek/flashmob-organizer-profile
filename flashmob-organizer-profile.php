@@ -2625,9 +2625,6 @@ class FLORP{
     }
 
     $aDataTable = $this->getIntfChartDataTable($aAttributes, $aOptions);
-    if (count($aDataTable) <= 1) {
-      return '';
-    }
 
     if (isset($aAttributes['row-height']) && $aAttributes['row-height'] > 0) {
       $aOptions["bar"] = array("groupWidth" => $aAttributes['row-height']);
