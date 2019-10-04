@@ -1103,7 +1103,7 @@ class FLORP{
     $aArgsMainBlogSubscribers = array(
       'blog_id' => $this->iMainBlogID,
     );
-    $aMainBlogSubscribersUsers = get_users( $aArgsMainBlogUsers );
+    $aMainBlogSubscribersUsers = get_users( $aArgsMainBlogSubscribers );
 
     $aOldVideoLinkMetaKeys = array(
       'facebook' => 'facebook_link',
@@ -4079,7 +4079,7 @@ class FLORP{
 
     $strButtons = $this->get_participants_table_admin_buttons_svk($aParticipantData, $strRowID);
 
-    $strEcho .= '<tr class="row" data-row-id="'.$strRowID.'">';
+    $strEcho = '<tr class="row" data-row-id="'.$strRowID.'">';
     $strEditSubmission = '';
     if ($this->isEditSubmissionsEnabled()) {
       $strDomain = '';
@@ -4315,7 +4315,7 @@ class FLORP{
 
       if ($this->isEditSubmissionsEnabled()) {
         // Remove attendance button //
-        $strButtonID = "florpButton-attend-remove-".$iLeaderID."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
+        $strButtonID = "florpButton-attend-remove-".$iYear."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
         $strButtonLabel = "Odstrániť info o účasti";
         $strLabelForHiding = "Zúčastní/-il(a) sa";
         $strButtons .= '<span class="button double-check button-danger" data-text-double-check="'.$strDoubleCheckQuestion.'" data-text-default="'.$strButtonLabel.'" data-button-id="'.$strButtonID.'" data-row-id="'.$strRowID.'" data-year="'.$iYear.'" data-participant-email="'.$strEmail.'" data-sure="0" data-action="florp_intf_participant_attend" data-attend="remove" data-security="'.wp_create_nonce( 'srd-florp-admin-security-string' ).'" data-text="'.$strLabelForHiding.'">'.$strButtonLabel.'</span>';
@@ -4356,7 +4356,7 @@ class FLORP{
 
     $strButtons = $this->get_participants_table_admin_buttons_intf($aParticipantData, $strRowID);
 
-    $strEcho .= '<tr class="row" data-row-id="'.$strRowID.'">'.PHP_EOL;
+    $strEcho = '<tr class="row" data-row-id="'.$strRowID.'">'.PHP_EOL;
     $strEditSubmission = '';
     if ($this->isEditSubmissionsEnabled()) {
       $strEditSubmission = ' <span class="submission-edit">(<a href="/' . $this->fakePageEditIntfParticipantSubmission . '/?year='.$iYear.'&email='.urlencode($strEmail).'" target="_blank">Edit</a>)</span>';
@@ -4562,6 +4562,10 @@ class FLORP{
 
   private function get_participant_checkin_table($aTshirtData, $aParticipantData, $bIntf = false) {
     $strRowID = "florpRow-".$aTshirtData["id"];
+
+    $aLabels = array(
+        'intf_city' => "Mesto (anketa)"
+    );
 
     $aReplacements = $this->get_participant_data_replacements();
     foreach ($aParticipantData as $strFieldKey => $mixValue) {
@@ -5035,7 +5039,7 @@ class FLORP{
         array($this, 'get_value_maybe_fix_unserialize_array'),
         get_user_meta( $oUser->ID )
       );
-      $strSubDomainPage = false;
+
       if (
               !empty($aAllMeta['flashmob_city'])
            && (
@@ -5048,7 +5052,7 @@ class FLORP{
         if ($strSubDomainPage) {
           $strSubsite = $strSubDomainPage;
           $aUserSubdomains[] = $strSubDomainPage;
-        } elseif (!$aData["bInfoWindow"]) {
+        } else {
           $strSubsite = "<span data-user_id=\"{$oUser->ID}\">Vytvoriť:</span>";
           $aVariations = $this->getCitySubdomainVariations( $strCity );
           foreach ($aVariations as $strVariation) {
@@ -5075,7 +5079,6 @@ class FLORP{
       }
     }
     $aSites = wp_get_sites();
-    $strRootDomain = "";
     foreach ($aSites as $i => $aSite) {
       if ($aSite['public'] != 1 || $aSite['deleted'] == 1 || $aSite['archived'] == 1) {
         continue;
@@ -5789,7 +5792,7 @@ class FLORP{
       $aKeyToType[$oField->get_setting('key')] = $oField->get_setting('type');
     }
 
-    $aSubmission = Ninja_Forms()->form( $iFormID )->get_sub( $iSubmissionID );
+    $oSubmission = Ninja_Forms()->form( $iFormID )->get_sub( $iSubmissionID );
     $aFieldValues = array_map(
       array($this, 'get_value_maybe_fix_unserialize_array'),
       $oSubmission->get_field_values()
@@ -5803,13 +5806,13 @@ class FLORP{
         unset($aFieldValues[$strKey]);
       }
     }
-    if ($sType === 'missed') {
-      if ($strBlog === "main" && email_exists($aFieldValues["user_email"])) {
-        return false;
-      } elseif ($strBlog === "flashmob" && $this->flashmob_participant_exists($aFieldValues["user_email"])) {
-        return false;
-      }
-    }
+//    if ($sType === 'missed') {
+//      if ($strBlog === "main" && email_exists($aFieldValues["user_email"])) {
+//        return false;
+//      } elseif ($strBlog === "flashmob" && $this->flashmob_participant_exists($aFieldValues["user_email"])) {
+//        return false;
+//      }
+//    }
     $strDateFormat = $this->strDateFormat;
     $aFieldValues['_submission_date'] = $oSubmission->get_sub_date( 'Y-m-d H:i:s' );
     $aFieldValues['_submission_date_wp_format'] = $oSubmission->get_sub_date( $strDateFormat );
@@ -6177,12 +6180,12 @@ class FLORP{
             } else {
               $strValue .= "{$oLeader->first_name} {$oLeader->last_name}";
               if (in_array( $this->strUserRolePending, (array) $oLeader->roles )) {
-                $strValue .= " ({$strUserRolePendingName})";
+                $strValue .= " ({$this->strUserRolePendingName})";
               }
             }
           } elseif (is_array($mixValue)) {
             $strValue = implode( ', ', $mixValue);
-          } elseif (in_array($strMetaKey, $aSingleCheckboxes) || is_bool($mixValue)) {
+          } elseif (in_array($strKey, $aSingleCheckboxes) || is_bool($mixValue)) {
             $strValue = $mixValue ? '<input type="checkbox" disabled checked /><span class="hidden">yes</span>' : '<input type="checkbox" disabled /><span class="hidden">no</span>';
           } else {
             $strValue = $mixValue;
@@ -8200,8 +8203,8 @@ class FLORP{
 
     $optionsFlashmobSite = '';
     $optionsMainSite = '';
-    $optionsNewsletterSite = $optionNoneF;
-    $optionsCloneSourceSite = $optionNoneF;
+    $optionsNewsletterSite = $aReturn['optionNoneF'];
+    $optionsCloneSourceSite = $aReturn['optionNoneF'];
     $optionsIntfSite = '';
     $aSites = wp_get_sites();
     $strMainBlogDomain = '';
@@ -8348,6 +8351,7 @@ class FLORP{
   }
 
   private function options_page_main( $aVariables = array() ) {
+    $optionNone = null; $optionNoneF = null; $optionsCloneSourceSite = null; $optionsMainSite = null; $aBooleanOptionsChecked = null;
     if (is_array($aVariables) && !empty($aVariables)) {
       foreach ($aVariables as $strVarName => $mixVarValue) {
         ${$strVarName} = $mixVarValue;
@@ -8445,6 +8449,7 @@ class FLORP{
   }
 
   private function options_page_flashmob( $aVariables = array() ) {
+    $optionNone = null; $optionNoneF = null; $optionsCloneSourceSite = null; $optionsMainSite = null; $aBooleanOptionsChecked = null; $optionsFlashmobSite = null;
     if (is_array($aVariables) && !empty($aVariables)) {
       foreach ($aVariables as $strVarName => $mixVarValue) {
         ${$strVarName} = $mixVarValue;
@@ -8615,6 +8620,7 @@ class FLORP{
   }
 
   private function options_page_common( $aVariables = array() ) {
+    $optionNone = null; $optionNoneF = null; $optionsCloneSourceSite = null; $optionsMainSite = null; $aBooleanOptionsChecked = null; $optionsNewsletterSite = null;
     if (is_array($aVariables) && !empty($aVariables)) {
       foreach ($aVariables as $strVarName => $mixVarValue) {
         ${$strVarName} = $mixVarValue;
@@ -8737,6 +8743,7 @@ class FLORP{
   }
 
   public function options_page_international() {
+    $optionNone = null; $optionNoneF = null; $optionsCloneSourceSite = null; $optionsMainSite = null; $aBooleanOptionsChecked = null;
     echo "<div class=\"wrap\"><h1>" . "Medzinárodný Flashmob" . "</h1>";
 
     if (isset($_POST['save-florp-options'])) {
@@ -9866,7 +9873,7 @@ class FLORP{
     $iSuffix = 0;
     while (username_exists($strUserName)) {
       $iSuffix++;
-      $strUserName = $strUserNameBase . "." . $mixSuffix;
+      $strUserName = $strUserNameBase . "." . $iSuffix;
     }
     return $strUserName;
   }
