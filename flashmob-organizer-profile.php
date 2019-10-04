@@ -2524,7 +2524,7 @@ class FLORP{
     return '<a name="'.$this->strClickTriggerAnchor.'"></a>';
   }
 
-  private function getIntfChartDataTable( $aAttributes, $aOptions ) {
+  private function getIntfChartDataTable( $aAttributes, $aOptions, $aDataTable = array() ) {
     $aCities = $this->get_intf_poll_cities();
     $aCityNumbers = array();
     foreach ($aCities as $strCity) {
