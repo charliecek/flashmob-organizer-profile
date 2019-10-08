@@ -710,6 +710,7 @@ class FLORP{
       'bTshirtOrdersAdminEnabled'                 => false,
       'bEditSubmissions'                          => false,
       'aSvkFlashmobMapVideoAllYears'              => array(),
+      'bIntfChartsVisibleIndefinitelyOnSubmit'    => false,
     );
   }
 
@@ -718,105 +719,106 @@ class FLORP{
     $this->aOptions = get_site_option( $this->strOptionKey, array() );
     $this->aOptionDefaults = $this->get_default_options();
     $this->aOptionFormKeys = array(
-      'florp_reload_after_ok_submission_main'         => 'bReloadAfterSuccessfulSubmissionMain',
-      'florp_reload_after_ok_submission_flashmob'     => 'bReloadAfterSuccessfulSubmissionFlashmob',
-      'florp_flashmob_year'                           => 'iFlashmobYear',
-      'florp_flashmob_month'                          => 'iFlashmobMonth',
-      'florp_flashmob_day'                            => 'iFlashmobDay',
-      'florp_flashmob_hour'                           => 'iFlashmobHour',
-      'florp_flashmob_minute'                         => 'iFlashmobMinute',
-      'florp_flashmob_blog_id'                        => 'iFlashmobBlogID',
-      'florp_main_blog_id'                            => 'iMainBlogID',
-      'florp_newsletter_blog_id'                      => 'iNewsletterBlogID',
-      'florp_clone_source_blog_id'                    => 'iCloneSourceBlogID',
-      'florp_intf_blog_id'                            => 'iIntfBlogID',
-      'florp_profile_form_ninja_form_id_main'         => 'iProfileFormNinjaFormIDMain',
-      'florp_profile_form_popup_id_main'              => 'iProfileFormPopupIDMain',
-      'florp_profile_form_ninja_form_id_flashmob'     => 'iProfileFormNinjaFormIDFlashmob',
-      'florp_profile_form_popup_id_flashmob'          => 'iProfileFormPopupIDFlashmob',
-      'florp_profile_form_ninja_form_id_intf'         => 'iProfileFormNinjaFormIDIntf',
-      'florp_profile_form_popup_id_intf'              => 'iProfileFormPopupIDIntf',
-      'florp_load_maps_lazy'                          => 'bLoadMapsLazy',
-      'florp_load_maps_async'                         => 'bLoadMapsAsync',
-      'florp_load_videos_lazy'                        => 'bLoadVideosLazy',
-      'florp_use_map_image'                           => 'bUseMapImage',
-      'florp_profile_form_page_id_main'               => 'iProfileFormPageIDMain',
-      'florp_profile_form_page_id_flashmob'           => 'iProfileFormPageIDFlashmob',
-      'florp_profile_form_page_id_intf'               => 'iProfileFormPageIDIntf',
-      'florp_pending_user_page_content_html'          => 'strPendingUserPageContentHTML',
-      'florp_user_approved_message'                   => 'strUserApprovedMessage',
-      'florp_user_approved_subject'                   => 'strUserApprovedSubject',
-      'florp_approve_users_automatically'             => 'bApproveUsersAutomatically',
-      'florp_before_login_form_html_main'             => 'strBeforeLoginFormHtmlMain',
-      'florp_before_login_form_html_flashmob'         => 'strBeforeLoginFormHtmlFlashmob',
-      'florp_before_login_form_html_intf'             => 'strBeforeLoginFormHtmlIntf',
-      'florp_google_maps_key'                         => 'strGoogleMapsKey',
-      'florp_google_maps_key_static'                  => 'strGoogleMapsKeyStatic',
-      'florp_fb_app_id'                               => 'strFbAppID',
-      'florp_registration_successful_message'         => 'strRegistrationSuccessfulMessage',
-      'florp_login_successful_message'                => 'strLoginSuccessfulMessage',
-      'florp_prevent_direct_media_downloads'          => 'bPreventDirectMediaDownloads',
-      'florp_newsletter_api_key'                      => 'strNewsletterAPIKey',
-      'florp_newsletter_lists_main'                   => 'strNewsletterListsMain',
-      'florp_newsletter_lists_flashmob'               => 'strNewsletterListsFlashmob',
-      'florp_participant_registered_subject'          => 'strParticipantRegisteredSubject',
-      'florp_participant_registered_message'          => 'strParticipantRegisteredMessage',
-      'florp_participant_removed_subject'             => 'strParticipantRemovedSubject',
-      'florp_participant_removed_message'             => 'strParticipantRemovedMessage',
-      'florp_leader_participant_list_notif_msg'       => 'strLeaderParticipantListNotificationMsg',
-      'florp_leader_participant_list_notif_sbj'       => 'strLeaderParticipantListNotificationSbj',
-      'florp_login_bar_label_login'                   => 'strLoginBarLabelLogin',
-      'florp_login_bar_label_logout'                  => 'strLoginBarLabelLogout',
-      'florp_login_bar_label_profile'                 => 'strLoginBarLabelProfile',
-      'florp_infowindow_template_organizer'           => 'strMarkerInfoWindowTemplateOrganizer',
-      'florp_infowindow_template_teacher'             => 'strMarkerInfoWindowTemplateTeacher',
-      'florp_signup_link_label'                       => 'strSignupLinkLabel',
-      'florp_infowindow_label_organizer'              => 'strInfoWindowLabel_organizer',
-      'florp_infowindow_label_teacher'                => 'strInfoWindowLabel_teacher',
-      'florp_infowindow_label_signup'                 => 'strInfoWindowLabel_signup',
-      'florp_infowindow_label_participant_count'      => 'strInfoWindowLabel_participant_count',
-      'florp_infowindow_label_year'                   => 'strInfoWindowLabel_year',
-      'florp_infowindow_label_dancers'                => 'strInfoWindowLabel_dancers',
-      'florp_infowindow_label_school'                 => 'strInfoWindowLabel_school',
-      'florp_infowindow_label_web'                    => 'strInfoWindowLabel_web',
-      'florp_infowindow_label_facebook'               => 'strInfoWindowLabel_facebook',
-      'florp_infowindow_label_note'                   => 'strInfoWindowLabel_note',
-      'florp_infowindow_label_embed_code'             => 'strInfoWindowLabel_embed_code',
-      'florp_infowindow_label_courses_info'           => 'strInfoWindowLabel_courses_info',
-      'florp_courses_number_enabled'                  => 'iCoursesNumberEnabled',
-      'florp_tshirt_payment_warning_notif_sbj'        => 'strTshirtPaymentWarningNotificationSbj',
-      'florp_tshirt_payment_warning_notif_msg'        => 'strTshirtPaymentWarningNotificationMsg',
-      'florp_payment_ok_notif_enabled'                => 'bPaymentOKNotificationEnabled',
-      'florp_payment_ok_notif_sbj'                    => 'strPaymentOKNotificationSbj',
-      'florp_payment_ok_notif_msg'                    => 'strPaymentOKNotificationMsg',
-      'florp_tshirt_ordering_disabled'                => 'bTshirtOrderingDisabled',
-      'florp_tshirt_ordering_only_disable'            => 'bTshirtOrderingDisabledOnlyDisable',
-      'florp_only_florp_profile_nf_flashmob'          => 'bOnlyFlorpProfileNinjaFormFlashmob',
-      'florp_only_florp_profile_nf_main'              => 'bOnlyFlorpProfileNinjaFormMain',
-      'florp_tshirt_payment_warning_deadline'         => 'iTshirtPaymentWarningDeadline',
-      'florp_tshirt_payment_warning_btn_deadline'     => 'iTshirtPaymentWarningButtonDeadline',
-      'florp_tshirt_order_delivered_b4_flash_ddl'     => 'iTshirtOrderDeliveredBeforeFlashmobDdl',
-      'florp_hide_flashmob_fields_individual'         => 'aHideFlashmobFieldsForUsers',
-      'florp_unhide_flashmob_fields_individual'       => 'aUnhideFlashmobFieldsForUsers',
-      'florp_intf_participant_registered_subject'     => 'strIntfParticipantRegisteredSubject',
-      'florp_intf_participant_registered_message'     => 'strIntfParticipantRegisteredMessage',
-      'florp_intf_tshirt_order_delivered_b4_flash_ddl'=> 'iIntfTshirtOrderDeliveredBeforeFlashmobDdl',
-      'florp_intf_tshirt_ordering_disabled'           => 'bIntfTshirtOrderingDisabled',
-      'florp_intf_tshirt_ordering_only_disable'       => 'bIntfTshirtOrderingDisabledOnlyDisable',
-      'florp_intf_tshirt_payment_warning_btn_deadline'=> 'iIntfTshirtPaymentWarningButtonDeadline',
-      'florp_intf_tshirt_payment_warning_deadline'    => 'iIntfTshirtPaymentWarningDeadline',
-      'florp_intf_tshirt_payment_warning_notif_sbj'   => 'strIntfTshirtPaymentWarningNotificationSbj',
-      'florp_intf_tshirt_payment_warning_notif_msg'   => 'strIntfTshirtPaymentWarningNotificationMsg',
-      'florp_newsletter_lists_intf'                   => 'strNewsletterListsIntf',
-      'florp_intf_flashmob_year'                      => 'iIntfFlashmobYear',
-      'florp_intf_flashmob_month'                     => 'iIntfFlashmobMonth',
-      'florp_intf_flashmob_day'                       => 'iIntfFlashmobDay',
-      'florp_intf_flashmob_hour'                      => 'iIntfFlashmobHour',
-      'florp_intf_flashmob_minute'                    => 'iIntfFlashmobMinute',
-      'florp_intf_city_poll_deadline'                 => 'iIntfCityPollDeadline',
-      'florp_intf_city_poll_users'                    => 'aIntfCityPollUsers',
-      'florp_intf_city_poll_extra_cities'             => 'strIntfCityPollExtraCities',
-      'florp_svk_flashmob_map_video_all_years'        => 'aSvkFlashmobMapVideoAllYears',
+        'florp_reload_after_ok_submission_main'            => 'bReloadAfterSuccessfulSubmissionMain',
+        'florp_reload_after_ok_submission_flashmob'        => 'bReloadAfterSuccessfulSubmissionFlashmob',
+        'florp_flashmob_year'                              => 'iFlashmobYear',
+        'florp_flashmob_month'                             => 'iFlashmobMonth',
+        'florp_flashmob_day'                               => 'iFlashmobDay',
+        'florp_flashmob_hour'                              => 'iFlashmobHour',
+        'florp_flashmob_minute'                            => 'iFlashmobMinute',
+        'florp_flashmob_blog_id'                           => 'iFlashmobBlogID',
+        'florp_main_blog_id'                               => 'iMainBlogID',
+        'florp_newsletter_blog_id'                         => 'iNewsletterBlogID',
+        'florp_clone_source_blog_id'                       => 'iCloneSourceBlogID',
+        'florp_intf_blog_id'                               => 'iIntfBlogID',
+        'florp_profile_form_ninja_form_id_main'            => 'iProfileFormNinjaFormIDMain',
+        'florp_profile_form_popup_id_main'                 => 'iProfileFormPopupIDMain',
+        'florp_profile_form_ninja_form_id_flashmob'        => 'iProfileFormNinjaFormIDFlashmob',
+        'florp_profile_form_popup_id_flashmob'             => 'iProfileFormPopupIDFlashmob',
+        'florp_profile_form_ninja_form_id_intf'            => 'iProfileFormNinjaFormIDIntf',
+        'florp_profile_form_popup_id_intf'                 => 'iProfileFormPopupIDIntf',
+        'florp_load_maps_lazy'                             => 'bLoadMapsLazy',
+        'florp_load_maps_async'                            => 'bLoadMapsAsync',
+        'florp_load_videos_lazy'                           => 'bLoadVideosLazy',
+        'florp_use_map_image'                              => 'bUseMapImage',
+        'florp_profile_form_page_id_main'                  => 'iProfileFormPageIDMain',
+        'florp_profile_form_page_id_flashmob'              => 'iProfileFormPageIDFlashmob',
+        'florp_profile_form_page_id_intf'                  => 'iProfileFormPageIDIntf',
+        'florp_pending_user_page_content_html'             => 'strPendingUserPageContentHTML',
+        'florp_user_approved_message'                      => 'strUserApprovedMessage',
+        'florp_user_approved_subject'                      => 'strUserApprovedSubject',
+        'florp_approve_users_automatically'                => 'bApproveUsersAutomatically',
+        'florp_before_login_form_html_main'                => 'strBeforeLoginFormHtmlMain',
+        'florp_before_login_form_html_flashmob'            => 'strBeforeLoginFormHtmlFlashmob',
+        'florp_before_login_form_html_intf'                => 'strBeforeLoginFormHtmlIntf',
+        'florp_google_maps_key'                            => 'strGoogleMapsKey',
+        'florp_google_maps_key_static'                     => 'strGoogleMapsKeyStatic',
+        'florp_fb_app_id'                                  => 'strFbAppID',
+        'florp_registration_successful_message'            => 'strRegistrationSuccessfulMessage',
+        'florp_login_successful_message'                   => 'strLoginSuccessfulMessage',
+        'florp_prevent_direct_media_downloads'             => 'bPreventDirectMediaDownloads',
+        'florp_newsletter_api_key'                         => 'strNewsletterAPIKey',
+        'florp_newsletter_lists_main'                      => 'strNewsletterListsMain',
+        'florp_newsletter_lists_flashmob'                  => 'strNewsletterListsFlashmob',
+        'florp_participant_registered_subject'             => 'strParticipantRegisteredSubject',
+        'florp_participant_registered_message'             => 'strParticipantRegisteredMessage',
+        'florp_participant_removed_subject'                => 'strParticipantRemovedSubject',
+        'florp_participant_removed_message'                => 'strParticipantRemovedMessage',
+        'florp_leader_participant_list_notif_msg'          => 'strLeaderParticipantListNotificationMsg',
+        'florp_leader_participant_list_notif_sbj'          => 'strLeaderParticipantListNotificationSbj',
+        'florp_login_bar_label_login'                      => 'strLoginBarLabelLogin',
+        'florp_login_bar_label_logout'                     => 'strLoginBarLabelLogout',
+        'florp_login_bar_label_profile'                    => 'strLoginBarLabelProfile',
+        'florp_infowindow_template_organizer'              => 'strMarkerInfoWindowTemplateOrganizer',
+        'florp_infowindow_template_teacher'                => 'strMarkerInfoWindowTemplateTeacher',
+        'florp_signup_link_label'                          => 'strSignupLinkLabel',
+        'florp_infowindow_label_organizer'                 => 'strInfoWindowLabel_organizer',
+        'florp_infowindow_label_teacher'                   => 'strInfoWindowLabel_teacher',
+        'florp_infowindow_label_signup'                    => 'strInfoWindowLabel_signup',
+        'florp_infowindow_label_participant_count'         => 'strInfoWindowLabel_participant_count',
+        'florp_infowindow_label_year'                      => 'strInfoWindowLabel_year',
+        'florp_infowindow_label_dancers'                   => 'strInfoWindowLabel_dancers',
+        'florp_infowindow_label_school'                    => 'strInfoWindowLabel_school',
+        'florp_infowindow_label_web'                       => 'strInfoWindowLabel_web',
+        'florp_infowindow_label_facebook'                  => 'strInfoWindowLabel_facebook',
+        'florp_infowindow_label_note'                      => 'strInfoWindowLabel_note',
+        'florp_infowindow_label_embed_code'                => 'strInfoWindowLabel_embed_code',
+        'florp_infowindow_label_courses_info'              => 'strInfoWindowLabel_courses_info',
+        'florp_courses_number_enabled'                     => 'iCoursesNumberEnabled',
+        'florp_tshirt_payment_warning_notif_sbj'           => 'strTshirtPaymentWarningNotificationSbj',
+        'florp_tshirt_payment_warning_notif_msg'           => 'strTshirtPaymentWarningNotificationMsg',
+        'florp_payment_ok_notif_enabled'                   => 'bPaymentOKNotificationEnabled',
+        'florp_payment_ok_notif_sbj'                       => 'strPaymentOKNotificationSbj',
+        'florp_payment_ok_notif_msg'                       => 'strPaymentOKNotificationMsg',
+        'florp_tshirt_ordering_disabled'                   => 'bTshirtOrderingDisabled',
+        'florp_tshirt_ordering_only_disable'               => 'bTshirtOrderingDisabledOnlyDisable',
+        'florp_only_florp_profile_nf_flashmob'             => 'bOnlyFlorpProfileNinjaFormFlashmob',
+        'florp_only_florp_profile_nf_main'                 => 'bOnlyFlorpProfileNinjaFormMain',
+        'florp_tshirt_payment_warning_deadline'            => 'iTshirtPaymentWarningDeadline',
+        'florp_tshirt_payment_warning_btn_deadline'        => 'iTshirtPaymentWarningButtonDeadline',
+        'florp_tshirt_order_delivered_b4_flash_ddl'        => 'iTshirtOrderDeliveredBeforeFlashmobDdl',
+        'florp_hide_flashmob_fields_individual'            => 'aHideFlashmobFieldsForUsers',
+        'florp_unhide_flashmob_fields_individual'          => 'aUnhideFlashmobFieldsForUsers',
+        'florp_intf_participant_registered_subject'        => 'strIntfParticipantRegisteredSubject',
+        'florp_intf_participant_registered_message'        => 'strIntfParticipantRegisteredMessage',
+        'florp_intf_tshirt_order_delivered_b4_flash_ddl'   => 'iIntfTshirtOrderDeliveredBeforeFlashmobDdl',
+        'florp_intf_tshirt_ordering_disabled'              => 'bIntfTshirtOrderingDisabled',
+        'florp_intf_tshirt_ordering_only_disable'          => 'bIntfTshirtOrderingDisabledOnlyDisable',
+        'florp_intf_tshirt_payment_warning_btn_deadline'   => 'iIntfTshirtPaymentWarningButtonDeadline',
+        'florp_intf_tshirt_payment_warning_deadline'       => 'iIntfTshirtPaymentWarningDeadline',
+        'florp_intf_tshirt_payment_warning_notif_sbj'      => 'strIntfTshirtPaymentWarningNotificationSbj',
+        'florp_intf_tshirt_payment_warning_notif_msg'      => 'strIntfTshirtPaymentWarningNotificationMsg',
+        'florp_newsletter_lists_intf'                      => 'strNewsletterListsIntf',
+        'florp_intf_flashmob_year'                         => 'iIntfFlashmobYear',
+        'florp_intf_flashmob_month'                        => 'iIntfFlashmobMonth',
+        'florp_intf_flashmob_day'                          => 'iIntfFlashmobDay',
+        'florp_intf_flashmob_hour'                         => 'iIntfFlashmobHour',
+        'florp_intf_flashmob_minute'                       => 'iIntfFlashmobMinute',
+        'florp_intf_city_poll_deadline'                    => 'iIntfCityPollDeadline',
+        'florp_intf_city_poll_users'                       => 'aIntfCityPollUsers',
+        'florp_intf_city_poll_extra_cities'                => 'strIntfCityPollExtraCities',
+        'florp_svk_flashmob_map_video_all_years'           => 'aSvkFlashmobMapVideoAllYears',
+        'florp_intf_charts_visible_indefinitely_on_submit' => 'bIntfChartsVisibleIndefinitelyOnSubmit',
     );
     $aDeprecatedKeys = array(
       // new => old //
@@ -843,6 +845,7 @@ class FLORP{
       'bIntfTshirtOrderingDisabled',
       'bTshirtOrdersAdminEnabled',
       'bPaymentOKNotificationEnabled',
+      'bIntfChartsVisibleIndefinitelyOnSubmit',
     );
     $this->aArrayOptions = array(
       'aHideFlashmobFieldsForUsers',
@@ -967,6 +970,7 @@ class FLORP{
         'aIntfParticipants',
         'aIntfCityPollUsers',
         'strIntfCityPollExtraCities',
+        'bIntfChartsVisibleIndefinitelyOnSubmit',
       ),
     );
     $this->aSeparateOptionKeys = array( 'logs', 'aParticipants', 'aIntfParticipants', 'aTshirts', 'aTshirtsIntf', 'aYearlyMapOptions', 'aYearlySvkFlashmobOptions', 'aOrderDates', 'aOptionChanges', 'aNfSubmissions', 'aNfFieldTypes' );
@@ -2524,7 +2528,7 @@ class FLORP{
     return '<a name="'.$this->strClickTriggerAnchor.'"></a>';
   }
 
-  private function getIntfChartDataTable( $aAttributes, $aOptions, $aDataTable = array() ) {
+  private function getIntfChartDataTable( $aAttributes, $aOptions ) {
     $aCities = $this->get_intf_poll_cities();
     $aCityNumbers = array();
     foreach ($aCities as $strCity) {
@@ -2553,13 +2557,13 @@ class FLORP{
     if (isset($aAttributes['limit']) && (is_int($aAttributes['limit']) || preg_match('~\d+~', $aAttributes['limit']))) {
       $iLimit = intval($aAttributes['limit']);
     }
-    // $iLimit = 3;
 
     $iCount = 1;
     $aHeader = [$aAttributes['row-name'], $aAttributes['col-name']];
     if (isset($aAttributes['color'])) {
       $aHeader[] = [ "role" => 'style' ];
     }
+    $aDataTable = array();
     $aDataTable[] = $aHeader;
     foreach ($aCityNumbers as $strCity => $iValue) {
       if ($iValue == 0) {
@@ -2582,18 +2586,26 @@ class FLORP{
   }
 
   public function shortcode_intf_chart( $aAttributes ) {
-    $aAttributes = shortcode_atts(array(
-      'row-height'    => 0,
-      'color'         => '#aaa',
-      'row-name'      => 'Mesto',
-      'col-name'      => 'Počet hlasov',
-      'val-style'     => 'count', // OR: 'percentage'
-      'limit'         => 0,
-      'chart-title'   => null,
-      'chart-height'  => null,
-      'type'          => 'BarChart',
-      'chartAreaLeft' => array( 230 => 35, 270 => 30, 340 => 25, 1000000 => 20 ), // key is max div width for given value //
-    ), $aAttributes);
+    $aAttributes = shortcode_atts( array(
+        'row-height'    => 0,
+        'color'         => '#aaa',
+        'row-name'      => 'Mesto',
+        'col-name'      => 'Počet hlasov',
+        'val-style'     => 'count', // OR: 'percentage'
+        'limit'         => 0,
+        'chart-title'   => null,
+        'chart-height'  => null,
+        'type'          => 'BarChart',
+        'chartAreaLeft' => array( 230 => 35, 270 => 30, 340 => 25, 1000000 => 20 ), // key is max div width for given value //
+        'hide-on-load'  => 0,
+        'focus-on-show' => 0,
+        'scroll-offset' => 100,
+    ), $aAttributes );
+    $bHideOnLoad = $aAttributes['hide-on-load'] === 1 || $aAttributes['hide-on-load'] === "1" || $aAttributes['hide-on-load'] === "true" || $aAttributes['hide-on-load'] === true;
+    $aAttributes['hide-on-load'] = $bHideOnLoad ? 1 : 0;
+    $aAttributes['focus-on-show'] = ($aAttributes['focus-on-show'] === 1 || $aAttributes['focus-on-show'] === "1" || $aAttributes['focus-on-show'] === "true" || $aAttributes['focus-on-show'] === true) ? 1 : 0;
+    $aAttributes['scroll-offset'] = intval($aAttributes['scroll-offset']);
+
     $aOptions = array(
       'title'           => 'Mestá',
       'legend'          => 'none',
@@ -2606,6 +2618,10 @@ class FLORP{
       // 'height' => '400px',
       'width' => '100%',
     );
+    if ($bHideOnLoad) {
+      $aStyleAttributes['display'] = "none";
+    }
+
     $aStyleItems = array();
     foreach ($aStyleAttributes as $key => $val) {
       if (isset($aAttributes["div-".$key])) {
@@ -2639,7 +2655,7 @@ class FLORP{
 
   public function filter__get_intf_chart_datatable( $aDataTable, $aChartProperties, $aChartData ) {
     if (in_array($this->strIntfChartClass, $aChartProperties["containerClasses"])) {
-      $aDataTableLoc = $this->getIntfChartDataTable($aChartData['attrs'], $aChartData['options'], $aChartData['dataTable']);
+      $aDataTableLoc = $this->getIntfChartDataTable($aChartData['attrs'], $aChartData['options']);
       // Only change the output if it's different from the previous value -- this prevents the reloading of charts e.g. on PUM close //
       if ($aDataTableLoc != $aChartData['dataTable']) {
         $aDataTable = $aDataTableLoc;
@@ -3481,53 +3497,55 @@ class FLORP{
     }
 
     $aJS = array(
-      'hide_flashmob_fields'              => $mixHideFlashmobFields,
-      'reload_ok_submission'              => $bReloadAfterSuccessfulSubmission ? 1 : 0, // DEPRECATED //
-      'reload_ok_submission_main'         => $bReloadAfterSuccessfulSubmissionMain ? 1 : 0,
-      'reload_ok_submission_flashmob'     => $bReloadAfterSuccessfulSubmissionFlashmob ? 1 : 0,
-      'using_og_map_image'                => $this->aOptions['bUseMapImage'] ? 1 : 0,
-      'blog_type'                         => $strBlogType, // DEPRECATED //
-      'blog_types'                        => $aBlogTypes,
-      'reload_ok_cookie'                  => 'florp-form-saved',
-      'florp_trigger_anchor'              => $this->strClickTriggerAnchor,
-      'get_markerInfoHTML_action'         => 'get_markerInfoHTML',
-      'get_mapUserInfo_action'            => 'get_mapUserInfo',
-      'ajaxurl'                           => admin_url( 'admin-ajax.php'),
-      'security'                          => wp_create_nonce( 'srd-florp-security-string' ),
-      'flashmob_city'                     => get_user_meta( $iUserID, 'flashmob_city', true ),
-      'click_trigger_class_main'          => $this->strClickTriggerClass,
-      'click_trigger_class_flashmob'      => $this->strClickTriggerClass,
-      'click_trigger_class_intf'          => $this->strClickTriggerClass,
-      'do_trigger_popup_click_main'       => $bDoTriggerPopupClick, // For when registration is in popup //
-      'general_map_options'               => $this->aGeneralMapOptions,
-      'form_id'                           => $iNFID, // DEPRECATED //
-      'form_id_main'                      => $iNFIDMain,
-      'form_id_flashmob'                  => $iNFIDFlashmob,
-      'form_id_intf'                      => $iNFIDIntf,
-      'logging_in_msg'                    => $this->aOptions['strRegistrationSuccessfulMessage'],
-      'popup_id'                          => $iPopupID, // DEPRECATED //
-      'popup_id_main'                     => $iPopupIDMain,
-      'popup_id_flashmob'                 => $iPopupIDFlashmob,
-      'popup_id_intf'                     => $iPopupIDIntf,
-      'load_maps_lazy'                    => $this->aOptions['bLoadMapsLazy'] ? 1 : 0,
-      'load_maps_async'                   => $this->aOptions['bLoadMapsAsync'] ? 1 : 0,
-      'load_videos_lazy'                  => $this->aOptions['bLoadVideosLazy'] ? 1 : 0,
-      'has_participants'                  => $iHasParticipants,
-      'img_path'                          => plugins_url( 'flashmob-organizer-profile/img/' ),
-      'tshirt_imgs_couples'               => $aTshirtImages['availability'],
-      'tshirt_imgs_full'                  => $aTshirtImages['full'],
-      'intf_tshirt_imgs_couples'          => $aTshirtImagesIntf['availability'],
-      'intf_tshirt_imgs_full'             => $aTshirtImagesIntf['full'],
-      'courses_info_disabled'             => $this->aOptions['iCoursesNumberEnabled'] == 0 ? 1 : 0,
-      'courses_number_enabled'            => intval($this->aOptions['iCoursesNumberEnabled']),
-      'tshirt_ordering_disabled'          => $this->aOptions['bTshirtOrderingDisabled'] ? 1 : 0,
-      'tshirt_ordering_only_disable'      => $this->aOptions['bTshirtOrderingDisabledOnlyDisable'] ? 1 : 0,
-      'tshirt_ordering_disabled_intf'     => $this->aOptions['bIntfTshirtOrderingDisabled'] ? 1 : 0,
-      'tshirt_ordering_only_disable_intf' => $this->aOptions['bIntfTshirtOrderingDisabledOnlyDisable'] ? 1 : 0,
-      'intf_city_poll_disabled'           => $this->bIntfCityPollDisabled ? 1 : 0,
-      // 'all_imgs'                          => glob($strImagePath . "t-shirt-*.png"),
-      'reload_charts_on_intff_submission' => $this->bReloadChartOnIntfFormSubmission ? 1 : 0,
-      'intf_chart_class'                  => $this->strIntfChartClass,
+        'hide_flashmob_fields'                       => $mixHideFlashmobFields,
+        'reload_ok_submission'                       => $bReloadAfterSuccessfulSubmission ? 1 : 0, // DEPRECATED //
+        'reload_ok_submission_main'                  => $bReloadAfterSuccessfulSubmissionMain ? 1 : 0,
+        'reload_ok_submission_flashmob'              => $bReloadAfterSuccessfulSubmissionFlashmob ? 1 : 0,
+        'using_og_map_image'                         => $this->aOptions['bUseMapImage'] ? 1 : 0,
+        'blog_type'                                  => $strBlogType, // DEPRECATED //
+        'blog_types'                                 => $aBlogTypes,
+        'reload_ok_cookie'                           => 'florp-form-saved',
+        'florp_trigger_anchor'                       => $this->strClickTriggerAnchor,
+        'get_markerInfoHTML_action'                  => 'get_markerInfoHTML',
+        'get_mapUserInfo_action'                     => 'get_mapUserInfo',
+        'ajaxurl'                                    => admin_url( 'admin-ajax.php' ),
+        'security'                                   => wp_create_nonce( 'srd-florp-security-string' ),
+        'flashmob_city'                              => get_user_meta( $iUserID, 'flashmob_city', true ),
+        'click_trigger_class_main'                   => $this->strClickTriggerClass,
+        'click_trigger_class_flashmob'               => $this->strClickTriggerClass,
+        'click_trigger_class_intf'                   => $this->strClickTriggerClass,
+        'do_trigger_popup_click_main'                => $bDoTriggerPopupClick, // For when registration is in popup //
+        'general_map_options'                        => $this->aGeneralMapOptions,
+        'form_id'                                    => $iNFID, // DEPRECATED //
+        'form_id_main'                               => $iNFIDMain,
+        'form_id_flashmob'                           => $iNFIDFlashmob,
+        'form_id_intf'                               => $iNFIDIntf,
+        'logging_in_msg'                             => $this->aOptions['strRegistrationSuccessfulMessage'],
+        'popup_id'                                   => $iPopupID, // DEPRECATED //
+        'popup_id_main'                              => $iPopupIDMain,
+        'popup_id_flashmob'                          => $iPopupIDFlashmob,
+        'popup_id_intf'                              => $iPopupIDIntf,
+        'load_maps_lazy'                             => $this->aOptions['bLoadMapsLazy'] ? 1 : 0,
+        'load_maps_async'                            => $this->aOptions['bLoadMapsAsync'] ? 1 : 0,
+        'load_videos_lazy'                           => $this->aOptions['bLoadVideosLazy'] ? 1 : 0,
+        'has_participants'                           => $iHasParticipants,
+        'img_path'                                   => plugins_url( 'flashmob-organizer-profile/img/' ),
+        'tshirt_imgs_couples'                        => $aTshirtImages['availability'],
+        'tshirt_imgs_full'                           => $aTshirtImages['full'],
+        'intf_tshirt_imgs_couples'                   => $aTshirtImagesIntf['availability'],
+        'intf_tshirt_imgs_full'                      => $aTshirtImagesIntf['full'],
+        'courses_info_disabled'                      => $this->aOptions['iCoursesNumberEnabled'] == 0 ? 1 : 0,
+        'courses_number_enabled'                     => intval( $this->aOptions['iCoursesNumberEnabled'] ),
+        'tshirt_ordering_disabled'                   => $this->aOptions['bTshirtOrderingDisabled'] ? 1 : 0,
+        'tshirt_ordering_only_disable'               => $this->aOptions['bTshirtOrderingDisabledOnlyDisable'] ? 1 : 0,
+        'tshirt_ordering_disabled_intf'              => $this->aOptions['bIntfTshirtOrderingDisabled'] ? 1 : 0,
+        'tshirt_ordering_only_disable_intf'          => $this->aOptions['bIntfTshirtOrderingDisabledOnlyDisable'] ? 1 : 0,
+        'intf_city_poll_disabled'                    => $this->bIntfCityPollDisabled ? 1 : 0,
+        // 'all_imgs'                                   => glob( $strImagePath . "t-shirt-*.png" ),
+        'reload_charts_on_intff_submission'          => $this->bReloadChartOnIntfFormSubmission ? 1 : 0,
+        'intf_chart_class'                           => $this->strIntfChartClass,
+        'intf_flashmob_year'                         => intval( $this->aOptions['iIntfFlashmobYear'] ),
+        'intf_charts_visible_indefinitely_on_submit' => $this->aOptions['bIntfChartsVisibleIndefinitelyOnSubmit'] ? 1 : 0,
     );
     if (is_user_logged_in()) {
       $aJS['user_id'] = $iUserID;
@@ -8935,6 +8953,7 @@ class FLORP{
           '%%aIntfCityPollUsers%%',
           '%%strIntfCityPollExtraCities%%',
           '%%paymentOKNotificationEnabledChecked%%', '%%strPaymentOKNotificationSbj%%', '%%wpEditorPaymentOKNotificationMsg%%', '%%strPaymentOKNotificationReasons%%',
+          '%%chartsVisibleIndefinitelyOnSubmitChecked%%',
         ),
         array(
           $aVariables['optionsIntfSite'],
@@ -8961,6 +8980,7 @@ class FLORP{
           $strIntfCityPollUsers,
           $this->aOptions['strIntfCityPollExtraCities'],
           $aBooleanOptionsChecked['bPaymentOKNotificationEnabled'], $this->aOptions['strPaymentOKNotificationSbj'], $wpEditorPaymentOKNotificationMsg, $this->strPaymentOKNotificationReasons,
+          $aBooleanOptionsChecked['bIntfChartsVisibleIndefinitelyOnSubmit'],
         ),
         file_get_contents( __DIR__ . "/view/options-international-settings.html" )
       );

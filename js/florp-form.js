@@ -139,7 +139,7 @@
 
 // BEGIN Florp specific functions //
   function florpScrollToAnchor() {
-    console.log("firing event before close");
+    console.log("firing event before close: scrolling to '#florp-popup-scroll'");
     var el = jQuery("#florp-popup-scroll");
     if (el.length > 0) {
       jQuery('html, body').scrollTop(el.first().offset().top - 100);
@@ -171,6 +171,10 @@
     if ("function" !== typeof florpChartReload) {
       return
     }
+    if (sessionStorage.getItem("florpFormSubmitSuccessful") !== "1") {
+      return;
+    }
+    localStorage.setItem('chartVisible', florp.intf_flashmob_year)
     florpChartReload(florp.intf_chart_class)
   }
   function florp_reload_on_successful_submission(sReloadOkVar) {

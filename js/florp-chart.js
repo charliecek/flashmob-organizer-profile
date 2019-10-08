@@ -46,7 +46,9 @@ function florpChartReload(chartClass) {
                 inputData = oResponse.chartProperties,
                 aDataTable = JSON.parse(JSON.stringify(oResponse.dataTable)),
                 // aOptions = oResponse.options,
-                chartWrapperLoc = florp_charts[inputData.wrapperIndex]
+                chartWrapperLoc = florp_charts[inputData.wrapperIndex],
+                chartContainerID = inputData.containerID || chartContainerID,
+                chartData = chartContainerID && florp_chart_options_object.hasOwnProperty(chartContainerID) ? florp_chart_options_object[chartContainerID] : {}
             // console.log(oResponse);
 
             if ("object" !== typeof chartWrapperLoc || "function" !== typeof chartWrapperLoc.setDataTable || "function" !== typeof chartWrapperLoc.draw) {
@@ -66,7 +68,7 @@ function florpChartReload(chartClass) {
               window["florpChartReloadAjaxRunning"][chartContainerID] = false
               return
             } else if (aDataTable.length === 1) {
-              if (inputData.hasOwnProperty("containerID") && florp_chart_options_object.hasOwnProperty(inputData["containerID"]) && florp_chart_options_object[inputData["containerID"]].attrs.type === "PieChart") {
+              if (chartContainerID && chartData.hasOwnProperty("attrs") && chartData.attrs.type === "PieChart") {
                 // nothing - pie chart handles empty data table well
               } else {
                 // Add fake empty row so the chart renders
@@ -84,6 +86,13 @@ function florpChartReload(chartClass) {
               window["florpChartReloadAjaxRunning"][chartContainerID] = false
               return
             }
+            if ($chartContainerLoc.data("hideOnLoad") === "1" || $chartContainerLoc.data("hideOnLoad") === 1 || (chartData.hasOwnProperty("attrs") && chartData.attrs["hide-on-load"] === 1)) {
+              $chartContainerLoc.show()
+              if ($chartContainerLoc.data("focusOnShow") === "1" || $chartContainerLoc.data("focusOnShow") === 1 || (chartData.hasOwnProperty("attrs") && chartData.attrs["focus-on-show"] === 1)) {
+                var scrollOffset = +$chartContainerLoc.data("scrollOffset") || ((chartData.hasOwnProperty("attrs") && !isNaN(+chartData.attrs["scroll-offset"])) ? +chartData.attrs["scroll-offset"] : 100);
+                jQuery('html, body').stop().animate({scrollTop: $chartContainerLoc.first().offset().top - scrollOffset});
+              }
+            }
             var valStyle = $chartContainerLoc.data('valStyle')
             if (valStyle === 'percentage') {
               aDataTable = google.visualization.arrayToDataTable(aDataTable)
@@ -93,7 +102,7 @@ function florpChartReload(chartClass) {
               })
               formatter.format(aDataTable, 1)
             }
-            florp_chart_options_object[inputData.containerID].dataTable = oResponse.dataTable
+            florp_chart_options_object[chartContainerID].dataTable = oResponse.dataTable
             chartWrapperLoc.setDataTable(aDataTable)
             chartWrapperLoc.draw()
             window["florpChartReloadAjaxRunning"][chartContainerID] = false
@@ -132,6 +141,12 @@ function florpChartDrawAll() {
       console.warn("undefined chart data for "+strID)
       return
     }
+    if (florp.intf_charts_visible_indefinitely_on_submit === "1" && +localStorage.getItem('chartVisible') === +florp.intf_flashmob_year) {
+      if ($this.data("hideOnLoad") === "1" || $this.data("hideOnLoad") === 1 || (chartData.hasOwnProperty("attrs") && chartData.attrs["hide-on-load"] === 1)) {
+        $this.show()
+      }
+    }
+
     var dataTable = chartData.dataTable
     if (dataTable.length === 1 && chartData.attrs.type !== "PieChart") {
       // Add fake empty row so the chart renders
