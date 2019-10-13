@@ -13,6 +13,19 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v5.7.0: Showing chart on international florp chart submission =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.7.0)
+- Added possibility to show chart(s) on intf form submit.
+- Fixed multiple typos, bugs in code.
+- Limited default intf tshirts list to current year's ones (table, csv).
+- Fixed setting of tshirt ordering to checked in cleared form on submit (intf).
+- Fixed chart reload bug.
+- Fixed missing cities in all-years-map.
+- Fixed getting city-based webpage and school webpage.
+- Added new SVK flashmob t-shirt images.
+- Removed outdated svk flashmob t-shirts.
+- Bugfix: intf year admin dropdown.
+
 = v5.6.0: All-years-map video override, YT playlists. =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.6.0)
 - Added option to override a city's video shown on the flashmob map of all years.
@@ -186,17 +199,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 - fix: double line break when signup link is empty (after flashmob)
 - fix: default value of organizer marker template
 
-= v4.6.4: individual flashmob hide/unhide, bugfixes =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.4)
-- added possibility to hide/unhide individual users' flashmob fields
-  - fix: do not show before-flashmob fields before flashmob if present
-- raised admin ajax timeout
-- fix: video link regex check
-- form fix: video_link usermeta default
-- form map js fixes:
-  - draggable callback wasn't assigned correctly
-  - lat, lng present caused address to be ignored
-  - preview map refresh on organizer checkbox change
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.6.4)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.6.5)
