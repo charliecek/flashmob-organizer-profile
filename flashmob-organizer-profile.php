@@ -14,7 +14,8 @@
  * License URI: https://www.gnu.org/licenses/gpl.html
  */
 
-require_once(__DIR__ . "/qr-code-3.6/vendor/autoload.php");
+require_once( __DIR__ . "/qr-code-3.6/vendor/autoload.php" );
+require_once( __DIR__ . "/class.florp.color.php" );
 
 use Endroid\QrCode\ErrorCorrectionLevel;
 use Endroid\QrCode\LabelAlignment;
@@ -2558,37 +2559,126 @@ class FLORP{
       $iLimit = intval($aAttributes['limit']);
     }
 
+    $aCityNumbers = array_filter($aCityNumbers, function($iValue) {
+      return $iValue > 0;
+    });
+
+    $iValueCount = count($aCityNumbers);
+    if ($iLimit > 0) {
+      $iValueCount = min($iLimit, $iValueCount);
+      $aCityNumbers = array_slice( $aCityNumbers, 0, $iValueCount, true);
+    }
+
+    $aColors = $this->getFlorpChartColors(isset($aAttributes['colors']) ? $aAttributes['colors'] : "", $iValueCount);
+    $iColorCount = count($aColors);
+
     $iCount = 1;
     $aHeader = [$aAttributes['row-name'], $aAttributes['col-name']];
-    if (isset($aAttributes['color'])) {
+    if ($iColorCount > 0) {
       $aHeader[] = [ "role" => 'style' ];
     }
+
     $aDataTable = array();
     $aDataTable[] = $aHeader;
     foreach ($aCityNumbers as $strCity => $iValue) {
-      if ($iValue == 0) {
-        continue;
-      }
-      if ($iLimit > 0 && $iCount > $iLimit) {
-        break;
-      }
       if ($bPercentage) {
         $iValue = round((100.0 * $iValue) / $iTotalCount, 2);
       }
       $aRow = [$strCity, $iValue];
-      if (isset($aAttributes['color'])) {
-        $aRow[] = $aAttributes['color'];
+      if ($iColorCount > 0) {
+        $aRow[] = $aColors[ $iCount % $iColorCount];
       }
       $aDataTable[] = $aRow;
       $iCount++;
     }
+
     return $aDataTable;
+  }
+
+  private function getFlorpChartColors($sColors, $iValueCount, $bTest = false) {
+    $sColors = str_replace(array(' ', "\t"), array("", ""), $sColors);
+    $bIncludeBorders = true;
+
+    if ($sColors === "auto") {
+      $bIncludeBorders = false;
+      $sColors         = "#000000-#ffffff";
+    } elseif ($sColors === "all") {
+      $sColors = "#f00-#0f0,#0f0-#00f,#00f-#f00";
+    } elseif (substr($sColors, -1) === "!") {
+      $bIncludeBorders = false;
+      $sColors = str_replace("!", "", $sColors);
+    }
+
+    $aColors = explode(",", $sColors);
+    if (count($aColors) === 0) {
+      return array();
+    }
+
+    $aRanges = array();
+    $iCountedRangeColorCount = 0;
+    $aCountedRanges = array();
+    foreach ($aColors as $iKey => $sColor) {
+      if (FLORP_COLOR::isHex($sColor)) {
+        continue;
+      } elseif (FLORP_COLOR::isHexRangeWithCount($sColor)) {
+        $aCountedRanges[$iKey] = explode("-", $sColor);
+        $iCountedRangeColorCount += intval($aCountedRanges[$iKey][2]);
+      } elseif (FLORP_COLOR::isHexRange($sColor)) {
+        $aRanges[$iKey] = explode("-", $sColor);
+      } else {
+        unset($aColors[$iKey]);
+      }
+    }
+
+    $iColorCount = count($aColors);
+    $iRangeCount = count($aRanges);
+
+    if ($iRangeCount > 0 || $iCountedRangeColorCount > 0) {
+      $iSimpleColorCount = $iColorCount - $iRangeCount;
+      $iNeededRangeColorCount = $iValueCount - $iSimpleColorCount - $iCountedRangeColorCount;
+
+      $aNewColors = array();
+      $iAddedColorCount = 0;
+
+      foreach ($aColors as $iKey => $sColor) {
+        if (isset( $aCountedRanges[$iKey] )) {
+          $aRangeInterval = $aCountedRanges[$iKey];
+          $aNewColors = array_merge($aNewColors, FLORP_COLOR::getRangeHex($aRangeInterval[0], $aRangeInterval[1], intval($aRangeInterval[2]), $bIncludeBorders));
+        } elseif (isset( $aRanges[$iKey] )) {
+          if ($iNeededRangeColorCount <= 0 || $iAddedColorCount >= $iNeededRangeColorCount) {
+            continue;
+          }
+
+          $aRangeInterval = $aRanges[$iKey];
+          $iCountPerRange = intval(ceil($iNeededRangeColorCount / $iRangeCount));
+          $aRange = FLORP_COLOR::getRangeHex($aRangeInterval[0], $aRangeInterval[1], $iCountPerRange, $bIncludeBorders);
+          if ($bTest) {
+            return [$aRangeInterval, $iCountPerRange, $aRange];
+          }
+          foreach ($aRange as $sColor) {
+            if ($iAddedColorCount >= $iNeededRangeColorCount) {
+              break;
+            }
+
+            $aNewColors[] = $sColor;
+
+            $iAddedColorCount++;
+          }
+        } else {
+          $aNewColors[] = $sColor;
+        }
+      }
+
+      $aColors = $aNewColors;
+    }
+
+    return $aColors;
   }
 
   public function shortcode_intf_chart( $aAttributes ) {
     $aAttributes = shortcode_atts( array(
         'row-height'    => 0,
-        'color'         => '#aaa',
+        'colors'        => '#aaa',
         'row-name'      => 'Mesto',
         'col-name'      => 'Počet hlasov',
         'val-style'     => 'count', // OR: 'percentage'
