@@ -13,6 +13,12 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v5.8.0: Chart color ranges, new intf t-shirts =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.8.0)
+- Added color ranges to charts.
+- Fixed intf_participant_exists() method to ignore past years by default.
+- Added new international flashmob t-shirts. Made sure old tshirt images are not shown from cache.
+
 = v5.7.0: Showing chart on international florp chart submission =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.7.0)
 - Added possibility to show chart(s) on intf form submit.
@@ -188,16 +194,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 - fix: region added also for static map api call (og image)
 - new main form
 
-= v4.6.5: dancer num check, geocoder region, fixes =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.5)
-- added dancer number check
-  - form won't submit
-  - marker won't show the field
-- added region to geocoder so Slovak cities are preferred
-- fixed hiding of before-flashmob fields
-- fixed evaluating whether user is before flashmob
-- fix: double line break when signup link is empty (after flashmob)
-- fix: default value of organizer marker template
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.6.5)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.6.6)
