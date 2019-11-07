@@ -10662,16 +10662,24 @@ class FLORP{
     return false;
   }
 
-  public function intf_participant_exists( $strEmail ) {
+  public function intf_participant_exists( $strEmail, $bAllYears = false ) {
     if (empty($this->aOptions['aIntfParticipants'])) {
       return false;
     }
-    foreach ($this->aOptions['aIntfParticipants'] as $iYear => $aParticipants) {
-      if (isset($aParticipants[$strEmail])) {
-        return true;
+
+    if ($bAllYears) {
+      foreach ($this->aOptions['aIntfParticipants'] as $iYear => $aParticipants) {
+        if (isset($aParticipants[$strEmail])) {
+          return true;
+        }
       }
+
+      return false;
+    } elseif (empty($this->aOptions['aIntfParticipants'][$this->aOptions['iIntfFlashmobYear']])) {
+      return false;
     }
-    return false;
+
+    return isset($this->aOptions['aIntfParticipants'][$this->aOptions['iIntfFlashmobYear']][$strEmail]);
   }
 
   public function fakepage_intf_participant_form( $aPosts ) {
@@ -11090,7 +11098,7 @@ function florp_flashmob_participant_exists( $strEmail ) {
   global $FLORP;
   return $FLORP->flashmob_participant_exists( $strEmail );
 }
-function florp_intf_participant_exists( $strEmail ) {
+function florp_intf_participant_exists( $strEmail, $bAllYears = false ) {
   global $FLORP;
-  return $FLORP->intf_participant_exists( $strEmail );
+  return $FLORP->intf_participant_exists( $strEmail, $bAllYears );
 }
