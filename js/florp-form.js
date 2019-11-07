@@ -949,7 +949,7 @@
     if ("undefined" !== typeof florp[strKey] && "undefined" !== typeof florp[strKey][strImgCitySlug] && florp[strKey][strImgCitySlug]) {
       strImgCitySlugLoc = strImgCitySlug
     }
-    return florp.img_path+strPrefix+"t-shirt-chest-"+color+"-"+strImgCitySlugLoc+".png"
+    return florp.img_path+strPrefix+"t-shirt-chest-"+color+"-"+strImgCitySlugLoc+".png?t="+(new Date()).getTime()
   }
   var fnGetTshirtPreviewImgPath = function( strImgCitySlug, color, bInternational = false ) {
     var strKey = "tshirt_imgs_full", strPrefix = ""
@@ -969,7 +969,7 @@
     } else {
       return fnGetTshirtImgPath( strImgCitySlug, color, bInternational )
     }
-    return florp.img_path+strPrefix+"t-shirt-"+color+"-"+strImgCitySlugLoc+".png"
+    return florp.img_path+strPrefix+"t-shirt-"+color+"-"+strImgCitySlugLoc+".png?t="+(new Date()).getTime()
   }
 
   function florpFixFormClasses() {
