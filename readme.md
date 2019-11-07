@@ -2,7 +2,7 @@
 
 **Requires at least**: 4.8
 
-**Tested up to**: 5.2.2
+**Tested up to**: 5.2.4
 
 **Requires PHP**: 5.6
 
