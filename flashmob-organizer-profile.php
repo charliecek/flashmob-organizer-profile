@@ -4629,13 +4629,18 @@ class FLORP{
 
     if (!empty($aParticipants)) {
       $aParticipantsFlat = array();
-      $iYear = $this->aOptions['iIntfFlashmobYear'];
-      if (is_array($aParticipants[$iYear]) && !empty($aParticipants[$iYear])) {
-        foreach ($aParticipants[$iYear] as $strEmail => $aParticipantData) {
-          $strKey = $strEmail."_".$iYear;
-          $aParticipantsFlat[$strKey] = $aParticipantData;
-          $aParticipantsFlat[$strKey]['year'] = $iYear;
-          $aParticipantsFlat[$strKey]['user_email'] = $strEmail;
+      foreach ($aParticipants as $iYear => $aParticipantsOfYear) {
+        if ((!isset($_GET["all_years"]) || $_GET["all_years"] !== "1") && intval($iYear) !== intval($this->aOptions['iIntfFlashmobYear'])) {
+          continue;
+        }
+
+        if (is_array($aParticipantsOfYear) && !empty($aParticipantsOfYear)) {
+          foreach ($aParticipantsOfYear as $strEmail => $aParticipantData) {
+            $strKey = $strEmail."_".$iYear;
+            $aParticipantsFlat[$strKey] = $aParticipantData;
+            $aParticipantsFlat[$strKey]['year'] = $iYear;
+            $aParticipantsFlat[$strKey]['user_email'] = $strEmail;
+          }
         }
       }
       uasort($aParticipantsFlat, array($this, "participant_sort"));
