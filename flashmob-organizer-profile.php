@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 5.8.0
+ * Version: 5.8.1
  * Requires at least: 4.8
  * Tested up to: 5.2.4
  * Requires PHP: 5.6
@@ -23,7 +23,7 @@ use Endroid\QrCode\QrCode;
 
 class FLORP{
 
-  private $strVersion = '5.8.0';
+  private $strVersion = '5.8.1';
   private $strSuperAdminMail = 'charliecek@gmail.com';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
