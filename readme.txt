@@ -13,6 +13,11 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v5.8.1: Added possibility to list all intf participants =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.8.1)
+- Added possibility to list all intf participants via a GET parameter.
+- Increased tested wp version.
+
 = v5.8.0: Chart color ranges, new intf t-shirts =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.8.0)
 - Added color ranges to charts.
@@ -186,13 +191,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 - fix in participant sort
 - improvement: admin filter can search checkboxes (yes/no)
 
-= v4.6.6: participant sorting, htaccess generation, static map fix =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.6)
-- fixed "moved_from_user_id" (moving participants between leaders)
-- improved htaccess generation and added call on subsite creation
-- added participant sorting by registration date
-- fix: region added also for static map api call (og image)
-- new main form
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.6.6)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.6.7)
