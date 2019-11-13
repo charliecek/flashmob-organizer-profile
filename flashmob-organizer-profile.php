@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 5.9.0
+ * Version: 5.10.0
  * Requires at least: 4.8
  * Tested up to: 5.2.4
  * Requires PHP: 5.6
@@ -23,7 +23,7 @@ use Endroid\QrCode\QrCode;
 
 class FLORP{
 
-  private $strVersion = '5.9.0';
+  private $strVersion = '5.10.0';
   private $strSuperAdminMail = 'charliecek@gmail.com';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
@@ -2559,9 +2559,11 @@ class FLORP{
       $iLimit = intval($aAttributes['limit']);
     }
 
-    $aCityNumbers = array_filter($aCityNumbers, function($iValue) {
-      return $iValue > 0;
-    });
+    if (!isset($aAttributes['show-all-cities']) || intval($aAttributes['show-all-cities']) !== 1) {
+      $aCityNumbers = array_filter($aCityNumbers, function($iValue) {
+        return $iValue > 0;
+      });
+    }
 
     $iValueCount = count($aCityNumbers);
     if ($iLimit > 0) {
@@ -2677,24 +2679,26 @@ class FLORP{
 
   public function shortcode_intf_chart( $aAttributes, $sContent = "" ) {
     $aAttributes = shortcode_atts( array(
-        'row-height'    => 0,
-        'colors'        => '#aaa',
-        'row-name'      => 'Mesto',
-        'col-name'      => 'Počet hlasov',
-        'val-style'     => 'count', // OR: 'percentage'
-        'limit'         => 0,
-        'chart-title'   => null,
-        'chart-height'  => null,
-        'type'          => 'BarChart',
-        'chartAreaLeft' => array( 230 => 35, 270 => 30, 340 => 25, 1000000 => 20 ), // key is max div width for given value //
-        'hide-on-load'  => 0,
-        'focus-on-show' => 0,
-        'scroll-offset' => 100,
+      'row-height'      => 0,
+      'colors'          => '#aaa',
+      'row-name'        => 'Mesto',
+      'col-name'        => 'Počet hlasov',
+      'val-style'       => 'count', // OR: 'percentage'
+      'show-all-cities' => 0,
+      'limit'           => 0,
+      'chart-title'     => null,
+      'chart-height'    => null,
+      'type'            => 'BarChart',
+      'chartAreaLeft'   => array( 230 => 35, 270 => 30, 340 => 25, 1000000 => 20 ), // key is max div width for given value //
+      'hide-on-load'    => 0,
+      'focus-on-show'   => 0,
+      'scroll-offset'   => 100,
     ), $aAttributes );
     $bHideOnLoad = $aAttributes['hide-on-load'] === 1 || $aAttributes['hide-on-load'] === "1" || $aAttributes['hide-on-load'] === "true" || $aAttributes['hide-on-load'] === true;
     $aAttributes['hide-on-load'] = $bHideOnLoad ? 1 : 0;
     $aAttributes['focus-on-show'] = ($aAttributes['focus-on-show'] === 1 || $aAttributes['focus-on-show'] === "1" || $aAttributes['focus-on-show'] === "true" || $aAttributes['focus-on-show'] === true) ? 1 : 0;
     $aAttributes['scroll-offset'] = intval($aAttributes['scroll-offset']);
+    $aAttributes['show-all-cities'] = ($aAttributes['show-all-cities'] === 1 || $aAttributes['show-all-cities'] === "1" || $aAttributes['show-all-cities'] === "true" || $aAttributes['show-all-cities'] === true) ? 1 : 0;
 
     $aOptions = array(
       'title'           => 'Mestá',

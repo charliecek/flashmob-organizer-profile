@@ -23,11 +23,12 @@ class FLORP_CHART {
 
   public function get_chart($aInputAttributes = array(), $aDivAttributes = array(), $aDataTable = array(), $aOptions = array(), $aAdditionalClasses = "", $sContentWhenHidden = "") {
     $aDefaultAttributes = array(
-      'type'          => 'BarChart',
-      'val-style'     => 'count',
-      'hide-on-load'  => 0,
-      'focus-on-show' => 0,
-      'scroll-offset' => 0
+      'type'            => 'BarChart',
+      'val-style'       => 'count',
+      'hide-on-load'    => 0,
+      'focus-on-show'   => 0,
+      'scroll-offset'   => 0,
+      'show-all-cities' => 0
     );
     $aAttributes = shortcode_atts( $aDefaultAttributes, $aInputAttributes );
 

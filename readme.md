@@ -17,6 +17,12 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 ## Version history
 
+### v5.9.0: Added chart placeholder (for charts that are hidden on load).
+
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.9.0)
+
+- Added chart placeholder (for charts that are hidden on load).
+
 ### v5.8.1: Added possibility to list all intf participants
 
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.8.1)
@@ -240,20 +246,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 - Participant CSV download buttons
 
-### v4.6.7: Submission history view, fixes
 
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.7)
-
-- fixed bug: flashmob organizer check on submission
-- removed a couple of DEVEL comments, logs
-- admin filter table count update on row removal
-- admin js: callback fn with proper variable passing
-- leader submission history
-  - cookie saving, include admins
-  - NF submission date offset fix, date format refactor
-  - progress views for leader submission history
-- fix in participant sort
-- improvement: admin filter can search checkboxes (yes/no)
-
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.6.7)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.6.8)
