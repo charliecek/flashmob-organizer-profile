@@ -13,6 +13,10 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v5.10.0: Added shortcode attribute to show all cities, even with 0 votes. =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.10.0)
+Added shortcode attribute to show all cities, even with 0 votes.
+
 = v5.9.0: Added chart placeholder (for charts that are hidden on load). =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.9.0)
 - Added chart placeholder (for charts that are hidden on load).
@@ -178,9 +182,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 - added youtu.be video link form
 - small profile form changes
 
-= v4.6.8: Participant CSV download buttons =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.8)
-- Participant CSV download buttons
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.6.8)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.6.9)

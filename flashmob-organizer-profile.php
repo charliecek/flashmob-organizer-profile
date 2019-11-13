@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 5.10.0
+ * Version: 5.11.0
  * Requires at least: 4.8
  * Tested up to: 5.2.4
  * Requires PHP: 5.6
@@ -23,7 +23,7 @@ use Endroid\QrCode\QrCode;
 
 class FLORP{
 
-  private $strVersion = '5.10.0';
+  private $strVersion = '5.11.0';
   private $strSuperAdminMail = 'charliecek@gmail.com';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
@@ -2529,6 +2529,24 @@ class FLORP{
     return '<a name="'.$this->strClickTriggerAnchor.'"></a>';
   }
 
+  private function getIntfChartMaxVoteCount() {
+    $aCities = $this->get_intf_poll_cities();
+    $aCityNumbers = array();
+    foreach ($aCities as $strCity) {
+      $aCityNumbers[$strCity] = 0;
+    }
+
+    if (is_array($this->aOptions['aIntfParticipants'][$this->aOptions['iIntfFlashmobYear']]) && !empty($this->aOptions['aIntfParticipants'][$this->aOptions['iIntfFlashmobYear']])) {
+      foreach ($this->aOptions['aIntfParticipants'][$this->aOptions['iIntfFlashmobYear']] as $aParticipantData) {
+        if (isset( $aParticipantData['intf_city'] ) && !empty( $aParticipantData['intf_city'] ) && 'null' != $aParticipantData['intf_city'] && in_array( $aParticipantData['intf_city'], $aCities )) {
+          $aCityNumbers[$aParticipantData['intf_city']]++;
+        }
+      }
+    }
+
+    return max($aCityNumbers);
+  }
+
   private function getIntfChartDataTable( $aAttributes, $aOptions ) {
     $aCities = $this->get_intf_poll_cities();
     $aCityNumbers = array();
@@ -2704,9 +2722,10 @@ class FLORP{
       'title'           => 'Mestá',
       'legend'          => 'none',
       'height'          => '400',
-      'chartArea'       => array("left" => "20%", "width" => "75%"),
+      'chartArea'       => array( "left" => "20%", "width" => "75%" ),
+      'gridlines'       => array( "count" => -1 ),
       // 'backgroundColor' => 'lightgray',
-      // 'width' => '400',
+      // 'width'           => '400',
     );
     $aStyleAttributes = array(
       // 'height' => '400px',
@@ -2731,6 +2750,14 @@ class FLORP{
     foreach ($aOptions as $key => $val) {
       if (isset($aAttributes["chart-".$key])) {
         $aOptions[$key] = $aAttributes["chart-".$key];
+      }
+    }
+
+    if (in_array($aAttributes['type'], array("BarChart", "ColumnChart")) && $aAttributes['val-style'] === "count") {
+      $iMaxVoteCount = $this->getIntfChartMaxVoteCount();
+      if ($iMaxVoteCount > 0) {
+        $sKey = $aAttributes['type'] === "BarChart" ? "hAxis" : "vAxis";
+        $aOptions[$sKey] = array("ticks" => range(0, $iMaxVoteCount));
       }
     }
 
