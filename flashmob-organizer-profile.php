@@ -2766,6 +2766,10 @@ class FLORP{
       return '';
     }
 
+    if (!empty( $sContent )) {
+      $sContent = apply_filters( "the_content", $sContent );
+    }
+
     return $this->oFlorpChartInstance->get_chart( $aAttributes, $aDivAttributes, $aDataTable, $aOptions, $this->strIntfChartClass, $sContent );
   }
 
