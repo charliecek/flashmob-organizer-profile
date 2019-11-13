@@ -17,6 +17,12 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 ## Version history
 
+### v5.11.2: Added application of the_content filter on chart placeholder content.
+
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.11.2)
+
+- Added application of the_content filter on chart placeholder content.
+
 ### v5.11.1: Fixed issues related to chart ticks (refreshing).
 
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.11.1)
@@ -233,17 +239,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 - fixed bug where course preview map wouldn't show additional cities
 - added option to configure number of allowed course cities
 
-### v4.6.11: Fixing teacher map, new forms, flashmob city check fix
 
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.11)
-
-- fixing teacher map (showing flashmob city if coordinates were present)
-- adding teacher header in options and markers
-- new forms
-  - with NL link on banner,
-  - fix for hidden non-text description
-  - fixed default value for fields of type 'number' (main)
-- limiting flashmob city check to users on given blog only
-
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.6.11)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.6.12)
