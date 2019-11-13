@@ -1,7 +1,7 @@
 <?php
 
 class FLORP_CHART {
-  private $strVersion = "1.1.0";
+  private $strVersion = "1.2.0";
   private $strClass = "florp-chart";
   private $strChartLanguage = 'sk';
   private $strChartVersion = 'current';
@@ -85,10 +85,12 @@ class FLORP_CHART {
     // );
     $aChartProperties = $_POST['chartProperties'];
     $aChartData = $_POST['chartData'];
+    $aChartData['options'] = apply_filters( 'florp_chart_get_options', $aChartData['options'], $aChartProperties, $aChartData['attrs'] );
     $aDataTable = apply_filters( 'florp_chart_get_datatable', array(), $aChartProperties, $aChartData );
     $aRes = array(
-      'dataTable' => $aDataTable,
-      'chartProperties' => $aChartProperties
+      'dataTable'       => $aDataTable,
+      'chartProperties' => $aChartProperties,
+      'chartOptions'    => $aChartData['options']
     );
     echo json_encode($aRes);
     wp_die();

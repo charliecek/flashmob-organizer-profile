@@ -6,9 +6,9 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 5.11.0
+ * Version: 5.11.1
  * Requires at least: 4.8
- * Tested up to: 5.2.4
+ * Tested up to: 5.3
  * Requires PHP: 5.6
  * License: GPLv3
  * License URI: https://www.gnu.org/licenses/gpl.html
@@ -23,7 +23,7 @@ use Endroid\QrCode\QrCode;
 
 class FLORP{
 
-  private $strVersion = '5.11.0';
+  private $strVersion = '5.11.1';
   private $strSuperAdminMail = 'charliecek@gmail.com';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
@@ -444,6 +444,7 @@ class FLORP{
     add_filter( 'the_content', array( $this, 'filter__the_content' ), 9999 );
     add_filter( 'us_load_header_settings', array( $this, 'filter__us_load_header_settings' ), 11 );
     add_filter( 'florp_chart_get_datatable', array( $this, 'filter__get_intf_chart_datatable' ), 10, 3 );
+    add_filter( 'florp_chart_get_options', array( $this, 'filter__get_intf_chart_options' ), 10, 3 );
     add_filter( 'the_posts', array( $this, 'fakepage_intf_participant_form' ), -10);
     add_filter( 'the_posts', array( $this, 'fakepage_svk_participant_form' ), -10);
     add_filter( 'the_posts', array( $this, 'fakepage_intf_participant_checkin' ), -10);
@@ -2753,13 +2754,7 @@ class FLORP{
       }
     }
 
-    if (in_array($aAttributes['type'], array("BarChart", "ColumnChart")) && $aAttributes['val-style'] === "count") {
-      $iMaxVoteCount = $this->getIntfChartMaxVoteCount();
-      if ($iMaxVoteCount > 0) {
-        $sKey = $aAttributes['type'] === "BarChart" ? "hAxis" : "vAxis";
-        $aOptions[$sKey] = array("ticks" => range(0, $iMaxVoteCount));
-      }
-    }
+    $aOptions = $this->getIntfChartTickOptions($aAttributes, $aOptions);
 
     $aDataTable = $this->getIntfChartDataTable($aAttributes, $aOptions);
 
@@ -2774,6 +2769,26 @@ class FLORP{
     return $this->oFlorpChartInstance->get_chart( $aAttributes, $aDivAttributes, $aDataTable, $aOptions, $this->strIntfChartClass, $sContent );
   }
 
+  private function getIntfChartTickOptions( $aAttributes, $aOptions ) {
+    if (in_array($aAttributes['type'], array("BarChart", "ColumnChart")) && $aAttributes['val-style'] === "count") {
+      $iMaxVoteCount = $this->getIntfChartMaxVoteCount();
+      $sKey = $aAttributes['type'] === "BarChart" ? "hAxis" : "vAxis";
+      if ($iMaxVoteCount > 0 && $iMaxVoteCount < 6) {
+        if (!isset($aOptions[$sKey])) {
+          $aOptions[$sKey] = array();
+        }
+        $aOptions[$sKey]["ticks"] = range(0, $iMaxVoteCount);
+      } elseif (isset($aOptions[$sKey]) && isset($aOptions[$sKey]["ticks"])) {
+        unset($aOptions[$sKey]["ticks"]);
+        if (empty($aOptions[$sKey])) {
+          unset($aOptions[$sKey]);
+        }
+      }
+    }
+
+    return $aOptions;
+  }
+
   public function filter__get_intf_chart_datatable( $aDataTable, $aChartProperties, $aChartData ) {
     if (in_array($this->strIntfChartClass, $aChartProperties["containerClasses"])) {
       $aDataTableLoc = $this->getIntfChartDataTable($aChartData['attrs'], $aChartData['options']);
@@ -2784,6 +2799,14 @@ class FLORP{
     }
 
     return $aDataTable;
+  }
+
+  public function filter__get_intf_chart_options( $aChartOptions, $aChartProperties, $aChartAttributes ) {
+    if (in_array($this->strIntfChartClass, $aChartProperties["containerClasses"])) {
+      $aChartOptions = $this->getIntfChartTickOptions($aChartAttributes, $aChartOptions);
+    }
+
+    return $aChartOptions;
   }
 
   private function getFlashmobSubscribers( $strType, $bPending = false ) {

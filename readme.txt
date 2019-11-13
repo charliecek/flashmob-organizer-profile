@@ -1,6 +1,6 @@
 === Flashmob Organizer Profile (with login/registration page) ===
 Requires at least: 4.8
-Tested up to: 5.2.4
+Tested up to: 5.3
 Requires PHP: 5.6
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl.html
@@ -13,9 +13,13 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v5.11.0: Changed ticks to integers when showing values in bar chart and column chart. =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.11.0)
+- Changed ticks to integers when showing values in bar chart and column chart.
+
 = v5.10.0: Added shortcode attribute to show all cities, even with 0 votes. =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.10.0)
-Added shortcode attribute to show all cities, even with 0 votes.
+- Added shortcode attribute to show all cities, even with 0 votes.
 
 = v5.9.0: Added chart placeholder (for charts that are hidden on load). =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.9.0)
@@ -177,10 +181,5 @@ Added shortcode attribute to show all cities, even with 0 votes.
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.10)
 - fixed when top bar (for login/logout) is shown
 
-= v4.6.9: added youtu.be video link form, small profile form changes =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.9)
-- added youtu.be video link form
-- small profile form changes
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.6.9)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.6.10)

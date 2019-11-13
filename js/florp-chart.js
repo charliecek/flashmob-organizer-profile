@@ -45,7 +45,7 @@ function florpChartReload(chartClass) {
             var oResponse = JSON.parse(response),
                 inputData = oResponse.chartProperties,
                 aDataTable = JSON.parse(JSON.stringify(oResponse.dataTable)),
-                // aOptions = oResponse.options,
+                oOptions = oResponse.chartOptions,
                 chartWrapperLoc = florp_charts[inputData.wrapperIndex],
                 chartContainerID = inputData.containerID || chartContainerID,
                 chartData = chartContainerID && florp_chart_options_object.hasOwnProperty(chartContainerID) ? florp_chart_options_object[chartContainerID] : {}
@@ -105,6 +105,8 @@ function florpChartReload(chartClass) {
             }
             florp_chart_options_object[chartContainerID].dataTable = oResponse.dataTable
             chartWrapperLoc.setDataTable(aDataTable)
+            florp_chart_options_object[chartContainerID].options = oOptions;
+            chartWrapperLoc.setOptions(oOptions)
             chartWrapperLoc.draw()
             window["florpChartReloadAjaxRunning"][chartContainerID] = false
           } catch(e) {
