@@ -13,6 +13,10 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v5.11.1: Fixed issues related to chart ticks (refreshing). =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.11.1)
+- Fixed issues related to chart ticks (refreshing).
+
 = v5.11.0: Changed ticks to integers when showing values in bar chart and column chart. =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.11.0)
 - Changed ticks to integers when showing values in bar chart and column chart.
@@ -177,9 +181,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
   - fixed default value for fields of type 'number' (main)
 - limiting flashmob city check to users on given blog only
 
-= v4.6.10: Fixed when top bar (for login/logout) is shown =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.10)
-- fixed when top bar (for login/logout) is shown
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.6.10)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.6.11)
