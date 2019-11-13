@@ -88,6 +88,7 @@ function florpChartReload(chartClass) {
             }
             if ($chartContainerLoc.data("hideOnLoad") === "1" || $chartContainerLoc.data("hideOnLoad") === 1 || (chartData.hasOwnProperty("attrs") && chartData.attrs["hide-on-load"] === 1)) {
               $chartContainerLoc.show()
+              jQuery("#" + $chartContainerLoc.prop("id") + "_placeholder").removeClass("florp-chart-active")
               if ($chartContainerLoc.data("focusOnShow") === "1" || $chartContainerLoc.data("focusOnShow") === 1 || (chartData.hasOwnProperty("attrs") && chartData.attrs["focus-on-show"] === 1)) {
                 var scrollOffset = +$chartContainerLoc.data("scrollOffset") || ((chartData.hasOwnProperty("attrs") && !isNaN(+chartData.attrs["scroll-offset"])) ? +chartData.attrs["scroll-offset"] : 100);
                 jQuery('html, body').stop().animate({scrollTop: $chartContainerLoc.first().offset().top - scrollOffset});
@@ -134,6 +135,7 @@ function florpChartDrawAll() {
   $chartDivs.each(function() {
     var $this = jQuery(this)
     var strID = $this.prop('id')
+    var $placeholderDiv = jQuery("#" + strID + "_placeholder")
     console.info("Drawing chart "+strID)
     var valStyle = $this.data('valStyle')
     var chartData = JSON.parse(JSON.stringify(florp_chart_options_object[strID]))
@@ -144,6 +146,7 @@ function florpChartDrawAll() {
     if (florp.intf_charts_visible_indefinitely_on_submit === "1" && +localStorage.getItem('chartVisible') === +florp.intf_flashmob_year) {
       if ($this.data("hideOnLoad") === "1" || $this.data("hideOnLoad") === 1 || (chartData.hasOwnProperty("attrs") && chartData.attrs["hide-on-load"] === 1)) {
         $this.show()
+        $placeholderDiv.removeClass("florp-chart-active")
       }
     }
 

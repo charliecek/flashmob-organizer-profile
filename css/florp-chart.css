@@ -1,0 +1,6 @@
+.florp-chart-placeholder {
+    display: none;
+}
+.florp-chart-placeholder.florp-chart-active {
+    display: block;
+}

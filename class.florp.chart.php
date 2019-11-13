@@ -1,7 +1,7 @@
 <?php
 
 class FLORP_CHART {
-  private $strVersion = "1.0.6";
+  private $strVersion = "1.1.0";
   private $strClass = "florp-chart";
   private $strChartLanguage = 'sk';
   private $strChartVersion = 'current';
@@ -21,7 +21,7 @@ class FLORP_CHART {
     // END ACTIONS //
   }
 
-  public function get_chart($aInputAttributes = array(), $aDivAttributes = array(), $aDataTable = array(), $aOptions = array(), $aAdditionalClasses = "") {
+  public function get_chart($aInputAttributes = array(), $aDivAttributes = array(), $aDataTable = array(), $aOptions = array(), $aAdditionalClasses = "", $sContentWhenHidden = "") {
     $aDefaultAttributes = array(
       'type'          => 'BarChart',
       'val-style'     => 'count',
@@ -53,7 +53,10 @@ class FLORP_CHART {
       }
       florp_chart_options_object["'.$strID.'"] = '.$strChartOptions.';
     </script>';
-    $strChartDivHtml = '<div id="'.$strID.'" class="'.$this->strClass.$aAdditionalClasses.'"';
+
+    $strPlaceholderDivActiveClass = $aAttributes["hide-on-load"] === 1 ? " florp-chart-active" : "";
+    $strPlaceholderDiv = empty($sContentWhenHidden) ? "" : ('<div id="'.$strID.'_placeholder" class="'.$this->strClass.'-placeholder'.$strPlaceholderDivActiveClass.'">' . $sContentWhenHidden . '</div>');
+    $strChartDivHtml = $strPlaceholderDiv.'<div id="'.$strID.'" class="'.$this->strClass.$aAdditionalClasses.'"';
 
     if (!empty($aAttributes)) {
       $aDataAttributes = array();
@@ -104,6 +107,8 @@ class FLORP_CHART {
       'chart_version'       => $this->strChartVersion,
     );
     wp_localize_script( 'florp_chart_js', 'florp_chart', $aJS );
+
+    wp_enqueue_style( 'florp_chart_css', plugins_url('css/florp-chart.css', __FILE__), false, $this->strVersion, 'all');
   }
 }
 

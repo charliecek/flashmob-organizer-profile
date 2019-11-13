@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 5.8.1
+ * Version: 5.9.0
  * Requires at least: 4.8
  * Tested up to: 5.2.4
  * Requires PHP: 5.6
@@ -23,7 +23,7 @@ use Endroid\QrCode\QrCode;
 
 class FLORP{
 
-  private $strVersion = '5.8.1';
+  private $strVersion = '5.9.0';
   private $strSuperAdminMail = 'charliecek@gmail.com';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
@@ -2675,7 +2675,7 @@ class FLORP{
     return $aColors;
   }
 
-  public function shortcode_intf_chart( $aAttributes ) {
+  public function shortcode_intf_chart( $aAttributes, $sContent = "" ) {
     $aAttributes = shortcode_atts( array(
         'row-height'    => 0,
         'colors'        => '#aaa',
@@ -2740,7 +2740,7 @@ class FLORP{
       return '';
     }
 
-    return $this->oFlorpChartInstance->get_chart( $aAttributes, $aDivAttributes, $aDataTable, $aOptions, $this->strIntfChartClass );
+    return $this->oFlorpChartInstance->get_chart( $aAttributes, $aDivAttributes, $aDataTable, $aOptions, $this->strIntfChartClass, $sContent );
   }
 
   public function filter__get_intf_chart_datatable( $aDataTable, $aChartProperties, $aChartData ) {
