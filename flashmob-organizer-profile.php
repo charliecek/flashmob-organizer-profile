@@ -18,7 +18,6 @@ require_once( __DIR__ . "/qr-code-3.6/vendor/autoload.php" );
 require_once( __DIR__ . "/class.florp.color.php" );
 
 use Endroid\QrCode\ErrorCorrectionLevel;
-use Endroid\QrCode\LabelAlignment;
 use Endroid\QrCode\QrCode;
 
 class FLORP{
@@ -34,7 +33,7 @@ class FLORP{
   private $iProfileFormPopupIDMain;
   private $iProfileFormPopupIDFlashmob;
   private $iProfileFormPopupIDIntf;
-  private $strOptionsPageSlug = 'florp-options';
+  // private $strOptionsPageSlug = 'florp-options';
   private $strOptionKey = 'florp-options';
   private $aOptionDefaults = array();
   private $aOptionFormKeys = array();
@@ -49,7 +48,7 @@ class FLORP{
   private $strProfileFormWrapperID = 'florp-profile-form-wrapper-div';
   private $strClickTriggerClass = 'florp-click-register-trigger';
   private $strClickTriggerClassFlashmob = 'florp-click-participant-trigger';
-  private $strClickTriggerClassIntf = 'florp-click-international-participant-trigger';
+  // private $strClickTriggerClassIntf = 'florp-click-international-participant-trigger';
   private $strClickTriggerGetParam = 'popup-florp';
   private $strClickTriggerAnchor = 'popup-florp';
   private $strClickTriggerCookieKey = 'florp-popup';
@@ -98,6 +97,30 @@ class FLORP{
   private $fakePageSvkParticipantCheckinGlobalID = "florp-svk-participant-checkin";
   private $fakePageIntfParticipantCheckin = "intfp";
   private $fakePageIntfParticipantCheckinGlobalID = "florp-intf-participant-checkin";
+  private $aSeparateOptionKeys;
+  private $iTshirtOrderDeliveredBeforeFlashmobDdlTimestamp;
+  private $iTshirtPaymentWarningDeadlineTimestamp;
+  private $iTshirtOrderDeliveredBeforeFlashmobDdlTime;
+  private $iTshirtOrderDeliveredBeforeFlashmobDdlDate;
+  private $iTshirtPaymentWarningDeadlineTime;
+  private $iTshirtPaymentWarningButtonDeadlineTimestamp;
+  private $iTshirtPaymentWarningButtonDeadlineTime;
+  private $aMarkerInfoWindowTemplates;
+  private $iIntfTshirtOrderDeliveredBeforeFlashmobDdlTimestamp;
+  private $iIntfTshirtOrderDeliveredBeforeFlashmobDdlTime;
+  private $iIntfTshirtOrderDeliveredBeforeFlashmobDdlDate;
+  private $iIntfTshirtPaymentWarningDeadlineTimestamp;
+  private $iIntfTshirtPaymentWarningDeadlineTime;
+  private $iIntfTshirtPaymentWarningButtonDeadlineTimestamp;
+  private $iIntfTshirtPaymentWarningButtonDeadlineTime;
+  private $iIntfCityPollDdlTimestamp;
+  private $iIntfCityPollDdlTime;
+  private $iIntfCityPollDdlDate;
+  private $strPaymentOKNotificationReasons;
+  private $aYearlySvkFlashmobOptions;
+  private $bReloadAfterSuccessfulSubmissionMain;
+  private $bReloadAfterSuccessfulSubmissionFlashmob;
+  private $aOptionKeysByBlog;
 
   public function __construct() {
     $this->load_options();
@@ -1057,12 +1080,12 @@ class FLORP{
     foreach ($this->aOptionDefaults as $strOptionKey => $mixDefaultValue) {
       $mixValue = $this->aOptions[$strOptionKey];
       if (in_array($strOptionKey, $this->aSeparateOptionKeys)) {
-        update_site_option( $this->strOptionKey . "-" . $strOptionKey, $mixValue, true );
+        update_site_option( $this->strOptionKey . "-" . $strOptionKey, $mixValue );
       } else {
         $aOptionsRest[$strOptionKey] = $mixValue;
       }
     }
-    update_site_option( $this->strOptionKey, $aOptionsRest, true );
+    update_site_option( $this->strOptionKey, $aOptionsRest );
   }
 
   private function save_option( $strOptionKey, $strOptionValue ) {
@@ -1729,7 +1752,7 @@ class FLORP{
       }
       $oRole = get_role($this->strUserRoleRegistrationAdminSvk);
       if (!$oRole) {
-        $oRole = add_role($this->strUserRoleRegistrationAdminSvk, $this->strUserRoleRegistrationAdminSvkName, array('read', $this->strUserRoleRegistrationAdminSvk));
+        add_role($this->strUserRoleRegistrationAdminSvk, $this->strUserRoleRegistrationAdminSvkName, array('read', $this->strUserRoleRegistrationAdminSvk));
       } else {
         if (!$oRole->has_cap($this->strUserRoleRegistrationAdminSvk)) {
           $oRole->add_cap($this->strUserRoleRegistrationAdminSvk);
@@ -1751,7 +1774,7 @@ class FLORP{
     if ($this->isFlashmobBlog) {
       $oRole = get_role($this->strUserRoleRegistrationAdmin);
       if (!$oRole) {
-        $oRole = add_role($this->strUserRoleRegistrationAdmin, $this->strUserRoleRegistrationAdminName, array('read', $this->strUserRoleRegistrationAdminSvk, $this->strUserRoleRegistrationAdminIntf));
+        add_role($this->strUserRoleRegistrationAdmin, $this->strUserRoleRegistrationAdminName, array('read', $this->strUserRoleRegistrationAdminSvk, $this->strUserRoleRegistrationAdminIntf));
       } else {
         if (!$oRole->has_cap($this->strUserRoleRegistrationAdminSvk)) {
           $oRole->add_cap($this->strUserRoleRegistrationAdminSvk);
@@ -1765,7 +1788,7 @@ class FLORP{
       }
       $oRole = get_role($this->strUserRoleRegistrationAdminSvk);
       if (!$oRole) {
-        $oRole = add_role($this->strUserRoleRegistrationAdminSvk, $this->strUserRoleRegistrationAdminSvkName, array('read', $this->strUserRoleRegistrationAdminSvk));
+        add_role($this->strUserRoleRegistrationAdminSvk, $this->strUserRoleRegistrationAdminSvkName, array('read', $this->strUserRoleRegistrationAdminSvk));
       } else {
         if (!$oRole->has_cap($this->strUserRoleRegistrationAdminSvk)) {
           $oRole->add_cap($this->strUserRoleRegistrationAdminSvk);
@@ -1776,7 +1799,7 @@ class FLORP{
       }
       $oRole = get_role($this->strUserRoleRegistrationAdminIntf);
       if (!$oRole) {
-        $oRole = add_role($this->strUserRoleRegistrationAdminIntf, $this->strUserRoleRegistrationAdminIntfName, array('read', $this->strUserRoleRegistrationAdminIntf));
+        add_role($this->strUserRoleRegistrationAdminIntf, $this->strUserRoleRegistrationAdminIntfName, array('read', $this->strUserRoleRegistrationAdminIntf));
       } else {
         if (!$oRole->has_cap($this->strUserRoleRegistrationAdminIntf)) {
           $oRole->add_cap($this->strUserRoleRegistrationAdminIntf);
@@ -2443,7 +2466,7 @@ class FLORP{
     return $aSettings;
   }
 
-  public function profile_form( $aAttributes ) {
+  public function profile_form( $aAttributes = array() ) {
     if ($this->isIntfBlog && isset($aAttributes['international'])) {
       $iNFID = $this->iProfileFormNinjaFormIDIntf;
     } elseif ($this->isMainBlog) {
@@ -2661,7 +2684,7 @@ class FLORP{
       $aNewColors = array();
       $iAddedColorCount = 0;
 
-      foreach ($aColors as $iKey => $sColor) {
+      foreach ($aColors as $iKey => $sCol) {
         if (isset( $aCountedRanges[$iKey] )) {
           $aRangeInterval = $aCountedRanges[$iKey];
           $aNewColors = array_merge($aNewColors, FLORP_COLOR::getRangeHex($aRangeInterval[0], $aRangeInterval[1], intval($aRangeInterval[2]), $bIncludeBorders));
@@ -2686,7 +2709,7 @@ class FLORP{
             $iAddedColorCount++;
           }
         } else {
-          $aNewColors[] = $sColor;
+          $aNewColors[] = $sCol;
         }
       }
 
@@ -2929,8 +2952,6 @@ class FLORP{
     }
     $iCount = $this->getRegisteredUserCount( $aCountAttrs );
     $aAttributes['target'] = $iCount;
-
-    $aCities = array();
 
     if (!isset($aAttributes['title'])) {
       $aAttributes['title'] = "MESTÁ";
@@ -3492,7 +3513,7 @@ class FLORP{
     }
     foreach ( glob($strImagePath . $strImageNamePattern) as $strImgName) {
       $aMatches = array();
-      $mixType = false;
+      $strType = false;
       if (preg_match( '~^('.$strImagePathEscaped.')?'.$strImageNamePatternPrefix.'t-shirt-chest-white-([a-zA-Z0-9_-]+).png$~', $strImgName, $aMatches )) {
         $strTshirtCitySlug = $aMatches[2];
         $strType = "white";
@@ -3826,7 +3847,7 @@ class FLORP{
         "dashicons-admin-generic",
         58
       );
-      $page = add_submenu_page(
+      add_submenu_page(
         'florp-admin',
         'Option changes',
         'Option changes',
@@ -3835,7 +3856,7 @@ class FLORP{
         'florp-admin',
         array( $this, 'option_changes_table_admin' )
       );
-      $page = add_submenu_page(
+      add_submenu_page(
         'florp-admin',
         'Leader submission history',
         'Leader submission history',
@@ -3856,7 +3877,7 @@ class FLORP{
       58
     );
     if ($this->isMainBlog) {
-      $page = add_submenu_page(
+      add_submenu_page(
         'florp-main',
         'Profil organizátora slovenského flashmobu',
         'Nastavenia profilu',
@@ -3864,7 +3885,7 @@ class FLORP{
         'florp-main',
         array( $this, 'options_page' )
       );
-      $page = add_submenu_page(
+      add_submenu_page(
         'florp-main',
         'Zoznam lídrov',
         'Zoznam lídrov',
@@ -3872,7 +3893,7 @@ class FLORP{
         'florp-leaders',
         array( $this, 'leaders_table_admin' )
       );
-      $page = add_submenu_page(
+      add_submenu_page(
         'florp-main',
         'Zoznam účastníkov',
         'Zoznam účastníkov',
@@ -3880,7 +3901,7 @@ class FLORP{
         'florp-participants',
         array( $this, 'participants_table_admin' )
       );
-      $page = add_submenu_page(
+      add_submenu_page(
         'florp-main',
         'Tričká',
         'Tričká',
@@ -3888,7 +3909,7 @@ class FLORP{
         'florp-tshirts',
         array( $this, 'tshirts_table_admin' )
       );
-      $page = add_submenu_page(
+      add_submenu_page(
         'florp-main',
         'Podstránky lídrov',
         'Podstránky lídrov',
@@ -3896,7 +3917,7 @@ class FLORP{
         'florp-subsites',
         array( $this, 'subsites_table_admin' )
       );
-      $page = add_submenu_page(
+      add_submenu_page(
         'florp-main',
         'Predošlé roky',
         'Predošlé roky',
@@ -3906,7 +3927,7 @@ class FLORP{
       );
     }
     if ($this->isFlashmobBlog) {
-      $page = add_submenu_page(
+      add_submenu_page(
         'florp-main',
         'Profil organizátora slovenského flashmobu',
         'Nastavenia profilu',
@@ -3914,7 +3935,7 @@ class FLORP{
         'florp-main',
         array( $this, 'options_page' )
       );
-      $page = add_submenu_page(
+      add_submenu_page(
         'florp-main',
         'Zoznam účastníkov',
         'Zoznam účastníkov',
@@ -3922,7 +3943,7 @@ class FLORP{
         'florp-participants',
         array( $this, 'participants_table_admin' )
       );
-      $page = add_submenu_page(
+      add_submenu_page(
         'florp-main',
         'Tričká',
         'Tričká',
@@ -3943,7 +3964,7 @@ class FLORP{
         "dashicons-admin-site",
         58
       );
-      $page = add_submenu_page(
+      add_submenu_page(
         'florp-international',
         'Medzinárodný Flashmob',
         'Nastavenia prihlásenia',
@@ -3951,7 +3972,7 @@ class FLORP{
         'florp-international',
         array( $this, 'options_page_international' )
       );
-      $page = add_submenu_page(
+      add_submenu_page(
         'florp-international',
         'Zoznam účastníkov',
         'Zoznam účastníkov',
@@ -3959,7 +3980,7 @@ class FLORP{
         'florp-intf-participants',
         array( $this, 'participants_table_admin_intf' )
       );
-      $page = add_submenu_page(
+      add_submenu_page(
         'florp-international',
         'Tričká',
         'Tričká',
@@ -4605,7 +4626,6 @@ class FLORP{
         $aParticipantData[$strKey] = str_replace( $aReplacementArr['from'], $aReplacementArr['to'], $aParticipantData[$strKey]);
       }
     }
-    $strDoubleCheckQuestion = "Ste si istý?";
     $strRowID = "florpRow-".$iYear."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
 
     $strButtons = $this->get_participants_table_admin_buttons_intf($aParticipantData, $strRowID, false);
@@ -4721,7 +4741,7 @@ class FLORP{
   }
 
   public function tshirts_table_admin_intf() {
-    return $this->tshirts_table_admin(true);
+    $this->tshirts_table_admin(true);
   }
 
   private function get_participant_checkin_table_no_tshirt($aParticipantData, $bIntf = false) {
@@ -4744,9 +4764,9 @@ class FLORP{
         $aParticipantData[$strFieldKey] = str_replace( $aReplacements[$strFieldKey]['from'], $aReplacements[$strFieldKey]['to'], $mixValue );
       }
       if ($strFieldKey === "preferences") {
-        foreach ($aParticipantData["preferences"] as $strKey => $mixValue) {
+        foreach ($aParticipantData["preferences"] as $strKey => $mixValueInner) {
           if (isset($aReplacements["preferences"][$strKey])) {
-            $aParticipantData[$strKey] = str_replace( $aReplacements[$strKey]['from'], $aReplacements[$strKey]['to'], $mixValue );
+            $aParticipantData[$strKey] = str_replace( $aReplacements[$strKey]['from'], $aReplacements[$strKey]['to'], $mixValueInner );
           }
         }
       }
@@ -5157,7 +5177,7 @@ class FLORP{
 
   public function leaders_history_table_admin() {
     echo "<div class=\"wrap\"><h1>" . "Predošlé roky" . "</h1>";
-    $aUsers = $this->getFlashmobSubscribers( 'all', true );
+    $this->getFlashmobSubscribers( 'all', true );
     $strEcho = '<table class="widefat striped"><th>Rok</th><th>Meno</th><th>M(i)esto Flashmobu</th><th>Profil</th>';
     foreach ($this->aOptions["aYearlyMapOptions"] as $iYear => $aMapOptionsForYear) {
       foreach ($aMapOptionsForYear as $iUserID => $aOptions) {
@@ -5387,7 +5407,6 @@ class FLORP{
 
   private function get_leader_submission_history_table_progress_data ($aNfSubmissionHistory) {
     $aSkip = array();
-    $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
     $aReturn = array();
     foreach ($aNfSubmissionHistory as $strEmail => $aSubmissionsOfUser) {
       $iChangeCount = $aSubmissionsOfUser['_count'];
@@ -5457,7 +5476,6 @@ class FLORP{
     $strEcho = "";
     $aTimestamps = array();
     foreach ($aData as $strEmail => $aUser) {
-      $strAdditionalClasses = "";
       if ($bHorizontal) {
         $strAdditionalClasses = " noFilter";
       } else {
@@ -5571,7 +5589,6 @@ class FLORP{
 
   private function leader_submission_history_table_admin__table($aNfSubmissionHistory) {
     $strEcho = '<table class="widefat striped noFilter"><th>User</th><th>Date</th><th>Changed option</th><th>From</th><th>To</th>'."\n";
-    $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
     $aSkip = array();
     // echo $strEcho; return;
 
@@ -5631,11 +5648,7 @@ class FLORP{
           $strRowspan = " rowspan=\"{$iRowspan}\"";
         }
         $strEcho .=   "<td{$strRowspan}>{$strDate}</td>\n";
-        $bFirst = false;
-        $bResave = false;
         if ($aSubmissionData['_first']) {
-          $bFirst = true;
-          $strSubmission = "";
           $aTimestamps = array();
           foreach ($aSubmissionData['_data'] as $strKey => $mixValue) {
             if ($this->aOptions['iCoursesNumberEnabled'] == 0 && in_array($strKey, $this->aMetaFieldsTeacher)) {
@@ -5655,12 +5668,9 @@ class FLORP{
               $strValue = $mixValue;
             }
             $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
-            $strType = " (".gettype($mixValue).")";
-            // $strSubmission .= '<strong title="'.$strKey.'">' . $strFieldName . '</strong>: ' . $strValue.$strType.'<br>';
             $strEcho .= '<td><strong title="'.$strKey.'">' . $strFieldName . '</strong></td><td>-</td><td>' . $strValue . '</td>';
             $strEcho .= "</tr>\n";
           }
-          //$strEcho .=   "<td colspan=\"3\">{$strSubmission}</td>";
         } elseif ($aSubmissionData['_resave']) {
           $strEcho .=   "<td colspan=\"3\">[resave without change]</td>";
           $strEcho .= "</tr>\n";
@@ -5686,15 +5696,9 @@ class FLORP{
             }
             if (is_null($from)) {
               $from = "[null]";
-              $from_type = "";
-            } else {
-              $from_type = " (".gettype($aChange['from']).")";
             }
             if (is_null($to)) {
               $to = "[null]";
-              $to_type = "";
-            } else {
-              $to_type = " (".gettype($aChange['to']).")";
             }
             if ($to === '') {
               $to = "[empty]";
@@ -5703,7 +5707,6 @@ class FLORP{
               $from = "[empty]";
             }
             $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
-            // $strEcho .= "<td><strong title=\"{$strKey}\">{$strFieldName}</strong></td><td>{$from}{$from_type}</td><td>{$to}{$to_type}</td>";
             $strEcho .= "<td><strong title=\"{$strKey}\">{$strFieldName}</strong></td><td>{$from}</td><td>{$to}</td>";
             $strEcho .= "</tr>\n";
           }
@@ -5935,16 +5938,11 @@ class FLORP{
   }
 
   private function get_nf_submission( $iBlogID, $iFormID, $iSubmissionID ) {
+    $mixChangeBlogID = false;
     if ($iBlogID !== get_current_blog_id()) {
       $mixChangeBlogID = $iBlogID;
     }
-    if ($iBlogID === $this->iMainBlogID) {
-      $iProfileFormNinjaFormID = $this->iProfileFormNinjaFormIDMain;
-      $strBlog = "main";
-    } elseif ($iBlogID === $this->iFlashmobBlogID) {
-      $iProfileFormNinjaFormID = $this->iProfileFormNinjaFormIDFlashmob;
-      $strBlog = "flashmob";
-    } else {
+    if ($iBlogID !== $this->iMainBlogID && $iBlogID !== $this->iFlashmobBlogID) {
       return false;
     }
     if (false !== $mixChangeBlogID) {
@@ -6011,7 +6009,6 @@ class FLORP{
     }
 
     $mixChangeBlogID = false;
-    $strBlog = "";
     if ($iBlogID !== false) {
       if ($iBlogID !== get_current_blog_id()) {
         $mixChangeBlogID = $iBlogID;
@@ -6530,7 +6527,6 @@ class FLORP{
       }
     }
     foreach ($aTshirts as $key => $aTshirtData) {
-      $bPaid = false;
       if ($aTshirtData["is_leader"]) {
         $bPaid = true;
         // $bPaid = (isset($aTshirtsOption["leaders"][$aTshirtData["user_id"]]) && isset($aTshirtsOption["leaders"][$aTshirtData["user_id"]]["paid"]) && $aTshirtsOption["leaders"][$aTshirtData["user_id"]]["paid"] === true);
@@ -7436,7 +7432,6 @@ class FLORP{
     if (!isset($this->aOptions["aTshirts"]) || empty($this->aOptions["aTshirts"])) {
       $aData["message"] = $strErrorMessage;
     } else {
-      $iYear = $aData['year'];
       $iTimestampNow = (int) current_time( 'timestamp' );
       $aData["ok"] = true;
       $aData["removeRowOnSuccess"] = false;
@@ -7623,7 +7618,6 @@ class FLORP{
       }
       return $aReturn;
     }
-    return $aReturn;
   }
 
   public function action__florp_tshirt_send_payment_warning_callback() {
@@ -7643,7 +7637,6 @@ class FLORP{
 
       $strMessageContent = $this->aOptions['strTshirtPaymentWarningNotificationMsg'];
       $strMessageSubject = $this->aOptions['strTshirtPaymentWarningNotificationSbj'];
-      $strBlogname = trim(wp_specialchars_decode(get_option('blogname'), ENT_QUOTES));
       $aHeaders = array('Content-Type: text/html; charset=UTF-8');
       $bSendResult = wp_mail($aData["email"], $strMessageSubject, $strMessageContent, $aHeaders);
 
@@ -7708,7 +7701,6 @@ class FLORP{
 
       $strMessageContent = $this->aOptions['strIntfTshirtPaymentWarningNotificationMsg'];
       $strMessageSubject = $this->aOptions['strIntfTshirtPaymentWarningNotificationSbj'];
-      $strBlogname = trim(wp_specialchars_decode(get_option('blogname'), ENT_QUOTES));
       $aHeaders = array('Content-Type: text/html; charset=UTF-8');
       $bSendResult = wp_mail($aData["email"], $strMessageSubject, $strMessageContent, $aHeaders);
 
@@ -7821,7 +7813,6 @@ class FLORP{
       $strDomainEnding = "." . $this->get_root_domain();
       $strSlug = $aData["subdomain"];
       $strDomain = $strSlug . $strDomainEnding;
-      $iSourceBlogID = $this->aOptions['iCloneSourceBlogID'];
       $strPath = '/';
       $aArgs = array(
         'slug' => $aData["subdomain"],
@@ -8695,7 +8686,6 @@ class FLORP{
     $aCityRows = array();
     $aLeaders = $this->getFlashmobSubscribers( 'all', true );
     foreach ($aLeaders as $oLeader) {
-      $iLeaderID = $oLeader->ID;
       $strFlashmobCity = get_user_meta( $oLeader->ID, 'flashmob_city', true );
       if (empty($strFlashmobCity)) {
         continue;
@@ -8843,10 +8833,6 @@ class FLORP{
         $aNumOptions[$strOptionKey] .= '<option value="'.$i.'" '.$strSelected.'>'.$strLabel.'</option>';
       }
     }
-    $strOptionsDaysStart = "";
-    $strOptionsDaysEnd = "";
-    $iSeasonStartDay = $this->aOptions["iSeasonStartDay"];
-    $iSeasonEndDay = $this->aOptions["iSeasonEndDay"];
 
     $strMarkerInfoWindowTemplateOrganizer = $this->get_wp_editor( $this->aOptions['strMarkerInfoWindowTemplateOrganizer'], 'florp_infowindow_template_organizer' );
     $strMarkerInfoWindowTemplateTeacher = $this->get_wp_editor( $this->aOptions['strMarkerInfoWindowTemplateTeacher'], 'florp_infowindow_template_teacher' );
@@ -9506,7 +9492,7 @@ class FLORP{
 
   public function action__reset_password_redirect() {
     // Check if have submitted
-    $confirm = ( isset($_GET['action'] ) && $_GET['action'] == resetpass );
+    $confirm = ( isset($_GET['action'] ) && $_GET['action'] == "resetpass" );
 
     if( $confirm ) {
       setcookie($this->strClickTriggerCookieKey, "1", time() + (1 * 24 * 60 * 60), '/');
@@ -9644,7 +9630,6 @@ class FLORP{
         continue;
       }
       $strDomain = $aSite['domain'];
-      $iID = $aSite['blog_id'];
       $aParts = explode( ".", $strDomain );
       if (!is_array($aParts) || count($aParts) !== 3) {
         continue;
@@ -9701,6 +9686,7 @@ class FLORP{
           } elseif (!$aData["bInfoWindow"]) {
             return "(vytvorit)";
           }
+          break;
         default:
           break;
       }
@@ -9775,6 +9761,7 @@ class FLORP{
           if ($strSubDomainPage && $strSubDomainPage !== "(vytvorit)") {
             $strSchoolWebpage = $strSubDomainPage;
           }
+          break;
         default:
           break;
       }
@@ -10479,7 +10466,7 @@ class FLORP{
       $aUserData['ID'] = $iUserID;
       add_filter( 'send_password_change_email', '__return_false' );
       add_filter( 'send_email_change_email', '__return_false' );
-      $mixRes = wp_update_user( $aUserData );
+      wp_update_user( $aUserData );
     }
     $aSavedMeta = array();
     if (!empty($aMetaData)) {
