@@ -1,40 +1,46 @@
 .wp-core-ui .participantCheckinTable .button:hover {
-  background-color: unset !important;
+    background-color: unset !important;
 }
-.wp-core-ui .participantCheckinTable .button-primary:hover {
-  background-color: #0085ba !important;
-}
-.wp-core-ui .participantCheckinTable .notice {
-  background: #fff;
-  border-left: 4px solid #fff;
-  box-shadow: 0 1px 1px 0 rgba(0,0,0,.1);
-  margin: 5px 15px 2px;
-  padding: 1px 12px;
 
-  display: block !important;
-  margin: 0 !important;
-  margin-bottom: 5px !important;
-  text-align: center;
+.wp-core-ui .participantCheckinTable .button-primary:hover {
+    background-color: #0085ba !important;
 }
+
+.wp-core-ui .participantCheckinTable .notice {
+    background: #fff;
+    border-left: 4px solid #fff;
+    box-shadow: 0 1px 1px 0 rgba(0, 0, 0, .1);
+    margin: 5px 15px 2px;
+    padding: 1px 12px;
+
+    display: block !important;
+    margin: 0 !important;
+    margin-bottom: 5px !important;
+    text-align: center;
+}
+
 .wp-core-ui .participantCheckinTable .notice.notice-success {
-  border-left-color: #46b450;
+    border-left-color: #46b450;
 }
+
 .wp-core-ui .participantCheckinTable .notice.notice-info {
-  border-left-color: #00a0d2;
+    border-left-color: #00a0d2;
 }
+
 .wp-core-ui .participantCheckinTable .notice.notice-warning {
-  border-left-color: #ffb900;
+    border-left-color: #ffb900;
 }
+
 .wp-core-ui .participantCheckinTable .notice.notice-error {
-  border-left-color: #dc3232;
+    border-left-color: #dc3232;
 }
 
 span.button,
-span.notice{
-  display: block !important;
-  margin: 0 !important;
-  margin-bottom: 5px !important;
-  text-align: center;
+span.notice {
+    display: block !important;
+    margin: 0 !important;
+    margin-bottom: 5px !important;
+    text-align: center;
 }
 
 td.column.hide,
@@ -42,134 +48,143 @@ th.column.hide,
 span.button.hide,
 span.notice.hide,
 span.button.forceHide,
-span.notice.forceHide{
-  display: none !important;
+span.notice.forceHide {
+    display: none !important;
 }
 
 .columnTogglerRow,
 .buttonTogglerRow {
-  display: block;
+    display: block;
 }
+
 .columnTogglerRow {
-  width: 100%;
+    width: 100%;
 }
+
 .buttonTogglerRow {
-  width: calc(100% - 11em);
+    width: calc(100% - 11em);
 }
 
 .columnTogglerCheckboxWrapper,
-.buttonTogglerCheckboxWrapper{
-  margin: 5px;
-  display: inline-block;
-}
-.buttonTogglerCheckboxWrapper{
-  float: left;
+.buttonTogglerCheckboxWrapper {
+    margin: 5px;
+    display: inline-block;
 }
 
-.button-warning{
+.buttonTogglerCheckboxWrapper {
+    float: left;
+}
+
+.button-warning {
     color: #fff !important;
     background-color: #f0ad4e !important;
     border-color: #eea236 !important;
 }
-.wp-core-ui .participantCheckinTable .button-warning:hover{
-  background-color: #f0ad4e !important;
+
+.wp-core-ui .participantCheckinTable .button-warning:hover {
+    background-color: #f0ad4e !important;
 }
 
-.button-danger{
+.button-danger {
     color: #fff !important;
     background-color: #dc3545 !important;
     border-color: #eea236 !important;
 }
-.wp-core-ui .participantCheckinTable .button-danger:hover{
-  background-color: #dc3545 !important;
+
+.wp-core-ui .participantCheckinTable .button-danger:hover {
+    background-color: #dc3545 !important;
 }
 
 tr.florpFilterHeaderRow,
-th.florpFilterHeaderCell{
-  margin: 0;
-  padding: 0;
+th.florpFilterHeaderCell {
+    margin: 0;
+    padding: 0;
 }
 
 
-input.florpFilterInput{
-  margin: 0 !important;
-  width: 100%;
-  height: 2em;
+input.florpFilterInput {
+    margin: 0 !important;
+    width: 100%;
+    height: 2em;
 }
 
-tr.florpFilterHidden{
-  display: none;
+tr.florpFilterHidden {
+    display: none;
 }
 
-p.addOrderDateParagraph span.button{
-  vertical-align: middle;
+p.addOrderDateParagraph span.button {
+    vertical-align: middle;
 }
 
 p.addOrderDateParagraph input,
-p.addOrderDateParagraph select{
-  height: 28px;
-  margin: 1px;
-  padding: 3px 5px;
-  vertical-align: middle;
+p.addOrderDateParagraph select {
+    height: 28px;
+    margin: 1px;
+    padding: 3px 5px;
+    vertical-align: middle;
 }
 
-span.tableCountInfo{
-  display: inline-block;
-  text-align: right;
-  padding: 5px;
-  float: right;
-  width: 10em;
+span.tableCountInfo {
+    display: inline-block;
+    text-align: right;
+    padding: 5px;
+    float: right;
+    width: 10em;
 }
 
-table.florpNoWrap{
-  white-space: nowrap;
+table.florpNoWrap {
+    white-space: nowrap;
 }
 
-table.florpHorizontalScroll{
-  overflow-x: auto;
-  display: block;
+table.florpHorizontalScroll {
+    overflow-x: auto;
+    display: block;
 }
 
-.florpTableCaption{
-  float: left;
-  margin-bottom: 0;
-  margin-top: 1.33em;
-}
-.florpTableCaption+.tableCountInfo{
-  float: right;
-  margin-top: 1.33em;
+.florpTableCaption {
+    float: left;
+    margin-bottom: 0;
+    margin-top: 1.33em;
 }
 
-table.florpFirstColFrozen.florpHorizontalScroll{
-  width: calc( 100% - 14em - 20px );
+.florpTableCaption + .tableCountInfo {
+    float: right;
+    margin-top: 1.33em;
+}
+
+table.florpFirstColFrozen.florpHorizontalScroll {
+    width: calc(100% - 14em - 20px);
 }
 
 table.florpFirstColFrozen tr td:first-of-type,
-table.florpFirstColFrozen tr th:first-of-type{
-  position: absolute;
-  width: 14em;
-  left: 10px;
-  background-color: white;
-  padding-left: 10px;
-  padding-right: 10px;
-/*  width: calc( 14em - 20px );
-  padding-left: 10px;
-  padding-right: 10px;*/
-}
-table.florpFirstColFrozen tr th:first-of-type{
-  width: calc( 14em - 20px );
-  padding-left: 10px;
-  padding-right: 10px;
-}
-table.florpFirstColFrozen.striped tr:nth-child(odd) :first-of-type {
-  background-color: #f9f9f9;
+table.florpFirstColFrozen tr th:first-of-type {
+    position: absolute;
+    width: 14em;
+    left: 10px;
+    background-color: white;
+    padding-left: 10px;
+    padding-right: 10px;
+    /*  width: calc( 14em - 20px );
+      padding-left: 10px;
+      padding-right: 10px;*/
 }
 
-table.florpFirstColFrozen tr.florpFilterHeaderRow th:first-of-type{
-  width: 14em;
-  padding-left: 0;
-  padding-right: 0;
+table.florpFirstColFrozen tr th:first-of-type {
+    width: calc(14em - 20px);
+    padding-left: 10px;
+    padding-right: 10px;
 }
-table.florpFirstColFrozen{
-  margin-left: calc( 14em + 20px );
+
+table.florpFirstColFrozen.striped tr:nth-child(odd) :first-of-type {
+    background-color: #f9f9f9;
+}
+
+table.florpFirstColFrozen tr.florpFilterHeaderRow th:first-of-type {
+    width: 14em;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+table.florpFirstColFrozen {
+    margin-left: calc(14em + 20px);
 }
