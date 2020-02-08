@@ -6,7 +6,7 @@
  * Short Description: Creates flashmob shortcodes, forms and maps
  * Author: charliecek
  * Author URI: http://charliecek.eu/
- * Version: 5.12.1
+ * Version: 5.12.2
  * Requires at least: 4.8
  * Tested up to: 5.3
  * Requires PHP: 5.6
@@ -22,7 +22,7 @@ use Endroid\QrCode\QrCode;
 
 class FLORP {
 
-  private $strVersion = '5.12.1';
+  private $strVersion = '5.12.2';
   private $strSuperAdminMail = 'charliecek@gmail.com';
   private $iMainBlogID = 1;
   private $iFlashmobBlogID = 6;
@@ -2098,11 +2098,13 @@ class FLORP {
       if ($aField['settings']['key'] === "flashmob_participant_tshirt_color" && $aField['settings']['type'] === "listradio") {
         $aTshirtImgs = $this->get_tshirt_images( true );
         if (count( $aTshirtImgs["full"] ) > 0) {
+          $aColors = array_keys($aTshirtImgs["full"]);
+          rsort($aColors);
           reset( $aField['settings']['options'] );
           $iFirstKey                     = key( $aField['settings']['options'] );
           $aOption                       = $aField['settings']['options'][$iFirstKey];
           $aField['settings']['options'] = array();
-          foreach ($aTshirtImgs["full"] as $strColor => $aCities) {
+          foreach ($aColors as $strColor) {
             $aOption["label"]                = $strColor;
             $aOption["value"]                = $strColor;
             $aField['settings']['options'][] = $aOption;
@@ -2164,11 +2166,13 @@ class FLORP {
       if ($aField['settings']['key'] === "flashmob_leader_tshirt_color" && $aField['settings']['type'] === "listradio") {
         $aTshirtImgs = $this->get_tshirt_images();
         if (count( $aTshirtImgs["full"] ) > 0) {
+          $aColors = array_keys($aTshirtImgs["full"]);
+          rsort($aColors);
           reset( $aField['settings']['options'] );
           $iFirstKey                     = key( $aField['settings']['options'] );
           $aOption                       = $aField['settings']['options'][$iFirstKey];
           $aField['settings']['options'] = array();
-          foreach ($aTshirtImgs["full"] as $strColor => $aCities) {
+          foreach ($aColors as $strColor) {
             $aOption["label"]                = $strColor;
             $aOption["value"]                = $strColor;
             $aField['settings']['options'][] = $aOption;
@@ -2292,11 +2296,13 @@ class FLORP {
       if ($aField['settings']['key'] === "flashmob_participant_tshirt_color" && $aField['settings']['type'] === "listradio") {
         $aTshirtImgs = $this->get_tshirt_images();
         if (count( $aTshirtImgs["full"] ) > 0) {
+          $aColors = array_keys($aTshirtImgs["full"]);
+          rsort($aColors);
           reset( $aField['settings']['options'] );
           $iFirstKey                     = key( $aField['settings']['options'] );
           $aOption                       = $aField['settings']['options'][$iFirstKey];
           $aField['settings']['options'] = array();
-          foreach ($aTshirtImgs["full"] as $strColor => $aCities) {
+          foreach ($aColors as $strColor) {
             $aOption["label"]                = $strColor;
             $aOption["value"]                = $strColor;
             $aField['settings']['options'][] = $aOption;
