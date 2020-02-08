@@ -3654,6 +3654,7 @@ class FLORP {
       $strImageNamePatternPrefix = "intf-";
       $strImageNamePattern       = "intf-t-shirt-*.png";
     }
+    $aCities = array();
     $aColors = array();
     foreach (glob( $strImagePath . $strImageNamePattern ) as $strImgName) {
       $aMatches = array();
@@ -3669,7 +3670,8 @@ class FLORP {
       foreach (glob( $strImagePath . $strImageNamePattern ) as $strImgName) {
         $aMatches = array();
         if (preg_match( '~^(' . $strImagePathEscaped . ')?' . $strImageNamePatternPrefix . 't-shirt-chest-' . $strColor . '-([a-zA-Z0-9_-]+).png$~', $strImgName, $aMatches )) {
-          $strTshirtCitySlug = $aMatches[2];
+          $strTshirtCitySlug           = $aMatches[2];
+          $aCities[$strTshirtCitySlug] = $strTshirtCitySlug;
           if ( !isset( $aCouples[$strTshirtCitySlug] )) {
             $aCouples[$strTshirtCitySlug] = array(
               "chest" => true,
@@ -3679,7 +3681,8 @@ class FLORP {
             $aCouples[$strTshirtCitySlug]["chest"] = true;
           }
         } elseif (preg_match( '~^(' . $strImagePathEscaped . ')?' . $strImageNamePatternPrefix . 't-shirt-' . $strColor . '-([a-zA-Z0-9_-]+).png$~', $strImgName, $aMatches )) {
-          $strTshirtCitySlug = $aMatches[2];
+          $strTshirtCitySlug           = $aMatches[2];
+          $aCities[$strTshirtCitySlug] = $strTshirtCitySlug;
           if ( !isset( $aCouples[$strTshirtCitySlug] )) {
             $aCouples[$strTshirtCitySlug] = array(
               "chest" => false,
@@ -3694,6 +3697,21 @@ class FLORP {
       foreach ($aCouples as $strCitySlug => $aCouple) {
         if ($aCouple["chest"] && $aCouple["full"]) {
           $aTshirtFullImages[$strColor][$strCitySlug] = 1;
+        }
+      }
+    }
+
+    foreach ($aCities as $strCitySlug) {
+      if ($aTshirtFullImages[$strCitySlug]) {
+        $bFound = true;
+        foreach ($aColors as $strColor) {
+          if ( !$aTshirtFullImages[$strCitySlug][$strColor]) {
+            $bFound = false;
+            break;
+          }
+        }
+        if ($bFound) {
+          $aTshirtImages[$strCitySlug] = 1;
         }
       }
     }
