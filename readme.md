@@ -17,6 +17,12 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 ## Version history
 
+### v5.12.2: Reordered tshirt color images
+
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.12.2)
+
+- Reordered tshirt color images in descending order (so that white is not last).
+
 ### v5.12.1: Added missing t-shirt availibility evaluation
 
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.12.1)
@@ -230,11 +236,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 - New international flashmob tshirt images
 - Changes to international flashmob participant signup NF form
 
-### v4.7.1: info circle position bugfix
 
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.7.1)
-
-- Bugfix: wrong info circle position and popup when multiple forms are on the same page
-
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.7.1)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.7.2)
