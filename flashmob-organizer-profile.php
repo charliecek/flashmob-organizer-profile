@@ -2094,6 +2094,22 @@ class FLORP {
     if (stripos( $aField['settings']['container_class'], 'florp-intf' ) !== false) {
       // Settings specific to the international signup form //
 
+      // Populate tshirt colors
+      if ($aField['settings']['key'] === "flashmob_participant_tshirt_color" && $aField['settings']['type'] === "listradio") {
+        $aTshirtImgs = $this->get_tshirt_images( true );
+        if (count( $aTshirtImgs["full"] ) > 0) {
+          reset( $aField['settings']['options'] );
+          $iFirstKey                     = key( $aField['settings']['options'] );
+          $aOption                       = $aField['settings']['options'][$iFirstKey];
+          $aField['settings']['options'] = array();
+          foreach ($aTshirtImgs["full"] as $strColor => $aCities) {
+            $aOption["label"]                = $strColor;
+            $aOption["value"]                = $strColor;
+            $aField['settings']['options'][] = $aOption;
+          }
+        }
+      }
+
       // Populate the poll options //
       if ($aField['settings']['key'] == 'intf_city') {
         if ($this->bIntfCityPollDisabled) {
@@ -2143,6 +2159,22 @@ class FLORP {
       }
     } elseif ($this->isMainBlog) {
       // Settings specific to the NF on the Main Blog //
+
+      // Populate tshirt colors
+      if ($aField['settings']['key'] === "flashmob_leader_tshirt_color" && $aField['settings']['type'] === "listradio") {
+        $aTshirtImgs = $this->get_tshirt_images();
+        if (count( $aTshirtImgs["full"] ) > 0) {
+          reset( $aField['settings']['options'] );
+          $iFirstKey                     = key( $aField['settings']['options'] );
+          $aOption                       = $aField['settings']['options'][$iFirstKey];
+          $aField['settings']['options'] = array();
+          foreach ($aTshirtImgs["full"] as $strColor => $aCities) {
+            $aOption["label"]                = $strColor;
+            $aOption["value"]                = $strColor;
+            $aField['settings']['options'][] = $aOption;
+          }
+        }
+      }
 
       // Replace flashmob date/time in flashmob_organizer single checkbox //
       if ('checkbox' === $aField['settings']['type'] && 'flashmob_organizer' === $aField['settings']['key']) {
@@ -2254,7 +2286,23 @@ class FLORP {
         }
       }
     } elseif ($this->isFlashmobBlog) {
-      // Settings specific to the NF on the Flashmob Blog //
+      // Settings specific to the non-international NF on the Flashmob Blog //
+
+      // Populate tshirt colors
+      if ($aField['settings']['key'] === "flashmob_participant_tshirt_color" && $aField['settings']['type'] === "listradio") {
+        $aTshirtImgs = $this->get_tshirt_images();
+        if (count( $aTshirtImgs["full"] ) > 0) {
+          reset( $aField['settings']['options'] );
+          $iFirstKey                     = key( $aField['settings']['options'] );
+          $aOption                       = $aField['settings']['options'][$iFirstKey];
+          $aField['settings']['options'] = array();
+          foreach ($aTshirtImgs["full"] as $strColor => $aCities) {
+            $aOption["label"]                = $strColor;
+            $aOption["value"]                = $strColor;
+            $aField['settings']['options'][] = $aOption;
+          }
+        }
+      }
 
       // Set default value of tshirt preference to unchecked if ordering is disabled //
       if ($this->aOptions['bTshirtOrderingDisabled'] && $aField['settings']['type'] === 'listcheckbox' && $aField['settings']['key'] === 'preferences') {
@@ -3599,52 +3647,60 @@ class FLORP {
     $strPluginDirPath          = WP_CONTENT_DIR . '/plugins/flashmob-organizer-profile';
     $strImagePath              = $strPluginDirPath . "/img/";
     $strImagePathEscaped       = preg_quote( $strImagePath, "~" );
-    $aTshirtImageCouples       = array();
-    $aTshirtFullImages         = array( 'white' => array(), 'black' => array() );
+    $aTshirtFullImages         = array();
     $strImageNamePatternPrefix = "";
     $strImageNamePattern       = "t-shirt-*.png";
     if ($bInternational) {
       $strImageNamePatternPrefix = "intf-";
       $strImageNamePattern       = "intf-t-shirt-*.png";
     }
+    $aColors = array();
     foreach (glob( $strImagePath . $strImageNamePattern ) as $strImgName) {
       $aMatches = array();
-      $strType  = false;
-      if (preg_match( '~^(' . $strImagePathEscaped . ')?' . $strImageNamePatternPrefix . 't-shirt-chest-white-([a-zA-Z0-9_-]+).png$~', $strImgName, $aMatches )) {
-        $strTshirtCitySlug = $aMatches[2];
-        $strType           = "white";
-      } elseif (preg_match( '~^(' . $strImagePathEscaped . ')?' . $strImageNamePatternPrefix . 't-shirt-chest-black-([a-zA-Z0-9_-]+).png$~', $strImgName, $aMatches )) {
-        $strTshirtCitySlug = $aMatches[2];
-        $strType           = "black";
-      } elseif (preg_match( '~^(' . $strImagePathEscaped . ')?' . $strImageNamePatternPrefix . 't-shirt-white-([a-zA-Z0-9_-]+).png$~', $strImgName, $aMatches )) {
-        $strTshirtCitySlug                              = $aMatches[2];
-        $aTshirtFullImages['white'][$strTshirtCitySlug] = 1;
-        continue;
-      } elseif (preg_match( '~^(' . $strImagePathEscaped . ')?' . $strImageNamePatternPrefix . 't-shirt-black-([a-zA-Z0-9_-]+).png$~', $strImgName, $aMatches )) {
-        $strTshirtCitySlug                              = $aMatches[2];
-        $aTshirtFullImages['black'][$strTshirtCitySlug] = 1;
-        continue;
-      }
-      if ($strType) {
-        if ( !isset( $aTshirtImageCouples[$strTshirtCitySlug] )) {
-          $aTshirtImageCouples[$strTshirtCitySlug] = array(
-            'white' => false,
-            'black' => false,
-          );
-        }
-        $aTshirtImageCouples[$strTshirtCitySlug][$strType] = true;
+      if (preg_match( '~^(' . $strImagePathEscaped . ')?' . $strImageNamePatternPrefix . 't-shirt-chest-([a-z]+)-[a-zA-Z0-9_-]+.png$~', $strImgName, $aMatches )) {
+        $strColor           = $aMatches[2];
+        $aColors[$strColor] = $strColor;
       }
     }
-    foreach ($aTshirtImageCouples as $strTshirtCitySlug => $aTypes) {
-      if ($aTypes['white'] && $aTypes['black']) {
-        $aTshirtImages[$strTshirtCitySlug] = 1;
+
+    foreach ($aColors as $strColor) {
+      $aTshirtFullImages[$strColor] = array();
+      $aCouples                     = array();
+      foreach (glob( $strImagePath . $strImageNamePattern ) as $strImgName) {
+        $aMatches = array();
+        if (preg_match( '~^(' . $strImagePathEscaped . ')?' . $strImageNamePatternPrefix . 't-shirt-chest-' . $strColor . '-([a-zA-Z0-9_-]+).png$~', $strImgName, $aMatches )) {
+          $strTshirtCitySlug = $aMatches[2];
+          if ( !isset( $aCouples[$strTshirtCitySlug] )) {
+            $aCouples[$strTshirtCitySlug] = array(
+              "chest" => true,
+              "full"  => false
+            );
+          } else {
+            $aCouples[$strTshirtCitySlug]["chest"] = true;
+          }
+        } elseif (preg_match( '~^(' . $strImagePathEscaped . ')?' . $strImageNamePatternPrefix . 't-shirt-' . $strColor . '-([a-zA-Z0-9_-]+).png$~', $strImgName, $aMatches )) {
+          $strTshirtCitySlug = $aMatches[2];
+          if ( !isset( $aCouples[$strTshirtCitySlug] )) {
+            $aCouples[$strTshirtCitySlug] = array(
+              "chest" => false,
+              "full"  => true
+            );
+          } else {
+            $aCouples[$strTshirtCitySlug]["full"] = true;
+          }
+        }
+      }
+
+      foreach ($aCouples as $strCitySlug => $aCouple) {
+        if ($aCouple["chest"] && $aCouple["full"]) {
+          $aTshirtFullImages[$strColor][$strCitySlug] = 1;
+        }
       }
     }
 
     return array(
       'availability' => $aTshirtImages,
-      'couples'      => $aTshirtImageCouples,
-      'full'         => $aTshirtFullImages,
+      'full'         => $aTshirtFullImages
     );
   }
 
