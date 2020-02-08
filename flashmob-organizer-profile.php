@@ -121,6 +121,10 @@ class FLORP {
   private $bReloadAfterSuccessfulSubmissionMain;
   private $bReloadAfterSuccessfulSubmissionFlashmob;
   private $aOptionKeysByBlog;
+  private $aLeaderSubmissionHistoryViews;
+  private $strLeaderSubmissionHistoryViewsCookieKey;
+  private $strLeaderSubmissionHistoryView;
+  private $strDateFormat;
 
   public function __construct() {
     $this->load_options();
