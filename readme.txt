@@ -13,6 +13,12 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
 
 **Version history**
 
+= v5.12.0: New international flashmob form tshirt colors =
+[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.12.0)
+- Added searching for available t-shirt image colors on disk.
+- Added new international flashmob form tshirt colors.
+- PHPStorm code fixes and formatting.
+
 = v5.11.2: Added application of the_content filter on chart placeholder content. =
 [View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v5.11.2)
 - Added application of the_content filter on chart placeholder content.
@@ -170,10 +176,5 @@ Creates shortcodes for flashmob organizer login / registration / profile editing
   - exporting of the NF form
   - email notifications, tshirt images, newsletter subscription
 
-= v4.6.12: course preview bug, course city number =
-[View on Github](https://github.com/charliecek/flashmob-organizer-profile/releases/tag/v4.6.12)
-- fixed bug where course preview map wouldn't show additional cities
-- added option to configure number of allowed course cities
 
-
-[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.6.12)
+[View the rest on Github](https://github.com/charliecek/flashmob-organizer-profile/releases?after=v4.7.0)
