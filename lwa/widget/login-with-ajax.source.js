@@ -179,7 +179,7 @@ jQuery(document).ready(function ($) {
             })
         } else {
             //If there already is an error element, replace text contents, otherwise create a new one and insert it
-            statusElement.attr('class', 'lwa-status lwa-status-invalid').html('An error has occured. Please try again.') //modify status content
+            statusElement.attr('class', 'lwa-status lwa-status-invalid').html('An error has occurred. Please try again.') //modify status content
             console.warn(data)
         }
     }

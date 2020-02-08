@@ -188,3 +188,17 @@ table.florpFirstColFrozen tr.florpFilterHeaderRow th:first-of-type {
 table.florpFirstColFrozen {
     margin-left: calc(14em + 20px);
 }
+
+#florp-admin-tshirt-change {
+    position: absolute;
+    min-width: 20em;
+    background: #f1f1f1;
+    border: 1px dotted #3b3d40;
+    padding: 1em;
+    z-index: 1;
+}
+
+.florp-pop-in-div.hide,
+.florp-pop-in-div p.notice.hide {
+    display: none;
+}

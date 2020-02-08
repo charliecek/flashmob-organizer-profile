@@ -208,6 +208,10 @@ class FLORP {
     add_action( 'wp_ajax_florp_intf_participant_paid_fee', array( $this, 'action__florp_intf_participant_paid_fee_callback' ) );
     add_action( 'wp_ajax_florp_participant_attend', array( $this, 'action__florp_participant_attend_callback' ) );
     add_action( 'wp_ajax_florp_intf_participant_attend', array( $this, 'action__florp_intf_participant_attend_callback' ) );
+    add_action( 'wp_ajax_florp_change_tshirt', array( $this, 'action__florp_tshirt_change_callback' ) );
+    add_action( 'wp_ajax_florp_intf_change_tshirt', array( $this, 'action__florp_tshirt_change_callback' ) );
+    add_action( 'wp_ajax_florp_tshirt_change_tshirt', array( $this, 'action__florp_tshirt_change_callback' ) );
+    add_action( 'wp_ajax_florp_intf_tshirt_change_tshirt', array( $this, 'action__florp_tshirt_change_callback' ) );
     // SVK only //
     add_action( 'wp_ajax_add_order_date', array( $this, 'action__add_order_date_callback' ) );
     add_action( 'wp_ajax_delete_nf_submission', array( $this, 'action__delete_nf_submission_callback' ) );
@@ -235,8 +239,8 @@ class FLORP {
     // END ACTIONS //
 
     // BEGIN FORM FIELDS //
-    $this->aUserFields                  = array( 'user_email', 'first_name', 'last_name', 'user_pass' );
-    $this->aUserFieldsMap               = array( 'first_name', 'last_name' );
+    $this->aUserFields = array( 'user_email', 'first_name', 'last_name', 'user_pass' );
+    $this->aUserFieldsMap = array( 'first_name', 'last_name' );
     $this->aMetaFieldsFlashmobToArchive = array(
       'flashmob_organizer',
       'flashmob_city',
@@ -254,7 +258,7 @@ class FLORP {
       'longitude',
       'latitude'
     );
-    $this->aMetaFieldsTeacher           = array(
+    $this->aMetaFieldsTeacher = array(
       'teacher',
       'courses_city',
       'courses_info',
@@ -265,7 +269,7 @@ class FLORP {
       'courses_info_3',
       'courses_city_3'
     );
-    $this->aMetaFields                  = array_merge( $this->aMetaFieldsFlashmobToArchive,
+    $this->aMetaFields = array_merge( $this->aMetaFieldsFlashmobToArchive,
       $this->aMetaFieldsTeacher,
       array(
         'user_city',
@@ -274,7 +278,7 @@ class FLORP {
         'flashmob_leader_tshirt_color',
         'preference_newsletter',
       ) );
-    $this->aFlashmobMetaFieldsToClean   = array(
+    $this->aFlashmobMetaFieldsToClean = array(
       'flashmob_organizer',
       'flashmob_city',
       'flashmob_number_of_dancers',
@@ -286,13 +290,13 @@ class FLORP {
       'flashmob_leader_tshirt_gender',
       'flashmob_leader_tshirt_color'
     );
-    $this->aLocationFields              = array(
+    $this->aLocationFields = array(
       'flashmob_organizer' => array( "flashmob_city", "flashmob_address", "longitude", "latitude" ),
       'teacher'            => array( "courses_city", "courses_city_2", "courses_city_3" ),
     );
     // END FORM FIELDS //
 
-    $this->aGeneralMapOptions                       = array(
+    $this->aGeneralMapOptions = array(
       'map_init_raw'     => array(
         'zoom'              => 8,
         'mapTypeId'         => 'roadmap',
@@ -322,22 +326,22 @@ class FLORP {
       'og_map_image_alt' => "Mapka registrovaných organizátorov rueda flashmobu na Slovensku",
       'fb_app_id'        => $this->aOptions['strFbAppID'],
     );
-    $this->aLeaderSubmissionHistoryViews            = array( 'progress_vertical', 'progress_horizontal', 'table' );
+    $this->aLeaderSubmissionHistoryViews = array( 'progress_vertical', 'progress_horizontal', 'table' );
     $this->strLeaderSubmissionHistoryViewsCookieKey = "florp-history-table-admin-view";
-    $this->strLeaderSubmissionHistoryView           = $this->aLeaderSubmissionHistoryViews[0];
-    $this->strDateFormat                            = get_option( 'date_format' ) . " " . get_option( 'time_format' );
+    $this->strLeaderSubmissionHistoryView = $this->aLeaderSubmissionHistoryViews[0];
+    $this->strDateFormat = get_option( 'date_format' ) . " " . get_option( 'time_format' );
   }
 
   private function get_default_options() {
-    $aNfFieldTypes  = array();
+    $aNfFieldTypes = array();
     $aNfSubmissions = array();
-    $aSites         = wp_get_sites();
+    $aSites = wp_get_sites();
     foreach ($aSites as $i => $aSite) {
       if ($aSite['public'] != 1 || $aSite['deleted'] == 1 || $aSite['archived'] == 1) {
         continue;
       }
-      $iID                  = intval( $aSite['blog_id'] );
-      $aNfFieldTypes[$iID]  = array( 'done' => false, 'field_types' => array() );
+      $iID = intval( $aSite['blog_id'] );
+      $aNfFieldTypes[$iID] = array( 'done' => false, 'field_types' => array() );
       $aNfSubmissions[$iID] = array( 'done' => false, 'forms' => array() );
     }
 
@@ -484,9 +488,9 @@ class FLORP {
 
   private function load_options() {
     // BEGIN options //
-    $this->aOptions            = get_site_option( $this->strOptionKey, array() );
-    $this->aOptionDefaults     = $this->get_default_options();
-    $this->aOptionFormKeys     = array(
+    $this->aOptions = get_site_option( $this->strOptionKey, array() );
+    $this->aOptionDefaults = $this->get_default_options();
+    $this->aOptionFormKeys = array(
       'florp_reload_after_ok_submission_main'            => 'bReloadAfterSuccessfulSubmissionMain',
       'florp_reload_after_ok_submission_flashmob'        => 'bReloadAfterSuccessfulSubmissionFlashmob',
       'florp_flashmob_year'                              => 'iFlashmobYear',
@@ -588,7 +592,7 @@ class FLORP {
       'florp_svk_flashmob_map_video_all_years'           => 'aSvkFlashmobMapVideoAllYears',
       'florp_intf_charts_visible_indefinitely_on_submit' => 'bIntfChartsVisibleIndefinitelyOnSubmit',
     );
-    $aDeprecatedKeys           = array(
+    $aDeprecatedKeys = array(
       // new => old //
       // OR: old //
       'iCurrentFlashmobYear',
@@ -600,7 +604,7 @@ class FLORP {
       'bCoursesInfoDisabled',
       // 'aIntfCityPollUsers',
     );
-    $this->aBooleanOptions     = array(
+    $this->aBooleanOptions = array(
       'bReloadAfterSuccessfulSubmissionMain',
       'bReloadAfterSuccessfulSubmissionFlashmob',
       'bLoadMapsAsync',
@@ -619,13 +623,13 @@ class FLORP {
       'bPaymentOKNotificationEnabled',
       'bIntfChartsVisibleIndefinitelyOnSubmit',
     );
-    $this->aArrayOptions       = array(
+    $this->aArrayOptions = array(
       'aHideFlashmobFieldsForUsers',
       'aUnhideFlashmobFieldsForUsers',
       'aIntfCityPollUsers',
       'aSvkFlashmobMapVideoAllYears',
     );
-    $this->aOptionKeysByBlog   = array(
+    $this->aOptionKeysByBlog = array(
       'main'          => array(
         'aYearlyMapOptions',
         'aYearlySvkFlashmobOptions',
@@ -780,7 +784,7 @@ class FLORP {
       foreach ($this->aOptionDefaults as $key => $val) {
         if ( !isset( $this->aOptions[$key] )) {
           $this->aOptions[$key] = $val;
-          $bUpdate              = true;
+          $bUpdate = true;
         }
       }
       // remove old options //
@@ -804,7 +808,7 @@ class FLORP {
       }
     }
     if (empty( $this->aOptions['aTshirtsIntf'] )) {
-      $this->aOptions['aTshirtsIntf']                                       = array();
+      $this->aOptions['aTshirtsIntf'] = array();
       $this->aOptions['aTshirtsIntf'][$this->aOptions['iIntfFlashmobYear']] = array();
       $this->save_options();
     }
@@ -858,7 +862,7 @@ class FLORP {
       'blog_id' => $iBlogFrom,
       'role'    => $this->strUserRoleApproved
     );
-    $aFlashmobBlogSubscribers     = get_users( $aArgsFlashmobBlogSubscribers );
+    $aFlashmobBlogSubscribers = get_users( $aArgsFlashmobBlogSubscribers );
     foreach ($aFlashmobBlogSubscribers as $oUser) {
       add_user_to_blog( $iBlogTo, $oUser->ID, $this->strUserRoleApproved );
       remove_user_from_blog( $oUser->ID, $iBlogFrom );
@@ -889,12 +893,12 @@ class FLORP {
     $this->migrate_subscribers( $this->iFlashmobBlogID, $this->iMainBlogID );
 
     // Make needed meta changes //
-    $aArgsMainBlogSubscribers  = array(
+    $aArgsMainBlogSubscribers = array(
       'blog_id' => $this->iMainBlogID,
     );
     $aMainBlogSubscribersUsers = get_users( $aArgsMainBlogSubscribers );
 
-    $aOldVideoLinkMetaKeys   = array(
+    $aOldVideoLinkMetaKeys = array(
       'facebook' => 'facebook_link',
       'youtube'  => 'youtube_link',
       'vimeo'    => 'vimeo_link',
@@ -909,12 +913,12 @@ class FLORP {
 
       // Transform subscriber_type meta to corresponding checkboxes //
       $mixSubscriberTypesOfUser = get_user_meta( $oUser->ID, 'subscriber_type', true );
-      $aSubscriberTypesOfUser   = array();
+      $aSubscriberTypesOfUser = array();
       if ("" === $mixSubscriberTypesOfUser) {
         // test via wpdb
         global $wpdb;
         $strQuery = "SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = {$oUser->ID} AND meta_key = 'flashmob_organizer'";
-        $res      = $wpdb->get_var( $strQuery );
+        $res = $wpdb->get_var( $strQuery );
         if ( !is_null( $res )) {
           delete_user_meta( $oUser->ID, 'subscriber_type' );
         }
@@ -948,7 +952,7 @@ class FLORP {
 
       // Change school_webpage => custom_webpage (and select 'vlastna' as school_webpage) //
       $strSchoolWebpage = get_user_meta( $oUser->ID, 'school_webpage', true );
-      $strUserWebpage   = get_user_meta( $oUser->ID, 'webpage', true );
+      $strUserWebpage = get_user_meta( $oUser->ID, 'webpage', true );
       if ( !empty( $strSchoolWebpage ) && !in_array( $strSchoolWebpage, array( 'vlastna', 'flashmob', 'vytvorit' ) )) {
         update_user_meta( $oUser->ID, 'webpage', 'vlastna' );
         update_user_meta( $oUser->ID, 'custom_webpage', $strSchoolWebpage );
@@ -980,12 +984,12 @@ class FLORP {
       // preferences:newsletter => preference_newsletter //
       // preferences:tshirt* => remove, it's automatic //
       $mixPreferencesOfUser = get_user_meta( $oUser->ID, 'preferences', true );
-      $aPreferencesOfUser   = array();
+      $aPreferencesOfUser = array();
       if ("" === $mixPreferencesOfUser) {
         // test via wpdb
         global $wpdb;
         $strQuery = "SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = {$oUser->ID} AND meta_key = 'flashmob_organizer'";
-        $res      = $wpdb->get_var( $strQuery );
+        $res = $wpdb->get_var( $strQuery );
         if ( !is_null( $res )) {
           delete_user_meta( $oUser->ID, 'preferences' );
         }
@@ -1023,11 +1027,11 @@ class FLORP {
     foreach ($this->aOptions['aYearlyMapOptions'] as $iYear => $aUsersInYear) {
       foreach ($aUsersInYear as $iUserID => $aArchivedMeta) {
         if (isset( $aArchivedMeta[$strVideoLinkTypeMetaKey] )) {
-          $bSaveOptions     = true;
+          $bSaveOptions = true;
           $strVideoLinkType = $aArchivedMeta[$strVideoLinkTypeMetaKey];
-          $strVideoLinkKey  = $aOldVideoLinkMetaKeys[$strVideoLinkType];
+          $strVideoLinkKey = $aOldVideoLinkMetaKeys[$strVideoLinkType];
           if (isset( $aArchivedMeta[$strVideoLinkKey] ) && !empty( $aArchivedMeta[$strVideoLinkKey] )) {
-            $strVideoLink                                                        = $aArchivedMeta[$strVideoLinkKey];
+            $strVideoLink = $aArchivedMeta[$strVideoLinkKey];
             $this->aOptions['aYearlyMapOptions'][$iYear][$iUserID]['video_link'] = $strVideoLink;
           }
           foreach ($aOldVideoLinkMetaKeys as $strLinkType => $strMetaKey) {
@@ -1040,14 +1044,14 @@ class FLORP {
 
         $strSchoolWebpage = $aArchivedMeta['school_webpage'];
         if ( !empty( $strSchoolWebpage ) && !in_array( $strSchoolWebpage, array( 'vlastna', 'flashmob', 'vytvorit' ) )) {
-          $bSaveOptions                                                                   = true;
-          $this->aOptions['aYearlyMapOptions'][$iYear][$iUserID]['school_webpage']        = 'vlastna';
+          $bSaveOptions = true;
+          $this->aOptions['aYearlyMapOptions'][$iYear][$iUserID]['school_webpage'] = 'vlastna';
           $this->aOptions['aYearlyMapOptions'][$iYear][$iUserID]['custom_school_webpage'] = $strSchoolWebpage;
         }
 
         $strUserWebpage = $aArchivedMeta['webpage'];
         if ( !empty( $strUserWebpage )) {
-          $bSaveOptions                                                          = true;
+          $bSaveOptions = true;
           $this->aOptions['aYearlyMapOptions'][$iYear][$iUserID]['user_webpage'] = $strUserWebpage;
           unset( $this->aOptions['aYearlyMapOptions'][$iYear][$iUserID]['webpage'] );
         }
@@ -1059,7 +1063,7 @@ class FLORP {
 
     // Version based upgrades //
     $strVersionInOptions = $this->aOptions['strVersion'];
-    $strCurrentVersion   = $this->strVersion;
+    $strCurrentVersion = $this->strVersion;
 
     $strUpgradeFlashmobSubscribersToOrganizers = '3.0.0';
     if (version_compare( $strVersionInOptions, $strUpgradeFlashmobSubscribersToOrganizers, '<' )) {
@@ -1142,19 +1146,19 @@ class FLORP {
       }
       if (property_exists( $this, $key )) {
         if (strpos( $key, 'i' ) === 0) {
-          $iVal                 = intval( $val );
+          $iVal = intval( $val );
           $this->aOptions[$key] = $iVal;
-          $this->$key           = $iVal;
+          $this->$key = $iVal;
         } else {
           $this->$key = $val;
         }
       } elseif (strpos( $key, 'i' ) === 0) {
-        $iVal                 = intval( $val );
+        $iVal = intval( $val );
         $this->aOptions[$key] = $iVal;
       }
     }
-    $iTimeZoneOffset              = get_option( 'gmt_offset', 0 );
-    $this->iFlashmobTimestamp     = intval( mktime( $this->aOptions['iFlashmobHour'] - $iTimeZoneOffset, $this->aOptions['iFlashmobMinute'], 0, $this->aOptions['iFlashmobMonth'], $this->aOptions['iFlashmobDay'], $this->aOptions['iFlashmobYear'] ) );
+    $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
+    $this->iFlashmobTimestamp = intval( mktime( $this->aOptions['iFlashmobHour'] - $iTimeZoneOffset, $this->aOptions['iFlashmobMinute'], 0, $this->aOptions['iFlashmobMonth'], $this->aOptions['iFlashmobDay'], $this->aOptions['iFlashmobYear'] ) );
     $this->iIntfFlashmobTimestamp = intval( mktime( $this->aOptions['iIntfFlashmobHour'] - $iTimeZoneOffset, $this->aOptions['iIntfFlashmobMinute'], 0, $this->aOptions['iIntfFlashmobMonth'], $this->aOptions['iIntfFlashmobDay'], $this->aOptions['iIntfFlashmobYear'] ) );
 
     $iNow = time();
@@ -1172,17 +1176,17 @@ class FLORP {
     // Slovak Flashmob //
     // This is from when ordered tshirts are delivered after the flashmob; should be 23:59 on the date iTshirtOrderDeliveredBeforeFlashmobDdl days before flashmob //
     $this->iTshirtOrderDeliveredBeforeFlashmobDdlTimestamp = intval( mktime( 23 - $iTimeZoneOffset, 59, 59, $this->aOptions['iFlashmobMonth'], $this->aOptions['iFlashmobDay'] - $this->aOptions['iTshirtOrderDeliveredBeforeFlashmobDdl'], $this->aOptions['iFlashmobYear'] ) );
-    $this->iTshirtOrderDeliveredBeforeFlashmobDdlTime      = date( 'Y/m/d H:i:s', $this->iTshirtOrderDeliveredBeforeFlashmobDdlTimestamp + $iTimeZoneOffset * 3600 );
-    $this->iTshirtOrderDeliveredBeforeFlashmobDdlDate      = date( 'd.m.Y', $this->iTshirtOrderDeliveredBeforeFlashmobDdlTimestamp + $iTimeZoneOffset * 3600 );
+    $this->iTshirtOrderDeliveredBeforeFlashmobDdlTime = date( 'Y/m/d H:i:s', $this->iTshirtOrderDeliveredBeforeFlashmobDdlTimestamp + $iTimeZoneOffset * 3600 );
+    $this->iTshirtOrderDeliveredBeforeFlashmobDdlDate = date( 'd.m.Y', $this->iTshirtOrderDeliveredBeforeFlashmobDdlTimestamp + $iTimeZoneOffset * 3600 );
 
     // This is when the warnings are first shown; should be from 00:00 on the date iTshirtPaymentWarningDeadline days before flashmob //
     $this->iTshirtPaymentWarningDeadlineTimestamp = intval( mktime( 0 - $iTimeZoneOffset, 0, 0, $this->aOptions['iFlashmobMonth'], $this->aOptions['iFlashmobDay'] - $this->aOptions['iTshirtPaymentWarningDeadline'], $this->aOptions['iFlashmobYear'] ) );
-    $this->iTshirtPaymentWarningDeadlineTime      = date( 'Y/m/d H:i:s', $this->iTshirtPaymentWarningDeadlineTimestamp + $iTimeZoneOffset * 3600 );
+    $this->iTshirtPaymentWarningDeadlineTime = date( 'Y/m/d H:i:s', $this->iTshirtPaymentWarningDeadlineTimestamp + $iTimeZoneOffset * 3600 );
 
     // This is when the warning buttons are forced shown; should be from 00:00 on the date iTshirtPaymentWarningButtonDeadline days before flashmob //
     if ($this->aOptions['iTshirtPaymentWarningButtonDeadline'] > -1) {
       $this->iTshirtPaymentWarningButtonDeadlineTimestamp = intval( mktime( 0 - $iTimeZoneOffset, 0, 0, $this->aOptions['iFlashmobMonth'], $this->aOptions['iFlashmobDay'] - $this->aOptions['iTshirtPaymentWarningButtonDeadline'], $this->aOptions['iFlashmobYear'] ) );
-      $this->iTshirtPaymentWarningButtonDeadlineTime      = date( 'Y/m/d H:i:s', $this->iTshirtPaymentWarningButtonDeadlineTimestamp + $iTimeZoneOffset * 3600 );
+      $this->iTshirtPaymentWarningButtonDeadlineTime = date( 'Y/m/d H:i:s', $this->iTshirtPaymentWarningButtonDeadlineTimestamp + $iTimeZoneOffset * 3600 );
     } else {
       $this->iTshirtPaymentWarningButtonDeadlineTime = "-";
     }
@@ -1190,26 +1194,26 @@ class FLORP {
     // International Flashmob //
     // This is from when ordered tshirts are delivered after the flashmob; should be 23:59 on the date iTshirtOrderDeliveredBeforeFlashmobDdl days before flashmob //
     $this->iIntfTshirtOrderDeliveredBeforeFlashmobDdlTimestamp = intval( mktime( 23 - $iTimeZoneOffset, 59, 59, $this->aOptions['iIntfFlashmobMonth'], $this->aOptions['iIntfFlashmobDay'] - $this->aOptions['iIntfTshirtOrderDeliveredBeforeFlashmobDdl'], $this->aOptions['iIntfFlashmobYear'] ) );
-    $this->iIntfTshirtOrderDeliveredBeforeFlashmobDdlTime      = date( 'Y/m/d H:i:s', $this->iIntfTshirtOrderDeliveredBeforeFlashmobDdlTimestamp + $iTimeZoneOffset * 3600 );
-    $this->iIntfTshirtOrderDeliveredBeforeFlashmobDdlDate      = date( 'd.m.Y', $this->iIntfTshirtOrderDeliveredBeforeFlashmobDdlTimestamp + $iTimeZoneOffset * 3600 );
+    $this->iIntfTshirtOrderDeliveredBeforeFlashmobDdlTime = date( 'Y/m/d H:i:s', $this->iIntfTshirtOrderDeliveredBeforeFlashmobDdlTimestamp + $iTimeZoneOffset * 3600 );
+    $this->iIntfTshirtOrderDeliveredBeforeFlashmobDdlDate = date( 'd.m.Y', $this->iIntfTshirtOrderDeliveredBeforeFlashmobDdlTimestamp + $iTimeZoneOffset * 3600 );
 
     // This is when the warnings are first shown; should be from 00:00 on the date iIntfTshirtPaymentWarningDeadline days before flashmob //
     $this->iIntfTshirtPaymentWarningDeadlineTimestamp = intval( mktime( 0 - $iTimeZoneOffset, 0, 0, $this->aOptions['iIntfFlashmobMonth'], $this->aOptions['iIntfFlashmobDay'] - $this->aOptions['iIntfTshirtPaymentWarningDeadline'], $this->aOptions['iIntfFlashmobYear'] ) );
-    $this->iIntfTshirtPaymentWarningDeadlineTime      = date( 'Y/m/d H:i:s', $this->iIntfTshirtPaymentWarningDeadlineTimestamp + $iTimeZoneOffset * 3600 );
+    $this->iIntfTshirtPaymentWarningDeadlineTime = date( 'Y/m/d H:i:s', $this->iIntfTshirtPaymentWarningDeadlineTimestamp + $iTimeZoneOffset * 3600 );
 
     // This is when the warning buttons are forced shown; should be from 00:00 on the date iIntfTshirtPaymentWarningButtonDeadline days before flashmob //
     if ($this->aOptions['iIntfTshirtPaymentWarningButtonDeadline'] > -1) {
       $this->iIntfTshirtPaymentWarningButtonDeadlineTimestamp = intval( mktime( 0 - $iTimeZoneOffset, 0, 0, $this->aOptions['iIntfFlashmobMonth'], $this->aOptions['iIntfFlashmobDay'] - $this->aOptions['iIntfTshirtPaymentWarningButtonDeadline'], $this->aOptions['iIntfFlashmobYear'] ) );
-      $this->iIntfTshirtPaymentWarningButtonDeadlineTime      = date( 'Y/m/d H:i:s', $this->iIntfTshirtPaymentWarningButtonDeadlineTimestamp + $iTimeZoneOffset * 3600 );
+      $this->iIntfTshirtPaymentWarningButtonDeadlineTime = date( 'Y/m/d H:i:s', $this->iIntfTshirtPaymentWarningButtonDeadlineTimestamp + $iTimeZoneOffset * 3600 );
     } else {
       $this->iIntfTshirtPaymentWarningButtonDeadlineTime = "-";
     }
 
     // This is from when the city poll is closed; should be 23:59 on the date iIntfCityPollDeadline days before flashmob //
     $this->iIntfCityPollDdlTimestamp = intval( mktime( 23 - $iTimeZoneOffset, 59, 59, $this->aOptions['iIntfFlashmobMonth'], $this->aOptions['iIntfFlashmobDay'] - $this->aOptions['iIntfCityPollDeadline'], $this->aOptions['iIntfFlashmobYear'] ) );
-    $this->iIntfCityPollDdlTime      = date( 'Y/m/d H:i:s', $this->iIntfCityPollDdlTimestamp + $iTimeZoneOffset * 3600 );
-    $this->iIntfCityPollDdlDate      = date( 'd.m.Y', $this->iIntfCityPollDdlTimestamp + $iTimeZoneOffset * 3600 );
-    $this->bIntfCityPollDisabled     = ( $this->iIntfCityPollDdlTimestamp <= time() );
+    $this->iIntfCityPollDdlTime = date( 'Y/m/d H:i:s', $this->iIntfCityPollDdlTimestamp + $iTimeZoneOffset * 3600 );
+    $this->iIntfCityPollDdlDate = date( 'd.m.Y', $this->iIntfCityPollDdlTimestamp + $iTimeZoneOffset * 3600 );
+    $this->bIntfCityPollDisabled = ( $this->iIntfCityPollDdlTimestamp <= time() );
 
     $this->strPaymentOKNotificationReasons = '"' . implode( '" | "', $this->aPaymentOKNotificationReasons ) . '"';
 
@@ -1217,10 +1221,10 @@ class FLORP {
   }
 
   private function set_variables_per_subsite() {
-    $iCurrentBlogID       = get_current_blog_id();
-    $this->isMainBlog     = ( $iCurrentBlogID == $this->iMainBlogID );
+    $iCurrentBlogID = get_current_blog_id();
+    $this->isMainBlog = ( $iCurrentBlogID == $this->iMainBlogID );
     $this->isFlashmobBlog = ( $iCurrentBlogID == $this->iFlashmobBlogID );
-    $this->isIntfBlog     = ( $iCurrentBlogID == $this->iIntfBlogID );
+    $this->isIntfBlog = ( $iCurrentBlogID == $this->iIntfBlogID );
   }
 
   private function get_registration_user_role() {
@@ -1318,7 +1322,7 @@ class FLORP {
     }
 
     $bHtaccessExists = false;
-    $strComment      = '# FLORP: Prevent direct download of media files';
+    $strComment = '# FLORP: Prevent direct download of media files';
     if (file_exists( $strHtaccessPath )) {
       if ( !$bForce) {
         if (filemtime( $strHtaccessPath ) <= ( time() - 12 * 3600 )) {
@@ -1351,15 +1355,15 @@ class FLORP {
       "  RewriteEngine On",
       "  RewriteCond %{REQUEST_URI} \.(mp4|mp3|avi)$ [NC]",
     );
-    $bSiteMissing                = false;
-    $aSites                      = wp_get_sites();
-    $strProtocol                 = is_ssl() ? 'https' : 'http';
+    $bSiteMissing = false;
+    $aSites = wp_get_sites();
+    $strProtocol = is_ssl() ? 'https' : 'http';
     foreach ($aSites as $i => $aSite) {
       if ($aSite['public'] != 1 || $aSite['deleted'] == 1 || $aSite['archived'] == 1) {
         continue;
       }
-      $strLine1                      = "  RewriteCond %{HTTP_REFERER} !^{$strProtocol}://{$aSite['domain']}$ [NC]";
-      $strLine2                      = "  RewriteCond %{HTTP_REFERER} !^{$strProtocol}://{$aSite['domain']}/.*$ [NC]";
+      $strLine1 = "  RewriteCond %{HTTP_REFERER} !^{$strProtocol}://{$aSite['domain']}$ [NC]";
+      $strLine2 = "  RewriteCond %{HTTP_REFERER} !^{$strProtocol}://{$aSite['domain']}/.*$ [NC]";
       $aMediaDlPreventionRuleLines[] = $strLine1;
       $aMediaDlPreventionRuleLines[] = $strLine2;
       if ($bHtaccessExists && ( false === strpos( $strContents, $aSite['domain'] ) || false === strpos( $strContents, $strLine1 ) || false === strpos( $strContents, $strLine2 ) )) {
@@ -1371,7 +1375,7 @@ class FLORP {
       "  RewriteRule ^.* - [F,L]",
       "</IfModule>",
     ) );
-    $strMediaDlPreventionRules   = implode( PHP_EOL, $aMediaDlPreventionRuleLines );
+    $strMediaDlPreventionRules = implode( PHP_EOL, $aMediaDlPreventionRuleLines );
 
     if ($bForce || !$bHtaccessExists || $bSiteMissing) {
       // Do write //
@@ -1395,9 +1399,9 @@ class FLORP {
       return array();
     }
     global $wpdb;
-    $strBlogPrefix      = $wpdb->get_blog_prefix( $this->aOptions['iNewsletterBlogID'] );
+    $strBlogPrefix = $wpdb->get_blog_prefix( $this->aOptions['iNewsletterBlogID'] );
     $strNewsletterTable = $strBlogPrefix . 'newsletter';
-    $strQuery           = $wpdb->prepare( 'SELECT * FROM ' . $strNewsletterTable . ' WHERE `email` = %s', $strEmail );
+    $strQuery = $wpdb->prepare( 'SELECT * FROM ' . $strNewsletterTable . ' WHERE `email` = %s', $strEmail );
 
     $aRow = $wpdb->get_row( $strQuery, ARRAY_A );
     if (null === $aRow) {
@@ -1492,8 +1496,8 @@ class FLORP {
       return array( 'error' => $mixResponse->get_error_message(), 'request' => $aRequestArgs );
     } else {
       $strResponseBody = $mixResponse['body'];
-      $aResponseBody   = json_decode( $strResponseBody, true );
-      $aResponse       = $mixResponse['response'];
+      $aResponseBody = json_decode( $strResponseBody, true );
+      $aResponse = $mixResponse['response'];
       if ($aResponse['code'] < 400 && $aResponseBody && ( is_array( $aResponseBody ) || $aResponseBody === 'OK' )) {
         return array( 'ok' => $aResponseBody, 'action' => $strAction, 'request' => $aRequestArgs, 'full-response' => $mixResponse );
       } else {
@@ -1531,7 +1535,7 @@ class FLORP {
         }
       }
     } elseif (get_role( $this->strUserRolePending )) {
-      $aPendingArgs  = array(
+      $aPendingArgs = array(
         'blog_id' => get_current_blog_id(),
         'role'    => $this->strUserRolePending
       );
@@ -1635,7 +1639,7 @@ class FLORP {
     if (is_admin() && current_user_can( 'activate_plugins' )) {
       // Set cookie for leader submission history view //
       $strCookieKey = $this->strLeaderSubmissionHistoryViewsCookieKey;
-      $aViews       = $this->aLeaderSubmissionHistoryViews;
+      $aViews = $this->aLeaderSubmissionHistoryViews;
       if (isset( $_POST ) && isset( $_POST['view'] ) && in_array( $_POST['view'], $aViews )) {
         $strView = $_POST['view'];
         setcookie( $strCookieKey, $strView, time() + ( 365 * 24 * 60 * 60 ), '/' );
@@ -1734,16 +1738,16 @@ class FLORP {
     if (defined( 'FLORP_DEVEL' ) && FLORP_DEVEL === true && defined( 'FLORP_DEVEL_DEBUG_PARTICIPANT_EDIT_FORMS' ) && FLORP_DEVEL_DEBUG_PARTICIPANT_EDIT_FORMS === true) {
       $bLoggedIn = is_user_logged_in();
       if ($this->bDisplayingProfileFormNinjaForm && $iFormID == $this->iProfileFormNinjaFormIDIntf && $bLoggedIn && $GLOBALS[$this->fakePageEditIntfParticipantSubmissionGlobalID]) {
-        $iYear            = $_REQUEST['year'];
-        $strEmail         = $_REQUEST['email'];
+        $iYear = $_REQUEST['year'];
+        $strEmail = $_REQUEST['email'];
         $aParticipantData = $this->aOptions['aIntfParticipants'][$iYear][$strEmail];
         echo "<pre>";
         var_dump( $aParticipantData );
         echo "</pre>";
       }
       if ($this->bDisplayingProfileFormNinjaForm && $iFormID == $this->iProfileFormNinjaFormIDFlashmob && $bLoggedIn && $GLOBALS[$this->fakePageEditSvkParticipantSubmissionGlobalID]) {
-        $iLeaderID        = $_REQUEST['leader_id'];
-        $strEmail         = $_REQUEST['email'];
+        $iLeaderID = $_REQUEST['leader_id'];
+        $strEmail = $_REQUEST['email'];
         $aParticipantData = $this->aOptions['aParticipants'][$iLeaderID][$strEmail];
         echo "<pre>";
         var_dump( $aParticipantData );
@@ -1754,7 +1758,7 @@ class FLORP {
   }
 
   private function get_intf_poll_cities() {
-    $aLeaders     = $this->getFlashmobSubscribers( 'all', true );
+    $aLeaders = $this->getFlashmobSubscribers( 'all', true );
     $aLeadersByID = array();
     foreach ($aLeaders as $oLeader) {
       $aLeadersByID[$oLeader->ID] = $oLeader;
@@ -1806,15 +1810,15 @@ class FLORP {
       if ($aField['settings']['key'] === "flashmob_participant_tshirt_color" && $aField['settings']['type'] === "listradio") {
         $aTshirtImgs = $this->get_tshirt_images( true );
         if (count( $aTshirtImgs["full"] ) > 0) {
-          $aColors = array_keys($aTshirtImgs["full"]);
-          rsort($aColors);
+          $aColors = array_keys( $aTshirtImgs["full"] );
+          rsort( $aColors );
           reset( $aField['settings']['options'] );
-          $iFirstKey                     = key( $aField['settings']['options'] );
-          $aOption                       = $aField['settings']['options'][$iFirstKey];
+          $iFirstKey = key( $aField['settings']['options'] );
+          $aOption = $aField['settings']['options'][$iFirstKey];
           $aField['settings']['options'] = array();
           foreach ($aColors as $strColor) {
-            $aOption["label"]                = $strColor;
-            $aOption["value"]                = $strColor;
+            $aOption["label"] = $strColor;
+            $aOption["value"] = $strColor;
             $aField['settings']['options'][] = $aOption;
           }
         }
@@ -1823,17 +1827,17 @@ class FLORP {
       // Populate the poll options //
       if ($aField['settings']['key'] == 'intf_city') {
         if ($this->bIntfCityPollDisabled) {
-          $aField['settings']['required']        = false;
+          $aField['settings']['required'] = false;
           $aField['settings']['container_class'] .= " florp-hidden";
         } else {
           $aFlashmobCities = $this->get_intf_poll_cities();
           if ( !empty( $aFlashmobCities )) {
             reset( $aField['settings']['options'] );
             $iFirstKey = key( $aField['settings']['options'] );
-            $aOption   = $aField['settings']['options'][$iFirstKey];
+            $aOption = $aField['settings']['options'][$iFirstKey];
             foreach ($aFlashmobCities as $strFlashmobCity) {
-              $aOption["label"]                = $strFlashmobCity;
-              $aOption["value"]                = $strFlashmobCity;
+              $aOption["label"] = $strFlashmobCity;
+              $aOption["value"] = $strFlashmobCity;
               $aField['settings']['options'][] = $aOption;
             }
           }
@@ -1874,15 +1878,15 @@ class FLORP {
       if ($aField['settings']['key'] === "flashmob_leader_tshirt_color" && $aField['settings']['type'] === "listradio") {
         $aTshirtImgs = $this->get_tshirt_images();
         if (count( $aTshirtImgs["full"] ) > 0) {
-          $aColors = array_keys($aTshirtImgs["full"]);
-          rsort($aColors);
+          $aColors = array_keys( $aTshirtImgs["full"] );
+          rsort( $aColors );
           reset( $aField['settings']['options'] );
-          $iFirstKey                     = key( $aField['settings']['options'] );
-          $aOption                       = $aField['settings']['options'][$iFirstKey];
+          $iFirstKey = key( $aField['settings']['options'] );
+          $aOption = $aField['settings']['options'][$iFirstKey];
           $aField['settings']['options'] = array();
           foreach ($aColors as $strColor) {
-            $aOption["label"]                = $strColor;
-            $aOption["value"]                = $strColor;
+            $aOption["label"] = $strColor;
+            $aOption["value"] = $strColor;
             $aField['settings']['options'][] = $aOption;
           }
         }
@@ -1903,7 +1907,7 @@ class FLORP {
               } else {
                 $strFormat = trim( $aMatches[1][$iKey], "[]" );
               }
-              $strTimeOrDate               = date( $strFormat, $this->iFlashmobTimestamp );
+              $strTimeOrDate = date( $strFormat, $this->iFlashmobTimestamp );
               $aField['settings']['label'] = str_replace( $strMatchFull, $strTimeOrDate, $aField['settings']['label'] );
             }
           }
@@ -1915,14 +1919,14 @@ class FLORP {
 
         // Set newsletter preference //
         if ($aField['settings']['type'] === 'listcheckbox' && $aField['settings']['key'] === 'preference_newsletter') {
-          $oUser                                        = get_user_by( 'id', $iUserID );
-          $bIsNewsletterSubscriber                      = $this->is_newsletter_subscriber( $oUser->user_email );
+          $oUser = get_user_by( 'id', $iUserID );
+          $bIsNewsletterSubscriber = $this->is_newsletter_subscriber( $oUser->user_email );
           $aField['settings']['options'][0]['selected'] = $bIsNewsletterSubscriber ? 1 : 0;
         }
 
         // Set checked as default value on checkboxes saved as checked //
         if ($aField['settings']['type'] === 'checkbox') {
-          $strValue                            = get_user_meta( $iUserID, $aField['settings']['key'], true );
+          $strValue = get_user_meta( $iUserID, $aField['settings']['key'], true );
           $aField['settings']['default_value'] = ( $strValue == '1' ) ? 'checked' : 'unchecked';
         }
         if ($aField['settings']['type'] === 'listradio') {
@@ -1980,7 +1984,7 @@ class FLORP {
           if ($aField['settings']['key'] == $sKey && $iNum > $this->aOptions['iCoursesNumberEnabled']) {
             // .hide-field-florp force-hides the container //
             $aField['settings']['container_class'] .= " florp-hidden hide-field-florp";
-            $aField['settings']['default_value']   = 'unchecked';
+            $aField['settings']['default_value'] = 'unchecked';
           }
         }
       }
@@ -1990,10 +1994,10 @@ class FLORP {
         if (isset( $aField['settings']['container_class'] ) && stripos( $aField['settings']['container_class'], 'florp-registration-field' ) === false) {
           $aField['settings']['container_class'] .= " hidden";
         } elseif (isset( $aField['settings']['key'] ) && ( $aField['settings']['key'] === 'user_pass' || $aField['settings']['key'] === 'passwordconfirm' )) {
-          $aField['settings']['required']  = true;
+          $aField['settings']['required'] = true;
           $aField['settings']['desc_text'] = '';
         } elseif (isset( $aField['settings']['type'] ) && ( $aField['settings']['type'] === 'submit' )) {
-          $aField['settings']['label']            = 'Zaregistruj ma';
+          $aField['settings']['label'] = 'Zaregistruj ma';
           $aField['settings']['processing_label'] = 'Registrujem';
         }
       }
@@ -2004,15 +2008,15 @@ class FLORP {
       if ($aField['settings']['key'] === "flashmob_participant_tshirt_color" && $aField['settings']['type'] === "listradio") {
         $aTshirtImgs = $this->get_tshirt_images();
         if (count( $aTshirtImgs["full"] ) > 0) {
-          $aColors = array_keys($aTshirtImgs["full"]);
-          rsort($aColors);
+          $aColors = array_keys( $aTshirtImgs["full"] );
+          rsort( $aColors );
           reset( $aField['settings']['options'] );
-          $iFirstKey                     = key( $aField['settings']['options'] );
-          $aOption                       = $aField['settings']['options'][$iFirstKey];
+          $iFirstKey = key( $aField['settings']['options'] );
+          $aOption = $aField['settings']['options'][$iFirstKey];
           $aField['settings']['options'] = array();
           foreach ($aColors as $strColor) {
-            $aOption["label"]                = $strColor;
-            $aOption["value"]                = $strColor;
+            $aOption["label"] = $strColor;
+            $aOption["value"] = $strColor;
             $aField['settings']['options'][] = $aOption;
           }
         }
@@ -2048,15 +2052,15 @@ class FLORP {
     }
 
     $bParticipantFormEdit = false;
-    $strFieldKey          = $aField['settings']['key'];
+    $strFieldKey = $aField['settings']['key'];
     if ($bLoggedIn && $GLOBALS[$this->fakePageEditIntfParticipantSubmissionGlobalID]) {
       $bParticipantFormEdit = false;
-      $iYear                = $_REQUEST['year'];
-      $strEmail             = $_REQUEST['email'];
-      $aParticipantData     = $this->aOptions['aIntfParticipants'][$iYear][$strEmail];
-      $strJsArrayKey        = $this->fakePageEditIntfParticipantSubmissionGlobalID . '-js';
+      $iYear = $_REQUEST['year'];
+      $strEmail = $_REQUEST['email'];
+      $aParticipantData = $this->aOptions['aIntfParticipants'][$iYear][$strEmail];
+      $strJsArrayKey = $this->fakePageEditIntfParticipantSubmissionGlobalID . '-js';
       if (isset( $aParticipantData[$strFieldKey] ) || $strFieldKey === 'submission_editing') {
-        $bParticipantFormEdit     = true;
+        $bParticipantFormEdit = true;
         $strSubmissionEditingText = "intf,{$iYear},{$strEmail}";
         if ( !is_array( $GLOBALS[$strJsArrayKey] )) {
           $GLOBALS[$strJsArrayKey] = array();
@@ -2066,16 +2070,16 @@ class FLORP {
         }
         if ($strFieldKey === 'intf_city' && $aParticipantData[$strFieldKey] !== 'null') {
           $GLOBALS[$strJsArrayKey]['intf_city_poll_disabled'] = 0;
-          $aField['settings']['required']                     = true;
-          $aField['settings']['container_class']              = str_replace( "florp-hidden", "", $aField['settings']['container_class'] );
-          $aFlashmobCities                                    = $this->get_intf_poll_cities();
+          $aField['settings']['required'] = true;
+          $aField['settings']['container_class'] = str_replace( "florp-hidden", "", $aField['settings']['container_class'] );
+          $aFlashmobCities = $this->get_intf_poll_cities();
           if ( !empty( $aFlashmobCities )) {
             reset( $aField['settings']['options'] );
             $iFirstKey = key( $aField['settings']['options'] );
-            $aOption   = $aField['settings']['options'][$iFirstKey];
+            $aOption = $aField['settings']['options'][$iFirstKey];
             foreach ($aFlashmobCities as $strFlashmobCity) {
-              $aOption["label"]                = $strFlashmobCity;
-              $aOption["value"]                = $strFlashmobCity;
+              $aOption["label"] = $strFlashmobCity;
+              $aOption["value"] = $strFlashmobCity;
               $aField['settings']['options'][] = $aOption;
             }
           }
@@ -2091,12 +2095,12 @@ class FLORP {
     }
     if ($bLoggedIn && $GLOBALS[$this->fakePageEditSvkParticipantSubmissionGlobalID]) {
       $bParticipantFormEdit = false;
-      $iLeaderID            = $_REQUEST['leader_id'];
-      $strEmail             = $_REQUEST['email'];
-      $aParticipantData     = $this->aOptions['aParticipants'][$iLeaderID][$strEmail];
-      $strJsArrayKey        = $this->fakePageEditSvkParticipantSubmissionGlobalID . '-js';
+      $iLeaderID = $_REQUEST['leader_id'];
+      $strEmail = $_REQUEST['email'];
+      $aParticipantData = $this->aOptions['aParticipants'][$iLeaderID][$strEmail];
+      $strJsArrayKey = $this->fakePageEditSvkParticipantSubmissionGlobalID . '-js';
       if (isset( $aParticipantData[$strFieldKey] ) || $strFieldKey === 'submission_editing') {
-        $bParticipantFormEdit     = true;
+        $bParticipantFormEdit = true;
         $strSubmissionEditingText = "svk,{$iLeaderID},{$strEmail}";
         if ( !is_array( $GLOBALS[$strJsArrayKey] )) {
           $GLOBALS[$strJsArrayKey] = array();
@@ -2186,10 +2190,10 @@ class FLORP {
         if (isset( $aField['container_class'] ) && stripos( $aField['container_class'], 'florp-registration-field' ) === false) {
           $aFields[$key]['container_class'] .= " hidden";
         } elseif (isset( $aField['key'] ) && ( $aField['key'] === 'user_pass' || $aField['key'] === 'passwordconfirm' )) {
-          $aFields[$key]['required']  = true;
+          $aFields[$key]['required'] = true;
           $aFields[$key]['desc_text'] = '';
         } elseif (isset( $aField['type'] ) && ( $aField['type'] === 'submit' )) {
-          $aFields[$key]['label']            = 'Zaregistruj ma';
+          $aFields[$key]['label'] = 'Zaregistruj ma';
           $aFields[$key]['processing_label'] = 'Registrujem';
         }
       }
@@ -2226,15 +2230,15 @@ class FLORP {
     }
 
     global $post;
-    $bUserLoggedIn      = is_user_logged_in();
+    $bUserLoggedIn = is_user_logged_in();
     $aNewSettingsByType = array();
-    $iSize              = 14;
+    $iSize = 14;
     $aNewSettingsCommon = array(
       'size'         => $iSize,
       'size_tablets' => $iSize,
       'size_mobiles' => $iSize,
     );
-    $aFieldsToUse       = array( 'text:1', 'text:4' );
+    $aFieldsToUse = array( 'text:1', 'text:4' );
     if ($this->iProfileFormPageIDMain > 0) {
       if ( !is_object( $post ) || $post->post_type !== 'page' || $post->ID !== $this->iProfileFormPageIDMain) {
         // We are not on the profile page //
@@ -2368,8 +2372,8 @@ class FLORP {
       return '';
     }
 
-    $strClass             = " class=\"{$this->aOptions['strLeaderParticipantsTableClass']}\"";
-    $iUserID              = get_current_user_id();
+    $strClass = " class=\"{$this->aOptions['strLeaderParticipantsTableClass']}\"";
+    $iUserID = get_current_user_id();
     $bIsFlashmobOrganizer = get_user_meta( $iUserID, 'flashmob_organizer', true ) == '1' ? true : false;
     if ( !$bIsFlashmobOrganizer) {
       return '<p' . $strClass . '>Neorganizujete flashmob ' . date( 'j.n.Y', $this->iFlashmobTimestamp ) . '.</p>';
@@ -2391,7 +2395,7 @@ class FLORP {
   }
 
   private function getIntfChartMaxVoteCount() {
-    $aCities      = $this->get_intf_poll_cities();
+    $aCities = $this->get_intf_poll_cities();
     $aCityNumbers = array();
     foreach ($aCities as $strCity) {
       $aCityNumbers[$strCity] = 0;
@@ -2409,7 +2413,7 @@ class FLORP {
   }
 
   private function getIntfChartDataTable( $aAttributes, $aOptions ) {
-    $aCities      = $this->get_intf_poll_cities();
+    $aCities = $this->get_intf_poll_cities();
     $aCityNumbers = array();
     foreach ($aCities as $strCity) {
       $aCityNumbers[$strCity] = 0;
@@ -2446,20 +2450,20 @@ class FLORP {
 
     $iValueCount = count( $aCityNumbers );
     if ($iLimit > 0) {
-      $iValueCount  = min( $iLimit, $iValueCount );
+      $iValueCount = min( $iLimit, $iValueCount );
       $aCityNumbers = array_slice( $aCityNumbers, 0, $iValueCount, true );
     }
 
-    $aColors     = $this->getFlorpChartColors( isset( $aAttributes['colors'] ) ? $aAttributes['colors'] : "", $iValueCount );
+    $aColors = $this->getFlorpChartColors( isset( $aAttributes['colors'] ) ? $aAttributes['colors'] : "", $iValueCount );
     $iColorCount = count( $aColors );
 
-    $iCount  = 1;
+    $iCount = 1;
     $aHeader = [ $aAttributes['row-name'], $aAttributes['col-name'] ];
     if ($iColorCount > 0) {
       $aHeader[] = [ "role" => 'style' ];
     }
 
-    $aDataTable   = array();
+    $aDataTable = array();
     $aDataTable[] = $aHeader;
     foreach ($aCityNumbers as $strCity => $iValue) {
       if ($bPercentage) {
@@ -2477,17 +2481,17 @@ class FLORP {
   }
 
   private function getFlorpChartColors( $sColors, $iValueCount, $bTest = false ) {
-    $sColors         = str_replace( array( ' ', "\t" ), array( "", "" ), $sColors );
+    $sColors = str_replace( array( ' ', "\t" ), array( "", "" ), $sColors );
     $bIncludeBorders = true;
 
     if ($sColors === "auto") {
       $bIncludeBorders = false;
-      $sColors         = "#000000-#ffffff";
+      $sColors = "#000000-#ffffff";
     } elseif ($sColors === "all") {
       $sColors = "#f00-#0f0,#0f0-#00f,#00f-#f00";
     } elseif (substr( $sColors, -1 ) === "!") {
       $bIncludeBorders = false;
-      $sColors         = str_replace( "!", "", $sColors );
+      $sColors = str_replace( "!", "", $sColors );
     }
 
     $aColors = explode( ",", $sColors );
@@ -2495,14 +2499,14 @@ class FLORP {
       return array();
     }
 
-    $aRanges                 = array();
+    $aRanges = array();
     $iCountedRangeColorCount = 0;
-    $aCountedRanges          = array();
+    $aCountedRanges = array();
     foreach ($aColors as $iKey => $sColor) {
       if (FLORP_COLOR::isHex( $sColor )) {
         continue;
       } elseif (FLORP_COLOR::isHexRangeWithCount( $sColor )) {
-        $aCountedRanges[$iKey]   = explode( "-", $sColor );
+        $aCountedRanges[$iKey] = explode( "-", $sColor );
         $iCountedRangeColorCount += intval( $aCountedRanges[$iKey][2] );
       } elseif (FLORP_COLOR::isHexRange( $sColor )) {
         $aRanges[$iKey] = explode( "-", $sColor );
@@ -2515,16 +2519,16 @@ class FLORP {
     $iRangeCount = count( $aRanges );
 
     if ($iRangeCount > 0 || $iCountedRangeColorCount > 0) {
-      $iSimpleColorCount      = $iColorCount - $iRangeCount;
+      $iSimpleColorCount = $iColorCount - $iRangeCount;
       $iNeededRangeColorCount = $iValueCount - $iSimpleColorCount - $iCountedRangeColorCount;
 
-      $aNewColors       = array();
+      $aNewColors = array();
       $iAddedColorCount = 0;
 
       foreach ($aColors as $iKey => $sCol) {
         if (isset( $aCountedRanges[$iKey] )) {
           $aRangeInterval = $aCountedRanges[$iKey];
-          $aNewColors     = array_merge( $aNewColors, FLORP_COLOR::getRangeHex( $aRangeInterval[0], $aRangeInterval[1], intval( $aRangeInterval[2] ), $bIncludeBorders ) );
+          $aNewColors = array_merge( $aNewColors, FLORP_COLOR::getRangeHex( $aRangeInterval[0], $aRangeInterval[1], intval( $aRangeInterval[2] ), $bIncludeBorders ) );
         } elseif (isset( $aRanges[$iKey] )) {
           if ($iNeededRangeColorCount <= 0 || $iAddedColorCount >= $iNeededRangeColorCount) {
             continue;
@@ -2532,7 +2536,7 @@ class FLORP {
 
           $aRangeInterval = $aRanges[$iKey];
           $iCountPerRange = intval( ceil( $iNeededRangeColorCount / $iRangeCount ) );
-          $aRange         = FLORP_COLOR::getRangeHex( $aRangeInterval[0], $aRangeInterval[1], $iCountPerRange, $bIncludeBorders );
+          $aRange = FLORP_COLOR::getRangeHex( $aRangeInterval[0], $aRangeInterval[1], $iCountPerRange, $bIncludeBorders );
           if ($bTest) {
             return [ $aRangeInterval, $iCountPerRange, $aRange ];
           }
@@ -2557,7 +2561,7 @@ class FLORP {
   }
 
   public function shortcode_intf_chart( $aAttributes, $sContent = "" ) {
-    $aAttributes                    = shortcode_atts( array(
+    $aAttributes = shortcode_atts( array(
       'row-height'      => 0,
       'colors'          => '#aaa',
       'row-name'        => 'Mesto',
@@ -2573,13 +2577,13 @@ class FLORP {
       'focus-on-show'   => 0,
       'scroll-offset'   => 100,
     ), $aAttributes );
-    $bHideOnLoad                    = $aAttributes['hide-on-load'] === 1 || $aAttributes['hide-on-load'] === "1" || $aAttributes['hide-on-load'] === "true" || $aAttributes['hide-on-load'] === true;
-    $aAttributes['hide-on-load']    = $bHideOnLoad ? 1 : 0;
-    $aAttributes['focus-on-show']   = ( $aAttributes['focus-on-show'] === 1 || $aAttributes['focus-on-show'] === "1" || $aAttributes['focus-on-show'] === "true" || $aAttributes['focus-on-show'] === true ) ? 1 : 0;
-    $aAttributes['scroll-offset']   = intval( $aAttributes['scroll-offset'] );
+    $bHideOnLoad = $aAttributes['hide-on-load'] === 1 || $aAttributes['hide-on-load'] === "1" || $aAttributes['hide-on-load'] === "true" || $aAttributes['hide-on-load'] === true;
+    $aAttributes['hide-on-load'] = $bHideOnLoad ? 1 : 0;
+    $aAttributes['focus-on-show'] = ( $aAttributes['focus-on-show'] === 1 || $aAttributes['focus-on-show'] === "1" || $aAttributes['focus-on-show'] === "true" || $aAttributes['focus-on-show'] === true ) ? 1 : 0;
+    $aAttributes['scroll-offset'] = intval( $aAttributes['scroll-offset'] );
     $aAttributes['show-all-cities'] = ( $aAttributes['show-all-cities'] === 1 || $aAttributes['show-all-cities'] === "1" || $aAttributes['show-all-cities'] === "true" || $aAttributes['show-all-cities'] === true ) ? 1 : 0;
 
-    $aOptions         = array(
+    $aOptions = array(
       'title'     => 'Mestá',
       'legend'    => 'none',
       'height'    => '400',
@@ -2636,7 +2640,7 @@ class FLORP {
   private function getIntfChartTickOptions( $aAttributes, $aOptions ) {
     if (in_array( $aAttributes['type'], array( "BarChart", "ColumnChart" ) ) && $aAttributes['val-style'] === "count") {
       $iMaxVoteCount = $this->getIntfChartMaxVoteCount();
-      $sKey          = $aAttributes['type'] === "BarChart" ? "hAxis" : "vAxis";
+      $sKey = $aAttributes['type'] === "BarChart" ? "hAxis" : "vAxis";
       if ($iMaxVoteCount > 0 && $iMaxVoteCount < 6) {
         if ( !isset( $aOptions[$sKey] )) {
           $aOptions[$sKey] = array();
@@ -2707,7 +2711,7 @@ class FLORP {
           // Getting all users //
           break;
       }
-      $aArgs  = array_merge( $aArgs, $aArgsTypeSpecific );
+      $aArgs = array_merge( $aArgs, $aArgsTypeSpecific );
       $aUsers = get_users( $aArgs );
       switch ($strType) {
         case 'flashmob_organizer':
@@ -2718,7 +2722,7 @@ class FLORP {
         case 'subscriber_only':
         case 'all':
         default:
-          $this->aFlashmobSubscribers        = array(
+          $this->aFlashmobSubscribers = array(
             'flashmob_organizer' => array(),
             'teacher'            => array(),
             'subscriber_only'    => array(),
@@ -2730,7 +2734,7 @@ class FLORP {
             foreach ($this->aSubscriberTypes as $strSubscriberType) {
               $strVal = get_user_meta( $oUser->ID, $strSubscriberType, true );
               if ($strVal) {
-                $bAtLeastOne                                      = true;
+                $bAtLeastOne = true;
                 $this->aFlashmobSubscribers[$strSubscriberType][] = $oUser;
               }
             }
@@ -2743,7 +2747,7 @@ class FLORP {
     }
     if ($bPending) {
       // If getting pending users, do not save them in the aFlashmobSubscribers variable //
-      $aReturn                              = $this->aFlashmobSubscribers[$strType];
+      $aReturn = $this->aFlashmobSubscribers[$strType];
       $this->aFlashmobSubscribers[$strType] = $aBak;
 
       return $aReturn;
@@ -2763,11 +2767,11 @@ class FLORP {
     if ($bOnMapOnly) {
       $iCnt = 0;
       foreach ($aUsers as $key => $oUser) {
-        $aAllMeta           = array_map(
+        $aAllMeta = array_map(
           array( $this, 'get_value_maybe_fix_unserialize_array' ),
           get_user_meta( $oUser->ID )
         );
-        $strFlashmobCity    = trim( $aAllMeta['flashmob_city'] );
+        $strFlashmobCity = trim( $aAllMeta['flashmob_city'] );
         $strFlashmobAddress = trim( $aAllMeta['flashmob_address'] );
         if (empty( $strFlashmobCity ) && empty( $strFlashmobAddress )) {
           continue;
@@ -2778,7 +2782,7 @@ class FLORP {
 
       return $iCnt;
     } else {
-      $iCnt                              = count( $aUsers );
+      $iCnt = count( $aUsers );
       $this->aRegisteredUserCount['all'] = $iCnt;
 
       return $iCnt;
@@ -2786,12 +2790,12 @@ class FLORP {
   }
 
   public function registeredUserImprezaCounter( $aAttributes ) {
-    $bOnMapOnly  = isset( $aAttributes['on-map-only'] ) || ( is_array( $aAttributes ) && in_array( 'on-map-only', $aAttributes ) );
+    $bOnMapOnly = isset( $aAttributes['on-map-only'] ) || ( is_array( $aAttributes ) && in_array( 'on-map-only', $aAttributes ) );
     $aCountAttrs = array();
     if ($bOnMapOnly) {
       $aCountAttrs['on-map-only'] = true;
     }
-    $iCount                = $this->getRegisteredUserCount( $aCountAttrs );
+    $iCount = $this->getRegisteredUserCount( $aCountAttrs );
     $aAttributes['target'] = $iCount;
 
     if ( !isset( $aAttributes['title'] )) {
@@ -2806,7 +2810,7 @@ class FLORP {
       $aShortCodeAttributes[] = $key . '="' . $val . '"';
     }
     $strShortCodeAttributes = implode( ' ', $aShortCodeAttributes );
-    $strFullShortcode       = '[us_counter ' . $strShortCodeAttributes . ']';
+    $strFullShortcode = '[us_counter ' . $strShortCodeAttributes . ']';
 
     return do_shortcode( $strFullShortcode );
   }
@@ -2898,9 +2902,9 @@ class FLORP {
       }
       $strMessage = str_replace( '%PROFILE_URL%', $strProfilePageUrl, $strMessage );
 
-      $oLeader     = get_user_by( 'id', $iLeaderID );
+      $oLeader = get_user_by( 'id', $iLeaderID );
       $strBlogname = trim( wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES ) );
-      $aHeaders    = array( 'Content-Type: text/html; charset=UTF-8' );
+      $aHeaders = array( 'Content-Type: text/html; charset=UTF-8' );
       $this->new_user_notification( $oLeader->user_login, '', $oLeader->user_email, $strBlogname, $strMessage, $this->aOptions['strLeaderParticipantListNotificationSbj'], $aHeaders );
     }
     $this->save_options();
@@ -2912,15 +2916,15 @@ class FLORP {
     }
     if ($bEmail) {
       $sTblAtt = ' style="width: 100%; border: 1px solid #ccc;"';
-      $sThAtt  = ' style="border: 1px solid #ccc;"';
-      $sTdAtt  = ' style="border: 1px solid #ccc;"';
+      $sThAtt = ' style="border: 1px solid #ccc;"';
+      $sTdAtt = ' style="border: 1px solid #ccc;"';
     } else {
       $sTblAtt = " class=\"{$this->aOptions['strLeaderParticipantsTableClass']}\"";
-      $sThAtt  = ' class="florp-leader-participants-hcell"';
-      $sTdAtt  = ' class="florp-leader-participants-cell"';
+      $sThAtt = ' class="florp-leader-participants-hcell"';
+      $sTdAtt = ' class="florp-leader-participants-cell"';
     }
     $aReplacements = $this->get_participant_data_replacements();
-    $strTable      = "<table{$sTblAtt}><tr><th{$sThAtt}>Meno</th><th{$sThAtt}>Priezvisko</th><th{$sThAtt}>Pohlavie</th><th{$sThAtt}>Tanečná úroveň</th></tr>";
+    $strTable = "<table{$sTblAtt}><tr><th{$sThAtt}>Meno</th><th{$sThAtt}>Priezvisko</th><th{$sThAtt}>Pohlavie</th><th{$sThAtt}>Tanečná úroveň</th></tr>";
     foreach ($aParticipants as $strEmail => $aParticipantData) {
       foreach ($aReplacements as $strKey => $aReplacementArr) {
         if (isset( $aParticipantData[$strKey] )) {
@@ -2944,7 +2948,7 @@ class FLORP {
 
   public function popupLinks( $aAttributes = array() ) {
     // DEPRECATED //
-    $aDefaults       = array(
+    $aDefaults = array(
       'login'            => 'Login',
       'login-trigger'    => 'florp-click-login-trigger',
       'register'         => 'Register',
@@ -2953,15 +2957,15 @@ class FLORP {
       'profile-trigger'  => 'florp-click-profile-trigger',
       'separator'        => ' | ',
     );
-    $aAttributes     = array_merge( $aDefaults, $aAttributes );
-    $aLoggedInItems  = array(
+    $aAttributes = array_merge( $aDefaults, $aAttributes );
+    $aLoggedInItems = array(
       'profile'
     );
     $aLoggedOutItems = array(
       'login',
       'register',
     );
-    $aReturn         = array();
+    $aReturn = array();
     if (is_user_logged_in()) {
       foreach ($aLoggedInItems as $strItem) {
         $aReturn[] = '<span class="florp-click-trigger ' . $aAttributes[$strItem . '-trigger'] . '">' . $aAttributes[$strItem] . '</span>';
@@ -2977,9 +2981,9 @@ class FLORP {
   }
 
   public function map_flashmob( $aAttributes ) {
-    $iFlashmobYear  = intval( $this->aOptions['iFlashmobYear'] );
+    $iFlashmobYear = intval( $this->aOptions['iFlashmobYear'] );
     $iIsCurrentYear = 0;
-    $bAllYears      = false;
+    $bAllYears = false;
     if (isset( $aAttributes['year'] )) {
       $mixYear = $aAttributes['year'];
       if ($aAttributes['year'] === 'all') {
@@ -3004,12 +3008,12 @@ class FLORP {
 
     if ($bAllYears) {
       // Current year: //
-      $aSchoolCities        = array();
+      $aSchoolCities = array();
       $aSchoolCitiesNoVideo = array();
-      $aMapOptionsNoVideo   = array();
-      $aMapOptionsArray     = array();
-      $aCurrentYearOptions  = $this->get_flashmob_map_options_array( true, 0 );
-      $aVideoFields         = array( 'facebook_link', 'youtube_link', 'vimeo_link', 'embed_code' );
+      $aMapOptionsNoVideo = array();
+      $aMapOptionsArray = array();
+      $aCurrentYearOptions = $this->get_flashmob_map_options_array( true, 0 );
+      $aVideoFields = array( 'facebook_link', 'youtube_link', 'vimeo_link', 'embed_code' );
       foreach ($aCurrentYearOptions as $iUserID => $aOptions) {
         if ( !isset( $aOptions['flashmob_city'] )) {
           $aOptions['flashmob_city'] = $aOptions['school_city'];
@@ -3026,12 +3030,12 @@ class FLORP {
             }
           }
           if ($bVideo) {
-            $aSchoolCities[]                    = $strCity;
-            $aMapOptionsArray[$iUserID]         = $aOptions;
+            $aSchoolCities[] = $strCity;
+            $aMapOptionsArray[$iUserID] = $aOptions;
             $aMapOptionsArray[$iUserID]['year'] = $this->aOptions['iFlashmobYear'];
           } else {
-            $aSchoolCitiesNoVideo[$strCity]       = $iUserID;
-            $aMapOptionsNoVideo[$iUserID]         = $aOptions;
+            $aSchoolCitiesNoVideo[$strCity] = $iUserID;
+            $aMapOptionsNoVideo[$iUserID] = $aOptions;
             $aMapOptionsNoVideo[$iUserID]['year'] = $this->aOptions['iFlashmobYear'];
           }
 
@@ -3042,11 +3046,11 @@ class FLORP {
           if ( !isset( $aOptions['flashmob_city'] )) {
             $aOptions['flashmob_city'] = $aOptions['school_city'];
           }
-          $strCity          = $aOptions['flashmob_city'];
+          $strCity = $aOptions['flashmob_city'];
           $aOptions['year'] = $iYear;
           if ( !empty( $strCity )) {
             $strCity = strtolower( $strCity );
-            $bVideo  = false;
+            $bVideo = false;
             foreach ($aVideoFields as $strFieldKey) {
               if (isset( $aOptions[$strFieldKey] ) && !empty( $aOptions[$strFieldKey] )) {
                 $bVideo = true;
@@ -3066,7 +3070,7 @@ class FLORP {
                 while (isset( $aMapOptionsNoVideo[$iKey] )) {
                   $iKey++;
                 }
-                $aMapOptionsNoVideo[$iKey]      = $aOptions;
+                $aMapOptionsNoVideo[$iKey] = $aOptions;
                 $aSchoolCitiesNoVideo[$strCity] = $iKey;
               }
             }
@@ -3086,7 +3090,7 @@ class FLORP {
 
       // If there is a video override defined for a given city's map of all years, use it //
       foreach ($aMapOptionsArray as $key => $aMapOptions) {
-        $strFlashmobCity   = $aMapOptions["flashmob_city"];
+        $strFlashmobCity = $aMapOptions["flashmob_city"];
         $strFlashmobCityID = str_replace( " ", "_", strtolower( $this->removeAccents( $strFlashmobCity ) ) );
         if (isset( $this->aOptions['aSvkFlashmobMapVideoAllYears'][$strFlashmobCityID] ) && !empty( $this->aOptions['aSvkFlashmobMapVideoAllYears'][$strFlashmobCityID] )) {
           $aMapOptionsArray[$key]["video_link"] = $this->aOptions['aSvkFlashmobMapVideoAllYears'][$strFlashmobCityID];
@@ -3126,7 +3130,7 @@ class FLORP {
 
   public function map_teachers( $aAttributes ) {
     $aMapOptionsArray = $this->get_teacher_map_options_array();
-    $aDivAttributes   = array(
+    $aDivAttributes = array(
       'data-map-type' => 'teacher',
     );
 
@@ -3134,18 +3138,18 @@ class FLORP {
   }
 
   private function get_map_html( $aMapOptionsArray, $aDivAttributes = array(), $strDivID_prefix = '' ) {
-    $iTimestamp      = date( 'U' );
+    $iTimestamp = date( 'U' );
     $strRandomString = wp_generate_password( 5, false );
-    $strID           = $strDivID_prefix . $iTimestamp . '_' . $strRandomString;
+    $strID = $strDivID_prefix . $iTimestamp . '_' . $strRandomString;
 
     $strMapOptionsArrayJson = json_encode( $aMapOptionsArray );
-    $strMapScript           = '<script type="text/javascript">
+    $strMapScript = '<script type="text/javascript">
       if ("undefined" === typeof florp_map_options_object) {
         var florp_map_options_object = {};
       }
       florp_map_options_object["' . $strID . '"] = ' . $strMapOptionsArrayJson . ';
     </script>';
-    $strMapDivHtml          = '<div id="' . $strID . '" class="florp-map"';
+    $strMapDivHtml = '<div id="' . $strID . '" class="florp-map"';
     if ( !empty( $aDivAttributes )) {
       foreach ($aDivAttributes as $strAttrKey => $strAttrValue) {
         $strMapDivHtml .= $strAttrKey . '="' . $strAttrValue . '"';
@@ -3177,7 +3181,7 @@ class FLORP {
 
   private function get_teacher_map_options_array() {
     $aMapOptionsArray = array();
-    $aUsers           = $this->getFlashmobSubscribers( 'teacher' );
+    $aUsers = $this->getFlashmobSubscribers( 'teacher' );
     foreach ($aUsers as $key => $oUser) {
       $aMapOptionsArray[$oUser->ID] = $this->getOneUserMapInfo( $oUser );
     }
@@ -3209,7 +3213,7 @@ class FLORP {
 
   private function get_flashmob_map_options_array_to_archive() {
     $iFlashmobYear = $this->aOptions['iFlashmobYear'];
-    $aMapOptions   = $this->get_flashmob_map_options_array( true, $iFlashmobYear );
+    $aMapOptions = $this->get_flashmob_map_options_array( true, $iFlashmobYear );
     foreach ($aMapOptions as $iUserID => $aUserMapOptions) {
       foreach ($aUserMapOptions as $strKey => $mixVal) {
         if ( !in_array( $strKey, $this->aMetaFieldsFlashmobToArchive ) && !in_array( $strKey, $this->aUserFieldsMap )) {
@@ -3223,7 +3227,7 @@ class FLORP {
 
   // Archive SVK flashmob fields //
   private function archive_current_year_svk_flashmob( $bTest = true ) {
-    $aMapOptions      = $this->archive_current_year_map_options( $bTest );
+    $aMapOptions = $this->archive_current_year_map_options( $bTest );
     $aFlashmobOptions = array(
       'aParticipants' => $this->aOptions['aParticipants'],
       'aTshirts'      => $this->aOptions['aTshirts'],
@@ -3239,7 +3243,7 @@ class FLORP {
       ) );
     }
 
-    $iFlashmobYear                                   = $this->aOptions['iFlashmobYear'];
+    $iFlashmobYear = $this->aOptions['iFlashmobYear'];
     $this->aYearlySvkFlashmobOptions[$iFlashmobYear] = $aFlashmobOptions;
     $this->save_options();
 
@@ -3253,7 +3257,7 @@ class FLORP {
       return $bMapOptions;
     }
 
-    $iFlashmobYear                                       = $this->aOptions['iFlashmobYear'];
+    $iFlashmobYear = $this->aOptions['iFlashmobYear'];
     $this->aOptions['aYearlyMapOptions'][$iFlashmobYear] = $bMapOptions;
     $this->save_options();
 
@@ -3266,8 +3270,8 @@ class FLORP {
           delete_user_meta( $oUser->ID, $keyVal );
         } else {
           // setting is an array and only one or more of its items should be cleaned //
-          $aParts               = explode( ':', $keyVal );
-          $strMetaKey           = $aParts[0];
+          $aParts = explode( ':', $keyVal );
+          $strMetaKey = $aParts[0];
           $mixMetaValuesToClean = explode( ',', $aParts[1] );
           if (empty( $mixMetaValuesToClean ) || !is_array( $mixMetaValuesToClean )) {
             continue;
@@ -3290,10 +3294,10 @@ class FLORP {
   }
 
   public function getMapImage() {
-    $aMapOptions       = $this->aGeneralMapOptions;
-    $aSizeArr          = explode( "x", $aMapOptions['og_map']['size'] );
+    $aMapOptions = $this->aGeneralMapOptions;
+    $aSizeArr = explode( "x", $aMapOptions['og_map']['size'] );
     $aOptionsFromUsers = $this->get_flashmob_map_options_array();
-    $aMarkerOptions    = array( 'icon:' . urlencode( $aMapOptions['markers']['icon'] ) );
+    $aMarkerOptions = array( 'icon:' . urlencode( $aMapOptions['markers']['icon'] ) );
 
     if ( !empty( $aOptionsFromUsers )) {
       foreach ($aOptionsFromUsers as $iUserID => $aOptions) {
@@ -3311,14 +3315,14 @@ class FLORP {
     }
     $strMarkerOptions = implode( "|", $aMarkerOptions );
 
-    $aMapImageOptions            = $aMapOptions['og_map'];
+    $aMapImageOptions = $aMapOptions['og_map'];
     $aMapImageOptions['markers'] = $strMarkerOptions;
     array_walk( $aMapImageOptions, function( &$a, $b ) {
       $a = "$b=$a";
     } );
 
     $strMapImage = 'https://maps.googleapis.com/maps/api/staticmap?' . implode( "&", $aMapImageOptions );
-    $aReturn     = array(
+    $aReturn = array(
       'url'       => $strMapImage,
       'alt'       => $aMapOptions['og_map_image_alt'],
       'width'     => $aSizeArr[0],
@@ -3339,13 +3343,13 @@ class FLORP {
       $sLangSlug = pll_current_language( 'slug' );
     }
     if ($this->isFlashmobBlog && $sLangSlug == 'sk') {
-      $aMapImage                    = $this->getMapImage();
-      $aMetaTags['og:image']        = $aMapImage['url'];
-      $aMetaTags['og:image:width']  = $aMapImage['width'];
+      $aMapImage = $this->getMapImage();
+      $aMetaTags['og:image'] = $aMapImage['url'];
+      $aMetaTags['og:image:width'] = $aMapImage['width'];
       $aMetaTags['og:image:height'] = $aMapImage['height'];
-      $aMetaTags['og:image:alt']    = $aMapImage['alt'];
+      $aMetaTags['og:image:alt'] = $aMapImage['alt'];
       $aMetaTags['og:updated_time'] = time();
-      $aMetaTags['fb:app_id']       = $aMapImage['fb_app_id'];
+      $aMetaTags['fb:app_id'] = $aMapImage['fb_app_id'];
     }
 
     return $aMetaTags;
@@ -3357,34 +3361,34 @@ class FLORP {
   }
 
   private function get_tshirt_images( $bInternational = false ) {
-    $aTshirtImages             = array();
-    $strPluginDirPath          = WP_CONTENT_DIR . '/plugins/flashmob-organizer-profile';
-    $strImagePath              = $strPluginDirPath . "/img/";
-    $strImagePathEscaped       = preg_quote( $strImagePath, "~" );
-    $aTshirtFullImages         = array();
+    $aTshirtImages = array();
+    $strPluginDirPath = WP_CONTENT_DIR . '/plugins/flashmob-organizer-profile';
+    $strImagePath = $strPluginDirPath . "/img/";
+    $strImagePathEscaped = preg_quote( $strImagePath, "~" );
+    $aTshirtFullImages = array();
     $strImageNamePatternPrefix = "";
-    $strImageNamePattern       = "t-shirt-*.png";
+    $strImageNamePattern = "t-shirt-*.png";
     if ($bInternational) {
       $strImageNamePatternPrefix = "intf-";
-      $strImageNamePattern       = "intf-t-shirt-*.png";
+      $strImageNamePattern = "intf-t-shirt-*.png";
     }
     $aCities = array();
     $aColors = array();
     foreach (glob( $strImagePath . $strImageNamePattern ) as $strImgName) {
       $aMatches = array();
       if (preg_match( '~^(' . $strImagePathEscaped . ')?' . $strImageNamePatternPrefix . 't-shirt-chest-([a-z]+)-[a-zA-Z0-9_-]+.png$~', $strImgName, $aMatches )) {
-        $strColor           = $aMatches[2];
+        $strColor = $aMatches[2];
         $aColors[$strColor] = $strColor;
       }
     }
 
     foreach ($aColors as $strColor) {
       $aTshirtFullImages[$strColor] = array();
-      $aCouples                     = array();
+      $aCouples = array();
       foreach (glob( $strImagePath . $strImageNamePattern ) as $strImgName) {
         $aMatches = array();
         if (preg_match( '~^(' . $strImagePathEscaped . ')?' . $strImageNamePatternPrefix . 't-shirt-chest-' . $strColor . '-([a-zA-Z0-9_-]+).png$~', $strImgName, $aMatches )) {
-          $strTshirtCitySlug           = $aMatches[2];
+          $strTshirtCitySlug = $aMatches[2];
           $aCities[$strTshirtCitySlug] = $strTshirtCitySlug;
           if ( !isset( $aCouples[$strTshirtCitySlug] )) {
             $aCouples[$strTshirtCitySlug] = array(
@@ -3395,7 +3399,7 @@ class FLORP {
             $aCouples[$strTshirtCitySlug]["chest"] = true;
           }
         } elseif (preg_match( '~^(' . $strImagePathEscaped . ')?' . $strImageNamePatternPrefix . 't-shirt-' . $strColor . '-([a-zA-Z0-9_-]+).png$~', $strImgName, $aMatches )) {
-          $strTshirtCitySlug           = $aMatches[2];
+          $strTshirtCitySlug = $aMatches[2];
           $aCities[$strTshirtCitySlug] = $strTshirtCitySlug;
           if ( !isset( $aCouples[$strTshirtCitySlug] )) {
             $aCouples[$strTshirtCitySlug] = array(
@@ -3457,45 +3461,45 @@ class FLORP {
     }
     setcookie( $this->strClickTriggerCookieKey, "0", time() + ( 1 * 24 * 60 * 60 ), '/' );
     if ($this->isMainBlog) {
-      $iPopupID                         = $this->iProfileFormPopupIDMain;
-      $iNFID                            = $this->iProfileFormNinjaFormIDMain;
+      $iPopupID = $this->iProfileFormPopupIDMain;
+      $iNFID = $this->iProfileFormNinjaFormIDMain;
       $bReloadAfterSuccessfulSubmission = $this->bReloadAfterSuccessfulSubmissionMain;
     } elseif ($this->isFlashmobBlog) {
-      $iPopupID                         = $this->iProfileFormPopupIDFlashmob;
-      $iNFID                            = $this->iProfileFormNinjaFormIDFlashmob;
+      $iPopupID = $this->iProfileFormPopupIDFlashmob;
+      $iNFID = $this->iProfileFormNinjaFormIDFlashmob;
       $bReloadAfterSuccessfulSubmission = $this->bReloadAfterSuccessfulSubmissionFlashmob;
     } else {
-      $iPopupID                         = 0;
-      $iNFID                            = 0;
+      $iPopupID = 0;
+      $iNFID = 0;
       $bReloadAfterSuccessfulSubmission = false;
     }
 
     if ($this->isMainBlog) {
-      $iPopupIDMain                         = $this->iProfileFormPopupIDMain;
-      $iNFIDMain                            = $this->iProfileFormNinjaFormIDMain;
+      $iPopupIDMain = $this->iProfileFormPopupIDMain;
+      $iNFIDMain = $this->iProfileFormNinjaFormIDMain;
       $bReloadAfterSuccessfulSubmissionMain = $this->bReloadAfterSuccessfulSubmissionMain;
     } else {
-      $iPopupIDMain                         = 0;
-      $iNFIDMain                            = 0;
+      $iPopupIDMain = 0;
+      $iNFIDMain = 0;
       $bReloadAfterSuccessfulSubmissionMain = false;
     }
 
     if ($this->isFlashmobBlog) {
-      $iPopupIDFlashmob                         = $this->iProfileFormPopupIDFlashmob;
-      $iNFIDFlashmob                            = $this->iProfileFormNinjaFormIDFlashmob;
+      $iPopupIDFlashmob = $this->iProfileFormPopupIDFlashmob;
+      $iNFIDFlashmob = $this->iProfileFormNinjaFormIDFlashmob;
       $bReloadAfterSuccessfulSubmissionFlashmob = $this->bReloadAfterSuccessfulSubmissionFlashmob;
     } else {
-      $iPopupIDFlashmob                         = 0;
-      $iNFIDFlashmob                            = 0;
+      $iPopupIDFlashmob = 0;
+      $iNFIDFlashmob = 0;
       $bReloadAfterSuccessfulSubmissionFlashmob = false;
     }
 
     if ($this->isIntfBlog) {
       $iPopupIDIntf = $this->iProfileFormPopupIDIntf;
-      $iNFIDIntf    = $this->iProfileFormNinjaFormIDIntf;
+      $iNFIDIntf = $this->iProfileFormNinjaFormIDIntf;
     } else {
       $iPopupIDIntf = 0;
-      $iNFIDIntf    = 0;
+      $iNFIDIntf = 0;
     }
 
     if ($this->isMainBlog) {
@@ -3523,13 +3527,13 @@ class FLORP {
       $iHasParticipants = 0;
     }
 
-    $aTshirtImages     = $this->get_tshirt_images();
+    $aTshirtImages = $this->get_tshirt_images();
     $aTshirtImagesIntf = $this->get_tshirt_images( true );
 
     $aHideFlashmobFields = array();
-    $aLeaders            = $this->getFlashmobSubscribers( 'all', true );
+    $aLeaders = $this->getFlashmobSubscribers( 'all', true );
     foreach ($aLeaders as $oLeader) {
-      $iLeaderID                       = $oLeader->ID;
+      $iLeaderID = $oLeader->ID;
       $aHideFlashmobFields[$iLeaderID] = $this->bHideFlashmobFields;
       if (in_array( $iLeaderID, $this->aOptions['aHideFlashmobFieldsForUsers'] )) {
         $aHideFlashmobFields[$iLeaderID] = true;
@@ -3602,8 +3606,8 @@ class FLORP {
       'intf_charts_visible_indefinitely_on_submit' => $this->aOptions['bIntfChartsVisibleIndefinitelyOnSubmit'] ? 1 : 0,
     );
     if (is_user_logged_in()) {
-      $aJS['user_id']                            = $iUserID;
-      $aJS['leader_participant_table_class']     = $this->aOptions['strLeaderParticipantsTableClass'];
+      $aJS['user_id'] = $iUserID;
+      $aJS['leader_participant_table_class'] = $this->aOptions['strLeaderParticipantsTableClass'];
       $aJS['get_leaderParticipantsTable_action'] = 'get_leaderParticipantsTable';
 
       if ($GLOBALS[$this->fakePageEditSvkParticipantSubmissionGlobalID] && is_array( $GLOBALS[$this->fakePageEditSvkParticipantSubmissionGlobalID . '-js'] )) {
@@ -3672,7 +3676,7 @@ class FLORP {
   public function action__ninja_forms_enqueue_scripts( $aFormData ) {
     // Add recaptcha JS if form contains our recaptcha field //
     // do_action( 'ninja_forms_enqueue_scripts', array( 'form_id' => $form_id ) ); //
-    $iFormID     = $aFormData['form_id'];
+    $iFormID = $aFormData['form_id'];
     $aFormFields = Ninja_Forms()->form( $iFormID )->get_fields();
 
     $bFormHasRecaptchaLoggedOutOnly = false;
@@ -3684,7 +3688,7 @@ class FLORP {
       }
     }
     if ($bFormHasRecaptchaLoggedOutOnly) {
-      $ver            = Ninja_Forms::VERSION;
+      $ver = Ninja_Forms::VERSION;
       $recaptcha_lang = Ninja_Forms()->get_setting( 'recaptcha_lang' );
       wp_enqueue_script( 'nf-google-recaptcha', 'https://www.google.com/recaptcha/api.js?hl=' . $recaptcha_lang . '&onload=nfRenderRecaptcha&render=explicit', array(
         'jquery',
@@ -3905,7 +3909,7 @@ class FLORP {
       // update_user_meta(32, 'flashmob_organizer', '0');
     }
 
-    $aUsers                    = $this->getFlashmobSubscribers( 'all', true );
+    $aUsers = $this->getFlashmobSubscribers( 'all', true );
     $aCancelFlashmobProperties = array(
       'buttonLabels'      => array(),
       'userDropdowns'     => array(),
@@ -3913,13 +3917,13 @@ class FLORP {
       'actions'           => array(),
     );
     foreach ($aUsers as $oLeader) {
-      $iLeaderID                                                  = $oLeader->ID;
-      $aCancelFlashmobProperties['buttonLabels'][$iLeaderID]      = "Zrušiť flashmob";
-      $aCancelFlashmobProperties['userDropdowns'][$iLeaderID]     = "<br/>\n<select name=\"florp_cancel_flashmob_reassign_participants-{$iLeaderID}\"><option value=\"0\">[nikoho, zmazať]</option>";
+      $iLeaderID = $oLeader->ID;
+      $aCancelFlashmobProperties['buttonLabels'][$iLeaderID] = "Zrušiť flashmob";
+      $aCancelFlashmobProperties['userDropdowns'][$iLeaderID] = "<br/>\n<select name=\"florp_cancel_flashmob_reassign_participants-{$iLeaderID}\"><option value=\"0\">[nikoho, zmazať]</option>";
       $aCancelFlashmobProperties['userDropdownNames'][$iLeaderID] = "florp_cancel_flashmob_reassign_participants-{$iLeaderID}";
       foreach ($aUsers as $oUser) {
-        $iUserID      = $oUser->ID;
-        $aAllMeta     = array_map(
+        $iUserID = $oUser->ID;
+        $aAllMeta = array_map(
           array( $this, 'get_value_maybe_fix_unserialize_array' ),
           get_user_meta( $iUserID )
         );
@@ -3942,7 +3946,7 @@ class FLORP {
       }
 
       $aCancelFlashmobProperties['userDropdowns'][$iLeaderID] .= "</select>";
-      $bIsOrganizer                                           = false;
+      $bIsOrganizer = false;
 
       $aAllMeta = array_map(
         array( $this, 'get_value_maybe_fix_unserialize_array' ),
@@ -3955,11 +3959,11 @@ class FLORP {
         $bIsOrganizer = isset( $aAllMeta[$strSubscriberType] ) && $aAllMeta[$strSubscriberType];
         break;
       }
-      $aParticipants    = $this->get_flashmob_participants( $iLeaderID, false, true );
+      $aParticipants = $this->get_flashmob_participants( $iLeaderID, false, true );
       $bHasParticipants = ( count( $aParticipants ) > 0 );
 
       if ( !$bHasParticipants) {
-        $aCancelFlashmobProperties['userDropdowns'][$iLeaderID]     = "";
+        $aCancelFlashmobProperties['userDropdowns'][$iLeaderID] = "";
         $aCancelFlashmobProperties['userDropdownNames'][$iLeaderID] = false;
       }
 
@@ -3969,18 +3973,18 @@ class FLORP {
           $aCancelFlashmobProperties['buttonLabels'][$iLeaderID] .= " a presunúť účastníkov na:";
         }
       } elseif ($bHasParticipants) {
-        $aCancelFlashmobProperties['actions'][$iLeaderID]      = "move_flashmob_participants";
+        $aCancelFlashmobProperties['actions'][$iLeaderID] = "move_flashmob_participants";
         $aCancelFlashmobProperties['buttonLabels'][$iLeaderID] = "Presunúť účastníkov na:";
       } else {
-        $aCancelFlashmobProperties['actions'][$iLeaderID]      = false;
+        $aCancelFlashmobProperties['actions'][$iLeaderID] = false;
         $aCancelFlashmobProperties['buttonLabels'][$iLeaderID] = false;
       }
     }
 
     $strEcho = '<table class="widefat striped"><th>Meno</th><th>Email</th><th>Mesto</th><th>Preferencie</th><th>Profil</th><th>Účastníci</th>';
     foreach ($aUsers as $oUser) {
-      $iUserID      = $oUser->ID;
-      $aAllMeta     = array_map(
+      $iUserID = $oUser->ID;
+      $aAllMeta = array_map(
         array( $this, 'get_value_maybe_fix_unserialize_array' ),
         get_user_meta( $iUserID )
       );
@@ -3989,12 +3993,12 @@ class FLORP {
         $strIsPending = " ({$this->strUserRolePendingName})";
       }
       $strButtons = "";
-      $strRowID   = "florpRow-" . $iUserID;
+      $strRowID = "florpRow-" . $iUserID;
       if ($aCancelFlashmobProperties['buttonLabels'][$iUserID] && $aCancelFlashmobProperties['actions'][$iUserID]) {
         $strDoubleCheckQuestion = "Ste si istý?";
-        $strButtonLabel         = $aCancelFlashmobProperties['buttonLabels'][$iUserID];
-        $strButtonID            = "florpButton-cancelFlashmob-" . $iUserID;
-        $strDataUseInputNames   = '';
+        $strButtonLabel = $aCancelFlashmobProperties['buttonLabels'][$iUserID];
+        $strButtonID = "florpButton-cancelFlashmob-" . $iUserID;
+        $strDataUseInputNames = '';
         if ($aCancelFlashmobProperties['userDropdownNames'][$iUserID]) {
           $strDataUseInputNames = ' data-use-input-names="' . $aCancelFlashmobProperties['userDropdownNames'][$iUserID] . '"';
         }
@@ -4019,11 +4023,11 @@ class FLORP {
           array( 'Zorganizuje Flashmob', 'Učí kurzy' ),
           $strSubscriberType
         );
-        $strEcho  .= $strLabel . ": " . $strValue . '<br>';
+        $strEcho .= $strLabel . ": " . $strValue . '<br>';
       }
-      $strEcho           .= '</td>';
-      $strEcho           .= '<td>';
-      $aCoursesInfoKeys  = array( 'courses_info', 'courses_info_2', 'courses_info_3' );
+      $strEcho .= '</td>';
+      $strEcho .= '<td>';
+      $aCoursesInfoKeys = array( 'courses_info', 'courses_info_2', 'courses_info_3' );
       $aSingleCheckboxes = array( 'courses_in_city_2', 'courses_in_city_3', 'preference_newsletter', 'hide_leader_info' );
       foreach ($this->aMetaFields as $strMetaKey) {
         if ( !isset( $aAllMeta[$strMetaKey] ) || ( !is_bool( $aAllMeta[$strMetaKey] ) && !is_numeric( $aAllMeta[$strMetaKey] ) && empty( $aAllMeta[$strMetaKey] ) ) || $aAllMeta[$strMetaKey] === 'null' || in_array( $strMetaKey, $this->aSubscriberTypes )) {
@@ -4083,30 +4087,87 @@ class FLORP {
     return $this->aOptions['bEditSubmissions'] || ( isset( $_REQUEST['edit-submissions'] ) && $_REQUEST['edit-submissions'] === 'on' ) || ( defined( 'FLORP_EDIT_SUBMISSIONS' ) && FLORP_EDIT_SUBMISSIONS === true );
   }
 
+  private function hasParticipantTshirt( $aParticipantData ) {
+    return isset( $aParticipantData['flashmob_participant_tshirt_gender'], $aParticipantData['flashmob_participant_tshirt_size'], $aParticipantData['flashmob_participant_tshirt_color'] )
+           && in_array( 'Chcem pamätné Flashmob tričko', $aParticipantData['preferences'] )
+           && $aParticipantData['flashmob_participant_tshirt_gender'] !== ""
+           && $aParticipantData['flashmob_participant_tshirt_gender'] !== "null"
+           && $aParticipantData['flashmob_participant_tshirt_size'] !== ""
+           && $aParticipantData['flashmob_participant_tshirt_size'] !== "null"
+           && $aParticipantData['flashmob_participant_tshirt_color'] !== ""
+           && $aParticipantData['flashmob_participant_tshirt_color'] !== "null";
+  }
+
+  private function getTshirtChangeForm( $bInternational ) {
+    $aOptionValues = array(
+      "size"   => array( "XS", "S", "M", "L", "XL", "XXL" ),
+      "gender" => array( "muz", "zena" ),
+      "color"  => array_keys( $this->get_tshirt_images( $bInternational )["full"] )
+    );
+    $aOptions = array();
+    $aReplacements = $this->get_participant_data_replacements();
+
+    foreach ($aOptionValues as $sKey => $aValues) {
+      $aOptions[$sKey] = "<option value='null'>-</option>";
+      foreach ($aValues as $strValue) {
+        $sLabel = $strValue;
+        if ($sKey === "gender") {
+          $sLabel = str_replace( $aReplacements["gender"]["from"], $aReplacements["gender"]["to"], $sLabel );
+        }
+        $aOptions[$sKey] .= "<option value='{$strValue}'>" . ucfirst( $sLabel ) . "</option>";
+      }
+    }
+
+    return str_replace(
+      array( '%%options-size%%', '%%options-gender%%', '%%options-color%%' ),
+      array( $aOptions["size"], $aOptions["gender"], $aOptions["color"] ),
+      file_get_contents( __DIR__ . "/view/admin-tshirt-change.html" )
+    );
+  }
+
   private function get_participants_table_admin_buttons_svk( $aParticipantData, $strRowID, $bBackend = true ) {
     $iLeaderID = $aParticipantData['leader_user_id'];
-    $strEmail  = $aParticipantData['user_email'];
+    $strEmail = $aParticipantData['user_email'];
 
     $strDoubleCheckQuestion = "Ste si istý?";
-    $strButtons             = "";
+    $strButtons = "";
 
     if (isset( $aParticipantData["paid_fee"] )) {
       // Paid fee info //
-      $strTitle   = ' title="' . date( $this->strDateFormat, $aParticipantData["paid_fee"] ) . '"';
-      $strLabel   = "Zaplatil(a) reg. poplatok";
+      $strTitle = ' title="' . date( $this->strDateFormat, $aParticipantData["paid_fee"] ) . '"';
+      $strLabel = "Zaplatil(a) reg. poplatok";
       $strButtons .= '<span data-button-id="florpButton-paid-fee-' . $iLeaderID . '-' . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail ) . '" class="notice notice-success"' . $strTitle . '>' . $strLabel . '</span>';
     } else {
       if ($bBackend) {
         // Delete button //
         $strButtonLabel = "Zmazať";
-        $strButtonID    = "florpButton-" . $iLeaderID . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
-        $strButtons     = '<span class="button double-check button-danger" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" data-leader-id="' . $iLeaderID . '" data-participant-email="' . $strEmail . '" data-sure="0" data-action="delete_florp_participant" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" data-hide="1">' . $strButtonLabel . '</span>';
+        $strButtonID = "florpButton-" . $iLeaderID . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
+        $strButtons = '<span class="button double-check button-danger" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" data-leader-id="' . $iLeaderID . '" data-participant-email="' . $strEmail . '" data-sure="0" data-action="delete_florp_participant" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" data-hide="1">' . $strButtonLabel . '</span>';
       }
 
       // Paid fee button //
       $strButtonLabel = "Zaplatil(a) reg. poplatok";
-      $strButtonID    = "florpButton-paid-fee-" . $iLeaderID . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
-      $strButtons     .= '<span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" data-leader-id="' . $iLeaderID . '" data-participant-email="' . $strEmail . '" data-sure="0" data-action="florp_participant_paid_fee" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '">' . $strButtonLabel . '</span>';
+      $strButtonID = "florpButton-paid-fee-" . $iLeaderID . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
+      $strButtons .= '<span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" data-leader-id="' . $iLeaderID . '" data-participant-email="' . $strEmail . '" data-sure="0" data-action="florp_participant_paid_fee" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '">' . $strButtonLabel . '</span>';
+    }
+
+    // Change t-shirt button //
+    if ($bBackend && current_user_can( 'administrator' )) {
+      $bHasTshirt = $this->hasParticipantTshirt( $aParticipantData );
+      $strButtonLabel = ( $bHasTshirt ? "Zmeniť" : "Pridať" ) . " tričko";
+      $strAction = $bHasTshirt ? "change" : "add";
+      $strButtonID = "florpButton-changeTshirt-" . $iLeaderID . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
+      $aTshirtData = array();
+      $aReplacements = $this->get_participant_data_replacements();
+      foreach (array( "size", "gender", "color" ) as $strProperty) {
+        $strVal = $aParticipantData['flashmob_participant_tshirt_' . $strProperty];
+        if ($strProperty === "gender") {
+          $strVal = str_replace( $aReplacements["gender"]["to"], $aReplacements["gender"]["from"], $strVal );
+        }
+        $aTshirtData[] = 'data-tshirt_' . $strProperty . '="' . $strVal . '"';
+      }
+
+      $strButtons .= '<span class="button pop-in" data-pop-in-id="florp-admin-tshirt-change" data-change-action="' . $strAction . '" ' . implode( " ", $aTshirtData ) . ' data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" data-leader-id="' . $iLeaderID . '" data-participant-email="' . $strEmail . '" data-action="florp_change_tshirt" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '">' . $strButtonLabel . '</span>';
     }
 
     if (isset( $aParticipantData["attend"] )) {
@@ -4116,28 +4177,28 @@ class FLORP {
         $strTitle = ' title="' . date( $this->strDateFormat, $aParticipantData["attend_set_timestamp"] ) . '"';
       }
       $strLabelForHiding = "Zúčastní/-il(a) sa";
-      $strLabel          = $aParticipantData["attend"] == "1" ? $strLabelForHiding : "Nezúčastní/-il(a) sa";
-      $strButtons        .= '<span data-button-id="florpButton-attend' . $aParticipantData["attend"] . '-' . $iLeaderID . '-' . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail ) . '" class="notice notice-success"' . $strTitle . ' data-text="' . $strLabelForHiding . '">' . $strLabel . '</span>';
+      $strLabel = $aParticipantData["attend"] == "1" ? $strLabelForHiding : "Nezúčastní/-il(a) sa";
+      $strButtons .= '<span data-button-id="florpButton-attend' . $aParticipantData["attend"] . '-' . $iLeaderID . '-' . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail ) . '" class="notice notice-success"' . $strTitle . ' data-text="' . $strLabelForHiding . '">' . $strLabel . '</span>';
 
       if ($this->isEditSubmissionsEnabled()) {
         // Remove attendance button //
-        $strButtonID       = "florpButton-attend-remove-" . $iLeaderID . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
-        $strButtonLabel    = "Odstrániť info o účasti";
+        $strButtonID = "florpButton-attend-remove-" . $iLeaderID . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
+        $strButtonLabel = "Odstrániť info o účasti";
         $strLabelForHiding = "Zúčastní/-il(a) sa";
-        $strButtons        .= '<span class="button double-check button-danger" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" data-leader-id="' . $iLeaderID . '" data-participant-email="' . $strEmail . '" data-sure="0" data-action="florp_participant_attend" data-attend="remove" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" data-text="' . $strLabelForHiding . '">' . $strButtonLabel . '</span>';
+        $strButtons .= '<span class="button double-check button-danger" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" data-leader-id="' . $iLeaderID . '" data-participant-email="' . $strEmail . '" data-sure="0" data-action="florp_participant_attend" data-attend="remove" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" data-text="' . $strLabelForHiding . '">' . $strButtonLabel . '</span>';
       }
     } else {
       // Will/Did attend button //
-      $strButtonID       = "florpButton-attend1-" . $iLeaderID . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
-      $strButtonLabel    = "Zúčastní/-il(a) sa";
+      $strButtonID = "florpButton-attend1-" . $iLeaderID . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
+      $strButtonLabel = "Zúčastní/-il(a) sa";
       $strLabelForHiding = $strButtonLabel;
-      $strButtons        .= '<span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" data-leader-id="' . $iLeaderID . '" data-participant-email="' . $strEmail . '" data-sure="0" data-action="florp_participant_attend" data-attend="1" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" data-text="' . $strLabelForHiding . '">' . $strButtonLabel . '</span>';
+      $strButtons .= '<span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" data-leader-id="' . $iLeaderID . '" data-participant-email="' . $strEmail . '" data-sure="0" data-action="florp_participant_attend" data-attend="1" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" data-text="' . $strLabelForHiding . '">' . $strButtonLabel . '</span>';
 
       if ($bBackend) {
         // Won't/Didn't attend button //
-        $strButtonID    = "florpButton-attend0-" . $iLeaderID . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
+        $strButtonID = "florpButton-attend0-" . $iLeaderID . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
         $strButtonLabel = "Nezúčastní/-il(a) sa";
-        $strButtons     .= '<span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" data-leader-id="' . $iLeaderID . '" data-participant-email="' . $strEmail . '" data-sure="0" data-action="florp_participant_attend" data-attend="0" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" data-text="' . $strLabelForHiding . '">' . $strButtonLabel . '</span>';
+        $strButtons .= '<span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" data-leader-id="' . $iLeaderID . '" data-participant-email="' . $strEmail . '" data-sure="0" data-action="florp_participant_attend" data-attend="0" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" data-text="' . $strLabelForHiding . '">' . $strButtonLabel . '</span>';
       }
     }
 
@@ -4146,7 +4207,7 @@ class FLORP {
 
   private function get_participants_table_admin_row_svk( $aParticipantData ) {
     $iLeaderID = $aParticipantData['leader_user_id'];
-    $strEmail  = $aParticipantData['user_email'];
+    $strEmail = $aParticipantData['user_email'];
 
     $aReplacements = $this->get_participant_data_replacements();
     foreach ($aReplacements as $strKey => $aReplacementArr) {
@@ -4159,7 +4220,7 @@ class FLORP {
 
     $strButtons = $this->get_participants_table_admin_buttons_svk( $aParticipantData, $strRowID );
 
-    $strEcho           = '<tr class="row" data-row-id="' . $strRowID . '">';
+    $strEcho = '<tr class="row" data-row-id="' . $strRowID . '">';
     $strEditSubmission = '';
     if ($this->isEditSubmissionsEnabled()) {
       $strDomain = '';
@@ -4168,25 +4229,25 @@ class FLORP {
       }
       $strEditSubmission = ' <span class="submission-edit">(<a href="' . $strDomain . '/' . $this->fakePageEditSvkParticipantSubmission . '/?leader_id=' . $iLeaderID . '&email=' . urlencode( $strEmail ) . '" target="_blank">Edit</a>)</span>';
     }
-    $strEcho                .= '<td class="column column-meno">' . $aParticipantData['first_name'] . ' ' . $aParticipantData['last_name'] . $strEditSubmission . $strButtons . '</td>';
-    $strEcho                .= '<td class="column column-email"><a name="' . $aParticipantData['user_email'] . '">' . $aParticipantData['user_email'] . '</a></td>';
-    $oLeader                = get_user_by( 'id', $iLeaderID );
+    $strEcho .= '<td class="column column-meno">' . $aParticipantData['first_name'] . ' ' . $aParticipantData['last_name'] . $strEditSubmission . $strButtons . '</td>';
+    $strEcho .= '<td class="column column-email"><a name="' . $aParticipantData['user_email'] . '">' . $aParticipantData['user_email'] . '</a></td>';
+    $oLeader = get_user_by( 'id', $iLeaderID );
     $strLeadersFlashmobCity = get_user_meta( $iLeaderID, 'flashmob_city', true );
-    $strWarning             = "";
+    $strWarning = "";
     if ($strLeadersFlashmobCity !== $aParticipantData['flashmob_city']) {
-      $strTitle   = " title=\"Pozor: pri registrácii účastníka mal líder nastavené mesto flashmobu na  {$aParticipantData['flashmob_city']}!\"";
+      $strTitle = " title=\"Pozor: pri registrácii účastníka mal líder nastavené mesto flashmobu na  {$aParticipantData['flashmob_city']}!\"";
       $strWarning = ' <span ' . $strTitle . ' class="dashicons dashicons-warning"></span>';
     }
-    $strEcho      .= '<td class="column column-mesto">' . $strLeadersFlashmobCity . $strWarning . '</td>';
+    $strEcho .= '<td class="column column-mesto">' . $strLeadersFlashmobCity . $strWarning . '</td>';
     $strIsPending = "";
     if (in_array( $this->strUserRolePending, (array) $oLeader->roles )) {
       $strIsPending = " ({$this->strUserRolePendingName})";
     }
-    $strEcho        .= '<td class="column column-lider"><a href="' . admin_url( 'admin.php?page=florp-leaders' ) . "#{$iLeaderID}\">{$oLeader->first_name} {$oLeader->last_name}</a>{$strIsPending}</td>";
-    $strEcho        .= '<td class="column column-profil">';
-    $aTimestamps    = array( 'registered', 'tshirt_order_cancelled_timestamp', 'updated_timestamp', 'paid_fee', 'attend_set_timestamp' );
+    $strEcho .= '<td class="column column-lider"><a href="' . admin_url( 'admin.php?page=florp-leaders' ) . "#{$iLeaderID}\">{$oLeader->first_name} {$oLeader->last_name}</a>{$strIsPending}</td>";
+    $strEcho .= '<td class="column column-profil">';
+    $aTimestamps = array( 'registered', 'tshirt_order_cancelled_timestamp', 'updated_timestamp', 'paid_fee', 'attend_set_timestamp' );
     $bOrderedTshirt = isset( $aParticipantData['preferences'] ) && is_array( $aParticipantData['preferences'] ) && in_array( 'Chcem pamätné Flashmob tričko', $aParticipantData['preferences'] );
-    $aSkip          = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', 'leader_user_id' );
+    $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', 'leader_user_id' );
     if ( !isset( $aParticipantData['leader_notified'] )) {
       $aParticipantData['leader_notified'] = false;
     }
@@ -4195,7 +4256,7 @@ class FLORP {
         continue;
       }
       if (in_array( $strKey, $aTimestamps )) {
-        $strKey   = str_replace( "_timestamp", "", $strKey );
+        $strKey = str_replace( "_timestamp", "", $strKey );
         $strValue = date( $this->strDateFormat, $mixValue );
       } elseif (is_array( $mixValue )) {
         $strValue = implode( ', ', $mixValue );
@@ -4213,7 +4274,7 @@ class FLORP {
         echo "</pre>";
         //*/
       } else {
-        $strEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue . '<br>';
+        $strEcho .= '<span data-field="' . $strKey . '"><strong>' . $strFieldName . '</strong>: <span class="florp-val">' . $strValue . '</span></span><br>';
       }
     }
     $strEcho .= '</td>';
@@ -4224,7 +4285,7 @@ class FLORP {
 
   private function get_participant_checkin_table_no_tshirt_svk( $aParticipantData ) {
     $iLeaderID = $aParticipantData['leader_user_id'];
-    $strEmail  = $aParticipantData['user_email'];
+    $strEmail = $aParticipantData['user_email'];
 
     $aReplacements = $this->get_participant_data_replacements();
     foreach ($aReplacements as $strKey => $aReplacementArr) {
@@ -4238,12 +4299,12 @@ class FLORP {
     $strButtons = $this->get_participants_table_admin_buttons_svk( $aParticipantData, $strRowID, false );
 
     $strEchoBeforeButtons = "";
-    $strEchoAfterButtons  = "";
+    $strEchoAfterButtons = "";
 
     // Participant data
-    $aTimestamps    = array( 'registered', 'tshirt_order_cancelled_timestamp', 'updated_timestamp', 'paid_fee', 'attend_set_timestamp' );
+    $aTimestamps = array( 'registered', 'tshirt_order_cancelled_timestamp', 'updated_timestamp', 'paid_fee', 'attend_set_timestamp' );
     $bOrderedTshirt = isset( $aParticipantData['preferences'] ) && is_array( $aParticipantData['preferences'] ) && in_array( 'Chcem pamätné Flashmob tričko', $aParticipantData['preferences'] );
-    $aSkip          = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', 'leader_user_id', 'year' );
+    $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', 'leader_user_id', 'year' );
     if ( !isset( $aParticipantData['leader_notified'] )) {
       $aParticipantData['leader_notified'] = false;
     }
@@ -4252,7 +4313,7 @@ class FLORP {
         continue;
       }
       if (in_array( $strKey, $aTimestamps )) {
-        $strKey   = str_replace( "_timestamp", "", $strKey );
+        $strKey = str_replace( "_timestamp", "", $strKey );
         $strValue = date( $this->strDateFormat, $mixValue );
       } elseif (is_array( $mixValue )) {
         $strValue = implode( ', ', $mixValue );
@@ -4279,9 +4340,9 @@ class FLORP {
       }
     }
 
-    $strEcho           = '<div class="wp-core-ui">';
-    $strEcho           .= '<table class="widefat participantCheckinTable striped noFilter">';
-    $strEcho           .= '<tr class="row" data-row-id="' . $strRowID . '">';
+    $strEcho = '<div class="wp-core-ui">';
+    $strEcho .= '<table class="widefat participantCheckinTable striped noFilter">';
+    $strEcho .= '<tr class="row" data-row-id="' . $strRowID . '">';
     $strEditSubmission = '';
     if ($this->isEditSubmissionsEnabled()) {
       $strDomain = '';
@@ -4290,17 +4351,17 @@ class FLORP {
       }
       $strEditSubmission = ' <span class="submission-edit">(<a href="' . $strDomain . '/' . $this->fakePageEditSvkParticipantSubmission . '/?leader_id=' . $iLeaderID . '&email=' . urlencode( $strEmail ) . '" target="_blank">Edit</a>)</span>';
     }
-    $strEcho                .= '<td>';
-    $strEcho                .= "<strong>Meno</strong>: " . $aParticipantData['first_name'] . ' ' . $aParticipantData['last_name'] . $strEditSubmission . '<br>';
-    $strEcho                .= "<strong>Email</strong>: " . $aParticipantData['user_email'] . '<br>';
-    $oLeader                = get_user_by( 'id', $iLeaderID );
+    $strEcho .= '<td>';
+    $strEcho .= "<strong>Meno</strong>: " . $aParticipantData['first_name'] . ' ' . $aParticipantData['last_name'] . $strEditSubmission . '<br>';
+    $strEcho .= "<strong>Email</strong>: " . $aParticipantData['user_email'] . '<br>';
+    $oLeader = get_user_by( 'id', $iLeaderID );
     $strLeadersFlashmobCity = get_user_meta( $iLeaderID, 'flashmob_city', true );
-    $strWarning             = "";
+    $strWarning = "";
     if ($strLeadersFlashmobCity !== $aParticipantData['flashmob_city']) {
-      $strTitle   = " title=\"Pozor: pri registrácii účastníka mal líder nastavené mesto flashmobu na  {$aParticipantData['flashmob_city']}!\"";
+      $strTitle = " title=\"Pozor: pri registrácii účastníka mal líder nastavené mesto flashmobu na  {$aParticipantData['flashmob_city']}!\"";
       $strWarning = ' <span ' . $strTitle . ' class="dashicons dashicons-warning"></span>';
     }
-    $strEcho      .= "<strong>Mesto</strong>: " . $strLeadersFlashmobCity . $strWarning . '<br>';
+    $strEcho .= "<strong>Mesto</strong>: " . $strLeadersFlashmobCity . $strWarning . '<br>';
     $strIsPending = "";
     if (in_array( $this->strUserRolePending, (array) $oLeader->roles )) {
       $strIsPending = " ({$this->strUserRolePendingName})";
@@ -4322,7 +4383,9 @@ class FLORP {
   public function participants_table_admin() {
     echo "<div class=\"wrap\"><h1>" . "Zoznam účastníkov slovenského flashmobu" . "</h1>";
 
-    $strEcho       = '<table class="widefat striped"><th class="column column-meno">Meno</th><th class="column column-email">Email</th><th class="column column-mesto">Mesto</th><th class="column column-lider">Líder</th><th class="column column-profil">Profil</th>';
+    echo $this->getTshirtChangeForm( false );
+
+    $strEcho = '<table class="widefat striped"><th class="column column-meno">Meno</th><th class="column column-email">Email</th><th class="column column-mesto">Mesto</th><th class="column column-lider">Líder</th><th class="column column-profil">Profil</th>';
     $aParticipants = $this->get_flashmob_participants( 0, false, true );
     // echo "<pre>";var_dump($aParticipants);echo "</pre>"; // NOTE DEVEL
     // echo "<pre>";var_dump($this->get_flashmob_participant_csv());echo "</pre>"; // NOTE DEVEL
@@ -4331,10 +4394,10 @@ class FLORP {
       $aParticipantsFlat = array();
       foreach ($aParticipants as $iLeaderID => $aParticipantsOfLeader) {
         foreach ($aParticipantsOfLeader as $strEmail => $aParticipantData) {
-          $strKey                                       = $strEmail . "_" . $iLeaderID;
-          $aParticipantsFlat[$strKey]                   = $aParticipantData;
+          $strKey = $strEmail . "_" . $iLeaderID;
+          $aParticipantsFlat[$strKey] = $aParticipantData;
           $aParticipantsFlat[$strKey]['leader_user_id'] = $iLeaderID;
-          $aParticipantsFlat[$strKey]['user_email']     = $strEmail;
+          $aParticipantsFlat[$strKey]['user_email'] = $strEmail;
         }
       }
       uasort( $aParticipantsFlat, array( $this, "participant_sort" ) );
@@ -4359,28 +4422,47 @@ class FLORP {
 
   private function get_participants_table_admin_buttons_intf( $aParticipantData, $strRowID, $bBackend = true ) {
     $strEmail = $aParticipantData['user_email'];
-    $iYear    = $aParticipantData['year'];
+    $iYear = $aParticipantData['year'];
 
     $strDoubleCheckQuestion = "Ste si istý?";
-    $strButtons             = "";
+    $strButtons = "";
 
     if (isset( $aParticipantData["paid_fee"] )) {
       // Paid fee info //
-      $strTitle   = ' title="' . date( $this->strDateFormat, $aParticipantData["paid_fee"] ) . '"';
-      $strLabel   = "Zaplatil(a) reg. poplatok";
+      $strTitle = ' title="' . date( $this->strDateFormat, $aParticipantData["paid_fee"] ) . '"';
+      $strLabel = "Zaplatil(a) reg. poplatok";
       $strButtons .= '<span data-button-id="florpButton-paid-fee-' . $iYear . '-' . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail ) . '" class="notice notice-success"' . $strTitle . '>' . $strLabel . '</span>';
     } else {
       if ($bBackend) {
         // Delete button //
-        $strButtonID    = "florpButton-" . $iYear . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
+        $strButtonID = "florpButton-" . $iYear . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
         $strButtonLabel = "Zmazať";
-        $strButtons     .= '<span class="button double-check button-danger" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" data-year="' . $iYear . '" data-participant-email="' . $strEmail . '" data-sure="0" data-action="delete_florp_intf_participant" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" data-hide="1">' . $strButtonLabel . '</span>';
+        $strButtons .= '<span class="button double-check button-danger" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" data-year="' . $iYear . '" data-participant-email="' . $strEmail . '" data-sure="0" data-action="delete_florp_intf_participant" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" data-hide="1">' . $strButtonLabel . '</span>';
       }
 
       // Paid fee button //
       $strButtonLabel = "Zaplatil(a) reg. poplatok";
-      $strButtonID    = "florpButton-paid-fee-" . $iYear . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
-      $strButtons     .= '<span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" data-year="' . $iYear . '" data-participant-email="' . $strEmail . '" data-sure="0" data-action="florp_intf_participant_paid_fee" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '">' . $strButtonLabel . '</span>';
+      $strButtonID = "florpButton-paid-fee-" . $iYear . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
+      $strButtons .= '<span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" data-year="' . $iYear . '" data-participant-email="' . $strEmail . '" data-sure="0" data-action="florp_intf_participant_paid_fee" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '">' . $strButtonLabel . '</span>';
+    }
+
+    // Change t-shirt button //
+    if ($bBackend && current_user_can( 'administrator' )) {
+      $bHasTshirt = $this->hasParticipantTshirt( $aParticipantData );
+      $strButtonLabel = ( $bHasTshirt ? "Zmeniť" : "Pridať" ) . " tričko";
+      $strAction = $bHasTshirt ? "change" : "add";
+      $strButtonID = "florpButton-changeTshirt-" . $iYear . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
+      $aTshirtData = array();
+      $aReplacements = $this->get_participant_data_replacements();
+      foreach (array( "size", "gender", "color" ) as $strProperty) {
+        $strVal = $aParticipantData['flashmob_participant_tshirt_' . $strProperty];
+        if ($strProperty === "gender") {
+          $strVal = str_replace( $aReplacements["gender"]["to"], $aReplacements["gender"]["from"], $strVal );
+        }
+        $aTshirtData[] = 'data-tshirt_' . $strProperty . '="' . $strVal . '"';
+      }
+
+      $strButtons .= '<span class="button pop-in" data-pop-in-id="florp-admin-tshirt-change" data-change-action="' . $strAction . '" ' . implode( " ", $aTshirtData ) . ' data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" data-year="' . $iYear . '" data-participant-email="' . $strEmail . '" data-action="florp_intf_change_tshirt" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '">' . $strButtonLabel . '</span>';
     }
 
     if (isset( $aParticipantData["attend"] )) {
@@ -4390,28 +4472,28 @@ class FLORP {
         $strTitle = ' title="' . date( $this->strDateFormat, $aParticipantData["attend_set_timestamp"] ) . '"';
       }
       $strLabelForHiding = "Zúčastní/-il(a) sa";
-      $strLabel          = $aParticipantData["attend"] == "1" ? $strLabelForHiding : "Nezúčastní/-il(a) sa";
-      $strButtons        .= '<span data-button-id="florpButton-attend' . $aParticipantData["attend"] . '-' . $iYear . '-' . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail ) . '" class="notice notice-success"' . $strTitle . ' data-text="' . $strLabelForHiding . '">' . $strLabel . '</span>';
+      $strLabel = $aParticipantData["attend"] == "1" ? $strLabelForHiding : "Nezúčastní/-il(a) sa";
+      $strButtons .= '<span data-button-id="florpButton-attend' . $aParticipantData["attend"] . '-' . $iYear . '-' . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail ) . '" class="notice notice-success"' . $strTitle . ' data-text="' . $strLabelForHiding . '">' . $strLabel . '</span>';
 
       if ($this->isEditSubmissionsEnabled()) {
         // Remove attendance button //
-        $strButtonID       = "florpButton-attend-remove-" . $iYear . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
-        $strButtonLabel    = "Odstrániť info o účasti";
+        $strButtonID = "florpButton-attend-remove-" . $iYear . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
+        $strButtonLabel = "Odstrániť info o účasti";
         $strLabelForHiding = "Zúčastní/-il(a) sa";
-        $strButtons        .= '<span class="button double-check button-danger" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" data-year="' . $iYear . '" data-participant-email="' . $strEmail . '" data-sure="0" data-action="florp_intf_participant_attend" data-attend="remove" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" data-text="' . $strLabelForHiding . '">' . $strButtonLabel . '</span>';
+        $strButtons .= '<span class="button double-check button-danger" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" data-year="' . $iYear . '" data-participant-email="' . $strEmail . '" data-sure="0" data-action="florp_intf_participant_attend" data-attend="remove" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" data-text="' . $strLabelForHiding . '">' . $strButtonLabel . '</span>';
       }
     } else {
       // Will/Did attend button //
-      $strButtonID       = "florpButton-attend1-" . $iYear . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
-      $strButtonLabel    = "Zúčastní/-il(a) sa";
+      $strButtonID = "florpButton-attend1-" . $iYear . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
+      $strButtonLabel = "Zúčastní/-il(a) sa";
       $strLabelForHiding = $strButtonLabel;
-      $strButtons        .= '<span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" data-year="' . $iYear . '" data-participant-email="' . $strEmail . '" data-sure="0" data-action="florp_intf_participant_attend" data-attend="1" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" data-text="' . $strLabelForHiding . '">' . $strButtonLabel . '</span>';
+      $strButtons .= '<span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" data-year="' . $iYear . '" data-participant-email="' . $strEmail . '" data-sure="0" data-action="florp_intf_participant_attend" data-attend="1" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" data-text="' . $strLabelForHiding . '">' . $strButtonLabel . '</span>';
 
       if ($bBackend) {
         // Won't/Didn't attend button //
-        $strButtonID    = "florpButton-attend0-" . $iYear . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
+        $strButtonID = "florpButton-attend0-" . $iYear . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
         $strButtonLabel = "Nezúčastní/-il(a) sa";
-        $strButtons     .= '<span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" data-year="' . $iYear . '" data-participant-email="' . $strEmail . '" data-sure="0" data-action="florp_intf_participant_attend" data-attend="0" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" data-text="' . $strLabelForHiding . '">' . $strButtonLabel . '</span>';
+        $strButtons .= '<span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" data-year="' . $iYear . '" data-participant-email="' . $strEmail . '" data-sure="0" data-action="florp_intf_participant_attend" data-attend="0" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" data-text="' . $strLabelForHiding . '">' . $strButtonLabel . '</span>';
       }
     }
 
@@ -4420,7 +4502,7 @@ class FLORP {
 
   private function get_participants_table_admin_row_intf( $aParticipantData ) {
     $strEmail = $aParticipantData['user_email'];
-    $iYear    = $aParticipantData['year'];
+    $iYear = $aParticipantData['year'];
 
     $aLabels = array(
       'intf_city' => "Mesto (anketa)"
@@ -4436,24 +4518,24 @@ class FLORP {
 
     $strButtons = $this->get_participants_table_admin_buttons_intf( $aParticipantData, $strRowID );
 
-    $strEcho           = '<tr class="row" data-row-id="' . $strRowID . '">' . PHP_EOL;
+    $strEcho = '<tr class="row" data-row-id="' . $strRowID . '">' . PHP_EOL;
     $strEditSubmission = '';
     if ($this->isEditSubmissionsEnabled()) {
       $strEditSubmission = ' <span class="submission-edit">(<a href="/' . $this->fakePageEditIntfParticipantSubmission . '/?year=' . $iYear . '&email=' . urlencode( $strEmail ) . '" target="_blank">Edit</a>)</span>';
     }
-    $strEcho        .= '<td class="column column-meno">' . $aParticipantData['first_name'] . ' ' . $aParticipantData['last_name'] . $strEditSubmission . $strButtons . '</td>' . PHP_EOL;
-    $strEcho        .= '<td class="column column-email"><a name="' . $aParticipantData['user_email'] . '">' . $aParticipantData['user_email'] . '</a></td>' . PHP_EOL;
-    $strEcho        .= '<td class="column column-mesto">' . $aParticipantData['flashmob_city'] . '</td>' . PHP_EOL;
-    $aTimestamps    = array( 'registered', 'paid_fee', 'attend_set_timestamp', 'updated_timestamp' );
-    $aSkip          = array( 'first_name', 'last_name', 'user_email', 'flashmob_city' );
+    $strEcho .= '<td class="column column-meno">' . $aParticipantData['first_name'] . ' ' . $aParticipantData['last_name'] . $strEditSubmission . $strButtons . '</td>' . PHP_EOL;
+    $strEcho .= '<td class="column column-email"><a name="' . $aParticipantData['user_email'] . '">' . $aParticipantData['user_email'] . '</a></td>' . PHP_EOL;
+    $strEcho .= '<td class="column column-mesto">' . $aParticipantData['flashmob_city'] . '</td>' . PHP_EOL;
+    $aTimestamps = array( 'registered', 'paid_fee', 'attend_set_timestamp', 'updated_timestamp' );
+    $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city' );
     $bOrderedTshirt = isset( $aParticipantData['preferences'] ) && is_array( $aParticipantData['preferences'] ) && in_array( 'Chcem pamätné Flashmob tričko', $aParticipantData['preferences'] );
-    $strEcho        .= '<td class="column column-profil">' . PHP_EOL;
+    $strEcho .= '<td class="column column-profil">' . PHP_EOL;
     foreach ($aParticipantData as $strKey => $mixValue) {
       if ( !isset( $mixValue ) || ( !is_bool( $mixValue ) && !is_numeric( $mixValue ) && empty( $mixValue ) ) || $mixValue === 'null' || in_array( $strKey, $aSkip )) {
         continue;
       }
       if (in_array( $strKey, $aTimestamps )) {
-        $strKey   = str_replace( "_timestamp", "", $strKey );
+        $strKey = str_replace( "_timestamp", "", $strKey );
         $strValue = date( $this->strDateFormat, $mixValue );
       } elseif (is_array( $mixValue )) {
         $strValue = implode( ', ', $mixValue );
@@ -4475,7 +4557,7 @@ class FLORP {
         echo "</pre>";
         //*/
       } else {
-        $strEcho .= '<strong>' . $strFieldName . '</strong>: ' . $strValue . '<br>' . PHP_EOL;
+        $strEcho .= '<span data-field="' . $strKey . '"><strong>' . $strFieldName . '</strong>: <span class="florp-val">' . $strValue . '</span></span><br>' . PHP_EOL;
       }
     }
     $strEcho .= '</td>' . PHP_EOL;
@@ -4507,7 +4589,7 @@ class FLORP {
 
   private function get_participant_checkin_table_no_tshirt_intf( $aParticipantData ) {
     $strEmail = $aParticipantData['user_email'];
-    $iYear    = $aParticipantData['year'];
+    $iYear = $aParticipantData['year'];
 
     $aLabels = array(
       'intf_city' => "Mesto (anketa)"
@@ -4524,18 +4606,18 @@ class FLORP {
     $strButtons = $this->get_participants_table_admin_buttons_intf( $aParticipantData, $strRowID, false );
 
     $strEchoBeforeButtons = "";
-    $strEchoAfterButtons  = "";
+    $strEchoAfterButtons = "";
 
     // Participant data
-    $aTimestamps    = array( 'registered', 'paid_fee', 'attend_set_timestamp', 'updated_timestamp' );
-    $aSkip          = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', 'year' );
+    $aTimestamps = array( 'registered', 'paid_fee', 'attend_set_timestamp', 'updated_timestamp' );
+    $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', 'year' );
     $bOrderedTshirt = isset( $aParticipantData['preferences'] ) && is_array( $aParticipantData['preferences'] ) && in_array( 'Chcem pamätné Flashmob tričko', $aParticipantData['preferences'] );
     foreach ($aParticipantData as $strKey => $mixValue) {
       if ( !isset( $mixValue ) || ( !is_bool( $mixValue ) && !is_numeric( $mixValue ) && empty( $mixValue ) ) || $mixValue === 'null' || in_array( $strKey, $aSkip )) {
         continue;
       }
       if (in_array( $strKey, $aTimestamps )) {
-        $strKey   = str_replace( "_timestamp", "", $strKey );
+        $strKey = str_replace( "_timestamp", "", $strKey );
         $strValue = date( $this->strDateFormat, $mixValue );
       } elseif (is_array( $mixValue )) {
         $strValue = implode( ', ', $mixValue );
@@ -4566,9 +4648,9 @@ class FLORP {
       }
     }
 
-    $strEcho           = '<div class="wp-core-ui">';
-    $strEcho           .= '<table class="widefat participantCheckinTable striped noFilter">';
-    $strEcho           .= '<tr class="row" data-row-id="' . $strRowID . '">' . PHP_EOL;
+    $strEcho = '<div class="wp-core-ui">';
+    $strEcho .= '<table class="widefat participantCheckinTable striped noFilter">';
+    $strEcho .= '<tr class="row" data-row-id="' . $strRowID . '">' . PHP_EOL;
     $strEditSubmission = '';
     if ($this->isEditSubmissionsEnabled()) {
       $strEditSubmission = ' <span class="submission-edit">(<a href="/' . $this->fakePageEditIntfParticipantSubmission . '/?year=' . $iYear . '&email=' . urlencode( $strEmail ) . '" target="_blank">Edit</a>)</span>';
@@ -4593,7 +4675,9 @@ class FLORP {
   public function participants_table_admin_intf() {
     echo "<div class=\"wrap\"><h1>" . "Zoznam účastníkov medzinárodného flashmobu" . "</h1>";
 
-    $strEcho       = '<table class="widefat striped"><th class="column column-meno">Meno</th><th class="column column-email">Email</th><th class="column column-mesto">Mesto (kde tancuje)</th><th class="column column-profil">Profil</th>' . PHP_EOL;
+    echo $this->getTshirtChangeForm( true );
+
+    $strEcho = '<table class="widefat striped"><th class="column column-meno">Meno</th><th class="column column-email">Email</th><th class="column column-mesto">Mesto (kde tancuje)</th><th class="column column-profil">Profil</th>' . PHP_EOL;
     $aParticipants = $this->aOptions['aIntfParticipants'];
     // echo "<pre>";var_dump($aParticipants);echo "</pre>"; // NOTE DEVEL
     // echo "<pre>";var_dump($this->get_flashmob_participant_csv('all', true));echo "</pre>"; // NOTE DEVEL
@@ -4607,9 +4691,9 @@ class FLORP {
 
         if (is_array( $aParticipantsOfYear ) && !empty( $aParticipantsOfYear )) {
           foreach ($aParticipantsOfYear as $strEmail => $aParticipantData) {
-            $strKey                                   = $strEmail . "_" . $iYear;
-            $aParticipantsFlat[$strKey]               = $aParticipantData;
-            $aParticipantsFlat[$strKey]['year']       = $iYear;
+            $strKey = $strEmail . "_" . $iYear;
+            $aParticipantsFlat[$strKey] = $aParticipantData;
+            $aParticipantsFlat[$strKey]['year'] = $iYear;
             $aParticipantsFlat[$strKey]['user_email'] = $strEmail;
           }
         }
@@ -4670,15 +4754,15 @@ class FLORP {
 
     $strFlashmobCityWarning = "";
     if ( !$bIntf && isset( $aTshirtData['flashmob_city_at_registration'] )) {
-      $strTitle               = " title=\"Pozor: pri registrácii účastníka mal líder nastavené mesto flashmobu na  {$aTshirtData['flashmob_city_at_registration']}!\"";
+      $strTitle = " title=\"Pozor: pri registrácii účastníka mal líder nastavené mesto flashmobu na  {$aTshirtData['flashmob_city_at_registration']}!\"";
       $strFlashmobCityWarning = ' <span ' . $strTitle . ' class="dashicons dashicons-warning"></span>';
     }
 
     $strEchoBeforeButtons = "";
-    $strEchoAfterButtons  = "";
+    $strEchoAfterButtons = "";
     // Participant properties
-    $aTimestamps    = array( 'registered', 'paid_fee', 'attend_set_timestamp', 'updated_timestamp' );
-    $aSkip          = array(
+    $aTimestamps = array( 'registered', 'paid_fee', 'attend_set_timestamp', 'updated_timestamp' );
+    $aSkip = array(
       'first_name',
       'last_name',
       'user_email',
@@ -4695,7 +4779,7 @@ class FLORP {
         continue;
       }
       if (in_array( $strKey, $aTimestamps )) {
-        $strKey   = str_replace( "_timestamp", "", $strKey );
+        $strKey = str_replace( "_timestamp", "", $strKey );
         $strValue = date( $this->strDateFormat, $mixValue );
       } elseif (is_array( $mixValue )) {
         $strValue = implode( ', ', $mixValue );
@@ -4761,7 +4845,7 @@ class FLORP {
     $strEcho .= "<strong>Email</strong>: " . $aTshirtData['email'] . "<br>" . PHP_EOL;
     $strEcho .= "<strong>Mesto</strong>: " . $aTshirtData['flashmob_city'] . $strFlashmobCityWarning . "<br>" . PHP_EOL;
     if ( !$bIntf) {
-      $oLeader      = get_user_by( 'id', $aParticipantData["leader_user_id"] );
+      $oLeader = get_user_by( 'id', $aParticipantData["leader_user_id"] );
       $strIsPending = "";
       if (in_array( $this->strUserRolePending, (array) $oLeader->roles )) {
         $strIsPending = " ({$this->strUserRolePendingName})";
@@ -4783,12 +4867,13 @@ class FLORP {
 
   private function get_tshirts_table_admin_row_buttons( $aTshirtData, $strRowID, $bIntf = false, $bBackend = true ) {
     $strDoubleCheckQuestion = "Ste si istý?";
-    $strButtonLabelPaid     = "Zaplatil tričko";
+    $strButtonLabelPaid = "Zaplatil tričko";
     if ($bBackend) {
       $strButtonLabelPaymentWarning = "Upozorniť na neskorú platbu";
     }
     $strButtonLabelCancelOrder = "Zrušiť objednávku";
-    $strButtonLabelDelivered   = "Tričko odovzdané";
+    $strButtonLabelDelivered = "Tričko odovzdané";
+    $strButtonLabelChangeTshirt = "Zmeniť tričko";
 
     $sIntfActionPart = $bIntf ? "_intf" : "";
 
@@ -4803,21 +4888,22 @@ class FLORP {
         $strValue = $mixValue;
       }
       $strValue = str_replace( "'", "\'", $strValue );
-      $strData  .= " data-{$strKey}='{$strValue}'";
+      $strData .= " data-{$strKey}='{$strValue}'";
     }
     foreach ($aTshirtData['properties'] as $strKey => $strValue) {
       if ($strKey === "webpage") {
         $strValue = htmlentities( $strValue );
       }
       $strValue = str_replace( "'", "\'", $strValue );
-      $strData  .= " data-{$strKey}='{$strValue}'";
+      $strData .= " data-{$strKey}='{$strValue}'";
     }
     $strData .= " data-participant-email='{$aTshirtData["email"]}'";
 
-    $strPaidButtonID           = "florpButton-paid-" . $aTshirtData["id"];
+    $strPaidButtonID = "florpButton-paid-" . $aTshirtData["id"];
     $strPaymentWarningButtonID = "florpButton-paymentWarning-" . $aTshirtData["id"];
-    $strCancelOrderButtonID    = "florpButton-cancelOrder-" . $aTshirtData["id"];
-    $strDeliveredButtonID      = "florpButton-tshirtDelivered-" . $aTshirtData["id"];
+    $strCancelOrderButtonID = "florpButton-cancelOrder-" . $aTshirtData["id"];
+    $strChangeTshirtButtonID = "florpButton-changeTshirt-" . $aTshirtData["id"];
+    $strDeliveredButtonID = "florpButton-tshirtDelivered-" . $aTshirtData["id"];
 
     $strButtons = "";
     // $strButtons .= "<pre>".var_export($strData, true)."</pre>";
@@ -4831,9 +4917,13 @@ class FLORP {
       }
       $strButtons .= '<span data-button-id="' . $strPaidButtonID . '" class="notice notice-success"' . $strTitle . '>' . $strButtonLabelPaid . '</span>';
     } else {
-
       // Paid button //
       $strButtons .= '<span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabelPaid . '" data-button-id="' . $strPaidButtonID . '" data-row-id="' . $strRowID . '" ' . $strData . ' data-action="florp' . $sIntfActionPart . '_tshirt_paid" data-sure="0" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '">' . $strButtonLabelPaid . '</span>';
+
+      if (current_user_can( 'administrator' )) {
+        // Change t-shirt button //
+        $strButtons .= '<span class="button pop-in" data-pop-in-id="florp-admin-tshirt-change" data-change-action="change" data-text-default="' . $strButtonLabelChangeTshirt . '" data-button-id="' . $strChangeTshirtButtonID . '" data-row-id="' . $strRowID . '" ' . $strData . ' data-action="florp' . $sIntfActionPart . '_tshirt_change_tshirt" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" data-hide="1">' . $strButtonLabelChangeTshirt . '</span>';
+      }
 
       // Cancel button //
       $strButtons .= '<span class="button double-check button-danger" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabelCancelOrder . '" data-button-id="' . $strCancelOrderButtonID . '" data-row-id="' . $strRowID . '" ' . $strData . ' data-action="florp' . $sIntfActionPart . '_tshirt_cancel_order" data-sure="0" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" data-hide="1">' . $strButtonLabelCancelOrder . '</span>';
@@ -4844,7 +4934,7 @@ class FLORP {
         || ( $bIntf && isset( $this->aOptions['strIntfTshirtPaymentWarningNotificationMsg'], $this->aOptions['strIntfTshirtPaymentWarningNotificationSbj'] ) && !empty( $this->aOptions['strIntfTshirtPaymentWarningNotificationMsg'] ) && !empty( $this->aOptions['strIntfTshirtPaymentWarningNotificationSbj'] ) )
       ) {
         $strWarningClass = "";
-        $bShow           = true;
+        $bShow = true;
         if ( !$bBackend) {
           $bShow = false;
         } elseif (
@@ -4890,29 +4980,29 @@ class FLORP {
     // BEGIN Participant administration buttons //
     $strEmail = $aTshirtData["email"];
     if ($bIntf) {
-      $iLeaderIdOrYear       = $aTshirtData["year"];
-      $aParticipantData      = $this->aOptions['aIntfParticipants'][$iLeaderIdOrYear][$strEmail];
+      $iLeaderIdOrYear = $aTshirtData["year"];
+      $aParticipantData = $this->aOptions['aIntfParticipants'][$iLeaderIdOrYear][$strEmail];
       $strDataLeaderIdOrYear = 'data-year="' . $iLeaderIdOrYear . '"';
-      $strIntfActionPart     = "_intf";
+      $strIntfActionPart = "_intf";
     } elseif ( !$aTshirtData['is_leader']) {
-      $iLeaderIdOrYear       = $aTshirtData["leader_id"];
-      $aParticipantData      = $this->aOptions['aParticipants'][$iLeaderIdOrYear][$strEmail];
+      $iLeaderIdOrYear = $aTshirtData["leader_id"];
+      $aParticipantData = $this->aOptions['aParticipants'][$iLeaderIdOrYear][$strEmail];
       $strDataLeaderIdOrYear = 'data-leader-id="' . $iLeaderIdOrYear . '"';
-      $strIntfActionPart     = "";
+      $strIntfActionPart = "";
     }
     $strDataHide = 'data-hide="1"';
 
     if ($bIntf || !$aTshirtData['is_leader']) {
       if (isset( $aParticipantData["paid_fee"] )) {
         // Paid fee info //
-        $strTitle   = ' title="' . date( $this->strDateFormat, $aParticipantData["paid_fee"] ) . '"';
-        $strLabel   = "Zaplatil(a) reg. poplatok";
+        $strTitle = ' title="' . date( $this->strDateFormat, $aParticipantData["paid_fee"] ) . '"';
+        $strLabel = "Zaplatil(a) reg. poplatok";
         $strButtons .= '<span data-button-id="florpButton-paid-fee-' . $iLeaderIdOrYear . '-' . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail ) . '" class="notice notice-success"' . $strTitle . ' ' . $strDataHide . '>' . $strLabel . '</span>';
       } else {
         // Paid fee button //
         $strButtonLabel = "Zaplatil(a) reg. poplatok";
-        $strButtonID    = "florpButton-paid-fee-" . $iLeaderIdOrYear . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
-        $strButtons     .= '<span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" ' . $strDataLeaderIdOrYear . ' data-participant-email="' . $strEmail . '" data-sure="0" data-action="florp' . $strIntfActionPart . '_participant_paid_fee" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" ' . $strDataHide . '>' . $strButtonLabel . '</span>';
+        $strButtonID = "florpButton-paid-fee-" . $iLeaderIdOrYear . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
+        $strButtons .= '<span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" ' . $strDataLeaderIdOrYear . ' data-participant-email="' . $strEmail . '" data-sure="0" data-action="florp' . $strIntfActionPart . '_participant_paid_fee" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" ' . $strDataHide . '>' . $strButtonLabel . '</span>';
       }
 
       if (isset( $aParticipantData["attend"] )) {
@@ -4922,27 +5012,27 @@ class FLORP {
           $strTitle = ' title="' . date( $this->strDateFormat, $aParticipantData["attend_set_timestamp"] ) . '"';
         }
         $strLabelForHiding = "Zúčastní/-il(a) sa";
-        $strLabel          = $aParticipantData["attend"] == "1" ? $strLabelForHiding : "Nezúčastní/-il(a) sa";
-        $strButtons        .= '<span data-button-id="florpButton-attend' . $aParticipantData["attend"] . '-' . $iLeaderIdOrYear . '-' . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail ) . '" class="notice notice-success"' . $strTitle . ' data-text="' . $strLabelForHiding . '" ' . $strDataHide . '>' . $strLabel . '</span>';
+        $strLabel = $aParticipantData["attend"] == "1" ? $strLabelForHiding : "Nezúčastní/-il(a) sa";
+        $strButtons .= '<span data-button-id="florpButton-attend' . $aParticipantData["attend"] . '-' . $iLeaderIdOrYear . '-' . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail ) . '" class="notice notice-success"' . $strTitle . ' data-text="' . $strLabelForHiding . '" ' . $strDataHide . '>' . $strLabel . '</span>';
         if ($this->isEditSubmissionsEnabled()) {
           // Remove attendance button //
-          $strButtonID       = "florpButton-attend-remove-" . $iLeaderIdOrYear . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
-          $strButtonLabel    = "Odstrániť info o účasti";
+          $strButtonID = "florpButton-attend-remove-" . $iLeaderIdOrYear . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
+          $strButtonLabel = "Odstrániť info o účasti";
           $strLabelForHiding = "Zúčastní/-il(a) sa";
-          $strButtons        .= '<span class="button double-check button-danger" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" ' . $strDataLeaderIdOrYear . ' data-participant-email="' . $strEmail . '" data-sure="0" data-action="florp' . $strIntfActionPart . '_participant_attend" data-attend="remove" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" data-text="' . $strLabelForHiding . '" ' . $strDataHide . '>' . $strButtonLabel . '</span>';
+          $strButtons .= '<span class="button double-check button-danger" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" ' . $strDataLeaderIdOrYear . ' data-participant-email="' . $strEmail . '" data-sure="0" data-action="florp' . $strIntfActionPart . '_participant_attend" data-attend="remove" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" data-text="' . $strLabelForHiding . '" ' . $strDataHide . '>' . $strButtonLabel . '</span>';
         }
       } else {
         // Will/Did attend button //
-        $strButtonID       = "florpButton-attend1-" . $iLeaderIdOrYear . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
-        $strButtonLabel    = "Zúčastní/-il(a) sa";
+        $strButtonID = "florpButton-attend1-" . $iLeaderIdOrYear . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
+        $strButtonLabel = "Zúčastní/-il(a) sa";
         $strLabelForHiding = $strButtonLabel;
-        $strButtons        .= '<span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" ' . $strDataLeaderIdOrYear . ' data-participant-email="' . $strEmail . '" data-sure="0" data-action="florp' . $strIntfActionPart . '_participant_attend" data-attend="1" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" data-text="' . $strLabelForHiding . '" ' . $strDataHide . '>' . $strButtonLabel . '</span>';
+        $strButtons .= '<span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" ' . $strDataLeaderIdOrYear . ' data-participant-email="' . $strEmail . '" data-sure="0" data-action="florp' . $strIntfActionPart . '_participant_attend" data-attend="1" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" data-text="' . $strLabelForHiding . '" ' . $strDataHide . '>' . $strButtonLabel . '</span>';
 
         if ($bBackend) {
           // Won't/Didn't attend button //
-          $strButtonID    = "florpButton-attend0-" . $iLeaderIdOrYear . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
+          $strButtonID = "florpButton-attend0-" . $iLeaderIdOrYear . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
           $strButtonLabel = "Nezúčastní/-il(a) sa";
-          $strButtons     .= '<span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" ' . $strDataLeaderIdOrYear . ' data-participant-email="' . $strEmail . '" data-sure="0" data-action="florp' . $strIntfActionPart . '_participant_attend" data-attend="0" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" data-text="' . $strLabelForHiding . '" ' . $strDataHide . '>' . $strButtonLabel . '</span>';
+          $strButtons .= '<span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" ' . $strDataLeaderIdOrYear . ' data-participant-email="' . $strEmail . '" data-sure="0" data-action="florp' . $strIntfActionPart . '_participant_attend" data-attend="0" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" data-text="' . $strLabelForHiding . '" ' . $strDataHide . '>' . $strButtonLabel . '</span>';
         }
       }
     }
@@ -4954,7 +5044,7 @@ class FLORP {
 
   private function get_tshirts_table_admin_row( $aTshirtData, $bIntf = false ) {
     $iUnpaid = 0;
-    $iPaid   = 0;
+    $iPaid = 0;
     $strEcho = "";
 
     $strRowID = "florpRow-" . $aTshirtData["id"];
@@ -4975,7 +5065,7 @@ class FLORP {
 
     $strWarning = "";
     if ( !$bIntf && isset( $aTshirtData['flashmob_city_at_registration'] )) {
-      $strTitle   = " title=\"Pozor: pri registrácii účastníka mal líder nastavené mesto flashmobu na  {$aTshirtData['flashmob_city_at_registration']}!\"";
+      $strTitle = " title=\"Pozor: pri registrácii účastníka mal líder nastavené mesto flashmobu na  {$aTshirtData['flashmob_city_at_registration']}!\"";
       $strWarning = ' <span ' . $strTitle . ' class="dashicons dashicons-warning"></span>';
     }
     $strEcho .= '<td class="column column-mesto">' . $aTshirtData['flashmob_city'] . $strWarning . '</td>';
@@ -4990,7 +5080,7 @@ class FLORP {
     $strEcho .= '<td class="column column-vlastnosti">';
     foreach ($aTshirtData['properties'] as $strKey => $strValue) {
       $strFieldName = ( $bIntf && $strKey === 'intf_city' ) ? "Mesto (anketa)" : ucfirst( str_replace( '_', ' ', $strKey ) );
-      $strEcho      .= '<strong>' . $strFieldName . '</strong>: ' . $strValue . '<br>';
+      $strEcho .= '<span data-field="' . $strKey . '"><strong>' . $strFieldName . '</strong>: <span class="florp-val">' . $strValue . '</span></span><br>';
     }
     $strEcho .= '</td>';
     $strEcho .= '</tr>';
@@ -5004,6 +5094,8 @@ class FLORP {
 
   public function tshirts_table_admin( $bIntf = false ) {
     echo "<div class=\"wrap\">\n<h1>" . "Tričká" . "</h1>\n";
+
+    echo $this->getTshirtChangeForm( $bIntf );
 
     $aTshirts = $this->get_tshirts( 'all', false, $bIntf );
     if (empty( $aTshirts )) {
@@ -5024,7 +5116,7 @@ class FLORP {
     $sIntfBtnIdPart = $bIntf ? "-intf" : "";
 
     $iUnpaid = 0;
-    $iPaid   = 0;
+    $iPaid = 0;
     foreach ($aTshirts as $aTshirtData) {
       $aRow = $this->get_tshirts_table_admin_row( $aTshirtData, $bIntf );
       if ($bIntf && ( !isset( $_GET["all_years"] ) || $_GET["all_years"] !== "1" ) && $aTshirtData['year'] != $this->aOptions['iIntfFlashmobYear']) {
@@ -5032,7 +5124,7 @@ class FLORP {
       }
       $strEcho .= $aRow["echo"];
       $iUnpaid += $aRow["iUnpaid"];
-      $iPaid   += $aRow["iPaid"];
+      $iPaid += $aRow["iPaid"];
     }
     $strEcho .= '</table>';
     $strEcho .= '<form action="" method="post">';
@@ -5057,25 +5149,25 @@ class FLORP {
       if ( !empty( $aOrderDates )) {
         foreach ($aOrderDates as $iTimestamp => $aOrderData) {
           $aOrderData['id'] = $iTimestamp;
-          $strEcho          .= $this->get_tshirt_order_dates_row( $aOrderData );
+          $strEcho .= $this->get_tshirt_order_dates_row( $aOrderData );
         }
       }
       $strEcho .= '</table>';
       $strEcho .= '</form>';
 
       // 'Add order' button with select - all / paid / unpaid
-      $strRowID               = "florpRow-addOrderDate-0";
-      $strButtonID            = "florpButton-addOrderDate-0-new";
-      $strButtonLabel         = "Pridaj";
-      $strAction              = "add_order_date";
+      $strRowID = "florpRow-addOrderDate-0";
+      $strButtonID = "florpButton-addOrderDate-0-new";
+      $strButtonLabel = "Pridaj";
+      $strAction = "add_order_date";
       $strDoubleCheckQuestion = "Ste si istý?";
-      $strData                = "";
-      $strEcho                .= "<p class=\"row addOrderDateParagraph\" data-row-id=\"{$strRowID}\">Pridať dátum objednávky: ";
-      $strEcho                .= '<input type="hidden" id="orderdate_timestamp_field" name="orderdate_timestamp" value="0">';
-      $strEcho                .= '<input type="text" name="orderdate" data-alt-field="#orderdate_timestamp_field" class="jquery-datetimepicker" autocomplete="off" value="">';
-      $strEcho                .= '<select name="ordertype"><option value="all">Všetko (ešte neobjednané)</option><option value="paid">Zaplatené (ešte neobjednané)</option><option value="unpaid">Nezaplatené (ešte neobjednané)</option></select>';
-      $strEcho                .= ' <span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '"' . $strData . ' data-use-input-names="orderdate,orderdate_timestamp,ordertype" data-action="' . $strAction . '" data-sure="0" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '">' . $strButtonLabel . '</span>';
-      $strEcho                .= "</p>";
+      $strData = "";
+      $strEcho .= "<p class=\"row addOrderDateParagraph\" data-row-id=\"{$strRowID}\">Pridať dátum objednávky: ";
+      $strEcho .= '<input type="hidden" id="orderdate_timestamp_field" name="orderdate_timestamp" value="0">';
+      $strEcho .= '<input type="text" name="orderdate" data-alt-field="#orderdate_timestamp_field" class="jquery-datetimepicker" autocomplete="off" value="">';
+      $strEcho .= '<select name="ordertype"><option value="all">Všetko (ešte neobjednané)</option><option value="paid">Zaplatené (ešte neobjednané)</option><option value="unpaid">Nezaplatené (ešte neobjednané)</option></select>';
+      $strEcho .= ' <span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '"' . $strData . ' data-use-input-names="orderdate,orderdate_timestamp,ordertype" data-action="' . $strAction . '" data-sure="0" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '">' . $strButtonLabel . '</span>';
+      $strEcho .= "</p>";
     }
     echo $strEcho;
     echo '</div><!-- .wrap -->';
@@ -5087,10 +5179,10 @@ class FLORP {
     $strEcho = '<table class="widefat striped"><th>Rok</th><th>Meno</th><th>M(i)esto Flashmobu</th><th>Profil</th>';
     foreach ($this->aOptions["aYearlyMapOptions"] as $iYear => $aMapOptionsForYear) {
       foreach ($aMapOptionsForYear as $iUserID => $aOptions) {
-        $strButtons          = "";
-        $strEcho             .= '<tr>';
-        $strEcho             .= '<td>' . $iYear . '</td>';
-        $strEcho             .= '<td>' . $aOptions['first_name'] . ' ' . $aOptions['last_name'] . $strButtons . '</td>';
+        $strButtons = "";
+        $strEcho .= '<tr>';
+        $strEcho .= '<td>' . $iYear . '</td>';
+        $strEcho .= '<td>' . $aOptions['first_name'] . ' ' . $aOptions['last_name'] . $strButtons . '</td>';
         $strFlashmobLocation = "-";
         if (isset( $aOptions['flashmob_address'] )) {
           $strFlashmobLocation = $aOptions['flashmob_address'];
@@ -5101,7 +5193,7 @@ class FLORP {
         }
         $strEcho .= '<td>' . $strFlashmobLocation . '</td>';
         $strEcho .= '<td>';
-        $aSkip   = array( 'first_name', 'last_name' );
+        $aSkip = array( 'first_name', 'last_name' );
         foreach ($aOptions as $strKey => $strValue) {
           if (in_array( $strKey, $aSkip )) {
             continue;
@@ -5125,12 +5217,12 @@ class FLORP {
 
   public function subsites_table_admin() {
     echo "<div class=\"wrap\">\n<h1>" . "Podstránky lídrov" . "</h1>\n";
-    $aUsers                 = $this->getFlashmobSubscribers( 'all', true );
+    $aUsers = $this->getFlashmobSubscribers( 'all', true );
     $strDoubleCheckQuestion = "Ste si istý?";
-    $strAction              = 'florp_create_subsite';
-    $strDomainEnding        = "." . $this->get_root_domain();
-    $aUserSubdomains        = array();
-    $strEcho                = '<table class="widefat striped"><th>Mesto</th><th>Líder</th><th>Podstránka</th>' . "\n";
+    $strAction = 'florp_create_subsite';
+    $strDomainEnding = "." . $this->get_root_domain();
+    $aUserSubdomains = array();
+    $strEcho = '<table class="widefat striped"><th>Mesto</th><th>Líder</th><th>Podstránka</th>' . "\n";
     foreach ($aUsers as $oUser) {
       $aAllMeta = array_map(
         array( $this, 'get_value_maybe_fix_unserialize_array' ),
@@ -5144,22 +5236,22 @@ class FLORP {
           || ( !empty( $aAllMeta['webpage'] ) && $aAllMeta['webpage'] === "vytvorit" )
         )
       ) {
-        $strCity  = $aAllMeta['flashmob_city'];
+        $strCity = $aAllMeta['flashmob_city'];
         $strRowID = "florpRow-subsite-{$oUser->ID}";
         if ($strSubDomainPage) {
-          $strSubsite        = $strSubDomainPage;
+          $strSubsite = $strSubDomainPage;
           $aUserSubdomains[] = $strSubDomainPage;
         } else {
-          $strSubsite  = "<span data-user_id=\"{$oUser->ID}\">Vytvoriť:</span>";
+          $strSubsite = "<span data-user_id=\"{$oUser->ID}\">Vytvoriť:</span>";
           $aVariations = $this->getCitySubdomainVariations( $strCity );
           foreach ($aVariations as $strVariation) {
             $strButtonLabel = $strVariation . $strDomainEnding;
-            $strButtonID    = "florpButton-createSubsite-{$oUser->ID}-{$strVariation}";
-            $aButtonData    = array(
+            $strButtonID = "florpButton-createSubsite-{$oUser->ID}-{$strVariation}";
+            $aButtonData = array(
               'user_id'   => $oUser->ID,
               'subdomain' => $strVariation,
             );
-            $strData        = "";
+            $strData = "";
             foreach ($aButtonData as $strKey => $strValue) {
               $strData .= " data-{$strKey}=\"{$strValue}\"";
             }
@@ -5181,8 +5273,8 @@ class FLORP {
         continue;
       }
       $strDomain = $aSite['domain'];
-      $iID       = intval( $aSite['blog_id'] );
-      $aParts    = explode( ".", $strDomain );
+      $iID = intval( $aSite['blog_id'] );
+      $aParts = explode( ".", $strDomain );
       if ( !is_array( $aParts ) || count( $aParts ) !== 3) {
         continue;
       }
@@ -5194,14 +5286,14 @@ class FLORP {
     }
     $strEcho .= "</table>";
 
-    $strRowID       = "florpRow-subsite-0";
-    $strButtonID    = "florpButton-createSubsite-0-new";
+    $strRowID = "florpRow-subsite-0";
+    $strButtonID = "florpButton-createSubsite-0-new";
     $strButtonLabel = "Vytvoriť";
-    $strData        = "";
-    $strEcho        .= "<p class=\"row\" data-row-id=\"{$strRowID}\">Vytvoriť inú podstránku: ";
-    $strEcho        .= '<input type="text" name="subdomain" value="">' . $strDomainEnding;
-    $strEcho        .= ' <span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '"' . $strData . ' data-use-input-names="subdomain" data-action="' . $strAction . '" data-sure="0" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '">' . $strButtonLabel . '</span>';
-    $strEcho        .= "</p>";
+    $strData = "";
+    $strEcho .= "<p class=\"row\" data-row-id=\"{$strRowID}\">Vytvoriť inú podstránku: ";
+    $strEcho .= '<input type="text" name="subdomain" value="">' . $strDomainEnding;
+    $strEcho .= ' <span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabel . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '"' . $strData . ' data-use-input-names="subdomain" data-action="' . $strAction . '" data-sure="0" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '">' . $strButtonLabel . '</span>';
+    $strEcho .= "</p>";
     echo $strEcho;
     echo '</div><!-- .wrap -->';
   }
@@ -5219,14 +5311,14 @@ class FLORP {
     }
 
     foreach ($this->aOptions['aOptionChanges'] as $iTimestamp => $aChanges) {
-      $iUserID      = $aChanges['_user_id'];
-      $oUser        = get_user_by( 'id', $iUserID );
+      $iUserID = $aChanges['_user_id'];
+      $oUser = get_user_by( 'id', $iUserID );
       $iChangeCount = count( $aChanges ) - 1;
       if ($iChangeCount <= 0) {
         continue;
       }
       $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
-      $strDate         = date( $this->strDateFormat, $iTimestamp + $iTimeZoneOffset * 3600 );
+      $strDate = date( $this->strDateFormat, $iTimestamp + $iTimeZoneOffset * 3600 );
 
       $strEcho .= "<tr data-timestamp=\"{$iTimestamp}\" class=\"row\">";
       $strEcho .= "<td rowspan=\"{$iChangeCount}\">{$strDate}</td>\n";
@@ -5237,7 +5329,7 @@ class FLORP {
         }
         if (in_array( $strKey, $this->aBooleanOptions )) {
           $from = $aChange['from'] ? "True" : "False";
-          $to   = $aChange['to'] ? "True" : "False";
+          $to = $aChange['to'] ? "True" : "False";
         } else {
           if (is_array( $aChange['from'] )) {
             $from = implode( ', ', $aChange['from'] );
@@ -5252,10 +5344,10 @@ class FLORP {
         }
         if (strpos( $strKey, "ajax__" ) === 0) {
           $from_type = "";
-          $to_type   = "";
+          $to_type = "";
         } else {
           $from_type = " (" . gettype( $aChange['from'] ) . ")";
-          $to_type   = " (" . gettype( $aChange['to'] ) . ")";
+          $to_type = " (" . gettype( $aChange['to'] ) . ")";
         }
         $strEcho .= "<td>{$strKey}</td><td>{$from}{$from_type}</td><td>{$to}{$to_type}</td>";
         $strEcho .= "</tr>\n";
@@ -5280,7 +5372,7 @@ class FLORP {
     if (isset( $this->strLeaderSubmissionHistoryView ) && in_array( $this->strLeaderSubmissionHistoryView, $aViews )) {
       $strView = $this->strLeaderSubmissionHistoryView;
     } else {
-      $strView                              = $aViews[0];
+      $strView = $aViews[0];
       $this->strLeaderSubmissionHistoryView = $strView;
     }
     $strEcho = '<form action="" method="post">';
@@ -5313,16 +5405,16 @@ class FLORP {
   }
 
   private function get_leader_submission_history_table_progress_data( $aNfSubmissionHistory ) {
-    $aSkip   = array();
+    $aSkip = array();
     $aReturn = array();
     foreach ($aNfSubmissionHistory as $strEmail => $aSubmissionsOfUser) {
       $iChangeCount = $aSubmissionsOfUser['_count'];
-      $oLeader      = get_user_by( 'email', $strEmail );
+      $oLeader = get_user_by( 'email', $strEmail );
       if (false === $oLeader) {
-        $strLeaderID    = "";
+        $strLeaderID = "";
         $strNameOrEmail = $strEmail;
       } else {
-        $strLeaderID    = $oLeader->ID . ": ";
+        $strLeaderID = $oLeader->ID . ": ";
         $strNameOrEmail = "<span title=\"{$strEmail}\">{$oLeader->first_name} {$oLeader->last_name}</span>";
       }
       if ($iChangeCount <= 0) {
@@ -5333,11 +5425,11 @@ class FLORP {
       );
 
       $aReturn[$strEmail]['columns'] = array();
-      $aReturn[$strEmail]['rows']    = array();
+      $aReturn[$strEmail]['rows'] = array();
       foreach ($aSubmissionsOfUser['_submissions'] as $strSubmissionChangeID => $aSubmissionData) {
-        $iTimestamp                                 = $aSubmissionData['_meta']['_submission_timestamp'];
-        $strDateFormat                              = $this->strDateFormat;
-        $aDate                                      = array(
+        $iTimestamp = $aSubmissionData['_meta']['_submission_timestamp'];
+        $strDateFormat = $this->strDateFormat;
+        $aDate = array(
           'ts'         => $aSubmissionData['_meta']['_submission_timestamp'],
           'dt'         => $aSubmissionData['_meta']['_submission_date'],
           'dtWpFormat' => isset( $aSubmissionData['_meta']['_submission_date_wp_format'] ) ? $aSubmissionData['_meta']['_submission_date_wp_format'] : date( $strDateFormat, $aSubmissionData['_meta']['_submission_timestamp'] ),
@@ -5360,7 +5452,7 @@ class FLORP {
               $aReturn[$strEmail]['rows'][$strKey] = array();
             }
             $aReturn[$strEmail]['rows'][$strKey][$iTimestamp] = $mixValue;
-            $bRows                                            = true;
+            $bRows = true;
           }
         } else {
           foreach ($aSubmissionData['_changes'] as $strKey => $aChange) {
@@ -5368,7 +5460,7 @@ class FLORP {
               $aReturn[$strEmail]['rows'][$strKey] = array();
             }
             $aReturn[$strEmail]['rows'][$strKey][$iTimestamp] = $aChange['to'];
-            $bRows                                            = true;
+            $bRows = true;
           }
         }
         if ( !$bRows) {
@@ -5381,7 +5473,7 @@ class FLORP {
   }
 
   private function get_leader_submission_history_table_progress_table( $aData, $bHorizontal = true ) {
-    $strEcho     = "";
+    $strEcho = "";
     $aTimestamps = array();
     foreach ($aData as $strEmail => $aUser) {
       if ($bHorizontal) {
@@ -5395,7 +5487,7 @@ class FLORP {
       if ($bHorizontal) {
         // Hotizontal //
         $aColumns = $aUser['columns'];
-        $aRows    = $aUser['rows'];
+        $aRows = $aUser['rows'];
         // Headers //
         $strEcho .= '<tr>' . PHP_EOL;
         $strEcho .= "<th>Field key</th>" . PHP_EOL;
@@ -5407,12 +5499,12 @@ class FLORP {
 
         foreach ($aRows as $strFieldKey => $aRow) {
           $strEcho .= '<tr>' . PHP_EOL;
-          $strKey  = $strFieldKey;
+          $strKey = $strFieldKey;
           if (in_array( $strFieldKey, $aTimestamps )) {
             $strKey = str_replace( "_timestamp", "", $strFieldKey );
           }
           $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
-          $strEcho      .= "<th>{$strFieldName}</th>" . PHP_EOL;
+          $strEcho .= "<th>{$strFieldName}</th>" . PHP_EOL;
           foreach ($aColumns as $iTimestamp => $aCol) {
             $strEcho .= '<td>' . PHP_EOL;
             if ($aCol['resave']) {
@@ -5420,7 +5512,7 @@ class FLORP {
             } elseif (isset( $aRow[$iTimestamp] )) {
               $mixValue = $aRow[$iTimestamp];
               if (in_array( $strFieldKey, $aTimestamps )) {
-                $strKey   = str_replace( "_timestamp", "", $strKey );
+                $strKey = str_replace( "_timestamp", "", $strKey );
                 $strValue = date( $this->strDateFormat, $mixValue );
               } elseif (is_array( $mixValue )) {
                 $strValue = implode( ', ', $mixValue );
@@ -5440,7 +5532,7 @@ class FLORP {
       } else {
         // Vertical //
         $aColumns = $aUser['rows'];
-        $aRows    = $aUser['columns'];
+        $aRows = $aUser['columns'];
         // Headers //
         $strEcho .= '<tr>' . PHP_EOL;
         $strEcho .= "<th>Date</th>" . PHP_EOL;
@@ -5450,7 +5542,7 @@ class FLORP {
             $strKey = str_replace( "_timestamp", "", $strFieldKey );
           }
           $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
-          $strEcho      .= "<th>{$strFieldName}</th>" . PHP_EOL;
+          $strEcho .= "<th>{$strFieldName}</th>" . PHP_EOL;
         }
         $strEcho .= '</tr>' . PHP_EOL;
 
@@ -5465,7 +5557,7 @@ class FLORP {
             } elseif (isset( $aColumn[$iTimestamp] )) {
               $mixValue = $aColumn[$iTimestamp];
               if (in_array( $strFieldKey, $aTimestamps )) {
-                $strKey   = str_replace( "_timestamp", "", $strKey );
+                $strKey = str_replace( "_timestamp", "", $strKey );
                 $strValue = date( $this->strDateFormat, $mixValue );
               } elseif (is_array( $mixValue )) {
                 $strValue = implode( ', ', $mixValue );
@@ -5499,17 +5591,17 @@ class FLORP {
 
   private function leader_submission_history_table_admin__table( $aNfSubmissionHistory ) {
     $strEcho = '<table class="widefat striped noFilter"><th>User</th><th>Date</th><th>Changed option</th><th>From</th><th>To</th>' . "\n";
-    $aSkip   = array();
+    $aSkip = array();
     // echo $strEcho; return;
 
     foreach ($aNfSubmissionHistory as $strEmail => $aSubmissions) {
       $iChangeCount = $aSubmissions['_count'];
-      $oLeader      = get_user_by( 'email', $strEmail );
+      $oLeader = get_user_by( 'email', $strEmail );
       if (false === $oLeader) {
-        $strLeaderID    = "";
+        $strLeaderID = "";
         $strNameOrEmail = $strEmail;
       } else {
-        $strLeaderID    = $oLeader->ID . ": ";
+        $strLeaderID = $oLeader->ID . ": ";
         $strNameOrEmail = "<span title=\"{$strEmail}\">{$oLeader->first_name} {$oLeader->last_name}</span>";
       }
       if ($iChangeCount <= 0) {
@@ -5537,7 +5629,7 @@ class FLORP {
       $strEcho .= "<td rowspan=\"{$iRows}\">{$strLeaderID}{$strNameOrEmail}</td>\n";
       foreach ($aSubmissions['_submissions'] as $strSubmissionChangeID => $aSubmissionData) {
         $strDateFormat = $this->strDateFormat;
-        $strDate       = isset( $aSubmissionData['_meta']['_submission_date_wp_format'] ) ? $aSubmissionData['_meta']['_submission_date_wp_format'] : date( $strDateFormat, $aSubmissionData['_meta']['_submission_timestamp'] );
+        $strDate = isset( $aSubmissionData['_meta']['_submission_date_wp_format'] ) ? $aSubmissionData['_meta']['_submission_date_wp_format'] : date( $strDateFormat, $aSubmissionData['_meta']['_submission_timestamp'] );
 
         if ($aSubmissionData['_first']) {
           $iRows = 0;
@@ -5554,7 +5646,7 @@ class FLORP {
         } elseif ($aSubmissionData['_resave']) {
           $strRowspan = "";
         } else {
-          $iRowspan   = count( $aSubmissionData['_changes'] );
+          $iRowspan = count( $aSubmissionData['_changes'] );
           $strRowspan = " rowspan=\"{$iRowspan}\"";
         }
         $strEcho .= "<td{$strRowspan}>{$strDate}</td>\n";
@@ -5568,7 +5660,7 @@ class FLORP {
               continue;
             }
             if (in_array( $strKey, $aTimestamps )) {
-              $strKey   = str_replace( "_timestamp", "", $strKey );
+              $strKey = str_replace( "_timestamp", "", $strKey );
               $strValue = date( $this->strDateFormat, $mixValue );
             } elseif (is_array( $mixValue )) {
               $strValue = implode( ', ', $mixValue );
@@ -5578,8 +5670,8 @@ class FLORP {
               $strValue = $mixValue;
             }
             $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
-            $strEcho      .= '<td><strong title="' . $strKey . '">' . $strFieldName . '</strong></td><td>-</td><td>' . $strValue . '</td>';
-            $strEcho      .= "</tr>\n";
+            $strEcho .= '<td><strong title="' . $strKey . '">' . $strFieldName . '</strong></td><td>-</td><td>' . $strValue . '</td>';
+            $strEcho .= "</tr>\n";
           }
         } elseif ($aSubmissionData['_resave']) {
           $strEcho .= "<td colspan=\"3\">[resave without change]</td>";
@@ -5591,7 +5683,7 @@ class FLORP {
             }
             if (in_array( $strKey, $this->aBooleanOptions )) {
               $from = $aChange['from'] ? "True" : "False";
-              $to   = $aChange['to'] ? "True" : "False";
+              $to = $aChange['to'] ? "True" : "False";
             } else {
               if (is_array( $aChange['from'] )) {
                 $from = implode( ', ', $aChange['from'] );
@@ -5617,8 +5709,8 @@ class FLORP {
               $from = "[empty]";
             }
             $strFieldName = ucfirst( str_replace( '_', ' ', $strKey ) );
-            $strEcho      .= "<td><strong title=\"{$strKey}\">{$strFieldName}</strong></td><td>{$from}</td><td>{$to}</td>";
-            $strEcho      .= "</tr>\n";
+            $strEcho .= "<td><strong title=\"{$strKey}\">{$strFieldName}</strong></td><td>{$from}</td><td>{$to}</td>";
+            $strEcho .= "</tr>\n";
           }
         }
       }
@@ -5636,10 +5728,10 @@ class FLORP {
     }
     foreach ($aOrderDates as $iKey => $aOrderData) {
       if (in_array( $iTshirtID, $aOrderData['orders'] )) {
-        $aReturn       = $aOrderData;
+        $aReturn = $aOrderData;
         $aReturn['id'] = $iKey;
         if ( !isset( $aReturn['datetime'] )) {
-          $iTimeZoneOffset     = get_option( 'gmt_offset', 0 );
+          $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
           $aReturn['datetime'] = date( $this->strDateFormat, $iKey + $iTimeZoneOffset * 3600 );
         }
 
@@ -5663,9 +5755,9 @@ class FLORP {
     ksort( $aOrderDates );
 
     foreach ($aOrderDates as $iKey => $aOrderData) {
-      $aOrderDates[$iKey]['aPaid']        = array();
-      $aOrderDates[$iKey]['aUnpaid']      = array();
-      $aOrderDates[$iKey]['aPaidAfter']   = array();
+      $aOrderDates[$iKey]['aPaid'] = array();
+      $aOrderDates[$iKey]['aUnpaid'] = array();
+      $aOrderDates[$iKey]['aPaidAfter'] = array();
       $aOrderDates[$iKey]['aUnpaidAfter'] = array();
     }
 
@@ -5677,7 +5769,7 @@ class FLORP {
         $bIsPaid = true;
       }
 
-      $iOrderKey          = false;
+      $iOrderKey = false;
       $aMatchingOrderDate = $this->get_tshirt_order_date_data( $aTshirtData["id"] );
       if ($aMatchingOrderDate) {
         $iOrderKey = $aMatchingOrderDate['id'];
@@ -5745,7 +5837,7 @@ class FLORP {
   }
 
   private function get_tshirt_orders_by_timestamp( $iTimestamp, $strType, $bBefore = true, $bIncludeSentOrders = true ) {
-    $aOrderDates    = $this->aOptions['aOrderDates'];
+    $aOrderDates = $this->aOptions['aOrderDates'];
     $aUsedTshirtIDs = array();
     if ($bIncludeSentOrders) {
       foreach ($aOrderDates as $iKey => $aOrderData) {
@@ -5805,7 +5897,7 @@ class FLORP {
       $strDate = $aOrderData['datetime'];
     } else {
       $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
-      $strDate         = date( $this->strDateFormat, $iTimestamp + $iTimeZoneOffset * 3600 );
+      $strDate = date( $this->strDateFormat, $iTimestamp + $iTimeZoneOffset * 3600 );
     }
     $strEcho .= '<td><span title="ID: ' . $iTimestamp . '">' . $strDate . '</span></td>';
     $strEcho .= '<td>' . $aOrderData['type'] . '</td>';
@@ -5869,13 +5961,13 @@ class FLORP {
       return false;
     }
 
-    $aFields    = Ninja_Forms()->form( $iFormID )->get_fields();
+    $aFields = Ninja_Forms()->form( $iFormID )->get_fields();
     $aKeyToType = array();
     foreach ($aFields as $oField) {
       $aKeyToType[$oField->get_setting( 'key' )] = $oField->get_setting( 'type' );
     }
 
-    $oSubmission  = Ninja_Forms()->form( $iFormID )->get_sub( $iSubmissionID );
+    $oSubmission = Ninja_Forms()->form( $iFormID )->get_sub( $iSubmissionID );
     $aFieldValues = array_map(
       array( $this, 'get_value_maybe_fix_unserialize_array' ),
       $oSubmission->get_field_values()
@@ -5896,15 +5988,15 @@ class FLORP {
     //        return false;
     //      }
     //    }
-    $strDateFormat                              = $this->strDateFormat;
-    $aFieldValues['_submission_date']           = $oSubmission->get_sub_date( 'Y-m-d H:i:s' );
+    $strDateFormat = $this->strDateFormat;
+    $aFieldValues['_submission_date'] = $oSubmission->get_sub_date( 'Y-m-d H:i:s' );
     $aFieldValues['_submission_date_wp_format'] = $oSubmission->get_sub_date( $strDateFormat );
-    $aFieldValues['_submission_timestamp']      = $oSubmission->get_sub_date( 'U' );
-    $aFieldValues['_form_id']                   = $iFormID;
-    $aFieldValues['_submission_id']             = $iSubmissionID;
-    $aFieldValues['_blog_id']                   = $iBlogID;
-    $aFieldValues['_field_types']               = $aKeyToType;
-    $aNfSubmission                              = array_filter( $aFieldValues, function( $key ) {
+    $aFieldValues['_submission_timestamp'] = $oSubmission->get_sub_date( 'U' );
+    $aFieldValues['_form_id'] = $iFormID;
+    $aFieldValues['_submission_id'] = $iSubmissionID;
+    $aFieldValues['_blog_id'] = $iBlogID;
+    $aFieldValues['_field_types'] = $aKeyToType;
+    $aNfSubmission = array_filter( $aFieldValues, function( $key ) {
       $aPermittedKeys = array( '_submission_date', '_submission_date_wp_format', '_submission_timestamp', '_form_id', '_submission_id', '_blog_id', '_field_types' );
 
       return in_array( $key, $aPermittedKeys ) || strpos( $key, "_" ) !== 0;
@@ -5919,7 +6011,7 @@ class FLORP {
 
   private function get_nf_submissions( $iBlogID = false, $sType = 'missed', $bUseCacheTypes = true, $bUseCacheSubmissions = true, $bClearCacheIfNotUsed = true ) {
     $aNfSubmissions = array();
-    $aTypes         = array( 'missed', 'all', 'history' );
+    $aTypes = array( 'missed', 'all', 'history' );
     if ( !in_array( $sType, $aTypes )) {
       return false;
     }
@@ -5931,21 +6023,21 @@ class FLORP {
       }
       if ($iBlogID === $this->iMainBlogID) {
         $iProfileFormNinjaFormID = $this->iProfileFormNinjaFormIDMain;
-        $strBlog                 = "main";
+        $strBlog = "main";
       } elseif ($iBlogID === $this->iFlashmobBlogID) {
         $iProfileFormNinjaFormID = $this->iProfileFormNinjaFormIDFlashmob;
-        $strBlog                 = "flashmob";
+        $strBlog = "flashmob";
       } else {
         return false;
       }
     } elseif ($this->isMainBlog) {
-      $iBlogID                 = $this->iMainBlogID;
+      $iBlogID = $this->iMainBlogID;
       $iProfileFormNinjaFormID = $this->iProfileFormNinjaFormIDMain;
-      $strBlog                 = "main";
+      $strBlog = "main";
     } elseif ($this->isFlashmobBlog) {
-      $iBlogID                 = $this->iFlashmobBlogID;
+      $iBlogID = $this->iFlashmobBlogID;
       $iProfileFormNinjaFormID = $this->iProfileFormNinjaFormIDFlashmob;
-      $strBlog                 = "flashmob";
+      $strBlog = "flashmob";
     } else {
       return false;
     }
@@ -5984,9 +6076,9 @@ class FLORP {
 
         return false;
       }
-      $objProfileForm      = Ninja_Forms()->form( $iProfileFormNinjaFormID )->get();
+      $objProfileForm = Ninja_Forms()->form( $iProfileFormNinjaFormID )->get();
       $strProfileFormTitle = $objProfileForm->get_setting( 'title' );
-      $aForms              = Ninja_Forms()->form()->get_forms();
+      $aForms = Ninja_Forms()->form()->get_forms();
       foreach ($aForms as $objForm) {
         $iFormID = $objForm->get_id();
         if (isset( $this->aOptions['aNfFieldTypes'][$iBlogID]['field_types'][$iFormID] )) {
@@ -5996,7 +6088,7 @@ class FLORP {
         if (strpos( $strTitle, $strProfileFormTitle ) === false && strpos( $strProfileFormTitle, $strTitle ) === false) {
           continue;
         }
-        $aFields    = Ninja_Forms()->form( $iFormID )->get_fields();
+        $aFields = Ninja_Forms()->form( $iFormID )->get_fields();
         $aKeyToType = array();
         foreach ($aFields as $oField) {
           $aKeyToType[$oField->get_setting( 'key' )] = $oField->get_setting( 'type' );
@@ -6026,9 +6118,9 @@ class FLORP {
 
         return false;
       }
-      $objProfileForm      = Ninja_Forms()->form( $iProfileFormNinjaFormID )->get();
+      $objProfileForm = Ninja_Forms()->form( $iProfileFormNinjaFormID )->get();
       $strProfileFormTitle = $objProfileForm->get_setting( 'title' );
-      $aForms              = Ninja_Forms()->form()->get_forms();
+      $aForms = Ninja_Forms()->form()->get_forms();
       foreach ($aForms as $objForm) {
         $iFormID = $objForm->get_id();
         if ( !isset( $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID] )) {
@@ -6083,13 +6175,13 @@ class FLORP {
             continue;
           }
 
-          $strDateFormat                              = $this->strDateFormat;
-          $aFieldValues['_submission_date']           = $oSubmission->get_sub_date( 'Y-m-d H:i:s' );
+          $strDateFormat = $this->strDateFormat;
+          $aFieldValues['_submission_date'] = $oSubmission->get_sub_date( 'Y-m-d H:i:s' );
           $aFieldValues['_submission_date_wp_format'] = $oSubmission->get_sub_date( $strDateFormat );
-          $aFieldValues['_submission_timestamp']      = $oSubmission->get_sub_date( 'U' );
-          $aFieldValues['_form_id']                   = $iFormID;
-          $aFieldValues['_submission_id']             = $iSubmissionID;
-          $aFieldValues['_blog_id']                   = $iBlogID;
+          $aFieldValues['_submission_timestamp'] = $oSubmission->get_sub_date( 'U' );
+          $aFieldValues['_form_id'] = $iFormID;
+          $aFieldValues['_submission_id'] = $iSubmissionID;
+          $aFieldValues['_blog_id'] = $iBlogID;
 
           $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'][$iSubmissionID] = $aFieldValues;
           $this->maybe_save_options( $bUseCacheSubmissions );
@@ -6124,7 +6216,7 @@ class FLORP {
         }
         if ($sType === 'history' && $strBlog === "main" && email_exists( $aFieldValues["user_email"] )) {
           $bIncludeAdmins = ( isset( $_GET['include-admins'] ) && $_GET['include-admins'] == 1 );
-          $oUser          = get_user_by( 'email', $aFieldValues["user_email"] );
+          $oUser = get_user_by( 'email', $aFieldValues["user_email"] );
           if (in_array( "administrator", $oUser->roles ) && !$bIncludeAdmins) {
             continue;
           }
@@ -6145,9 +6237,9 @@ class FLORP {
     }
 
     if ($sType === 'history') {
-      $aSkipKeys         = array( '_blog_id', '_submission_date', '_submission_date_wp_format', '_submission_timestamp', '_form_id', '_submission_id' );
+      $aSkipKeys = array( '_blog_id', '_submission_date', '_submission_date_wp_format', '_submission_timestamp', '_form_id', '_submission_id' );
       $aNfSubmissionsRaw = $aNfSubmissions;
-      $aNfSubmissions    = array();
+      $aNfSubmissions = array();
       foreach ($aNfSubmissionsRaw as $strEmail => $aSubmissionsOfUser) {
         $aNfSubmissions[$strEmail] = array(
           '_count'       => count( $aSubmissionsOfUser ),
@@ -6155,7 +6247,7 @@ class FLORP {
         );
         usort( $aSubmissionsOfUser, array( $this, "nf_submission_sort" ) );
         foreach ($aSubmissionsOfUser as $iKey => $aSubmissionData) {
-          $aSubmissionMeta       = array(
+          $aSubmissionMeta = array(
             '_submission_date'           => $aSubmissionData['_submission_date'],
             '_submission_date_wp_format' => $aSubmissionData['_submission_date_wp_format'],
             '_submission_timestamp'      => $aSubmissionData['_submission_timestamp'],
@@ -6178,7 +6270,7 @@ class FLORP {
 
           if ($iKey === 0) {
             $aNfSubmissions[$strEmail]['_submissions'][$strSubmissionChangeID]['_first'] = true;
-            $aNfSubmissions[$strEmail]['_submissions'][$strSubmissionChangeID]['_data']  = $aSubmissionData;
+            $aNfSubmissions[$strEmail]['_submissions'][$strSubmissionChangeID]['_data'] = $aSubmissionData;
             continue;
           }
 
@@ -6201,7 +6293,7 @@ class FLORP {
             continue;
           }
           $aDiffKeys = array_unique( array_merge( array_keys( $aNotInNew ), array_keys( $aNotInOld ) ) );
-          $aChanges  = array();
+          $aChanges = array();
           foreach ($aDiffKeys as $strKey) {
             $aChanges[$strKey] = array(
               'from' => $aPreviousSubmissionData[$strKey],
@@ -6228,31 +6320,31 @@ class FLORP {
 
     $strEcho = "<h1>" . "Chýbajúce dáta (možno)" . "</h1>";
 
-    $strEcho       .= '<table class="widefat striped"><th>Email</th><th>Dátum</th><th>Meno</th><th>Dáta</th>';
+    $strEcho .= '<table class="widefat striped"><th>Email</th><th>Dátum</th><th>Meno</th><th>Dáta</th>';
     $aReplacements = $this->get_participant_data_replacements();
     foreach ($aMissedSubmissions as $strEmail => $aMissedSubmissionsOfUser) {
       foreach ($aMissedSubmissionsOfUser as $aSubmissionData) {
         foreach ($aReplacements as $strKey => $aReplacementArr) {
           $aSubmissionData[$strKey] = str_replace( $aReplacementArr['from'], $aReplacementArr['to'], $aSubmissionData[$strKey] );
         }
-        $strButtonLabelDelete   = "Zmazať riadok z NF";
-        $strButtonLabelImport   = "Importovať riadok z NF";
+        $strButtonLabelDelete = "Zmazať riadok z NF";
+        $strButtonLabelImport = "Importovať riadok z NF";
         $strDoubleCheckQuestion = "Ste si istý?";
-        $strCommonIDPart        = "missedSubmission-" . $iBlogID . "-" . $aSubmissionData['_form_id'] . "-" . $aSubmissionData['_submission_id'] . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
-        $strRowID               = "florpRow-{$strCommonIDPart}";
-        $strButtonID            = "florpButton-{$strCommonIDPart}-delete";
-        $strButtons             = '<span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabelDelete . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" data-blog-id="' . $iBlogID . '" data-form-id="' . $aSubmissionData['_form_id'] . '" data-submission-id="' . $aSubmissionData['_submission_id'] . '" data-email="' . $strEmail . '" data-sure="0" data-action="delete_nf_submission" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '">' . $strButtonLabelDelete . '</span>';
+        $strCommonIDPart = "missedSubmission-" . $iBlogID . "-" . $aSubmissionData['_form_id'] . "-" . $aSubmissionData['_submission_id'] . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
+        $strRowID = "florpRow-{$strCommonIDPart}";
+        $strButtonID = "florpButton-{$strCommonIDPart}-delete";
+        $strButtons = '<span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabelDelete . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" data-blog-id="' . $iBlogID . '" data-form-id="' . $aSubmissionData['_form_id'] . '" data-submission-id="' . $aSubmissionData['_submission_id'] . '" data-email="' . $strEmail . '" data-sure="0" data-action="delete_nf_submission" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '">' . $strButtonLabelDelete . '</span>';
         if ($iBlogID === $this->iFlashmobBlogID) {
           $strButtonID = "florpButton-{$strCommonIDPart}-import";
-          $strButtons  .= '<span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabelImport . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" data-blog-id="' . $iBlogID . '" data-form-id="' . $aSubmissionData['_form_id'] . '" data-submission-id="' . $aSubmissionData['_submission_id'] . '" data-email="' . $strEmail . '" data-sure="0" data-action="import_flashmob_nf_submission" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '">' . $strButtonLabelImport . '</span>';
+          $strButtons .= '<span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabelImport . '" data-button-id="' . $strButtonID . '" data-row-id="' . $strRowID . '" data-blog-id="' . $iBlogID . '" data-form-id="' . $aSubmissionData['_form_id'] . '" data-submission-id="' . $aSubmissionData['_submission_id'] . '" data-email="' . $strEmail . '" data-sure="0" data-action="import_flashmob_nf_submission" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '">' . $strButtonLabelImport . '</span>';
         }
-        $strEcho           .= '<tr class="row missedSubmissionRow" data-row-id="' . $strRowID . '" data-email="' . $aSubmissionData['user_email'] . '">';
-        $strEcho           .= '<td><a name="' . $aSubmissionData['user_email'] . '">' . $aSubmissionData['user_email'] . '</a></td>';
-        $strDate           = isset( $aSubmissionData['_submission_date_wp_format'] ) ? $aSubmissionData['_submission_date_wp_format'] : $aSubmissionData['_submission_date'];
-        $strEcho           .= '<td>' . $strDate . '</td>';
-        $strEcho           .= '<td>' . $aSubmissionData['first_name'] . ' ' . $aSubmissionData['last_name'] . $strButtons . '</td>';
+        $strEcho .= '<tr class="row missedSubmissionRow" data-row-id="' . $strRowID . '" data-email="' . $aSubmissionData['user_email'] . '">';
+        $strEcho .= '<td><a name="' . $aSubmissionData['user_email'] . '">' . $aSubmissionData['user_email'] . '</a></td>';
+        $strDate = isset( $aSubmissionData['_submission_date_wp_format'] ) ? $aSubmissionData['_submission_date_wp_format'] : $aSubmissionData['_submission_date'];
+        $strEcho .= '<td>' . $strDate . '</td>';
+        $strEcho .= '<td>' . $aSubmissionData['first_name'] . ' ' . $aSubmissionData['last_name'] . $strButtons . '</td>';
         $aSingleCheckboxes = array( 'courses_in_city_2', 'courses_in_city_3', 'preference_newsletter', 'hide_leader_info' );
-        $aSkip             = array(
+        $aSkip = array(
           'first_name',
           'last_name',
           'user_email',
@@ -6264,14 +6356,14 @@ class FLORP {
           '_form_id',
           '_blog_id'
         );
-        $strEcho           .= "<td>";
+        $strEcho .= "<td>";
         foreach ($aSubmissionData as $strKey => $mixValue) {
           if ( !isset( $mixValue ) || ( !is_bool( $mixValue ) && !is_numeric( $mixValue ) && empty( $mixValue ) ) || $mixValue === 'null' || in_array( $strKey, $aSkip )) {
             continue;
           }
           if ($strKey === 'leader_user_id') {
-            $strKey   = 'leader';
-            $oLeader  = get_user_by( 'id', $mixValue );
+            $strKey = 'leader';
+            $oLeader = get_user_by( 'id', $mixValue );
             $strValue = "{$mixValue}: ";
             if (false === $oLeader) {
               $strValue .= "[deleted]";
@@ -6416,12 +6508,12 @@ class FLORP {
     if ($bIntf) {
       return $this->get_tshirts_intf( $strPaidFlag, $bCSV );
     }
-    $aLeaders       = $this->getFlashmobSubscribers( 'flashmob_organizer' );
+    $aLeaders = $this->getFlashmobSubscribers( 'flashmob_organizer' );
     $aTshirtsOption = $this->aOptions["aTshirts"];
     // echo "<pre>";var_dump($aTshirtsOption);echo "</pre>";
     $aTshirts = array();
     foreach ($aLeaders as $oUser) {
-      $aAllMeta                  = array_map(
+      $aAllMeta = array_map(
         array( $this, 'get_value_maybe_fix_unserialize_array' ),
         get_user_meta( $oUser->ID )
       );
@@ -6431,12 +6523,12 @@ class FLORP {
           continue 2;
         }
       }
-      $aWebpageArgs     = array(
+      $aWebpageArgs = array(
         'id'            => $oUser->ID,
         'bReturnAnchor' => !$bCSV,
         'bInfoWindow'   => false,
       );
-      $strID            = "leader-" . $oUser->ID;
+      $strID = "leader-" . $oUser->ID;
       $aTshirts[$strID] = array(
         "id"            => $strID,
         "name"          => $oUser->first_name . ' ' . $oUser->last_name,
@@ -6462,19 +6554,19 @@ class FLORP {
           // echo "<pre>";var_dump($aParticipantData);echo "</pre>"; // NOTE DEVEL
           continue;
         }
-        $aWebpageArgs           = array(
+        $aWebpageArgs = array(
           'id'            => $iLeaderID,
           'bReturnAnchor' => !$bCSV,
           'bInfoWindow'   => false,
         );
-        $aToMerge               = array();
-        $oLeader                = get_user_by( 'id', $iLeaderID );
+        $aToMerge = array();
+        $oLeader = get_user_by( 'id', $iLeaderID );
         $strLeadersFlashmobCity = get_user_meta( $iLeaderID, 'flashmob_city', true );
         if ($strLeadersFlashmobCity !== $aParticipantData['flashmob_city']) {
           $aToMerge['flashmob_city_at_registration'] = $aParticipantData['flashmob_city'];
-          $aToMerge['flashmob_city']                 = $strLeadersFlashmobCity;
+          $aToMerge['flashmob_city'] = $strLeadersFlashmobCity;
         }
-        $strID            = "participant-" . $iLeaderID . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
+        $strID = "participant-" . $iLeaderID . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
         $aTshirts[$strID] = array_merge( array(
           "id"                           => $strID,
           "name"                         => $aParticipantData['first_name'] . ' ' . $aParticipantData['last_name'],
@@ -6505,7 +6597,7 @@ class FLORP {
         // $bPaid = (isset($aTshirtsOption["leaders"][$aTshirtData["user_id"]]) && isset($aTshirtsOption["leaders"][$aTshirtData["user_id"]]["paid"]) && $aTshirtsOption["leaders"][$aTshirtData["user_id"]]["paid"] === true);
 
         // Delivered //
-        $bDelivered                     = ( isset( $aTshirtsOption["leaders"][$aTshirtData["user_id"]] ) && isset( $aTshirtsOption["leaders"][$aTshirtData["user_id"]]["is_delivered"] ) && $aTshirtsOption["leaders"][$aTshirtData["user_id"]]["is_delivered"] === true );
+        $bDelivered = ( isset( $aTshirtsOption["leaders"][$aTshirtData["user_id"]] ) && isset( $aTshirtsOption["leaders"][$aTshirtData["user_id"]]["is_delivered"] ) && $aTshirtsOption["leaders"][$aTshirtData["user_id"]]["is_delivered"] === true );
         $aTshirts[$key]["is_delivered"] = $bDelivered;
         if ($bDelivered) {
           $aTshirts[$key]["delivered_timestamp"] = $aTshirtsOption["leaders"][$aTshirtData["user_id"]]['delivered-timestamp'];
@@ -6517,13 +6609,13 @@ class FLORP {
           $aTshirts[$key]["paid_timestamp"] = $aTshirtsOption["participants"][$aTshirtData["email"]]['paid-timestamp'];
         }
         // Payment warning //
-        $bPaymentWarningSent                    = ( isset( $aTshirtsOption["participants"][$aTshirtData["email"]] ) && isset( $aTshirtsOption["participants"][$aTshirtData["email"]]["payment_warning_sent"] ) && $aTshirtsOption["participants"][$aTshirtData["email"]]["payment_warning_sent"] === true );
+        $bPaymentWarningSent = ( isset( $aTshirtsOption["participants"][$aTshirtData["email"]] ) && isset( $aTshirtsOption["participants"][$aTshirtData["email"]]["payment_warning_sent"] ) && $aTshirtsOption["participants"][$aTshirtData["email"]]["payment_warning_sent"] === true );
         $aTshirts[$key]["payment_warning_sent"] = $bPaymentWarningSent;
         if ($bPaymentWarningSent) {
           $aTshirts[$key]["payment_warning_sent_timestamp"] = $aTshirtsOption["participants"][$aTshirtData["email"]]['payment_warning_sent-timestamp'];
         }
         // Delivered //
-        $bDelivered                     = ( isset( $aTshirtsOption["participants"][$aTshirtData["email"]] ) && isset( $aTshirtsOption["participants"][$aTshirtData["email"]]["is_delivered"] ) && $aTshirtsOption["participants"][$aTshirtData["email"]]["is_delivered"] === true );
+        $bDelivered = ( isset( $aTshirtsOption["participants"][$aTshirtData["email"]] ) && isset( $aTshirtsOption["participants"][$aTshirtData["email"]]["is_delivered"] ) && $aTshirtsOption["participants"][$aTshirtData["email"]]["is_delivered"] === true );
         $aTshirts[$key]["is_delivered"] = $bDelivered;
         if ($bDelivered) {
           $aTshirts[$key]["delivered_timestamp"] = $aTshirtsOption["participants"][$aTshirtData["email"]]['delivered-timestamp'];
@@ -6536,11 +6628,11 @@ class FLORP {
       $aTshirts[$key]["is_paid"] = $bPaid;
 
       if ($this->aOptions['bTshirtOrdersAdminEnabled']) {
-        $aTshirts[$key]['order_sent_timestamp']     = 0;
+        $aTshirts[$key]['order_sent_timestamp'] = 0;
         $aTshirts[$key]['properties']['order_sent'] = "n/a";
-        $aMatchingOrderDate                         = $this->get_tshirt_order_date_data( $aTshirtData['id'] );
+        $aMatchingOrderDate = $this->get_tshirt_order_date_data( $aTshirtData['id'] );
         if ($aMatchingOrderDate) {
-          $aTshirts[$key]['order_sent_timestamp']     = $aMatchingOrderDate["id"];
+          $aTshirts[$key]['order_sent_timestamp'] = $aMatchingOrderDate["id"];
           $aTshirts[$key]['properties']['order_sent'] = $aMatchingOrderDate['datetime'];
         }
       }
@@ -6577,7 +6669,7 @@ class FLORP {
           // echo "<pre>";var_dump($aParticipantData);echo "</pre>"; // NOTE DEVEL
           continue;
         }
-        $strID            = "intf-participant-" . $iYear . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
+        $strID = "intf-participant-" . $iYear . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $strEmail );
         $aTshirts[$strID] = array(
           "id"                           => $strID,
           "name"                         => $aParticipantData['first_name'] . ' ' . $aParticipantData['last_name'],
@@ -6593,28 +6685,28 @@ class FLORP {
             "tshirt_size"   => isset( $aParticipantData['flashmob_participant_tshirt_size'] ) ? $aParticipantData['flashmob_participant_tshirt_size'] : "n/a",
             "tshirt_gender" => isset( $aParticipantData['flashmob_participant_tshirt_gender'] ) ? $aParticipantData['flashmob_participant_tshirt_gender'] : "n/a",
             "tshirt_color"  => isset( $aParticipantData['flashmob_participant_tshirt_color'] ) ? $aParticipantData['flashmob_participant_tshirt_color'] : "n/a",
-            "ordered"       => isset( $aParticipantData["registered"] ) ? date( $this->strDateFormat, $aParticipantData["registered"] ) : "n/a",
+            "ordered"       => isset( $aParticipantData["tshirt_ordered_timestamp"] ) ? date( $this->strDateFormat, $aParticipantData["tshirt_ordered_timestamp"] ) : ( isset( $aParticipantData["registered"] ) ? date( $this->strDateFormat, $aParticipantData["registered"] ) : "n/a" ),
           ),
         );
       }
     }
     foreach ($aTshirts as $key => $aTshirtData) {
       // Paid //
-      $bPaid                     = ( isset( $aTshirtsOption[$aTshirtData['year']][$aTshirtData["email"]] ) && isset( $aTshirtsOption[$aTshirtData['year']][$aTshirtData["email"]]["paid"] ) && $aTshirtsOption[$aTshirtData['year']][$aTshirtData["email"]]["paid"] === true );
+      $bPaid = ( isset( $aTshirtsOption[$aTshirtData['year']][$aTshirtData["email"]] ) && isset( $aTshirtsOption[$aTshirtData['year']][$aTshirtData["email"]]["paid"] ) && $aTshirtsOption[$aTshirtData['year']][$aTshirtData["email"]]["paid"] === true );
       $aTshirts[$key]["is_paid"] = $bPaid;
       if ($bPaid) {
         $aTshirts[$key]["paid_timestamp"] = $aTshirtsOption[$aTshirtData['year']][$aTshirtData["email"]]['paid-timestamp'];
       }
 
       // Payment warning //
-      $bPaymentWarningSent                    = ( isset( $aTshirtsOption[$aTshirtData['year']][$aTshirtData["email"]] ) && isset( $aTshirtsOption[$aTshirtData['year']][$aTshirtData["email"]]["payment_warning_sent"] ) && $aTshirtsOption[$aTshirtData['year']][$aTshirtData["email"]]["payment_warning_sent"] === true );
+      $bPaymentWarningSent = ( isset( $aTshirtsOption[$aTshirtData['year']][$aTshirtData["email"]] ) && isset( $aTshirtsOption[$aTshirtData['year']][$aTshirtData["email"]]["payment_warning_sent"] ) && $aTshirtsOption[$aTshirtData['year']][$aTshirtData["email"]]["payment_warning_sent"] === true );
       $aTshirts[$key]["payment_warning_sent"] = $bPaymentWarningSent;
       if ($bPaymentWarningSent) {
         $aTshirts[$key]["payment_warning_sent_timestamp"] = $aTshirtsOption[$aTshirtData['year']][$aTshirtData["email"]]['payment_warning_sent-timestamp'];
       }
 
       // Delivered //
-      $bDelivered                     = ( isset( $aTshirtsOption[$aTshirtData['year']][$aTshirtData["email"]] ) && isset( $aTshirtsOption[$aTshirtData['year']][$aTshirtData["email"]]["is_delivered"] ) && $aTshirtsOption[$aTshirtData['year']][$aTshirtData["email"]]["is_delivered"] === true );
+      $bDelivered = ( isset( $aTshirtsOption[$aTshirtData['year']][$aTshirtData["email"]] ) && isset( $aTshirtsOption[$aTshirtData['year']][$aTshirtData["email"]]["is_delivered"] ) && $aTshirtsOption[$aTshirtData['year']][$aTshirtData["email"]]["is_delivered"] === true );
       $aTshirts[$key]["is_delivered"] = $bDelivered;
       if ($bDelivered) {
         $aTshirts[$key]["delivered_timestamp"] = $aTshirtsOption[$aTshirtData['year']][$aTshirtData["email"]]['delivered-timestamp'];
@@ -6625,11 +6717,11 @@ class FLORP {
       }
 
       if ($this->aOptions['bTshirtOrdersAdminEnabled']) {
-        $aTshirts[$key]['order_sent_timestamp']     = 0;
+        $aTshirts[$key]['order_sent_timestamp'] = 0;
         $aTshirts[$key]['properties']['order_sent'] = "n/a";
-        $aMatchingOrderDate                         = $this->get_tshirt_order_date_data( $aTshirtData['id'] );
+        $aMatchingOrderDate = $this->get_tshirt_order_date_data( $aTshirtData['id'] );
         if ($aMatchingOrderDate) {
-          $aTshirts[$key]['order_sent_timestamp']     = $aMatchingOrderDate["id"];
+          $aTshirts[$key]['order_sent_timestamp'] = $aMatchingOrderDate["id"];
           $aTshirts[$key]['properties']['order_sent'] = $aMatchingOrderDate['datetime'];
         }
       }
@@ -6702,8 +6794,8 @@ class FLORP {
 
   private function get_flashmob_participant_csv( $sType = 'all', $bIntf = false, $iYear = 0 ) {
     $aParticipantCSV = array();
-    $aParticipants   = $bIntf ? $this->aOptions['aIntfParticipants'] : $this->get_flashmob_participants();
-    $aTshirtsAll     = $bIntf ? $this->aOptions['aTshirtsIntf'] : $this->aOptions['aTshirts'];
+    $aParticipants = $bIntf ? $this->aOptions['aIntfParticipants'] : $this->get_flashmob_participants();
+    $aTshirtsAll = $bIntf ? $this->aOptions['aTshirtsIntf'] : $this->aOptions['aTshirts'];
     if ($iYear === 0) {
       $iYear = $this->aOptions['iIntfFlashmobYear'];
     }
@@ -6711,7 +6803,7 @@ class FLORP {
 
     // Get participants as a flat array //
     $aParticipantsFlat = array();
-    $aPreferences      = array();
+    $aPreferences = array();
     foreach ($aParticipants as $iLeaderIDOrYear => $aParticipantsOfLeaderOrYear) {
       if ($bIntf && false !== $iYear && $iYear !== $iLeaderIDOrYear) {
         // Skip that year //
@@ -6728,8 +6820,8 @@ class FLORP {
         if (isset( $aTshirtsAll[$sKey], $aTshirtsAll[$sKey][$strEmail] ) && is_array( $aTshirtsAll[$sKey][$strEmail] )) {
           $aTshirtData = $aTshirtsAll[$sKey][$strEmail];
         }
-        $bOrderedTshirt             = isset( $aParticipantData['preferences'] ) && is_array( $aParticipantData['preferences'] ) && in_array( 'flashmob_participant_tshirt', $aParticipantData['preferences'] );
-        $strKey                     = $strEmail . "_" . $iLeaderIDOrYear;
+        $bOrderedTshirt = isset( $aParticipantData['preferences'] ) && is_array( $aParticipantData['preferences'] ) && in_array( 'flashmob_participant_tshirt', $aParticipantData['preferences'] );
+        $strKey = $strEmail . "_" . $iLeaderIDOrYear;
         $aParticipantsFlat[$strKey] = $aParticipantData;
         if (isset( $aParticipantsFlat[$strKey]['submission_editing'] )) {
           unset( $aParticipantsFlat[$strKey]['submission_editing'] );
@@ -6785,10 +6877,10 @@ class FLORP {
         }
       }
     }
-    $iColumnCount      = count( $aHeaders );
+    $iColumnCount = count( $aHeaders );
     $aParticipantCSV[] = $aHeaders;
 
-    $aTimestamps   = array( 'registered', 'paid_fee' );
+    $aTimestamps = array( 'registered', 'paid_fee' );
     $aReplacements = $this->get_participant_data_replacements();
 
     // Get the participant rows //
@@ -6853,13 +6945,13 @@ class FLORP {
       'florp-download-intf-participant-csv-all',
       'florp-download-intf-participant-csv-notshirts',
     );
-    $strType      = "";
-    $bFound       = false;
+    $strType = "";
+    $bFound = false;
     foreach ($aButtonNames as $strButtonName) {
       if (isset( $_POST[$strButtonName] )) {
-        $bFound        = true;
-        $strType       = str_replace( "florp-download-participant-csv-", "", $strButtonName );
-        $strType       = str_replace( "florp-download-intf-participant-csv-", "", $strType );
+        $bFound = true;
+        $strType = str_replace( "florp-download-participant-csv-", "", $strButtonName );
+        $strType = str_replace( "florp-download-intf-participant-csv-", "", $strType );
         $aParticipants = $this->get_flashmob_participant_csv( $strType, $bIntf );
         break;
       }
@@ -6892,7 +6984,7 @@ class FLORP {
       return;
     }
 
-    $strPrefix   = $bIntf ? "international-" : "svk-";
+    $strPrefix = $bIntf ? "international-" : "svk-";
     $strFileName = $strPrefix . "participants-{$strType}-" . current_time( 'Ymd-His' ) . ".csv";
 
     // output headers so that the file is downloaded rather than displayed
@@ -6922,21 +7014,21 @@ class FLORP {
 
       return;
     }
-    $bOrderDateBased    = false;
-    $strFileNamePart    = "";
+    $bOrderDateBased = false;
+    $strFileNamePart = "";
     $strIntfRequestPart = $bIntf ? '-intf' : '';
     if ( !isset( $_POST["florp-download{$strIntfRequestPart}-tshirt-csv-all"] ) && !isset( $_POST["florp-download{$strIntfRequestPart}-tshirt-csv-unpaid"] ) && !isset( $_POST["florp-download{$strIntfRequestPart}-tshirt-csv-paid"] )) {
-      $bFound   = false;
+      $bFound = false;
       $aMatches = array();
       foreach ($_POST as $key => $val) {
         if (preg_match( '~^florp-download' . $strIntfRequestPart . '-tshirt-csv-(after-)?order-(\d+)-(all|unpaid|paid)$~', $key, $aMatches )) {
-          $bFound          = true;
+          $bFound = true;
           $bOrderDateBased = true;
-          $bIncluded       = empty( $aMatches[1] ) || strlen( $aMatches[1] ) === 0;
-          $iTimestamp      = intval( $aMatches[2] );
-          $strType         = $aMatches[3];
+          $bIncluded = empty( $aMatches[1] ) || strlen( $aMatches[1] ) === 0;
+          $iTimestamp = intval( $aMatches[2] );
+          $strType = $aMatches[3];
           if ( !$bIncluded) {
-            $bBefore            = false;
+            $bBefore = false;
             $bIncludeSentOrders = true;
           }
           $strFileNamePart = $aMatches[1] . "order-" . $aMatches[2] . "-" . $aMatches[3];
@@ -6957,16 +7049,16 @@ class FLORP {
       }
     }
 
-    $strPrefix   = $bIntf ? "international-" : "svk-";
+    $strPrefix = $bIntf ? "international-" : "svk-";
     $strFileName = $strPrefix . "tshirts-";
     if (isset( $_POST["florp-download{$strIntfRequestPart}-tshirt-csv-all"] )) {
-      $aTshirts    = $this->get_tshirts( 'all', true, $bIntf );
+      $aTshirts = $this->get_tshirts( 'all', true, $bIntf );
       $strFileName .= "all";
     } elseif (isset( $_POST["florp-download{$strIntfRequestPart}-tshirt-csv-unpaid"] )) {
-      $aTshirts    = $this->get_tshirts( 'unpaid', true, $bIntf );
+      $aTshirts = $this->get_tshirts( 'unpaid', true, $bIntf );
       $strFileName .= "unpaid";
     } elseif (isset( $_POST["florp-download{$strIntfRequestPart}-tshirt-csv-paid"] )) {
-      $aTshirts    = $this->get_tshirts( 'paid', true, $bIntf );
+      $aTshirts = $this->get_tshirts( 'paid', true, $bIntf );
       $strFileName .= "paid";
     } elseif ($this->aOptions['bTshirtOrdersAdminEnabled'] && $bOrderDateBased) { // TODO not implemented for INTF yet
       if ($bIncluded) {
@@ -6974,7 +7066,7 @@ class FLORP {
       } else {
         $aTshirts = $this->get_tshirt_orders_by_timestamp( $iTimestamp, $strType, $bBefore, $bIncludeSentOrders );
       }
-      $aTshirts    = $this->get_tshirts_csv( $aTshirts, $bIntf );
+      $aTshirts = $this->get_tshirts_csv( $aTshirts, $bIntf );
       $strFileName .= $strFileNamePart;
     }
     if ( !is_array( $aTshirts ) || empty( $aTshirts ) || count( $aTshirts ) === 1) {
@@ -7019,9 +7111,9 @@ class FLORP {
       'from' => $from,
       'to'   => $to
     );
-    $iCurrentUserID                 = get_current_user_id();
-    $aChangedOptions['_user_id']    = $iCurrentUserID;
-    $iTimeNow                       = time();
+    $iCurrentUserID = get_current_user_id();
+    $aChangedOptions['_user_id'] = $iCurrentUserID;
+    $iTimeNow = time();
     while (isset( $this->aOptions['aOptionChanges'][$iTimeNow] )) {
       $iTimeNow++;
     }
@@ -7036,14 +7128,14 @@ class FLORP {
     // wp_die();
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
-    $aData           = $_POST;
+    $aData = $_POST;
     $strErrorMessage = "Could not remove the flashmob participant '{$aData['participantEmail']}'";
     if ( !isset( $this->aOptions["aParticipants"] ) || empty( $this->aOptions["aParticipants"] )) {
       $aData["message"] = $strErrorMessage;
     } else {
       if (isset( $this->aOptions["aParticipants"][$aData["leaderId"]] ) && isset( $this->aOptions["aParticipants"][$aData["leaderId"]][$aData["participantEmail"]] )) {
         $aData["removeRowOnSuccess"] = true;
-        $aData["ok"]                 = true;
+        $aData["ok"] = true;
         if (defined( 'FLORP_DEVEL' ) && FLORP_DEVEL === true && defined( 'FLORP_DEVEL_FAKE_ACTIONS' ) && FLORP_DEVEL_FAKE_ACTIONS === true) {
           $aData["message"] = "The flashmob participant '{$aData['participantEmail']}' was deleted successfully (NOT: FLORP_DEVEL is on!)";
         } else {
@@ -7065,14 +7157,14 @@ class FLORP {
     // wp_die();
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
-    $aData           = $_POST;
+    $aData = $_POST;
     $strErrorMessage = "Could not remove the international flashmob participant '{$aData['participantEmail']}'";
     if ( !isset( $this->aOptions["aIntfParticipants"] ) || empty( $this->aOptions["aIntfParticipants"] ) || !isset( $aData['year'] )) {
       $aData["message"] = $strErrorMessage;
     } else {
       if (isset( $this->aOptions["aIntfParticipants"][$aData["year"]] ) && isset( $this->aOptions["aIntfParticipants"][$aData["year"]][$aData["participantEmail"]] )) {
         $aData["removeRowOnSuccess"] = true;
-        $aData["ok"]                 = true;
+        $aData["ok"] = true;
         if (defined( 'FLORP_DEVEL' ) && FLORP_DEVEL === true && defined( 'FLORP_DEVEL_FAKE_ACTIONS' ) && FLORP_DEVEL_FAKE_ACTIONS === true) {
           $aData["message"] = "The flashmob participant '{$aData['participantEmail']}' was deleted successfully (NOT: FLORP_DEVEL is on!)";
         } else {
@@ -7094,25 +7186,25 @@ class FLORP {
     // wp_die();
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
-    $aData           = $_POST;
+    $aData = $_POST;
     $strErrorMessage = "Could not set attendance of the Slovak flashmob participant '{$aData['participantEmail']}'";
     if ( !isset( $this->aOptions["aParticipants"] ) || empty( $this->aOptions["aParticipants"] ) || !isset( $aData['leaderId'] )) {
       $aData["message"] = $strErrorMessage;
     } else {
       if (isset( $this->aOptions["aParticipants"][$aData["leaderId"]] ) && isset( $this->aOptions["aParticipants"][$aData["leaderId"]][$aData["participantEmail"]] ) && isset( $aData["attend"] )) {
-        $iTimestampNow               = (int) current_time( 'timestamp' );
-        $strTitle                    = ' title="' . date( $this->strDateFormat, $iTimestampNow ) . '"';
+        $iTimestampNow = (int) current_time( 'timestamp' );
+        $strTitle = ' title="' . date( $this->strDateFormat, $iTimestampNow ) . '"';
         $aData["removeRowOnSuccess"] = false;
-        $aData["replaceButton"]      = true;
-        $strLabelForHiding           = "Zúčastní/-il(a) sa";
+        $aData["replaceButton"] = true;
+        $strLabelForHiding = "Zúčastní/-il(a) sa";
         if ($aData["attend"] === 'remove') {
-          $aData["message"]           = "The Slovak flashmob participant {$aData['participantEmail']}'s attendance was removed successfully";
-          $strOtherButtonID1          = str_replace( "-attend-remove-", "-attend1-", $aData['buttonId'] );
-          $strOtherButtonID0          = str_replace( "-attend-remove-", "-attend0-", $aData['buttonId'] );
-          $aData["hideSelector"]      = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strOtherButtonID0}], tr[data-row-id={$aData['rowId']}] span[data-button-id={$strOtherButtonID1}]";
+          $aData["message"] = "The Slovak flashmob participant {$aData['participantEmail']}'s attendance was removed successfully";
+          $strOtherButtonID1 = str_replace( "-attend-remove-", "-attend1-", $aData['buttonId'] );
+          $strOtherButtonID0 = str_replace( "-attend-remove-", "-attend0-", $aData['buttonId'] );
+          $aData["hideSelector"] = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strOtherButtonID0}], tr[data-row-id={$aData['rowId']}] span[data-button-id={$strOtherButtonID1}]";
           $aData["replaceButtonHtml"] = '<span data-button-id="' . $aData['buttonId'] . '" class="notice notice-success" data-text="' . $strLabelForHiding . '">Attendance removed. Refresh to see buttons.</span>';
           if (defined( 'FLORP_DEVEL' ) && FLORP_DEVEL === true && defined( 'FLORP_DEVEL_FAKE_ACTIONS' ) && FLORP_DEVEL_FAKE_ACTIONS === true) {
-            $aData["ok"]      = true;
+            $aData["ok"] = true;
             $aData["message"] .= " (NOT: FLORP_DEVEL is on!)";
           } else {
             $aValues = array();
@@ -7133,16 +7225,16 @@ class FLORP {
             }
           }
         } else {
-          $aData["ok"]                = true;
-          $aData["message"]           = "The Slovak flashmob participant {$aData['participantEmail']}'s attendance was set successfully";
-          $strReplaceWith             = ( $aData["attend"] == "1" ) ? "-attend0-" : "-attend1-";
-          $strOtherButtonID           = str_replace( "-attend{$aData['attend']}-", $strReplaceWith, $aData['buttonId'] );
-          $aData["hideSelector"]      = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strOtherButtonID}]";
+          $aData["ok"] = true;
+          $aData["message"] = "The Slovak flashmob participant {$aData['participantEmail']}'s attendance was set successfully";
+          $strReplaceWith = ( $aData["attend"] == "1" ) ? "-attend0-" : "-attend1-";
+          $strOtherButtonID = str_replace( "-attend{$aData['attend']}-", $strReplaceWith, $aData['buttonId'] );
+          $aData["hideSelector"] = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strOtherButtonID}]";
           $aData["replaceButtonHtml"] = '<span data-button-id="' . $aData['buttonId'] . '" class="notice notice-success"' . $strTitle . ' data-text="' . $strLabelForHiding . '">' . $aData['textDefault'] . '</span>';
           if (defined( 'FLORP_DEVEL' ) && FLORP_DEVEL === true && defined( 'FLORP_DEVEL_FAKE_ACTIONS' ) && FLORP_DEVEL_FAKE_ACTIONS === true) {
             $aData["message"] .= " (NOT: FLORP_DEVEL is on!)";
           } else {
-            $this->aOptions["aParticipants"][$aData["leaderId"]][$aData["participantEmail"]]["attend"]               = $aData["attend"];
+            $this->aOptions["aParticipants"][$aData["leaderId"]][$aData["participantEmail"]]["attend"] = $aData["attend"];
             $this->aOptions["aParticipants"][$aData["leaderId"]][$aData["participantEmail"]]["attend_set_timestamp"] = $iTimestampNow;
             $this->add_option_change( "ajax__florp_participant_attend", "", $aData["attend"] . " (" . $aData["leaderId"] . ": " . $aData["participantEmail"] . ")", false );
             $this->save_options();
@@ -7161,25 +7253,25 @@ class FLORP {
     // wp_die();
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
-    $aData           = $_POST;
+    $aData = $_POST;
     $strErrorMessage = "Could not set attendance of the international flashmob participant '{$aData['participantEmail']}'";
     if ( !isset( $this->aOptions["aIntfParticipants"] ) || empty( $this->aOptions["aIntfParticipants"] ) || !isset( $aData['year'] )) {
       $aData["message"] = $strErrorMessage;
     } else {
       if (isset( $this->aOptions["aIntfParticipants"][$aData["year"]] ) && isset( $this->aOptions["aIntfParticipants"][$aData["year"]][$aData["participantEmail"]] ) && isset( $aData["attend"] )) {
-        $iTimestampNow               = (int) current_time( 'timestamp' );
-        $strTitle                    = ' title="' . date( $this->strDateFormat, $iTimestampNow ) . '"';
+        $iTimestampNow = (int) current_time( 'timestamp' );
+        $strTitle = ' title="' . date( $this->strDateFormat, $iTimestampNow ) . '"';
         $aData["removeRowOnSuccess"] = false;
-        $aData["replaceButton"]      = true;
-        $strLabelForHiding           = "Zúčastní/-il(a) sa";
+        $aData["replaceButton"] = true;
+        $strLabelForHiding = "Zúčastní/-il(a) sa";
         if ($aData["attend"] === 'remove') {
-          $aData["message"]           = "The international flashmob participant {$aData['participantEmail']}'s attendance was removed successfully";
-          $strOtherButtonID1          = str_replace( "-attend-remove-", "-attend1-", $aData['buttonId'] );
-          $strOtherButtonID0          = str_replace( "-attend-remove-", "-attend0-", $aData['buttonId'] );
-          $aData["hideSelector"]      = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strOtherButtonID0}], tr[data-row-id={$aData['rowId']}] span[data-button-id={$strOtherButtonID1}]";
+          $aData["message"] = "The international flashmob participant {$aData['participantEmail']}'s attendance was removed successfully";
+          $strOtherButtonID1 = str_replace( "-attend-remove-", "-attend1-", $aData['buttonId'] );
+          $strOtherButtonID0 = str_replace( "-attend-remove-", "-attend0-", $aData['buttonId'] );
+          $aData["hideSelector"] = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strOtherButtonID0}], tr[data-row-id={$aData['rowId']}] span[data-button-id={$strOtherButtonID1}]";
           $aData["replaceButtonHtml"] = '<span data-button-id="' . $aData['buttonId'] . '" class="notice notice-success" data-text="' . $strLabelForHiding . '">Attendance removed. Refresh to see buttons.</span>';
           if (defined( 'FLORP_DEVEL' ) && FLORP_DEVEL === true && defined( 'FLORP_DEVEL_FAKE_ACTIONS' ) && FLORP_DEVEL_FAKE_ACTIONS === true) {
-            $aData["ok"]      = true;
+            $aData["ok"] = true;
             $aData["message"] .= " (NOT: FLORP_DEVEL is on!)";
           } else {
             $aValues = array();
@@ -7200,16 +7292,16 @@ class FLORP {
             }
           }
         } else {
-          $aData["ok"]                = true;
-          $strReplaceWith             = ( $aData["attend"] == "1" ) ? "-attend0-" : "-attend1-";
-          $strOtherButtonID           = str_replace( "-attend{$aData['attend']}-", $strReplaceWith, $aData['buttonId'] );
-          $aData["hideSelector"]      = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strOtherButtonID}]";
+          $aData["ok"] = true;
+          $strReplaceWith = ( $aData["attend"] == "1" ) ? "-attend0-" : "-attend1-";
+          $strOtherButtonID = str_replace( "-attend{$aData['attend']}-", $strReplaceWith, $aData['buttonId'] );
+          $aData["hideSelector"] = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strOtherButtonID}]";
           $aData["replaceButtonHtml"] = '<span data-button-id="' . $aData['buttonId'] . '" class="notice notice-success"' . $strTitle . ' data-text="' . $strLabelForHiding . '">' . $aData['textDefault'] . '</span>';
-          $aData["message"]           = "The international flashmob participant {$aData['participantEmail']}'s attendance was set successfully";
+          $aData["message"] = "The international flashmob participant {$aData['participantEmail']}'s attendance was set successfully";
           if (defined( 'FLORP_DEVEL' ) && FLORP_DEVEL === true && defined( 'FLORP_DEVEL_FAKE_ACTIONS' ) && FLORP_DEVEL_FAKE_ACTIONS === true) {
             $aData["message"] .= " (NOT: FLORP_DEVEL is on!)";
           } else {
-            $this->aOptions["aIntfParticipants"][$aData["year"]][$aData["participantEmail"]]["attend"]               = $aData["attend"];
+            $this->aOptions["aIntfParticipants"][$aData["year"]][$aData["participantEmail"]]["attend"] = $aData["attend"];
             $this->aOptions["aIntfParticipants"][$aData["year"]][$aData["participantEmail"]]["attend_set_timestamp"] = $iTimestampNow;
             $this->add_option_change( "ajax__florp_intf_participant_attend", "", $aData["attend"] . " (" . $aData["year"] . ": " . $aData["participantEmail"] . ")", false );
             $this->save_options();
@@ -7224,24 +7316,177 @@ class FLORP {
     wp_die();
   }
 
+  public function action__florp_tshirt_change_callback() {
+    check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
+
+    $aData = $_POST;
+    $strNotFoundErrorMessage = "Could not find participant '{$aData['participantEmail']}'";
+    $strErrorMessage = "Could not change T-shirt order of '{$aData['participantEmail']}'";
+    $strOkMessage = "T-shirt order of '{$aData['participantEmail']}' was changed successfully!";
+
+    // Actions:
+    // florp_change_tshirt
+    // florp_intf_change_tshirt
+    // florp_tshirt_change_tshirt
+    // florp_intf_tshirt_change_tshirt
+
+    $aData["ok"] = true;
+    $aData["message"] = $strOkMessage;
+
+    $aKeys = array( "tshirt_color", "tshirt_gender", "tshirt_size" );
+    $sKeyPrefix = "";
+
+    $aParticipantData = array();
+    switch ($aData["action"]) {
+      case "florp_change_tshirt":
+        $aParticipants = $this->get_flashmob_participants( intval( $aData["leaderId"] ), false, true );
+        if ( !isset( $aParticipants[$aData["leaderId"]], $aParticipants[$aData["leaderId"]][$aData["participantEmail"]] )) {
+          $aData["ok"] = false;
+          $aData["message"] = $strNotFoundErrorMessage;
+
+          return;
+        }
+
+        $sKeyPrefix = "flashmob_participant_";
+        $aParticipantData = $aParticipants[$aData["leaderId"]][$aData["participantEmail"]];
+
+        foreach ($aKeys as $sKey) {
+          $aParticipantData[$sKeyPrefix . $sKey] = $aData[$sKey];
+        }
+
+        break;
+      case "florp_intf_change_tshirt":
+        if ( !isset( $this->aOptions['aIntfParticipants'][$aData["year"]], $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]] )) {
+          $aData["ok"] = false;
+          $aData["message"] = $strNotFoundErrorMessage;
+
+          return;
+        }
+
+        // BEGIN: Save option
+        $sKeyPrefix = "flashmob_participant_";
+
+        $bChange = false;
+        if ($aData["changeAction"] === "add") {
+          if ( !isset( $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]]["preferences"] )) {
+            $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]]["preferences"] = array( "flashmob_participant_tshirt" );
+          } elseif ( !in_array( "flashmob_participant_tshirt", $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]]["preferences"] )) {
+            $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]]["preferences"][] = "flashmob_participant_tshirt";
+          }
+          $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]]["tshirt_ordered_timestamp"] = (int) current_time( 'timestamp' );
+          $bChange = true;
+        }
+
+        foreach ($aKeys as $sKey) {
+          if (isset( $aData[$sKey] )) {
+            $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]][$sKeyPrefix . $sKey] = $aData[$sKey];
+            $bChange = true;
+          }
+        }
+
+        if ($bChange) {
+          $this->save_options();
+        }
+        // END: Save option
+
+        $aParticipantData = $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]];
+
+        break;
+      case "florp_tshirt_change_tshirt":
+        $aTshirts = $this->get_tshirts( 'all', false, false );
+        $strID = "participant-" . $aData["leaderId"] . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $aData["participantEmail"] );
+        if ( !isset( $aTshirts[$strID] )) {
+          $aData["ok"] = false;
+          $aData["message"] = $strNotFoundErrorMessage;
+
+          return;
+        }
+
+        $aParticipantData = $aTshirts[$strID];
+
+        $aData["debug"] = $aTshirts;
+
+        break;
+      case "florp_intf_tshirt_change_tshirt":
+        $aTshirts = $this->get_tshirts( 'all', false, true );
+        $strID = "intf-participant-" . $aData["year"] . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $aData["participantEmail"] );
+        if ( !isset( $aTshirts[$strID] )) {
+          $aData["ok"] = false;
+          $aData["message"] = $strNotFoundErrorMessage;
+
+          return;
+        }
+        if ( !isset( $this->aOptions['aIntfParticipants'][$aData["year"]], $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]] )) {
+          $aData["ok"] = false;
+          $aData["message"] = $strNotFoundErrorMessage;
+
+          return;
+        }
+
+        $aParticipantData = $aTshirts[$strID];
+
+        // BEGIN: Save option
+        $sKeyPrefix = "flashmob_participant_";
+
+        $bChange = false;
+        if ($aData["changeAction"] === "add") {
+          if ( !isset( $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]]["preferences"] )) {
+            $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]]["preferences"] = array( "flashmob_participant_tshirt" );
+          } elseif ( !in_array( "flashmob_participant_tshirt", $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]]["preferences"] )) {
+            $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]]["preferences"][] = "flashmob_participant_tshirt";
+          }
+          $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]]["tshirt_ordered_timestamp"] = (int) current_time( 'timestamp' );
+          $bChange = true;
+        }
+
+        foreach ($aKeys as $sKey) {
+          if (isset( $aData[$sKey] )) {
+            $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]][$sKeyPrefix . $sKey] = $aData[$sKey];
+            $bChange = true;
+          }
+        }
+
+        if ($bChange) {
+          $this->save_options();
+        }
+        // END: Save option
+
+        break;
+      default:
+        break;
+    }
+
+    $aData = array_merge( $aParticipantData, $aData );
+
+    $aReplacements = $this->get_participant_data_replacements();
+    foreach ($aReplacements as $strKey => $aReplacementArr) {
+      if (isset( $aData[$strKey] )) {
+        $aData[$strKey] = str_replace( $aReplacementArr['from'], $aReplacementArr['to'], $aData[$strKey] );
+      }
+    }
+
+    echo json_encode( $aData );
+    wp_die();
+  }
+
   public function action__florp_participant_paid_fee_callback() {
     // wp_die();
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
-    $aData           = $_POST;
+    $aData = $_POST;
     $strErrorMessage = "Could not set fee payment status of the Slovak flashmob participant '{$aData['participantEmail']}'";
     if ( !isset( $this->aOptions["aParticipants"] ) || empty( $this->aOptions["aParticipants"] ) || !isset( $aData['leaderId'] )) {
       $aData["message"] = $strErrorMessage;
     } else {
       if (isset( $this->aOptions["aParticipants"][$aData["leaderId"]] ) && isset( $this->aOptions["aParticipants"][$aData["leaderId"]][$aData["participantEmail"]] )) {
-        $iTimestampNow               = (int) current_time( 'timestamp' );
-        $strTitle                    = ' title="' . date( $this->strDateFormat, $iTimestampNow ) . '"';
+        $iTimestampNow = (int) current_time( 'timestamp' );
+        $strTitle = ' title="' . date( $this->strDateFormat, $iTimestampNow ) . '"';
         $aData["removeRowOnSuccess"] = false;
-        $aData["replaceButton"]      = true;
-        $aData["ok"]                 = true;
-        $strDeleteButtonID           = str_replace( "-paid-fee", "", $aData['buttonId'] );
-        $aData["hideSelector"]       = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strDeleteButtonID}]";
-        $aData["replaceButtonHtml"]  = '<span data-button-id="' . $aData['buttonId'] . '" class="notice notice-success"' . $strTitle . '>' . $aData['textDefault'] . '</span>';
+        $aData["replaceButton"] = true;
+        $aData["ok"] = true;
+        $strDeleteButtonID = str_replace( "-paid-fee", "", $aData['buttonId'] );
+        $aData["hideSelector"] = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strDeleteButtonID}]";
+        $aData["replaceButtonHtml"] = '<span data-button-id="' . $aData['buttonId'] . '" class="notice notice-success"' . $strTitle . '>' . $aData['textDefault'] . '</span>';
         if (defined( 'FLORP_DEVEL' ) && FLORP_DEVEL === true && defined( 'FLORP_DEVEL_FAKE_ACTIONS' ) && FLORP_DEVEL_FAKE_ACTIONS === true) {
           $aData["message"] = "The Slovak flashmob participant {$aData['participantEmail']}'s was set successfully (NOT: FLORP_DEVEL is on!)";
         } else {
@@ -7249,7 +7494,7 @@ class FLORP {
           $this->add_option_change( "ajax__florp_participant_paid_fee", "", $aData["leaderId"] . ": " . $aData["participantEmail"], false );
           $aData["message"] = "The Slovak flashmob participant {$aData['participantEmail']}'s payment status was set successfully";
 
-          $aSendRes                                                                                                        = $this->maybeSendPaymentOKNotification( 'paid_fee', $aData["participantEmail"] );
+          $aSendRes = $this->maybeSendPaymentOKNotification( 'paid_fee', $aData["participantEmail"] );
           $this->aOptions["aParticipants"][$aData["leaderId"]][$aData["participantEmail"]]["paid_fee_notification_result"] = $aSendRes['res'];
           $this->add_option_change( "ajax__florp_participant_paid_fee_notification", "", $aData["participantEmail"] . ": {$aSendRes['message']}", false );
           $this->save_options();
@@ -7268,20 +7513,20 @@ class FLORP {
     // wp_die();
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
-    $aData           = $_POST;
+    $aData = $_POST;
     $strErrorMessage = "Could not set fee payment status of the international flashmob participant '{$aData['participantEmail']}'";
     if ( !isset( $this->aOptions["aIntfParticipants"] ) || empty( $this->aOptions["aIntfParticipants"] ) || !isset( $aData['year'] )) {
       $aData["message"] = $strErrorMessage;
     } else {
       if (isset( $this->aOptions["aIntfParticipants"][$aData["year"]] ) && isset( $this->aOptions["aIntfParticipants"][$aData["year"]][$aData["participantEmail"]] )) {
-        $iTimestampNow               = (int) current_time( 'timestamp' );
-        $strTitle                    = ' title="' . date( $this->strDateFormat, $iTimestampNow ) . '"';
+        $iTimestampNow = (int) current_time( 'timestamp' );
+        $strTitle = ' title="' . date( $this->strDateFormat, $iTimestampNow ) . '"';
         $aData["removeRowOnSuccess"] = false;
-        $aData["replaceButton"]      = true;
-        $aData["ok"]                 = true;
-        $strDeleteButtonID           = str_replace( "-paid-fee", "", $aData['buttonId'] );
-        $aData["hideSelector"]       = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strDeleteButtonID}]";
-        $aData["replaceButtonHtml"]  = '<span data-button-id="' . $aData['buttonId'] . '" class="notice notice-success"' . $strTitle . '>' . $aData['textDefault'] . '</span>';
+        $aData["replaceButton"] = true;
+        $aData["ok"] = true;
+        $strDeleteButtonID = str_replace( "-paid-fee", "", $aData['buttonId'] );
+        $aData["hideSelector"] = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strDeleteButtonID}]";
+        $aData["replaceButtonHtml"] = '<span data-button-id="' . $aData['buttonId'] . '" class="notice notice-success"' . $strTitle . '>' . $aData['textDefault'] . '</span>';
         if (defined( 'FLORP_DEVEL' ) && FLORP_DEVEL === true && defined( 'FLORP_DEVEL_FAKE_ACTIONS' ) && FLORP_DEVEL_FAKE_ACTIONS === true) {
           $aData["message"] = "The international flashmob participant {$aData['participantEmail']}'s was set successfully (NOT: FLORP_DEVEL is on!)";
         } else {
@@ -7289,7 +7534,7 @@ class FLORP {
           $this->add_option_change( "ajax__florp_intf_participant_paid_fee", "", $aData["year"] . ": " . $aData["participantEmail"], false );
           $aData["message"] = "The international flashmob participant {$aData['participantEmail']}'s payment status was set successfully";
 
-          $aSendRes                                                                                                        = $this->maybeSendPaymentOKNotification( 'paid_fee', $aData["participantEmail"] );
+          $aSendRes = $this->maybeSendPaymentOKNotification( 'paid_fee', $aData["participantEmail"] );
           $this->aOptions["aIntfParticipants"][$aData["year"]][$aData["participantEmail"]]["paid_fee_notification_result"] = $aSendRes['res'];
           $this->add_option_change( "ajax__florp_intf_participant_paid_fee_notification", "", $aData["participantEmail"] . ": {$aSendRes['message']}", false );
           $this->save_options();
@@ -7308,25 +7553,25 @@ class FLORP {
     // wp_die();
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
-    $aData           = $_POST;
+    $aData = $_POST;
     $strErrorMessage = "Could not mark the flashmob participant '{$aData['participantEmail']}' as having paid";
     if ( !isset( $this->aOptions["aTshirts"] ) || empty( $this->aOptions["aTshirts"] )) {
       $aData["message"] = $strErrorMessage;
     } else {
-      $iTimestampNow               = (int) current_time( 'timestamp' );
-      $aData["ok"]                 = true;
+      $iTimestampNow = (int) current_time( 'timestamp' );
+      $aData["ok"] = true;
       $aData["removeRowOnSuccess"] = false;
-      $aData["replaceButton"]      = true;
-      $strTitle                    = ' title="' . date( $this->strDateFormat, $iTimestampNow ) . '"';
-      $strPaymentWarningButtonID   = str_replace( "-paid-", "-paymentWarning-", $aData['buttonId'] );
-      $strCancelOrderButtonID      = str_replace( "-paid-", "-cancelOrder-", $aData['buttonId'] );
-      $aData["hideSelector"]       = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strPaymentWarningButtonID}], tr[data-row-id={$aData['rowId']}] span[data-button-id={$strCancelOrderButtonID}]";
-      $aData["replaceButtonHtml"]  = '<span data-button-id="' . $aData['buttonId'] . '" class="notice notice-success"' . $strTitle . '>' . $aData['textDefault'] . '</span>';
+      $aData["replaceButton"] = true;
+      $strTitle = ' title="' . date( $this->strDateFormat, $iTimestampNow ) . '"';
+      $strPaymentWarningButtonID = str_replace( "-paid-", "-paymentWarning-", $aData['buttonId'] );
+      $strCancelOrderButtonID = str_replace( "-paid-", "-cancelOrder-", $aData['buttonId'] );
+      $aData["hideSelector"] = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strPaymentWarningButtonID}], tr[data-row-id={$aData['rowId']}] span[data-button-id={$strCancelOrderButtonID}]";
+      $aData["replaceButtonHtml"] = '<span data-button-id="' . $aData['buttonId'] . '" class="notice notice-success"' . $strTitle . '>' . $aData['textDefault'] . '</span>';
       if (defined( 'FLORP_DEVEL' ) && FLORP_DEVEL === true && defined( 'FLORP_DEVEL_FAKE_ACTIONS' ) && FLORP_DEVEL_FAKE_ACTIONS === true) {
         $aData["message"] = "The flashmob participant '{$aData['participantEmail']}' was marked as having paid successfully (NOT: FLORP_DEVEL is on!)";
       } else {
         $aSendRes = $this->maybeSendPaymentOKNotification( 'paid_tshirt', $aData["email"] );
-        $aOk      = array(
+        $aOk = array(
           "paid"                            => true,
           "paid-timestamp"                  => $iTimestampNow,
           "paid_tshirt_notification_result" => $aSendRes['res'],
@@ -7366,26 +7611,26 @@ class FLORP {
     // wp_die();
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
-    $aData           = $_POST;
+    $aData = $_POST;
     $strErrorMessage = "Could not mark the flashmob participant '{$aData['participantEmail']}' as having paid";
     if ( !isset( $this->aOptions["aTshirtsIntf"] ) || empty( $this->aOptions["aTshirtsIntf"] ) || !isset( $aData['year'] )) {
       $aData["message"] = $strErrorMessage;
     } else {
-      $iYear                       = $aData['year'];
-      $iTimestampNow               = (int) current_time( 'timestamp' );
-      $aData["ok"]                 = true;
+      $iYear = $aData['year'];
+      $iTimestampNow = (int) current_time( 'timestamp' );
+      $aData["ok"] = true;
       $aData["removeRowOnSuccess"] = false;
-      $aData["replaceButton"]      = true;
-      $strTitle                    = ' title="' . date( $this->strDateFormat, $iTimestampNow ) . '"';
-      $strPaymentWarningButtonID   = str_replace( "-paid-", "-paymentWarning-", $aData['buttonId'] );
-      $strCancelOrderButtonID      = str_replace( "-paid-", "-cancelOrder-", $aData['buttonId'] );
-      $aData["hideSelector"]       = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strPaymentWarningButtonID}], tr[data-row-id={$aData['rowId']}] span[data-button-id={$strCancelOrderButtonID}]";
-      $aData["replaceButtonHtml"]  = '<span data-button-id="' . $aData['buttonId'] . '" class="notice notice-success"' . $strTitle . '>' . $aData['textDefault'] . '</span>';
+      $aData["replaceButton"] = true;
+      $strTitle = ' title="' . date( $this->strDateFormat, $iTimestampNow ) . '"';
+      $strPaymentWarningButtonID = str_replace( "-paid-", "-paymentWarning-", $aData['buttonId'] );
+      $strCancelOrderButtonID = str_replace( "-paid-", "-cancelOrder-", $aData['buttonId'] );
+      $aData["hideSelector"] = "tr[data-row-id={$aData['rowId']}] span[data-button-id={$strPaymentWarningButtonID}], tr[data-row-id={$aData['rowId']}] span[data-button-id={$strCancelOrderButtonID}]";
+      $aData["replaceButtonHtml"] = '<span data-button-id="' . $aData['buttonId'] . '" class="notice notice-success"' . $strTitle . '>' . $aData['textDefault'] . '</span>';
       if (defined( 'FLORP_DEVEL' ) && FLORP_DEVEL === true && defined( 'FLORP_DEVEL_FAKE_ACTIONS' ) && FLORP_DEVEL_FAKE_ACTIONS === true) {
         $aData["message"] = "The flashmob participant '{$aData['participantEmail']}' was marked as having paid successfully (NOT: FLORP_DEVEL is on!)";
       } else {
         $aSendRes = $this->maybeSendPaymentOKNotification( 'paid_tshirt', $aData["email"] );
-        $aOk      = array(
+        $aOk = array(
           "paid"                            => true,
           "paid-timestamp"                  => $iTimestampNow,
           "paid_tshirt_notification_result" => $aSendRes['res'],
@@ -7414,17 +7659,17 @@ class FLORP {
     // wp_die();
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
-    $aData           = $_POST;
+    $aData = $_POST;
     $strErrorMessage = "Could not mark successful tshirt delivery for the flashmob participant '{$aData['participantEmail']}'";
     if ( !isset( $this->aOptions["aTshirts"] ) || empty( $this->aOptions["aTshirts"] )) {
       $aData["message"] = $strErrorMessage;
     } else {
-      $iTimestampNow               = (int) current_time( 'timestamp' );
-      $aData["ok"]                 = true;
+      $iTimestampNow = (int) current_time( 'timestamp' );
+      $aData["ok"] = true;
       $aData["removeRowOnSuccess"] = false;
-      $aData["replaceButton"]      = true;
-      $strTitle                    = ' title="' . date( $this->strDateFormat, $iTimestampNow ) . '"';
-      $aData["replaceButtonHtml"]  = '<span data-button-id="' . $aData['buttonId'] . '" class="notice notice-success"' . $strTitle . '>' . $aData['textDefault'] . '</span>';
+      $aData["replaceButton"] = true;
+      $strTitle = ' title="' . date( $this->strDateFormat, $iTimestampNow ) . '"';
+      $aData["replaceButtonHtml"] = '<span data-button-id="' . $aData['buttonId'] . '" class="notice notice-success"' . $strTitle . '>' . $aData['textDefault'] . '</span>';
       if (defined( 'FLORP_DEVEL' ) && FLORP_DEVEL === true && defined( 'FLORP_DEVEL_FAKE_ACTIONS' ) && FLORP_DEVEL_FAKE_ACTIONS === true) {
         $aData["message"] = "The tshirt delivery for flashmob participant '{$aData['participantEmail']}' was marked successfully (NOT: FLORP_DEVEL is on!)";
       } else {
@@ -7464,18 +7709,18 @@ class FLORP {
     // wp_die();
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
-    $aData           = $_POST;
+    $aData = $_POST;
     $strErrorMessage = "Could not mark successful tshirt delivery for the flashmob participant '{$aData['participantEmail']}'";
     if ( !isset( $this->aOptions["aTshirtsIntf"] ) || empty( $this->aOptions["aTshirtsIntf"] ) || !isset( $aData['year'] )) {
       $aData["message"] = $strErrorMessage;
     } else {
-      $iYear                       = $aData['year'];
-      $iTimestampNow               = (int) current_time( 'timestamp' );
-      $aData["ok"]                 = true;
+      $iYear = $aData['year'];
+      $iTimestampNow = (int) current_time( 'timestamp' );
+      $aData["ok"] = true;
       $aData["removeRowOnSuccess"] = false;
-      $aData["replaceButton"]      = true;
-      $strTitle                    = ' title="' . date( $this->strDateFormat, $iTimestampNow ) . '"';
-      $aData["replaceButtonHtml"]  = '<span data-button-id="' . $aData['buttonId'] . '" class="notice notice-success"' . $strTitle . '>' . $aData['textDefault'] . '</span>';
+      $aData["replaceButton"] = true;
+      $strTitle = ' title="' . date( $this->strDateFormat, $iTimestampNow ) . '"';
+      $aData["replaceButtonHtml"] = '<span data-button-id="' . $aData['buttonId'] . '" class="notice notice-success"' . $strTitle . '>' . $aData['textDefault'] . '</span>';
       if (defined( 'FLORP_DEVEL' ) && FLORP_DEVEL === true && defined( 'FLORP_DEVEL_FAKE_ACTIONS' ) && FLORP_DEVEL_FAKE_ACTIONS === true) {
         $aData["message"] = "The tshirt delivery for flashmob participant '{$aData['participantEmail']}' was marked successfully (NOT: FLORP_DEVEL is on!)";
       } else {
@@ -7504,14 +7749,14 @@ class FLORP {
     // wp_die();
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
-    $aData           = $_POST;
+    $aData = $_POST;
     $strErrorMessage = "Could not add order date";
-    $strOkMessage    = "Successfully added order date";
-    $aOrderTypes     = array( 'all', 'paid', 'unpaid' );
+    $strOkMessage = "Successfully added order date";
+    $aOrderTypes = array( 'all', 'paid', 'unpaid' );
     if (isset( $aData['orderdate'], $aData['orderdate_timestamp'], $aData['ordertype'] ) && in_array( $aData['ordertype'], $aOrderTypes ) && intval( $aData['orderdate_timestamp'] ) > 0) {
-      $iTimestamp    = intval( $aData['orderdate_timestamp'] );
+      $iTimestamp = intval( $aData['orderdate_timestamp'] );
       $iTimestampMax = 0;
-      $bTest         = false; // NOTE DEVEL TEST //
+      $bTest = false; // NOTE DEVEL TEST //
       if ($bTest) {
         $this->aOptions['aOrderDates'] = array();
       }
@@ -7525,7 +7770,7 @@ class FLORP {
       } elseif (isset( $this->aOptions['aOrderDates'][$iTimestamp] )) {
         $aData['message'] = $strErrorMessage . ". This order date exists already!";
       } else {
-        $aOrders   = $this->get_tshirt_orders_by_timestamp( $iTimestamp, $aData['ordertype'], true, false );
+        $aOrders = $this->get_tshirt_orders_by_timestamp( $iTimestamp, $aData['ordertype'], true, false );
         $aOrderIDs = array();
         foreach ($aOrders as $aTshirtData) {
           $aOrderIDs[] = $aTshirtData['id'];
@@ -7547,12 +7792,12 @@ class FLORP {
 
           if (strlen( $strOrderRowHtml ) > 0) {
             $aData["insertAfterSelector"] = "table.florpTshirtOrderTable tr:last-of-type";
-            $aData["insertHtml"]          = $strOrderRowHtml;
+            $aData["insertHtml"] = $strOrderRowHtml;
           }
           $aData["clearInputNames"] = true;
           // $aData["tshirt_order_dates_row"] = $strOrderRowHtml;
           $aData['message'] = $strOkMessage;
-          $aData['ok']      = true;
+          $aData['ok'] = true;
         }
       }
     } else {
@@ -7586,11 +7831,11 @@ class FLORP {
       // OK to send //
       $strMessageContent = str_replace( '%REASON%', $strReason, $this->aOptions['strPaymentOKNotificationMsg'] );
       $strMessageSubject = str_replace( '%REASON%', $strReason, $this->aOptions['strPaymentOKNotificationSbj'] );
-      $aHeaders          = array( 'Content-Type: text/html; charset=UTF-8' );
-      $bSendResult       = wp_mail( $strEmail, $strMessageSubject, $strMessageContent, $aHeaders );
+      $aHeaders = array( 'Content-Type: text/html; charset=UTF-8' );
+      $bSendResult = wp_mail( $strEmail, $strMessageSubject, $strMessageContent, $aHeaders );
 
       if ($bSendResult) {
-        $aReturn['res']     = true;
+        $aReturn['res'] = true;
         $aReturn['message'] = "Payment OK notification was sent successfully to '{$strEmail}'.";
       } else {
         $aReturn['message'] .= " There was an error while sending.";
@@ -7616,21 +7861,21 @@ class FLORP {
     // wp_die();
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
-    $aData           = $_POST;
+    $aData = $_POST;
     $strErrorMessage = "Could not send payment warning to the flashmob participant '{$aData['email']}'";
     if ( !isset( $this->aOptions["aTshirts"] ) || empty( $this->aOptions["aTshirts"] ) || !isset( $this->aOptions['strTshirtPaymentWarningNotificationMsg'], $this->aOptions['strTshirtPaymentWarningNotificationSbj'] ) || empty( $this->aOptions['strTshirtPaymentWarningNotificationMsg'] ) || empty( $this->aOptions['strTshirtPaymentWarningNotificationSbj'] )) {
       $aData["message"] = $strErrorMessage;
     } else {
-      $iTimestampNow               = (int) current_time( 'timestamp' );
+      $iTimestampNow = (int) current_time( 'timestamp' );
       $aData["removeRowOnSuccess"] = false;
-      $aData["replaceButton"]      = true;
-      $strTitle                    = ' title="' . date( $this->strDateFormat, $iTimestampNow ) . '"';
-      $aData["replaceButtonHtml"]  = '<span data-button-id="' . $aData['buttonId'] . '" class="notice notice-success"' . $strTitle . ' data-text="' . $aData['textDefault'] . '">Upozornený na neskorú platbu</span>';
+      $aData["replaceButton"] = true;
+      $strTitle = ' title="' . date( $this->strDateFormat, $iTimestampNow ) . '"';
+      $aData["replaceButtonHtml"] = '<span data-button-id="' . $aData['buttonId'] . '" class="notice notice-success"' . $strTitle . ' data-text="' . $aData['textDefault'] . '">Upozornený na neskorú platbu</span>';
 
       $strMessageContent = $this->aOptions['strTshirtPaymentWarningNotificationMsg'];
       $strMessageSubject = $this->aOptions['strTshirtPaymentWarningNotificationSbj'];
-      $aHeaders          = array( 'Content-Type: text/html; charset=UTF-8' );
-      $bSendResult       = wp_mail( $aData["email"], $strMessageSubject, $strMessageContent, $aHeaders );
+      $aHeaders = array( 'Content-Type: text/html; charset=UTF-8' );
+      $bSendResult = wp_mail( $aData["email"], $strMessageSubject, $strMessageContent, $aHeaders );
 
       if ($bSendResult) {
         $aData["ok"] = true;
@@ -7676,7 +7921,7 @@ class FLORP {
     // wp_die();
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
-    $aData           = $_POST;
+    $aData = $_POST;
     $strErrorMessage = "Could not send payment warning to the flashmob participant '{$aData['email']}'";
     if ( !isset( $this->aOptions["aTshirtsIntf"] ) || empty( $this->aOptions["aTshirtsIntf"] )
          || !isset( $this->aOptions['strIntfTshirtPaymentWarningNotificationMsg'], $this->aOptions['strIntfTshirtPaymentWarningNotificationSbj'] )
@@ -7684,17 +7929,17 @@ class FLORP {
          || !isset( $aData['year'] )) {
       $aData["message"] = $strErrorMessage;
     } else {
-      $iYear                       = $aData['year'];
-      $iTimestampNow               = (int) current_time( 'timestamp' );
+      $iYear = $aData['year'];
+      $iTimestampNow = (int) current_time( 'timestamp' );
       $aData["removeRowOnSuccess"] = false;
-      $aData["replaceButton"]      = true;
-      $strTitle                    = ' title="' . date( $this->strDateFormat, $iTimestampNow ) . '"';
-      $aData["replaceButtonHtml"]  = '<span data-button-id="' . $aData['buttonId'] . '" class="notice notice-success"' . $strTitle . ' data-text="' . $aData['textDefault'] . '">Upozornený na neskorú platbu</span>';
+      $aData["replaceButton"] = true;
+      $strTitle = ' title="' . date( $this->strDateFormat, $iTimestampNow ) . '"';
+      $aData["replaceButtonHtml"] = '<span data-button-id="' . $aData['buttonId'] . '" class="notice notice-success"' . $strTitle . ' data-text="' . $aData['textDefault'] . '">Upozornený na neskorú platbu</span>';
 
       $strMessageContent = $this->aOptions['strIntfTshirtPaymentWarningNotificationMsg'];
       $strMessageSubject = $this->aOptions['strIntfTshirtPaymentWarningNotificationSbj'];
-      $aHeaders          = array( 'Content-Type: text/html; charset=UTF-8' );
-      $bSendResult       = wp_mail( $aData["email"], $strMessageSubject, $strMessageContent, $aHeaders );
+      $aHeaders = array( 'Content-Type: text/html; charset=UTF-8' );
+      $bSendResult = wp_mail( $aData["email"], $strMessageSubject, $strMessageContent, $aHeaders );
 
       if ($bSendResult) {
         $aData["ok"] = true;
@@ -7729,7 +7974,7 @@ class FLORP {
     // wp_die();
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
-    $aData           = $_POST;
+    $aData = $_POST;
     $strErrorMessage = "Could not cancel the tshirt order of flashmob participant '{$aData['email']}'";
     if ( !isset( $this->aOptions["aParticipants"] ) || empty( $this->aOptions["aParticipants"] )) {
       $aData["message"] = $strErrorMessage;
@@ -7738,7 +7983,7 @@ class FLORP {
         $aPreferences = $this->aOptions["aParticipants"][$aData["leader_id"]][$aData["email"]]['preferences'];
         if (is_array( $aPreferences ) && ( $iKey = array_search( "flashmob_participant_tshirt", $aPreferences ) ) !== false) {
           $aData["removeRowOnSuccess"] = true;
-          $aData["ok"]                 = true;
+          $aData["ok"] = true;
           if (defined( 'FLORP_DEVEL' ) && FLORP_DEVEL === true && defined( 'FLORP_DEVEL_FAKE_ACTIONS' ) && FLORP_DEVEL_FAKE_ACTIONS === true) {
             $aData["message"] = "The tshirt order of flashmob participant '{$aData['email']}' was cancelled successfully (NOT: FLORP_DEVEL is on!)";
           } else {
@@ -7763,7 +8008,7 @@ class FLORP {
     // wp_die();
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
-    $aData           = $_POST;
+    $aData = $_POST;
     $strErrorMessage = "Could not cancel the tshirt order of flashmob participant '{$aData['email']}'";
     if ( !isset( $this->aOptions["aIntfParticipants"] ) || empty( $this->aOptions["aIntfParticipants"] ) || !isset( $aData['year'] )) {
       $aData["message"] = $strErrorMessage;
@@ -7773,7 +8018,7 @@ class FLORP {
         $aPreferences = $this->aOptions["aIntfParticipants"][$iYear][$aData["email"]]['preferences'];
         if (is_array( $aPreferences ) && ( $iKey = array_search( "flashmob_participant_tshirt", $aPreferences ) ) !== false) {
           $aData["removeRowOnSuccess"] = true;
-          $aData["ok"]                 = true;
+          $aData["ok"] = true;
           if (defined( 'FLORP_DEVEL' ) && FLORP_DEVEL === true && defined( 'FLORP_DEVEL_FAKE_ACTIONS' ) && FLORP_DEVEL_FAKE_ACTIONS === true) {
             $aData["message"] = "The tshirt order of flashmob participant '{$aData['email']}' was cancelled successfully (NOT: FLORP_DEVEL is on!)";
           } else {
@@ -7797,16 +8042,16 @@ class FLORP {
   public function action__florp_create_subsite_callback() {
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
-    $aData           = $_POST;
+    $aData = $_POST;
     $strErrorMessage = "Could not create subsite for subdomain '{$aData['subdomain']}'.";
-    $oUser           = wp_get_current_user();
-    $iUserID         = get_current_user_id();
+    $oUser = wp_get_current_user();
+    $iUserID = get_current_user_id();
     if (is_super_admin( $iUserID ) || current_user_can( 'manage_sites' )) {
       $strDomainEnding = "." . $this->get_root_domain();
-      $strSlug         = $aData["subdomain"];
-      $strDomain       = $strSlug . $strDomainEnding;
-      $strPath         = '/';
-      $aArgs           = array(
+      $strSlug = $aData["subdomain"];
+      $strDomain = $strSlug . $strDomainEnding;
+      $strPath = '/';
+      $aArgs = array(
         'slug'       => $aData["subdomain"],
         'source'     => $this->aOptions['iCloneSourceBlogID'],
         'email'      => $oUser->user_email,
@@ -7817,11 +8062,11 @@ class FLORP {
         if (isset( $aArgs['source'] ) && $aArgs['source'] > 0) {
           $bTest = false; // NOTE DEVEL TEST //
           if ($bTest) {
-            $aData['ok']      = true;
+            $aData['ok'] = true;
             $aData['message'] = "ok message";
           } else {
             $aResult = $this->mucd_clone_site( $aArgs );
-            $aData   = array_merge( $aData, $aResult );
+            $aData = array_merge( $aData, $aResult );
           }
         } else {
           $aData["message"] = $strErrorMessage . "<br/>Source subsite is not set!";
@@ -7831,7 +8076,7 @@ class FLORP {
         if (is_wp_error( $iID )) {
           $aData["message"] = $strErrorMessage . "<br/>" . $iID->get_error_message();
         } else {
-          $aData["ok"]      = true;
+          $aData["ok"] = true;
           $aData["message"] = "Successfully created subsite: '{$strDomain}'";
         }
       }
@@ -7844,10 +8089,10 @@ class FLORP {
       $aData["removeRowOnSuccess"] = false;
       if ($aData["rowId"] === "florpRow-subsite-0") {
         $aData["insertAfterSelector"] = "table tr:last-of-type";
-        $aData["insertHtml"]          = "<tr><td>-</td><td>-</td><td>{$strDomain}</td></tr>";
-        $aData["clearInputNames"]     = true;
+        $aData["insertHtml"] = "<tr><td>-</td><td>-</td><td>{$strDomain}</td></tr>";
+        $aData["clearInputNames"] = true;
       } else {
-        $aData["hideSelector"]  = "tr[data-row-id={$aData['rowId']}] span[data-user_id={$aData['user_id']}], tr[data-row-id={$aData['rowId']}] .subsite br";
+        $aData["hideSelector"] = "tr[data-row-id={$aData['rowId']}] span[data-user_id={$aData['user_id']}], tr[data-row-id={$aData['rowId']}] .subsite br";
         $aData["replaceButton"] = true;
       }
       $aData["replaceButtonHtml"] = "<span data-button-id=\"{$aData['buttonId']}\">{$strDomain}</span>";
@@ -7863,18 +8108,18 @@ class FLORP {
 
     $bTest = false; // NOTE DEVEL TEST //
 
-    $aData                       = $_POST;
-    $strErrorMessage             = "Could not delete form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'";
-    $strOkMessage                = "Successfully deleted form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'";
+    $aData = $_POST;
+    $strErrorMessage = "Could not delete form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'";
+    $strOkMessage = "Successfully deleted form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'";
     $aData["removeRowOnSuccess"] = true;
 
     $mixChangeBlogID = false;
-    $iBlogID         = intval( $aData['blogId'] );
-    $iFormID         = intval( $aData['formId'] );
-    $iSubmissionID   = intval( $aData['submissionId'] );
+    $iBlogID = intval( $aData['blogId'] );
+    $iFormID = intval( $aData['formId'] );
+    $iSubmissionID = intval( $aData['submissionId'] );
 
     if ( !isset( $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID], $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'][$iSubmissionID] )) {
-      $aData['message']            = $strErrorMessage;
+      $aData['message'] = $strErrorMessage;
       $aData['submissions_option'] = $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID];
     } else {
       if ($iBlogID !== intval( get_current_blog_id() )) {
@@ -7884,7 +8129,7 @@ class FLORP {
         switch_to_blog( $mixChangeBlogID );
       }
 
-      $oSubmission  = Ninja_Forms()->form( $iFormID )->get_sub( $iSubmissionID );
+      $oSubmission = Ninja_Forms()->form( $iFormID )->get_sub( $iSubmissionID );
       $strUserEmail = $oSubmission->get_field_value( 'user_email' );
       if (empty( $strUserEmail )) {
         $aData['message'] = $strErrorMessage;
@@ -7893,7 +8138,7 @@ class FLORP {
         $oSubmission->delete();
       }
 
-      $oSubmission   = Ninja_Forms()->form( $iFormID )->get_sub( $iSubmissionID );
+      $oSubmission = Ninja_Forms()->form( $iFormID )->get_sub( $iSubmissionID );
       $strUserEmailN = $oSubmission->get_field_value( 'user_email' );
       if ( !$bTest && $strUserEmail === $strUserEmailN) {
         $aData['message'] = $strErrorMessage;
@@ -7906,7 +8151,7 @@ class FLORP {
       if ( !isset( $aData['message'] )) {
         if (isset( $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID], $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'][$iSubmissionID] )) {
           if ($bTest) {
-            $aData['deleted']                   = $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'][$iSubmissionID];
+            $aData['deleted'] = $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'][$iSubmissionID];
             $aData['submissions_option_before'] = $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'];
           }
           unset( $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][$iFormID]['rows'][$iSubmissionID] );
@@ -7932,14 +8177,14 @@ class FLORP {
             }
           }
           if ( !isset( $aData['message'] )) {
-            $aData['ok']      = true;
+            $aData['ok'] = true;
             $aData['message'] = $strOkMessage;
             if ( !$bTest) {
               $this->add_option_change( "ajax__delete_nf_submission", "", "form #{$iFormID} submission #{$iSubmissionID} of '{$aData['email']}'" );
             }
           }
         } else {
-          $aData['ok']      = true;
+          $aData['ok'] = true;
           $aData['message'] = $strOkMessage;
           if ( !$bTest) {
             $this->add_option_change( "ajax__delete_nf_submission", "", "form #{$iFormID} submission #{$iSubmissionID} of '{$aData['email']}'" );
@@ -7955,12 +8200,12 @@ class FLORP {
   public function action__import_flashmob_nf_submission_callback() {
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
-    $aData                       = $_POST;
-    $strErrorMessage             = "Could not import form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'";
-    $strOkMessage                = "Successfully imported form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'";
+    $aData = $_POST;
+    $strErrorMessage = "Could not import form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'";
+    $strOkMessage = "Successfully imported form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'";
     $aData["removeRowOnSuccess"] = true;
-    $aData["hideSelector"]       = "tr.missedSubmissionRow[data-email='{$aData['email']}']";
-    $aData['blogId']             = intval( $aData['blogId'] );
+    $aData["hideSelector"] = "tr.missedSubmissionRow[data-email='{$aData['email']}']";
+    $aData['blogId'] = intval( $aData['blogId'] );
 
     if ($aData['blogId'] === $this->iFlashmobBlogID) {
       $aSubmission = $this->get_nf_submission( $aData['blogId'], $aData['formId'], $aData['submissionId'] );
@@ -7973,7 +8218,7 @@ class FLORP {
           // Leader is pending //
           $aData['message'] = $strErrorMessage . "\nLeader is pending approval";
         } else {
-          $aFields   = array();
+          $aFields = array();
           $aSkipKeys = array( '_submission_date', '_submission_date_wp_format', '_submission_timestamp', '_form_id', '_submission_id', '_blog_id', '_field_types' );
           foreach ($aSubmission as $key => $val) {
             if (in_array( $key, $aSkipKeys )) {
@@ -7988,17 +8233,17 @@ class FLORP {
               'value' => $val
             );
           }
-          $aFormData            = array(
+          $aFormData = array(
             'form_id' => $this->iProfileFormNinjaFormIDFlashmob,
             'fields'  => $aFields
           );
-          $bIsFlashmobBlogBak   = $this->isFlashmobBlog;
-          $bIsMainBlogBak       = $this->isMainBlog;
+          $bIsFlashmobBlogBak = $this->isFlashmobBlog;
+          $bIsMainBlogBak = $this->isMainBlog;
           $this->isFlashmobBlog = true;
-          $this->isMainBlog     = false;
-          $res                  = $this->action__update_user_profile( $aFormData );
+          $this->isMainBlog = false;
+          $res = $this->action__update_user_profile( $aFormData );
           $this->isFlashmobBlog = $bIsFlashmobBlogBak;
-          $this->isMainBlog     = $bIsMainBlogBak;
+          $this->isMainBlog = $bIsMainBlogBak;
           // $aData['res'] = var_export($res, true); // NOTE DEVEL
 
           if ( !$this->flashmob_participant_exists( $aData['email'] )) {
@@ -8006,7 +8251,7 @@ class FLORP {
             $aData['message'] = $strErrorMessage;
           } else {
             // Participant was imported //
-            $aData['ok']      = true;
+            $aData['ok'] = true;
             $aData['message'] = $strOkMessage;
             $this->add_option_change( "ajax__import_flashmob_nf_submission", "", "form #{$aData['formId']} submission #{$aData['submissionId']} of '{$aData['email']}'" );
           }
@@ -8027,14 +8272,14 @@ class FLORP {
   public function action__cancel_flashmob_callback( $bCancelFlashmob = true ) {
     check_ajax_referer( 'srd-florp-admin-security-string', 'security' );
 
-    $aData           = $_POST;
+    $aData = $_POST;
     $bCancelFlashmob = !( $bCancelFlashmob === false );
     if ($bCancelFlashmob) {
       $strErrorMessage = "Could not cancel flashmob";
-      $strOkMessage    = "Successfully cancelled flashmob";
+      $strOkMessage = "Successfully cancelled flashmob";
     } else {
       $strErrorMessage = "Could not move participants";
-      $strOkMessage    = "Successfully moved participants";
+      $strOkMessage = "Successfully moved participants";
     }
 
     $iUserID = $aData['userId'];
@@ -8042,7 +8287,7 @@ class FLORP {
       $iUserID = intval( $iUserID );
       if ($iUserID > 0) {
         $strErrorMessage .= " of user #{$iUserID}";
-        $strOkMessage    .= " of user #{$iUserID}";
+        $strOkMessage .= " of user #{$iUserID}";
         if (isset( $aData['florp_cancel_flashmob_reassign_participants-' . $iUserID] ) && $aData['florp_cancel_flashmob_reassign_participants-' . $iUserID] !== "") {
           $iReassignTo = intval( $aData['florp_cancel_flashmob_reassign_participants-' . $iUserID] );
         } else {
@@ -8078,8 +8323,8 @@ class FLORP {
               }
               foreach ($this->aOptions['aParticipants'][$iUserID] as $strEmail => $aParticipantData) {
                 $strMessageContent = $this->aOptions['strParticipantRemovedMessage'];
-                $strBlogname       = trim( wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES ) );
-                $aHeaders          = array( 'Content-Type: text/html; charset=UTF-8' );
+                $strBlogname = trim( wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES ) );
+                $aHeaders = array( 'Content-Type: text/html; charset=UTF-8' );
                 $this->new_user_notification( $strEmail, '', $strEmail, $strBlogname, $strMessageContent, $this->aOptions['strParticipantRemovedSubject'], $aHeaders );
               }
               unset( $this->aOptions['aParticipants'][$iUserID] );
@@ -8104,9 +8349,9 @@ class FLORP {
           if ($bCancelFlashmob) {
             update_user_meta( $iUserID, 'flashmob_organizer', '0' );
           }
-          $aData['ok']          = true;
-          $strOkMessage         .= ". <strong>Please wait for the page to reload</strong>";
-          $aData['message']     = $strOkMessage;
+          $aData['ok'] = true;
+          $strOkMessage .= ". <strong>Please wait for the page to reload</strong>";
+          $aData['message'] = $strOkMessage;
           $aData['reload_page'] = true;
           $this->add_option_change( "ajax__cancel_flashmob", "", $aData['message'] );
         }
@@ -8181,7 +8426,7 @@ class FLORP {
     global $wpdb, $current_site;
 
 
-    $base  = $assoc_args['slug'];
+    $base = $assoc_args['slug'];
     $title = isset( $assoc_args['title'] ) ? $assoc_args['title'] : ucfirst( $base );
 
     $email = empty( $assoc_args['email'] ) ? '' : $assoc_args['email'];
@@ -8222,11 +8467,11 @@ class FLORP {
     $email = sanitize_email( $email );
     if (empty( $email ) || !is_email( $email )) {
       $super_admins = get_super_admins();
-      $email        = '';
+      $email = '';
       if ( !empty( $super_admins ) && is_array( $super_admins )) {
         // Just get the first one
         $super_login = $super_admins[0];
-        $super_user  = get_user_by( 'login', $super_login );
+        $super_user = get_user_by( 'login', $super_login );
         if ($super_user) {
           $email = $super_user->user_email;
         }
@@ -8235,10 +8480,10 @@ class FLORP {
 
     if (is_subdomain_install()) {
       $newdomain = $base . '.' . preg_replace( '|^www\.|', '', $network->domain );
-      $path      = $network->path;
+      $path = $network->path;
     } else {
       $newdomain = $network->domain;
-      $path      = $network->path . $base . '/';
+      $path = $network->path . $base . '/';
     }
 
     // Source ?
@@ -8264,10 +8509,10 @@ class FLORP {
 
     // Write log
     if (isset( $assoc_args['log'] )) {
-      $log      = 'yes';
+      $log = 'yes';
       $log_path = $assoc_args['log'];
     } else {
-      $log      = 'no';
+      $log = 'no';
       $log_path = '';
     }
 
@@ -8301,13 +8546,13 @@ class FLORP {
         switch_to_blog( $form_message['site_id'] );
 
         if ( !isset( $assoc_args['v'] )) {
-          $aOutput['message']     = 'Site ' . $form_message['site_id'] . ' created: ' . get_site_url();
+          $aOutput['message'] = 'Site ' . $form_message['site_id'] . ' created: ' . get_site_url();
           $aOutput['new_site_id'] = $form_message['site_id'];
         } else { // Verbose mode
-          $aOutput['message']            = $form_message['msg'];
-          $aOutput['new_site_id']        = $form_message['site_id'];
-          $aOutput['new_site_title']     = get_bloginfo( 'name' );
-          $aOutput['new_site_front']     = get_site_url();
+          $aOutput['message'] = $form_message['msg'];
+          $aOutput['new_site_id'] = $form_message['site_id'];
+          $aOutput['new_site_title'] = get_bloginfo( 'name' );
+          $aOutput['new_site_front'] = get_site_url();
           $aOutput['new_site_dashboard'] = admin_url();
           $aOutput['new_site_customize'] = admin_url( 'customize.php' );
         }
@@ -8324,7 +8569,7 @@ class FLORP {
       'blog_id' => $this->iMainBlogID,
       'role'    => 'administrator'
     );
-    $aAdmins    = get_users( $aAdminArgs );
+    $aAdmins = get_users( $aAdminArgs );
     if (empty( $aAdmins ) || ( defined( 'FLORP_DEVEL' ) && FLORP_DEVEL === true )) {
       $aAdmins = array( wp_get_current_user() );
     }
@@ -8344,7 +8589,7 @@ class FLORP {
         continue;
       }
       $strDomain = $aSite['domain'];
-      $iID       = intval( $aSite['blog_id'] );
+      $iID = intval( $aSite['blog_id'] );
       if (is_main_site( $iID )) {
         return $strDomain;
       }
@@ -8356,39 +8601,39 @@ class FLORP {
   private function get_options_page_vars() {
     $aReturn = array();
 
-    $aReturn['optionNone']  = '<option value="0">Žiadny</option>';
+    $aReturn['optionNone'] = '<option value="0">Žiadny</option>';
     $aReturn['optionNoneF'] = '<option value="0">Žiadna</option>';
 
-    $optionsFlashmobSite    = '';
-    $optionsMainSite        = '';
-    $optionsNewsletterSite  = $aReturn['optionNoneF'];
+    $optionsFlashmobSite = '';
+    $optionsMainSite = '';
+    $optionsNewsletterSite = $aReturn['optionNoneF'];
     $optionsCloneSourceSite = $aReturn['optionNoneF'];
-    $optionsIntfSite        = '';
-    $aSites                 = wp_get_sites();
-    $strMainBlogDomain      = '';
-    $strFlashmobBlogDomain  = '';
-    $strIntfBlogDomain      = '';
+    $optionsIntfSite = '';
+    $aSites = wp_get_sites();
+    $strMainBlogDomain = '';
+    $strFlashmobBlogDomain = '';
+    $strIntfBlogDomain = '';
     foreach ($aSites as $i => $aSite) {
       if ($aSite['public'] != 1 || $aSite['deleted'] == 1 || $aSite['archived'] == 1) {
         continue;
       }
-      $iID      = $aSite['blog_id'];
+      $iID = $aSite['blog_id'];
       $strTitle = $aSite['domain'] . " (ID: {$iID})";
       if ($this->iFlashmobBlogID == $iID) {
         $strSelectedFlashmobSite = 'selected="selected"';
-        $strFlashmobBlogDomain   = $aSite['domain'];
+        $strFlashmobBlogDomain = $aSite['domain'];
       } else {
         $strSelectedFlashmobSite = '';
       }
       if ($this->iMainBlogID == $iID) {
         $strSelectedMainSite = 'selected="selected"';
-        $strMainBlogDomain   = $aSite['domain'];
+        $strMainBlogDomain = $aSite['domain'];
       } else {
         $strSelectedMainSite = '';
       }
       if ($this->iIntfBlogID == $iID) {
         $strSelectedIntfSite = 'selected="selected"';
-        $strIntfBlogDomain   = $aSite['domain'];
+        $strIntfBlogDomain = $aSite['domain'];
       } else {
         $strSelectedIntfSite = '';
       }
@@ -8402,20 +8647,20 @@ class FLORP {
       } else {
         $strSelectedCloneSourceSite = '';
       }
-      $optionsFlashmobSite    .= '<option value="' . $iID . '" ' . $strSelectedFlashmobSite . '>' . $strTitle . '</option>';
-      $optionsMainSite        .= '<option value="' . $iID . '" ' . $strSelectedMainSite . '>' . $strTitle . '</option>';
-      $optionsNewsletterSite  .= '<option value="' . $iID . '" ' . $strSelectedNewsletterSite . '>' . $strTitle . '</option>';
+      $optionsFlashmobSite .= '<option value="' . $iID . '" ' . $strSelectedFlashmobSite . '>' . $strTitle . '</option>';
+      $optionsMainSite .= '<option value="' . $iID . '" ' . $strSelectedMainSite . '>' . $strTitle . '</option>';
+      $optionsNewsletterSite .= '<option value="' . $iID . '" ' . $strSelectedNewsletterSite . '>' . $strTitle . '</option>';
       $optionsCloneSourceSite .= '<option value="' . $iID . '" ' . $strSelectedCloneSourceSite . '>' . $strTitle . '</option>';
-      $optionsIntfSite        .= '<option value="' . $iID . '" ' . $strSelectedIntfSite . '>' . $strTitle . '</option>';
+      $optionsIntfSite .= '<option value="' . $iID . '" ' . $strSelectedIntfSite . '>' . $strTitle . '</option>';
     }
-    $aReturn['optionsFlashmobSite']    = $optionsFlashmobSite;
-    $aReturn['optionsMainSite']        = $optionsMainSite;
-    $aReturn['optionsNewsletterSite']  = $optionsNewsletterSite;
+    $aReturn['optionsFlashmobSite'] = $optionsFlashmobSite;
+    $aReturn['optionsMainSite'] = $optionsMainSite;
+    $aReturn['optionsNewsletterSite'] = $optionsNewsletterSite;
     $aReturn['optionsCloneSourceSite'] = $optionsCloneSourceSite;
-    $aReturn['optionsIntfSite']        = $optionsIntfSite;
-    $aReturn['strIntfBlogDomain']      = $strIntfBlogDomain;
-    $aReturn['strMainBlogDomain']      = $strMainBlogDomain;
-    $aReturn['strFlashmobBlogDomain']  = $strFlashmobBlogDomain;
+    $aReturn['optionsIntfSite'] = $optionsIntfSite;
+    $aReturn['strIntfBlogDomain'] = $strIntfBlogDomain;
+    $aReturn['strMainBlogDomain'] = $strMainBlogDomain;
+    $aReturn['strFlashmobBlogDomain'] = $strFlashmobBlogDomain;
 
     $aBooleanOptionsChecked = array();
     foreach ($this->aBooleanOptions as $strOptionKey) {
@@ -8478,7 +8723,7 @@ class FLORP {
       // echo "<pre>" .var_export($this->get_qr_code("http://flashmob.salsarueda.dance/"), true). "</pre>";
     }
 
-    $aVariablesMain     = array(
+    $aVariablesMain = array(
       'optionsMainSite'        => $aVariables['optionsMainSite'],
       'optionNone'             => $aVariables['optionNone'],
       'optionNoneF'            => $aVariables['optionNoneF'],
@@ -8491,14 +8736,14 @@ class FLORP {
       'optionNoneF'            => $aVariables['optionNoneF'],
       'aBooleanOptionsChecked' => $aVariables['aBooleanOptionsChecked'],
     );
-    $aVariablesCommon   = array(
+    $aVariablesCommon = array(
       'aBooleanOptionsChecked' => $aVariables['aBooleanOptionsChecked'],
       'optionsNewsletterSite'  => $aVariables['optionsNewsletterSite'],
     );
 
-    $strSettingsHtmlMain     = $this->options_page_main( $aVariablesMain );
+    $strSettingsHtmlMain = $this->options_page_main( $aVariablesMain );
     $strSettingsHtmlFlashmob = $this->options_page_flashmob( $aVariablesFlashmob );
-    $strSettingsHtmlCommon   = $this->options_page_common( $aVariablesCommon );
+    $strSettingsHtmlCommon = $this->options_page_common( $aVariablesCommon );
 
     do_action( 'florp_options_page_notices' );
 
@@ -8510,10 +8755,10 @@ class FLORP {
   }
 
   private function options_page_main( $aVariables = array() ) {
-    $optionNone             = null;
-    $optionNoneF            = null;
+    $optionNone = null;
+    $optionNoneF = null;
     $optionsCloneSourceSite = null;
-    $optionsMainSite        = null;
+    $optionsMainSite = null;
     $aBooleanOptionsChecked = null;
     if (is_array( $aVariables ) && !empty( $aVariables )) {
       foreach ($aVariables as $strVarName => $mixVarValue) {
@@ -8529,7 +8774,7 @@ class FLORP {
     if (function_exists( 'Ninja_Forms' )) {
       $aForms = Ninja_Forms()->form()->get_forms();
       foreach ($aForms as $objForm) {
-        $iID      = $objForm->get_id();
+        $iID = $objForm->get_id();
         $strTitle = $objForm->get_setting( 'title' ) . " (ID: {$iID})";
         if ($this->iProfileFormNinjaFormIDMain == $iID) {
           $strSelectedMain = 'selected="selected"';
@@ -8548,7 +8793,7 @@ class FLORP {
       if ($aPopupsWPQuery->have_posts()) {
         while ($aPopupsWPQuery->have_posts()) :
           $aPopupsWPQuery->next_post();
-          $iID      = $aPopupsWPQuery->post->ID;
+          $iID = $aPopupsWPQuery->post->ID;
           $strTitle = $aPopupsWPQuery->post->post_title . " (ID: {$iID})";
           if ($this->iProfileFormPopupIDMain == $iID) {
             $strSelectedMain = 'selected="selected"';
@@ -8561,12 +8806,12 @@ class FLORP {
     }
 
     $optionsPagesMain = $optionNoneF;
-    $aPages           = get_pages();
+    $aPages = get_pages();
     foreach ($aPages as $oPage) {
-      $iID      = $oPage->ID;
+      $iID = $oPage->ID;
       $strTitle = $oPage->post_title . " (ID: {$iID})";
       if (function_exists( 'pll_get_post_language' )) {
-        $strLang  = pll_get_post_language( $iID, 'name' );
+        $strLang = pll_get_post_language( $iID, 'name' );
         $strTitle .= " [{$strLang}]";
       }
       if ($this->iProfileFormPageIDMain == $iID) {
@@ -8577,9 +8822,9 @@ class FLORP {
       $optionsPagesMain .= '<option value="' . $iID . '" ' . $strSelectedMain . '>' . $strTitle . '</option>';
     }
 
-    $strBeforeLoginFormHtmlMain                   = $this->get_wp_editor( $this->strBeforeLoginFormHtmlMain, 'florp_before_login_form_html_main' );
-    $wpEditorPendingUserPageContentHTML           = $this->get_wp_editor( $this->strPendingUserPageContentHTML, 'florp_pending_user_page_content_html' );
-    $wpEditorUserApprovedMessage                  = $this->get_wp_editor( $this->strUserApprovedMessage, 'florp_user_approved_message' );
+    $strBeforeLoginFormHtmlMain = $this->get_wp_editor( $this->strBeforeLoginFormHtmlMain, 'florp_before_login_form_html_main' );
+    $wpEditorPendingUserPageContentHTML = $this->get_wp_editor( $this->strPendingUserPageContentHTML, 'florp_pending_user_page_content_html' );
+    $wpEditorUserApprovedMessage = $this->get_wp_editor( $this->strUserApprovedMessage, 'florp_user_approved_message' );
     $wpEditorLeaderParticipantListNotificationMsg = $this->get_wp_editor( $this->aOptions['strLeaderParticipantListNotificationMsg'], 'florp_leader_participant_list_notif_msg' );
 
     return str_replace(
@@ -8632,12 +8877,12 @@ class FLORP {
   }
 
   private function options_page_flashmob( $aVariables = array() ) {
-    $optionNone             = null;
-    $optionNoneF            = null;
+    $optionNone = null;
+    $optionNoneF = null;
     $optionsCloneSourceSite = null;
-    $optionsMainSite        = null;
+    $optionsMainSite = null;
     $aBooleanOptionsChecked = null;
-    $optionsFlashmobSite    = null;
+    $optionsFlashmobSite = null;
     if (is_array( $aVariables ) && !empty( $aVariables )) {
       foreach ($aVariables as $strVarName => $mixVarValue) {
         ${$strVarName} = $mixVarValue;
@@ -8649,12 +8894,12 @@ class FLORP {
     }
 
     $optionsNinjaFormsFlashmob = $optionNone;
-    $optionsPopupsFlashmob     = $optionNone;
+    $optionsPopupsFlashmob = $optionNone;
 
     if (function_exists( 'Ninja_Forms' )) {
       $aForms = Ninja_Forms()->form()->get_forms();
       foreach ($aForms as $objForm) {
-        $iID      = $objForm->get_id();
+        $iID = $objForm->get_id();
         $strTitle = $objForm->get_setting( 'title' ) . " (ID: {$iID})";
         if ($this->iProfileFormNinjaFormIDFlashmob == $iID) {
           $strSelectedFlashmob = 'selected="selected"';
@@ -8672,7 +8917,7 @@ class FLORP {
       if ($aPopupsWPQuery->have_posts()) {
         while ($aPopupsWPQuery->have_posts()) :
           $aPopupsWPQuery->next_post();
-          $iID      = $aPopupsWPQuery->post->ID;
+          $iID = $aPopupsWPQuery->post->ID;
           $strTitle = $aPopupsWPQuery->post->post_title . " (ID: {$iID})";
           if ($this->iProfileFormPopupIDFlashmob == $iID) {
             $strSelectedFlashmob = 'selected="selected"';
@@ -8685,12 +8930,12 @@ class FLORP {
     }
 
     $optionsPagesFlashmob = $optionNoneF;
-    $aPages               = get_pages();
+    $aPages = get_pages();
     foreach ($aPages as $oPage) {
-      $iID      = $oPage->ID;
+      $iID = $oPage->ID;
       $strTitle = $oPage->post_title . " (ID: {$iID})";
       if (function_exists( 'pll_get_post_language' )) {
-        $strLang  = pll_get_post_language( $iID, 'name' );
+        $strLang = pll_get_post_language( $iID, 'name' );
         $strTitle .= " [{$strLang}]";
       }
       if ($this->iProfileFormPageIDFlashmob == $iID) {
@@ -8701,16 +8946,16 @@ class FLORP {
       $optionsPagesFlashmob .= '<option value="' . $iID . '" ' . $strSelectedFlashmob . '>' . $strTitle . '</option>';
     }
 
-    $strBeforeLoginFormHtmlFlashmob              = $this->get_wp_editor( $this->strBeforeLoginFormHtmlFlashmob, 'florp_before_login_form_html_flashmob' );
-    $strParticipantRegisteredMessage             = $this->get_wp_editor( $this->aOptions['strParticipantRegisteredMessage'], 'florp_participant_registered_message' );
-    $strParticipantRemovedMessage                = $this->get_wp_editor( $this->aOptions['strParticipantRemovedMessage'], 'florp_participant_removed_message' );
+    $strBeforeLoginFormHtmlFlashmob = $this->get_wp_editor( $this->strBeforeLoginFormHtmlFlashmob, 'florp_before_login_form_html_flashmob' );
+    $strParticipantRegisteredMessage = $this->get_wp_editor( $this->aOptions['strParticipantRegisteredMessage'], 'florp_participant_registered_message' );
+    $strParticipantRemovedMessage = $this->get_wp_editor( $this->aOptions['strParticipantRemovedMessage'], 'florp_participant_removed_message' );
     $wpEditorTshirtPaymentWarningNotificationMsg = $this->get_wp_editor( $this->aOptions['strTshirtPaymentWarningNotificationMsg'], 'florp_tshirt_payment_warning_notif_msg' );
-    $wpEditorPaymentOKNotificationMsg            = $this->get_wp_editor( $this->aOptions['strPaymentOKNotificationMsg'], 'florp_payment_ok_notif_msg' );
+    $wpEditorPaymentOKNotificationMsg = $this->get_wp_editor( $this->aOptions['strPaymentOKNotificationMsg'], 'florp_payment_ok_notif_msg' );
 
     // Get all cities and create input fields for them - CURRENT YEAR //
     $strCityTemplate = '<label for="florp_svk_flashmob_map_video_all_years_%%id%%" style="width:19%; display:inline-block;">%%flashmob_city%%:</label><input id="florp_svk_flashmob_map_video_all_years_%%id%%" name="florp_svk_flashmob_map_video_all_years[%%id%%]" type="text" value="%%link%%" style="width: 80%;" title="%%flashmob_city%%" />';
-    $aCityRows       = array();
-    $aLeaders        = $this->getFlashmobSubscribers( 'all', true );
+    $aCityRows = array();
+    $aLeaders = $this->getFlashmobSubscribers( 'all', true );
     foreach ($aLeaders as $oLeader) {
       $strFlashmobCity = get_user_meta( $oLeader->ID, 'flashmob_city', true );
       if (empty( $strFlashmobCity )) {
@@ -8827,12 +9072,12 @@ class FLORP {
   }
 
   private function options_page_common( $aVariables = array() ) {
-    $optionNone             = null;
-    $optionNoneF            = null;
+    $optionNone = null;
+    $optionNoneF = null;
     $optionsCloneSourceSite = null;
-    $optionsMainSite        = null;
+    $optionsMainSite = null;
     $aBooleanOptionsChecked = null;
-    $optionsNewsletterSite  = null;
+    $optionsNewsletterSite = null;
     if (is_array( $aVariables ) && !empty( $aVariables )) {
       foreach ($aVariables as $strVarName => $mixVarValue) {
         ${$strVarName} = $mixVarValue;
@@ -8844,18 +9089,18 @@ class FLORP {
     }
 
     $iFlashmobMonth = $this->aOptions["iFlashmobMonth"];
-    $optionsMonths  = "";
+    $optionsMonths = "";
     for ($i = 1; $i <= 12; $i++) {
       if ($iFlashmobMonth == $i) {
         $strSelected = 'selected="selected"';
       } else {
         $strSelected = '';
       }
-      $strMonthName  = __( date( 'F', mktime( 0, 0, 0, $i, 1, date( 'Y' ) ) ), 'florp' );
+      $strMonthName = __( date( 'F', mktime( 0, 0, 0, $i, 1, date( 'Y' ) ) ), 'florp' );
       $optionsMonths .= '<option value="' . $i . '" ' . $strSelected . '>' . $strMonthName . '</option>';
     }
 
-    $iYearNow           = intval( date( 'Y' ) );
+    $iYearNow = intval( date( 'Y' ) );
     $aNumOptionSettings = array(
       'optionsYears'                => array( 'start' => $iYearNow - 5, 'end' => $iYearNow + 5, 'leadingZero' => false, 'optionKey' => 'iFlashmobYear' ),
       'optionsDays'                 => array( 'start' => 1, 'end' => 31, 'leadingZero' => false, 'optionKey' => 'iFlashmobDay' ),
@@ -8863,10 +9108,10 @@ class FLORP {
       'optionsMinutes'              => array( 'start' => 0, 'end' => 59, 'leadingZero' => true, 'optionKey' => 'iFlashmobMinute' ),
       'optionsCoursesNumberEnabled' => array( 'start' => 0, 'end' => 3, 'leadingZero' => false, 'optionKey' => 'iCoursesNumberEnabled' ),
     );
-    $aNumOptions        = array();
+    $aNumOptions = array();
     foreach ($aNumOptionSettings as $strOptionKey => $aSettings) {
       $aNumOptions[$strOptionKey] = '';
-      $iOptionValue               = isset( $this->aOptions[$aSettings['optionKey']] ) ? intval( $this->aOptions[$aSettings['optionKey']] ) : -1;
+      $iOptionValue = isset( $this->aOptions[$aSettings['optionKey']] ) ? intval( $this->aOptions[$aSettings['optionKey']] ) : -1;
       for ($i = $aSettings['start']; $i <= $aSettings['end']; $i++) {
         if ($strOptionKey === "optionsYears" && isset( $this->aOptions['aYearlyMapOptions'][$i] )) {
           continue;
@@ -8886,16 +9131,16 @@ class FLORP {
     }
 
     $strMarkerInfoWindowTemplateOrganizer = $this->get_wp_editor( $this->aOptions['strMarkerInfoWindowTemplateOrganizer'], 'florp_infowindow_template_organizer' );
-    $strMarkerInfoWindowTemplateTeacher   = $this->get_wp_editor( $this->aOptions['strMarkerInfoWindowTemplateTeacher'], 'florp_infowindow_template_teacher' );
-    $wpEditorPaymentOKNotificationMsg     = $this->get_wp_editor( $this->aOptions['strPaymentOKNotificationMsg'], 'florp_payment_ok_notif_msg' );
+    $strMarkerInfoWindowTemplateTeacher = $this->get_wp_editor( $this->aOptions['strMarkerInfoWindowTemplateTeacher'], 'florp_infowindow_template_teacher' );
+    $wpEditorPaymentOKNotificationMsg = $this->get_wp_editor( $this->aOptions['strPaymentOKNotificationMsg'], 'florp_payment_ok_notif_msg' );
 
     $aInfoWindowLabelSlugs = array( 'organizer', 'teacher', 'signup', 'participant_count', 'year', 'dancers', 'school', 'note', 'web', 'facebook', /*'embed_code', 'courses_info'*/ );
-    $strInfoWindowLabels   = "";
+    $strInfoWindowLabels = "";
     foreach ($aInfoWindowLabelSlugs as $strSlug) {
-      $strElementID   = 'florp_infowindow_label_' . $strSlug;
-      $strOptionKey   = 'strInfoWindowLabel_' . $strSlug;
+      $strElementID = 'florp_infowindow_label_' . $strSlug;
+      $strOptionKey = 'strInfoWindowLabel_' . $strSlug;
       $strOptionValue = $this->aOptions[$strOptionKey];
-      $strNote        = "";
+      $strNote = "";
       // if ('web' === $strSlug) {
       //   $strNote = '<span style="width: 100%;">Táto položka sa zobrazí len ak nie je povolené zobrazovanie kurzov vo formulári alebo je prázdne meno školy.</span>';
       // }
@@ -8908,12 +9153,12 @@ class FLORP {
             </tr>';
     }
 
-    $strHideFlashmobFieldsForUsers   = "";
+    $strHideFlashmobFieldsForUsers = "";
     $strUnhideFlashmobFieldsForUsers = "";
-    $aLeaders                        = $this->getFlashmobSubscribers( 'all', true );
+    $aLeaders = $this->getFlashmobSubscribers( 'all', true );
     foreach ($aLeaders as $oLeader) {
-      $iLeaderID        = $oLeader->ID;
-      $strCheckedHide   = "";
+      $iLeaderID = $oLeader->ID;
+      $strCheckedHide = "";
       $strCheckedUnhide = "";
       if (in_array( $iLeaderID, $this->aOptions['aHideFlashmobFieldsForUsers'] )) {
         $strCheckedHide = ' checked="checked"';
@@ -8921,7 +9166,7 @@ class FLORP {
       if (in_array( $iLeaderID, $this->aOptions['aUnhideFlashmobFieldsForUsers'] )) {
         $strCheckedUnhide = ' checked="checked"';
       }
-      $strHideFlashmobFieldsForUsers   .= '<input id="florp_hide_flashmob_fields_individual-' . $iLeaderID . '" name="florp_hide_flashmob_fields_individual[]" type="checkbox" value="' . $iLeaderID . '"' . $strCheckedHide . '/> <label for="florp_hide_flashmob_fields_individual-' . $iLeaderID . '">' . $iLeaderID . ': ' . $oLeader->first_name . ' ' . $oLeader->last_name . '</label> ';
+      $strHideFlashmobFieldsForUsers .= '<input id="florp_hide_flashmob_fields_individual-' . $iLeaderID . '" name="florp_hide_flashmob_fields_individual[]" type="checkbox" value="' . $iLeaderID . '"' . $strCheckedHide . '/> <label for="florp_hide_flashmob_fields_individual-' . $iLeaderID . '">' . $iLeaderID . ': ' . $oLeader->first_name . ' ' . $oLeader->last_name . '</label> ';
       $strUnhideFlashmobFieldsForUsers .= '<input id="florp_unhide_flashmob_fields_individual-' . $iLeaderID . '" name="florp_unhide_flashmob_fields_individual[]" type="checkbox" value="' . $iLeaderID . '"' . $strCheckedUnhide . '/> <label for="florp_unhide_flashmob_fields_individual-' . $iLeaderID . '">' . $iLeaderID . ': ' . $oLeader->first_name . ' ' . $oLeader->last_name . '</label> ';
     }
 
@@ -8985,10 +9230,10 @@ class FLORP {
   }
 
   public function options_page_international() {
-    $optionNone             = null;
-    $optionNoneF            = null;
+    $optionNone = null;
+    $optionNoneF = null;
     $optionsCloneSourceSite = null;
-    $optionsMainSite        = null;
+    $optionsMainSite = null;
     $aBooleanOptionsChecked = null;
     echo "<div class=\"wrap\"><h1>" . "Medzinárodný Flashmob" . "</h1>";
 
@@ -9016,12 +9261,12 @@ class FLORP {
 
     if ($this->isIntfBlog) {
       $optionsNinjaFormsIntf = $aVariables['optionNone'];
-      $optionsPopupsIntf     = $aVariables['optionNone'];
+      $optionsPopupsIntf = $aVariables['optionNone'];
 
       if (function_exists( 'Ninja_Forms' )) {
         $aForms = Ninja_Forms()->form()->get_forms();
         foreach ($aForms as $objForm) {
-          $iID      = $objForm->get_id();
+          $iID = $objForm->get_id();
           $strTitle = $objForm->get_setting( 'title' ) . " (ID: {$iID})";
           if ($this->iProfileFormNinjaFormIDIntf == $iID) {
             $strSelectedIntf = 'selected="selected"';
@@ -9039,7 +9284,7 @@ class FLORP {
         if ($aPopupsWPQuery->have_posts()) {
           while ($aPopupsWPQuery->have_posts()) :
             $aPopupsWPQuery->next_post();
-            $iID      = $aPopupsWPQuery->post->ID;
+            $iID = $aPopupsWPQuery->post->ID;
             $strTitle = $aPopupsWPQuery->post->post_title . " (ID: {$iID})";
             if ($this->iProfileFormPopupIDIntf == $iID) {
               $strSelectedIntf = 'selected="selected"';
@@ -9052,12 +9297,12 @@ class FLORP {
       }
 
       $optionsPagesIntf = $aVariables['optionNoneF'];
-      $aPages           = get_pages();
+      $aPages = get_pages();
       foreach ($aPages as $oPage) {
-        $iID      = $oPage->ID;
+        $iID = $oPage->ID;
         $strTitle = $oPage->post_title . " (ID: {$iID})";
         if (function_exists( 'pll_get_post_language' )) {
-          $strLang  = pll_get_post_language( $iID, 'name' );
+          $strLang = pll_get_post_language( $iID, 'name' );
           $strTitle .= " [{$strLang}]";
         }
         if ($this->iProfileFormPageIDIntf == $iID) {
@@ -9069,28 +9314,28 @@ class FLORP {
       }
 
       $iFlashmobMonth = $this->aOptions["iIntfFlashmobMonth"];
-      $optionsMonths  = "";
+      $optionsMonths = "";
       for ($i = 1; $i <= 12; $i++) {
         if ($iFlashmobMonth == $i) {
           $strSelected = 'selected="selected"';
         } else {
           $strSelected = '';
         }
-        $strMonthName  = __( date( 'F', mktime( 0, 0, 0, $i, 1, date( 'Y' ) ) ), 'florp' );
+        $strMonthName = __( date( 'F', mktime( 0, 0, 0, $i, 1, date( 'Y' ) ) ), 'florp' );
         $optionsMonths .= '<option value="' . $i . '" ' . $strSelected . '>' . $strMonthName . '</option>';
       }
 
-      $iYearNow           = intval( date( 'Y' ) );
+      $iYearNow = intval( date( 'Y' ) );
       $aNumOptionSettings = array(
         'optionsYears'   => array( 'start' => $iYearNow - 5, 'end' => $iYearNow + 5, 'leadingZero' => false, 'optionKey' => 'iIntfFlashmobYear' ),
         'optionsDays'    => array( 'start' => 1, 'end' => 31, 'leadingZero' => false, 'optionKey' => 'iIntfFlashmobDay' ),
         'optionsHours'   => array( 'start' => 0, 'end' => 23, 'leadingZero' => true, 'optionKey' => 'iIntfFlashmobHour' ),
         'optionsMinutes' => array( 'start' => 0, 'end' => 59, 'leadingZero' => true, 'optionKey' => 'iIntfFlashmobMinute' ),
       );
-      $aNumOptions        = array();
+      $aNumOptions = array();
       foreach ($aNumOptionSettings as $strOptionKey => $aSettings) {
         $aNumOptions[$strOptionKey] = '';
-        $iOptionValue               = isset( $this->aOptions[$aSettings['optionKey']] ) ? intval( $this->aOptions[$aSettings['optionKey']] ) : -1;
+        $iOptionValue = isset( $this->aOptions[$aSettings['optionKey']] ) ? intval( $this->aOptions[$aSettings['optionKey']] ) : -1;
         for ($i = $aSettings['start']; $i <= $aSettings['end']; $i++) {
           if ($strOptionKey === "optionsYears") {
             if (defined( 'FLORP_DEVEL' ) && FLORP_DEVEL === true) {
@@ -9115,9 +9360,9 @@ class FLORP {
 
       // Get all flashmob cities (current and past) //
       $aIntfCityPollUsers = array();
-      $aLeaders           = $this->getFlashmobSubscribers( 'all', true );
+      $aLeaders = $this->getFlashmobSubscribers( 'all', true );
       foreach ($aLeaders as $oLeader) {
-        $iLeaderID       = $oLeader->ID;
+        $iLeaderID = $oLeader->ID;
         $strFlashmobCity = get_user_meta( $oLeader->ID, 'flashmob_city', true );
         if (empty( $strFlashmobCity )) {
           continue;
@@ -9150,10 +9395,10 @@ class FLORP {
       ksort( $aIntfCityPollUsers );
       $strIntfCityPollUsers = implode( "<br>", $aIntfCityPollUsers );
 
-      $strBeforeLoginFormHtmlIntf                  = $this->get_wp_editor( $this->strBeforeLoginFormHtmlIntf, 'florp_before_login_form_html_intf' );
-      $strParticipantRegisteredMessage             = $this->get_wp_editor( $this->aOptions['strIntfParticipantRegisteredMessage'], 'florp_intf_participant_registered_message' );
+      $strBeforeLoginFormHtmlIntf = $this->get_wp_editor( $this->strBeforeLoginFormHtmlIntf, 'florp_before_login_form_html_intf' );
+      $strParticipantRegisteredMessage = $this->get_wp_editor( $this->aOptions['strIntfParticipantRegisteredMessage'], 'florp_intf_participant_registered_message' );
       $wpEditorTshirtPaymentWarningNotificationMsg = $this->get_wp_editor( $this->aOptions['strIntfTshirtPaymentWarningNotificationMsg'], 'florp_intf_tshirt_payment_warning_notif_msg' );
-      $wpEditorPaymentOKNotificationMsg            = $this->get_wp_editor( $this->aOptions['strPaymentOKNotificationMsg'], 'florp_payment_ok_notif_msg' );
+      $wpEditorPaymentOKNotificationMsg = $this->get_wp_editor( $this->aOptions['strPaymentOKNotificationMsg'], 'florp_payment_ok_notif_msg' );
 
       $strIntfOptions = str_replace(
         array(
@@ -9249,7 +9494,7 @@ class FLORP {
       if ( !$this->bHideFlashmobFields) {
         // Trying to archive after the saved flashmob date //
         $iFlashmobYearCurrent = intval( $this->aOptions['iFlashmobYear'] );
-        $iFlashmobYearNew     = isset( $aPostedOptions['florp_flashmob_year'] ) ? intval( $aPostedOptions['florp_flashmob_year'] ) : $iFlashmobYearCurrent;
+        $iFlashmobYearNew = isset( $aPostedOptions['florp_flashmob_year'] ) ? intval( $aPostedOptions['florp_flashmob_year'] ) : $iFlashmobYearCurrent;
         if (isset( $this->aOptions['aYearlyMapOptions'][$iFlashmobYearNew] )) {
           // There is archived data for this flashmob year in the DB already //
           add_action( 'florp_options_page_notices', function() {
@@ -9266,7 +9511,7 @@ class FLORP {
               echo '<div class="notice notice-info"><p><code>(FLORP_DEVEL && FLORP_DEVEL_PREVENT_ORGANIZER_ARCHIVATION == true)</code> => nearchivujem dáta svk flashmobu.</p><p>Archivované dáta by však vyzerali nasledovne:</p><pre>' . $GLOBALS["florpArchivedData"] . '</pre></div>' . PHP_EOL;
             } );
           } else {
-            $aOptionsToReinitFromDefaults         = $this->archive_current_year_svk_flashmob( false );
+            $aOptionsToReinitFromDefaults = $this->archive_current_year_svk_flashmob( false );
             $GLOBALS['iFlorpFlashmobYearCurrent'] = $iFlashmobYearCurrent;
             add_action( 'florp_options_page_notices', function() {
               echo '<div class="notice notice-success"><p>Dáta flashmobu z roku ' . $GLOBALS['iFlorpFlashmobYearCurrent'] . ' boli archivované.</p></div>' . PHP_EOL;
@@ -9286,13 +9531,13 @@ class FLORP {
       return;
     }
 
-    $aOptionsOld     = $this->aOptions;
+    $aOptionsOld = $this->aOptions;
     $aChangedOptions = array();
 
     foreach ($this->aBooleanOptions as $strOptionKey) {
       if (in_array( $strOptionKey, $aKeysToSave )) {
         $this->aOptions[$strOptionKey] = false;
-        $strPostKey                    = array_search( $strOptionKey, $this->aOptionFormKeys );
+        $strPostKey = array_search( $strOptionKey, $this->aOptionFormKeys );
         if ($strPostKey !== false && !isset( $aPostedOptions[$strPostKey] ) && $aOptionsOld[$strOptionKey] !== $this->aOptions[$strOptionKey]) {
           $aChangedOptions[$strOptionKey] = array(
             'from' => $aOptionsOld[$strOptionKey],
@@ -9346,8 +9591,8 @@ class FLORP {
     }
 
     if ( !empty( $aChangedOptions )) {
-      $iCurrentUserID                           = get_current_user_id();
-      $aChangedOptions['_user_id']              = $iCurrentUserID;
+      $iCurrentUserID = get_current_user_id();
+      $aChangedOptions['_user_id'] = $iCurrentUserID;
       $this->aOptions['aOptionChanges'][time()] = $aChangedOptions;
     }
 
@@ -9384,7 +9629,7 @@ class FLORP {
   private function get_int_version() {
     $aVersionParts = explode( '.', $this->strVersion );
     $aVersionParts = array_reverse( $aVersionParts );
-    $iVersion      = 0;
+    $iVersion = 0;
     foreach ($aVersionParts as $iKey => $strNum) {
       $iVersion += intval( $strNum ) * pow( 1000, $iKey );
     }
@@ -9446,26 +9691,26 @@ class FLORP {
       }
     }
 
-    $aExport       = array();
-    $oFormModel    = Ninja_Forms()->form( $iFormID )->get();
+    $aExport = array();
+    $oFormModel = Ninja_Forms()->form( $iFormID )->get();
     $aFormSettings = $oFormModel->get_settings();
     if ( !empty( $aFormSettings )) {
-      $aExport['form_settings']  = $aFormSettings;
+      $aExport['form_settings'] = $aFormSettings;
       $aExport['field_settings'] = array();
-      $aFormFieldModels          = Ninja_Forms()->form( $iFormID )->get_fields();
+      $aFormFieldModels = Ninja_Forms()->form( $iFormID )->get_fields();
       foreach ($aFormFieldModels as $oFormFieldModel) {
         $aFieldSettings = $oFormFieldModel->get_settings();
         if ( !empty( $aFieldSettings )) {
-          $iID                             = $oFormFieldModel->get_id();
+          $iID = $oFormFieldModel->get_id();
           $aExport['field_settings'][$iID] = $aFieldSettings;
         }
       }
       $aExport['action_settings'] = array();
-      $aFormActionModels          = Ninja_Forms()->form( $iFormID )->get_actions();
+      $aFormActionModels = Ninja_Forms()->form( $iFormID )->get_actions();
       foreach ($aFormActionModels as $oFormActionModel) {
         $aActionSettings = $oFormActionModel->get_settings();
         if ( !empty( $aActionSettings )) {
-          $iID                              = $oFormActionModel->get_id();
+          $iID = $oFormActionModel->get_id();
           $aExport['action_settings'][$iID] = $aActionSettings;
         }
       }
@@ -9487,10 +9732,10 @@ class FLORP {
         return;
       }
     }
-    $aExport['version']   = $this->get_int_version();
+    $aExport['version'] = $this->get_int_version();
     $aExport['timestamp'] = time();
-    $strExportContent     = '<?php if ( ! defined( \'ABSPATH\' ) ) exit;' . PHP_EOL . '$' . $this->strExportVarName . ' = ' . var_export( $aExport, true ) . '; ?>';
-    $mixRes               = file_put_contents( $strExportPath, $strExportContent );
+    $strExportContent = '<?php if ( ! defined( \'ABSPATH\' ) ) exit;' . PHP_EOL . '$' . $this->strExportVarName . ' = ' . var_export( $aExport, true ) . '; ?>';
+    $mixRes = file_put_contents( $strExportPath, $strExportContent );
     if ($mixRes !== false) {
       add_action( 'florp_options_page_notices', function() {
         echo '<div class="notice notice-success"><p>Form "' . $GLOBALS['aFlorpFormExportInfo']['title'] . '" (ID: ' . $GLOBALS['aFlorpFormExportInfo']['id'] . ') was exported successfully</p></div>' . PHP_EOL;
@@ -9518,7 +9763,7 @@ class FLORP {
       $var_iProfileFormNinjaFormID = "iProfileFormNinjaFormIDMain";
       if ($this->$var_iProfileFormNinjaFormID != 0) {
         $var_iProfileFormNinjaFormImportVersion = "iProfileFormNinjaFormImportVersionMain";
-        $strExportPath                          = $this->strNinjaFormExportPathMain;
+        $strExportPath = $this->strNinjaFormExportPathMain;
         $this->import_ninja_form( $strExportPath, $var_iProfileFormNinjaFormID, $var_iProfileFormNinjaFormImportVersion );
       }
     }
@@ -9526,7 +9771,7 @@ class FLORP {
       $var_iProfileFormNinjaFormID = "iProfileFormNinjaFormIDFlashmob";
       if ($this->$var_iProfileFormNinjaFormID != 0) {
         $var_iProfileFormNinjaFormImportVersion = "iProfileFormNinjaFormImportVersionFlashmob";
-        $strExportPath                          = $this->strNinjaFormExportPathFlashmob;
+        $strExportPath = $this->strNinjaFormExportPathFlashmob;
         $this->import_ninja_form( $strExportPath, $var_iProfileFormNinjaFormID, $var_iProfileFormNinjaFormImportVersion );
       }
     }
@@ -9534,7 +9779,7 @@ class FLORP {
       $var_iProfileFormNinjaFormID = "iProfileFormNinjaFormIDIntf";
       if ($this->$var_iProfileFormNinjaFormID != 0) {
         $var_iProfileFormNinjaFormImportVersion = "iProfileFormNinjaFormImportVersionIntf";
-        $strExportPath                          = $this->strNinjaFormExportPathIntf;
+        $strExportPath = $this->strNinjaFormExportPathIntf;
         $this->import_ninja_form( $strExportPath, $var_iProfileFormNinjaFormID, $var_iProfileFormNinjaFormImportVersion );
       }
     }
@@ -9586,8 +9831,8 @@ class FLORP {
       rename( $strExportPath, $strExportPath . '.' . $iCurrentVersion . '.imported-' . date( 'Ymd-His' ) );
 
       // Change the form id and version in aOptions to the new form's id //
-      $this->$var_iProfileFormNinjaFormID                      = $iNewFormID;
-      $this->aOptions[$var_iProfileFormNinjaFormID]            = $this->$var_iProfileFormNinjaFormID;
+      $this->$var_iProfileFormNinjaFormID = $iNewFormID;
+      $this->aOptions[$var_iProfileFormNinjaFormID] = $this->$var_iProfileFormNinjaFormID;
       $this->aOptions[$var_iProfileFormNinjaFormImportVersion] = $iNewVersion;
       $this->save_options();
     }
@@ -9624,7 +9869,7 @@ class FLORP {
 
   public function action__get_markerInfoHTML_callback() {
     check_ajax_referer( 'srd-florp-security-string', 'security' );
-    $aMarkerData   = array_merge(
+    $aMarkerData = array_merge(
       $_POST['infoWindowData'],
       array(
         'mixMarkerKey'      => $_POST['mixMarkerKey'],
@@ -9638,7 +9883,7 @@ class FLORP {
         'iParticipantCount' => $this->get_flashmob_participant_count( $_POST['iUserID'] ),
       ) );
     $strMarkerText = $this->getMarkerInfoWindowContent( $aMarkerData );
-    $aRes          = array(
+    $aRes = array(
       'contentHtml' => $strMarkerText,
       'data'        => $_POST
     );
@@ -9648,7 +9893,7 @@ class FLORP {
 
   public function action__get_leaderParticipantsTable_callback() {
     check_ajax_referer( 'srd-florp-security-string', 'security' );
-    $aData              = $_POST;
+    $aData = $_POST;
     $aData['tableHtml'] = $this->leader_participants_table_shortcode( array() );
     echo json_encode( $aData );
     wp_die();
@@ -9668,8 +9913,8 @@ class FLORP {
       wp_die();
     } else {
       $aMapOptionsArray = $this->getOneUserMapInfo( $oUser );
-      $strMapType       = $_POST['strMapType'];
-      $strVal           = get_user_meta( $oUser->ID, $strMapType, true );
+      $strMapType = $_POST['strMapType'];
+      $strVal = get_user_meta( $oUser->ID, $strMapType, true );
       if ( !$strVal) {
         foreach ($this->aLocationFields[$strMapType] as $strFieldKey) {
           unset( $aMapOptionsArray[$strFieldKey] );
@@ -9738,7 +9983,7 @@ class FLORP {
 
     // Check also other variations: with dash,underscore,"" instead of spaces; initials //
     $aVariations = array();
-    $aWords      = preg_split( "/\s+/", $strCity );
+    $aWords = preg_split( "/\s+/", $strCity );
     if (is_array( $aWords ) && count( $aWords ) > 1) {
       foreach (array( "", "-", "_" ) as $delimiter) {
         $aVariations[] = str_replace( " ", $delimiter, $strCity );
@@ -9762,8 +10007,8 @@ class FLORP {
       return false;
     }
     $strProtocol = $bWithProtocol ? "http://" : "";
-    $aSites      = wp_get_sites();
-    $strCity     = $this->removeAccents( strtolower( $strCity ) );
+    $aSites = wp_get_sites();
+    $strCity = $this->removeAccents( strtolower( $strCity ) );
     $aVariations = $this->getCitySubdomainVariations( $strCity );
 
     foreach ($aSites as $i => $aSite) {
@@ -9771,7 +10016,7 @@ class FLORP {
         continue;
       }
       $strDomain = $aSite['domain'];
-      $aParts    = explode( ".", $strDomain );
+      $aParts = explode( ".", $strDomain );
       if ( !is_array( $aParts ) || count( $aParts ) !== 3) {
         continue;
       }
@@ -9802,7 +10047,7 @@ class FLORP {
         array( $this, 'get_value_maybe_fix_unserialize_array' ),
         get_user_meta( $aData["id"] )
       );
-      $aData    = array_merge( $aData, $aAllMeta );
+      $aData = array_merge( $aData, $aAllMeta );
     } elseif (isset( $aData["webpage"] )) {
       // OK //
     } else {
@@ -9810,7 +10055,7 @@ class FLORP {
       return "";
     }
     $aData["bReturnAnchor"] = ( isset( $aData["bReturnAnchor"] ) && $aData["bReturnAnchor"] === true );
-    $strWebpage             = '';
+    $strWebpage = '';
     if ( !empty( $aData['webpage'] )) {
       switch ($aData['webpage']) {
         case "flashmob":
@@ -9837,7 +10082,7 @@ class FLORP {
     if ( !empty( $strWebpage )) {
       if ($aData["bReturnAnchor"]) {
         $strWebLabel = preg_replace( '~^https?://(www\.)?|/$~', "", $strWebpage );
-        $strWeb      = '<a href="' . $strWebpage . '" target="_blank">' . $strWebLabel . '</a>';
+        $strWeb = '<a href="' . $strWebpage . '" target="_blank">' . $strWebLabel . '</a>';
         if ($aData["bInfoWindow"]) {
           $strWeb = $this->getInfoWindowLabel( 'web' ) . $strWeb;
         }
@@ -9850,7 +10095,7 @@ class FLORP {
   }
 
   private function getMarkerInfoWindowContent( $aInfoWindowData ) {
-    $bHideLeaderInfo   = isset( $aInfoWindowData['hide_leader_info'] ) && isset( $aInfoWindowData['hide_leader_info']['value'] ) && $aInfoWindowData['hide_leader_info']['value'] == '1';
+    $bHideLeaderInfo = isset( $aInfoWindowData['hide_leader_info'] ) && isset( $aInfoWindowData['hide_leader_info']['value'] ) && $aInfoWindowData['hide_leader_info']['value'] == '1';
     $bIsBeforeFlashmob = ( $aInfoWindowData['strMapType'] === 'flashmob_organizer' && ( $aInfoWindowData['iCurrentYear'] == '1' || ( isset( $aInfoWindowData['iIsPreview'] ) && $aInfoWindowData['iIsPreview'] == '1' ) ) && $aInfoWindowData['iBeforeFlashmob'] == '1' );
 
     $strUserWebpage = $aInfoWindowData['user_webpage']['value'];
@@ -9884,7 +10129,7 @@ class FLORP {
     $strFacebook = '';
     if ( !$bHideLeaderInfo && !empty( $aInfoWindowData['facebook']['value'] )) {
       $strFacebookLabel = preg_replace( '~^https?://(www\.)?|/$~', "", $aInfoWindowData['facebook']['value'] );
-      $strFacebook      = $this->getInfoWindowLabel( 'facebook' ) . '<a href="' . $aInfoWindowData['facebook']['value'] . '" target="_blank">' . $strFacebookLabel . '</a>';
+      $strFacebook = $this->getInfoWindowLabel( 'facebook' ) . '<a href="' . $aInfoWindowData['facebook']['value'] . '" target="_blank">' . $strFacebookLabel . '</a>';
     }
 
     // BEGIN School webpage is only in case of archived map options //
@@ -9921,7 +10166,7 @@ class FLORP {
       'bReturnAnchor'   => true,
       'bInfoWindow'     => true,
     );
-    $strWeb       = $this->get_leader_webpage( $aWebpageArgs );
+    $strWeb = $this->get_leader_webpage( $aWebpageArgs );
 
     if ( !empty( $aInfoWindowData['webpage']['value'] ) && $aInfoWindowData['webpage']['value'] == "vytvorit") {
       $strSubDomainPage = $this->findCityWebpage( $aInfoWindowData['flashmob_city']['value'] );
@@ -9930,7 +10175,7 @@ class FLORP {
       }
     }
 
-    $strSchool       = '';
+    $strSchool = '';
     $bIsYearUpTo2017 = ( isset( $aInfoWindowData['iYear'] ) && !empty( $aInfoWindowData['iYear'] ) && $aInfoWindowData['iYear'] <= 2017 );
     if (( $bIsYearUpTo2017 || $this->aOptions["iCoursesNumberEnabled"] > 0 ) && !empty( $aInfoWindowData['school_name']['value'] )) {
       $strSchool = $aInfoWindowData['school_name']['value'];
@@ -9943,15 +10188,15 @@ class FLORP {
       }
     }
 
-    $aVideoRegexes         = array(
+    $aVideoRegexes = array(
       "youtubePlaylist" => '~^https?://(www\.|m\.)?(youtube\.com/watch\?v=[^&]+&list=|youtube\.com/watch\?list=|youtube\.com/playlist\?list=)([^&]+)(.*?)$~i',
       "youtube"         => '~^https?://(www\.|m\.)?(youtube\.com/watch\?v=|youtu.be/)(.+)$~i',
       "facebook"        => '~^https?://(www.)?facebook.com/[a-zA-Z0-9]+/videos/[a-zA-Z0-9]+/?$~i',
       "vimeo"           => '~^https?://(www.)?vimeo.com/([0-9]+)/?$~i',
     );
     $aVideoRegexMatchesAll = array( "other" => array() );
-    $strVideoLink          = ( isset( $aInfoWindowData['video_link'] ) && isset( $aInfoWindowData['video_link']['value'] ) ) ? trim( $aInfoWindowData['video_link']['value'] ) : "";
-    $strVideoLinkType      = "other";
+    $strVideoLink = ( isset( $aInfoWindowData['video_link'] ) && isset( $aInfoWindowData['video_link']['value'] ) ) ? trim( $aInfoWindowData['video_link']['value'] ) : "";
+    $strVideoLinkType = "other";
     if ( !empty( $strVideoLink )) {
       foreach ($aVideoRegexes as $strType => $strRegex) {
         $aVideoRegexMatchesAll[$strType] = array();
@@ -9962,10 +10207,10 @@ class FLORP {
       }
 
       if ($strVideoLinkType === "other") {
-        $strFlashmobCity   = $aInfoWindowData['flashmob_city']['value'];
+        $strFlashmobCity = $aInfoWindowData['flashmob_city']['value'];
         $strFlashmobCityID = str_replace( " ", "_", strtolower( $this->removeAccents( $strFlashmobCity ) ) );
         if (isset( $this->aOptions['aSvkFlashmobMapVideoAllYears'][$strFlashmobCityID] ) && $this->aOptions['aSvkFlashmobMapVideoAllYears'][$strFlashmobCityID] === $strVideoLink) {
-          $strVideoLinkType                         = "youtubePlaylist";
+          $strVideoLinkType = "youtubePlaylist";
           $aVideoRegexMatchesAll[$strVideoLinkType] = array( 3 => $strVideoLink );
         }
       }
@@ -10029,13 +10274,13 @@ class FLORP {
       }
     } elseif ($strVideoLinkType === "facebook") {
       $strFacebookLink = htmlentities( urlencode( $strVideoLink ) );
-      $strEmbedCode    = $this->getInfoWindowLabel( 'embed_code' ) . '<iframe src="https://www.facebook.com/plugins/video.php?show_text=0&width=280&href=' . $strFacebookLink . '" width="280" height="160" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowTransparency="true" allowFullScreen="true"></iframe>';//.'<pre>'.$strFacebookLink.'</pre>';
+      $strEmbedCode = $this->getInfoWindowLabel( 'embed_code' ) . '<iframe src="https://www.facebook.com/plugins/video.php?show_text=0&width=280&href=' . $strFacebookLink . '" width="280" height="160" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowTransparency="true" allowFullScreen="true"></iframe>';//.'<pre>'.$strFacebookLink.'</pre>';
     } elseif ($strVideoLinkType === "vimeo") {
       if ( !isset( $aVideoRegexMatches[2] ) || empty( $aVideoRegexMatches[2] )) {
         $strEmbedCode = "";
       } else {
         $strVimeoVideoID = $aVideoRegexMatches[2];
-        $strEmbedCode    = $this->getInfoWindowLabel( 'embed_code' ) . '<iframe src="https://player.vimeo.com/video/' . $strVimeoVideoID . '" width="340" height="200" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>';//.'<pre>'.$strVimeokLink.'</pre>';
+        $strEmbedCode = $this->getInfoWindowLabel( 'embed_code' ) . '<iframe src="https://player.vimeo.com/video/' . $strVimeoVideoID . '" width="340" height="200" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>';//.'<pre>'.$strVimeokLink.'</pre>';
       }
     } else {
       // Should not happen //
@@ -10079,19 +10324,19 @@ class FLORP {
 
     if ($bIsBeforeFlashmob) {
       // Before Flashmob //
-      $strSignupLink       = $this->getInfoWindowLabel( 'signup' ) . '<span class="florp-click-trigger ' . $this->strClickTriggerClassFlashmob . ' pum-trigger" data-user-id="' . $aInfoWindowData['iUserID'] . '" data-flashmob-city="' . $aInfoWindowData['flashmob_city']['value'] . '" data-marker-key="' . $aInfoWindowData['mixMarkerKey'] . '" data-div-id="' . $aInfoWindowData['strDivID'] . '" style="cursor: pointer;">' . $this->aOptions['strSignupLinkLabel'] . '</span><br/>';
+      $strSignupLink = $this->getInfoWindowLabel( 'signup' ) . '<span class="florp-click-trigger ' . $this->strClickTriggerClassFlashmob . ' pum-trigger" data-user-id="' . $aInfoWindowData['iUserID'] . '" data-flashmob-city="' . $aInfoWindowData['flashmob_city']['value'] . '" data-marker-key="' . $aInfoWindowData['mixMarkerKey'] . '" data-div-id="' . $aInfoWindowData['strDivID'] . '" style="cursor: pointer;">' . $this->aOptions['strSignupLinkLabel'] . '</span><br/>';
       $strParticipantCount = $this->getInfoWindowLabel( 'participant_count' ) . $aInfoWindowData['iParticipantCount'];
 
-      $strDancers   = "";
+      $strDancers = "";
       $strEmbedCode = "";
     } else {
       // After Flashmob //
-      $strSignupLink       = "";
+      $strSignupLink = "";
       $strParticipantCount = "";
     }
 
     // Separate optional placeholders by a line break //
-    $aPlaceholdersToSeparate          = array(
+    $aPlaceholdersToSeparate = array(
       'organizer'         => 'strOrganizer',
       'teacher'           => 'strTeacher',
       'school'            => 'strSchool',
@@ -10116,7 +10361,7 @@ class FLORP {
       if ($iPosition === $iPlaceholdersToSeparateMaxPosition) {
         continue;
       }
-      $strVarName    = $aPlaceholdersToSeparate[$strPlaceholder];
+      $strVarName = $aPlaceholdersToSeparate[$strPlaceholder];
       ${$strVarName} .= "<br>";
     }
 
@@ -10141,7 +10386,7 @@ class FLORP {
 
     if ($bHideLeaderInfo) {
       $strOrganizer = "";
-      $strSchool    = "";
+      $strSchool = "";
     }
     // if ($aInfoWindowData['strMapType'] === "teacher") {
     //   // This is a tag only for the organizer info window //
@@ -10163,7 +10408,7 @@ class FLORP {
       $strSignupLink,
       $strParticipantCount
     );
-    $strText  = str_replace( $aSearch, $aReplace, $this->aMarkerInfoWindowTemplates[$aInfoWindowData['strMapType']] );
+    $strText = str_replace( $aSearch, $aReplace, $this->aMarkerInfoWindowTemplates[$aInfoWindowData['strMapType']] );
 
     return $strText;
     /*
@@ -10280,7 +10525,7 @@ class FLORP {
       }
     }
 
-    $iBlogID                                            = get_current_blog_id();
+    $iBlogID = get_current_blog_id();
     $this->aOptions['aNfSubmissions'][$iBlogID]['done'] = false;
     if (isset( $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][intval( $aFormData['form_id'] )] )) {
       $this->aOptions['aNfSubmissions'][$iBlogID]['forms'][intval( $aFormData['form_id'] )]['done'] = false;
@@ -10295,27 +10540,27 @@ class FLORP {
 
     if ($this->isFlashmobBlog && intval( $aFormData['form_id'] ) === $this->iProfileFormNinjaFormIDFlashmob) {
       // Get field values by keys //
-      $aFieldData         = array();
+      $aFieldData = array();
       $bSubmissionEditing = false;
-      $aSkipFieldTypes    = array( 'recaptcha_logged-out-only', 'recaptcha', 'submit', 'html', 'hr' );
+      $aSkipFieldTypes = array( 'recaptcha_logged-out-only', 'recaptcha', 'submit', 'html', 'hr' );
       foreach ($aFormData["fields"] as $strKey => $aData) {
         if (in_array( $aData['type'], $aSkipFieldTypes )) {
           continue;
         }
         if ($aData["key"] === 'submission_editing' && strpos( $aData['value'], ',' ) !== false) {
           $bSubmissionEditing = true;
-          $aHiddenFieldData   = explode( ',', $aData['value'] );
-          $strEmail           = $aHiddenFieldData[2];
-          $iLeaderID          = $aHiddenFieldData[1];
+          $aHiddenFieldData = explode( ',', $aData['value'] );
+          $strEmail = $aHiddenFieldData[2];
+          $iLeaderID = $aHiddenFieldData[1];
         } else {
           $aFieldData[$aData["key"]] = $aData['value'];
         }
       }
       if ($bSubmissionEditing) {
         $aParticipantData = $this->aOptions['aParticipants'][$iLeaderID][$strEmail];
-        $aChanged         = array();
-        $aChangedFrom     = array();
-        $aChangedTo       = array();
+        $aChanged = array();
+        $aChangedFrom = array();
+        $aChangedTo = array();
         foreach ($aParticipantData as $sKey => $mixValue) {
           if (isset( $aFieldData[$sKey] ) && $aFieldData[$sKey] !== $mixValue) {
             if ($sKey === 'preferences') {
@@ -10324,7 +10569,7 @@ class FLORP {
                 $aFieldData[$sKey][] = 'newsletter_subscribe';
               } elseif ( !in_array( 'newsletter_subscribe', $mixValue ) && in_array( 'newsletter_subscribe', $aFieldData[$sKey] )) {
                 if (in_array( 'flashmob_participant_tshirt', $aFieldData[$sKey] )) {
-                  $aFieldData[$sKey]   = array();
+                  $aFieldData[$sKey] = array();
                   $aFieldData[$sKey][] = 'flashmob_participant_tshirt';
                 } else {
                   $aFieldData[$sKey] = array();
@@ -10335,12 +10580,12 @@ class FLORP {
               }
             }
             $this->aOptions['aParticipants'][$iLeaderID][$strEmail][$sKey] = $aFieldData[$sKey];
-            $aChanged[$sKey]                                               = array(
+            $aChanged[$sKey] = array(
               $mixValue,
               $aFieldData[$sKey]
             );
-            $aChangedFrom[$sKey]                                           = is_array( $mixValue ) ? ( '[' . implode( ',', $mixValue ) . ']' ) : $mixValue;
-            $aChangedTo[$sKey]                                             = is_array( $aFieldData[$sKey] ) ? ( '[' . implode( ',', $aFieldData[$sKey] ) . ']' ) : $aFieldData[$sKey];
+            $aChangedFrom[$sKey] = is_array( $mixValue ) ? ( '[' . implode( ',', $mixValue ) . ']' ) : $mixValue;
+            $aChangedTo[$sKey] = is_array( $aFieldData[$sKey] ) ? ( '[' . implode( ',', $aFieldData[$sKey] ) . ']' ) : $aFieldData[$sKey];
           }
         }
         if (count( $aChanged ) > 0) {
@@ -10354,7 +10599,7 @@ class FLORP {
       }
 
       $aFieldData["registered"] = (int) current_time( 'timestamp' );
-      $iUserID                  = $aFieldData['leader_user_id'];
+      $iUserID = $aFieldData['leader_user_id'];
       if ( !isset( $this->aOptions['aParticipants'][$iUserID] )) {
         $this->aOptions['aParticipants'][$iUserID] = array();
       }
@@ -10362,7 +10607,7 @@ class FLORP {
       if ( !empty( $aFieldData ) && in_array( 'newsletter_subscribe', $aFieldData['preferences'] )) {
         // Subscribe participant to newsletter via REST API //
         $strAction = 'subscribe';
-        $aData     = array(
+        $aData = array(
           'email'       => $aFieldData['user_email'],
           'name'        => $aFieldData['first_name'],
           'surname'     => $aFieldData['last_name'],
@@ -10372,11 +10617,11 @@ class FLORP {
           $aData['gender'] = $aFieldData['gender'] === 'muz' ? 'm' : 'f';
         }
         $aFieldData['newsletter_subscription_result'] = '';
-        $bResult                                      = $this->execute_newsletter_rest_api_call( $strAction, $aData );
+        $bResult = $this->execute_newsletter_rest_api_call( $strAction, $aData );
         if ($strAction === 'subscribe' && !$bResult['ok'] && isset( $bResult['issue'] ) && $bResult['issue'] === 'email-exists') {
           $strAction2 = 'subscribers/delete';
-          $aData2     = array( 'email' => $aFieldData['user_email'] );
-          $bResult2   = $this->execute_newsletter_rest_api_call( $strAction2, $aData2 );
+          $aData2 = array( 'email' => $aFieldData['user_email'] );
+          $bResult2 = $this->execute_newsletter_rest_api_call( $strAction2, $aData2 );
           if ($bResult2['ok']) {
             $bResult = $this->execute_newsletter_rest_api_call( $strAction, $aData );
             if (defined( 'FLORP_DEVEL_REST_API_DEBUG' ) && FLORP_DEVEL_REST_API_DEBUG === true) {
@@ -10409,8 +10654,8 @@ class FLORP {
 
       if (strlen( trim( $this->aOptions['strParticipantRegisteredMessage'] ) ) > 0) {
         $strMessageContent = $this->aOptions['strParticipantRegisteredMessage'];
-        $strBlogname       = trim( wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES ) );
-        $aHeaders          = array( 'Content-Type: text/html; charset=UTF-8' );
+        $strBlogname = trim( wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES ) );
+        $aHeaders = array( 'Content-Type: text/html; charset=UTF-8' );
 
         // Create a unique check-in QR code for the participant and send it as attachment //
         $strParticipantDefinition = $this->encode( implode( "|", array(
@@ -10418,9 +10663,9 @@ class FLORP {
           $iUserID,
           $aFieldData['user_email']
         ) ) );
-        $strParticipantUrl        = home_url( "/" . $this->fakePageSvkParticipantCheckin . "/?id=" . $strParticipantDefinition );
-        $strOutputFname           = date( 'YmdHis' ) . "-" . $strParticipantDefinition;
-        $strQrCodePath            = $this->get_qr_code( $strParticipantUrl, $strOutputFname );
+        $strParticipantUrl = home_url( "/" . $this->fakePageSvkParticipantCheckin . "/?id=" . $strParticipantDefinition );
+        $strOutputFname = date( 'YmdHis' ) . "-" . $strParticipantDefinition;
+        $strQrCodePath = $this->get_qr_code( $strParticipantUrl, $strOutputFname );
         // TODO maybe use logo (but add it to this plugin's img folder): $this->get_qr_code($strParticipantUrl, $strOutputFname, 500, "png", "false", $strLogoPath, $iLogoWidth, $iLogoHeight);
         $aAttachments = array( $strQrCodePath );
 
@@ -10432,27 +10677,27 @@ class FLORP {
 
     if ($this->isIntfBlog && intval( $aFormData['form_id'] ) === $this->iProfileFormNinjaFormIDIntf) {
       // Get field values by keys //
-      $aFieldData         = array();
+      $aFieldData = array();
       $bSubmissionEditing = false;
-      $aSkipFieldTypes    = array( 'recaptcha_logged-out-only', 'recaptcha', 'submit', 'html', 'hr' );
+      $aSkipFieldTypes = array( 'recaptcha_logged-out-only', 'recaptcha', 'submit', 'html', 'hr' );
       foreach ($aFormData["fields"] as $strKey => $aData) {
         if (in_array( $aData['type'], $aSkipFieldTypes )) {
           continue;
         }
         if ($aData["key"] === 'submission_editing' && strpos( $aData['value'], ',' ) !== false) {
           $bSubmissionEditing = true;
-          $aHiddenFieldData   = explode( ',', $aData['value'] );
-          $strEmail           = $aHiddenFieldData[2];
-          $iYear              = $aHiddenFieldData[1];
+          $aHiddenFieldData = explode( ',', $aData['value'] );
+          $strEmail = $aHiddenFieldData[2];
+          $iYear = $aHiddenFieldData[1];
         } else {
           $aFieldData[$aData["key"]] = $aData['value'];
         }
       }
       if ($bSubmissionEditing) {
         $aParticipantData = $this->aOptions['aIntfParticipants'][$iYear][$strEmail];
-        $aChanged         = array();
-        $aChangedFrom     = array();
-        $aChangedTo       = array();
+        $aChanged = array();
+        $aChangedFrom = array();
+        $aChangedTo = array();
         foreach ($aParticipantData as $sKey => $mixValue) {
           if (isset( $aFieldData[$sKey] ) && $aFieldData[$sKey] !== $mixValue) {
             if ($sKey === 'preferences') {
@@ -10461,7 +10706,7 @@ class FLORP {
                 $aFieldData[$sKey][] = 'newsletter_subscribe';
               } elseif ( !in_array( 'newsletter_subscribe', $mixValue ) && in_array( 'newsletter_subscribe', $aFieldData[$sKey] )) {
                 if (in_array( 'flashmob_participant_tshirt', $aFieldData[$sKey] )) {
-                  $aFieldData[$sKey]   = array();
+                  $aFieldData[$sKey] = array();
                   $aFieldData[$sKey][] = 'flashmob_participant_tshirt';
                 } else {
                   $aFieldData[$sKey] = array();
@@ -10472,12 +10717,12 @@ class FLORP {
               }
             }
             $this->aOptions['aIntfParticipants'][$iYear][$strEmail][$sKey] = $aFieldData[$sKey];
-            $aChanged[$sKey]                                               = array(
+            $aChanged[$sKey] = array(
               $mixValue,
               $aFieldData[$sKey]
             );
-            $aChangedFrom[$sKey]                                           = is_array( $mixValue ) ? ( '[' . implode( ',', $mixValue ) . ']' ) : $mixValue;
-            $aChangedTo[$sKey]                                             = is_array( $aFieldData[$sKey] ) ? ( '[' . implode( ',', $aFieldData[$sKey] ) . ']' ) : $aFieldData[$sKey];
+            $aChangedFrom[$sKey] = is_array( $mixValue ) ? ( '[' . implode( ',', $mixValue ) . ']' ) : $mixValue;
+            $aChangedTo[$sKey] = is_array( $aFieldData[$sKey] ) ? ( '[' . implode( ',', $aFieldData[$sKey] ) . ']' ) : $aFieldData[$sKey];
           }
         }
         if (count( $aChanged ) > 0) {
@@ -10498,7 +10743,7 @@ class FLORP {
       if ( !empty( $aFieldData ) && in_array( 'newsletter_subscribe', $aFieldData['preferences'] )) {
         // Subscribe participant to newsletter via REST API //
         $strAction = 'subscribe';
-        $aData     = array(
+        $aData = array(
           'email'       => $aFieldData['user_email'],
           'name'        => $aFieldData['first_name'],
           'surname'     => $aFieldData['last_name'],
@@ -10508,11 +10753,11 @@ class FLORP {
           $aData['gender'] = $aFieldData['gender'] === 'muz' ? 'm' : 'f';
         }
         $aFieldData['newsletter_subscription_result'] = '';
-        $bResult                                      = $this->execute_newsletter_rest_api_call( $strAction, $aData );
+        $bResult = $this->execute_newsletter_rest_api_call( $strAction, $aData );
         if ($strAction === 'subscribe' && !$bResult['ok'] && isset( $bResult['issue'] ) && $bResult['issue'] === 'email-exists') {
           $strAction2 = 'subscribers/delete';
-          $aData2     = array( 'email' => $aFieldData['user_email'] );
-          $bResult2   = $this->execute_newsletter_rest_api_call( $strAction2, $aData2 );
+          $aData2 = array( 'email' => $aFieldData['user_email'] );
+          $bResult2 = $this->execute_newsletter_rest_api_call( $strAction2, $aData2 );
           if ($bResult2['ok']) {
             $bResult = $this->execute_newsletter_rest_api_call( $strAction, $aData );
             if (defined( 'FLORP_DEVEL_REST_API_DEBUG' ) && FLORP_DEVEL_REST_API_DEBUG === true) {
@@ -10545,17 +10790,17 @@ class FLORP {
 
       if (strlen( trim( $this->aOptions['strIntfParticipantRegisteredMessage'] ) ) > 0) {
         $strMessageContent = $this->aOptions['strIntfParticipantRegisteredMessage'];
-        $strBlogname       = trim( wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES ) );
-        $aHeaders          = array( 'Content-Type: text/html; charset=UTF-8' );
+        $strBlogname = trim( wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES ) );
+        $aHeaders = array( 'Content-Type: text/html; charset=UTF-8' );
 
         // Create a unique check-in QR code for the participant and send it as attachment //
         $strParticipantDefinition = $this->encode( implode( "|", array(
           $this->aOptions['iIntfFlashmobYear'],
           $aFieldData['user_email']
         ) ) );
-        $strParticipantUrl        = home_url( "/" . $this->fakePageIntfParticipantCheckin . "/?id=" . $strParticipantDefinition );
-        $strOutputFname           = date( 'YmdHis' ) . "-" . $strParticipantDefinition;
-        $strQrCodePath            = $this->get_qr_code( $strParticipantUrl, $strOutputFname );
+        $strParticipantUrl = home_url( "/" . $this->fakePageIntfParticipantCheckin . "/?id=" . $strParticipantDefinition );
+        $strOutputFname = date( 'YmdHis' ) . "-" . $strParticipantDefinition;
+        $strQrCodePath = $this->get_qr_code( $strParticipantUrl, $strOutputFname );
         // TODO maybe use logo (but add it to this plugin's img folder): $this->get_qr_code($strParticipantUrl, $strOutputFname, 500, "png", "false", $strLogoPath, $iLogoWidth, $iLogoHeight);
         $aAttachments = array( $strQrCodePath );
 
@@ -10602,13 +10847,13 @@ class FLORP {
         $message .= sprintf( __( 'E-mail: %s' ), $aFieldData['user_email'] ) . "\n";
         if ( !$this->aOptions['bApproveUsersAutomatically']) {
           $strUserListUrl = admin_url( 'users.php' );
-          $message        .= "\n" . sprintf( __( 'Approval needed - go to the user list: %s' ), $strUserListUrl ) . "\n";
+          $message .= "\n" . sprintf( __( 'Approval needed - go to the user list: %s' ), $strUserListUrl ) . "\n";
         }
         $aAdminArgs = array(
           'blog_id' => get_current_blog_id(),
           'role'    => 'administrator'
         );
-        $aAdmins    = get_users( $aAdminArgs );
+        $aAdmins = get_users( $aAdminArgs );
         if (empty( $aAdmins ) || ( defined( 'FLORP_DEVEL' ) && FLORP_DEVEL === true )) {
           $strSubjectRaw = '[%s] New User Registration';
           if ( !$this->aOptions['bApproveUsersAutomatically']) {
@@ -10625,7 +10870,7 @@ class FLORP {
     }
 
     $strNewsletterSubscribeKey = 'preference_newsletter';
-    $bNewsletterSubscribeOld   = get_user_meta( $iUserID, $strNewsletterSubscribeKey, true ) == '1' ? 1 : 0;
+    $bNewsletterSubscribeOld = get_user_meta( $iUserID, $strNewsletterSubscribeKey, true ) == '1' ? 1 : 0;
 
     $strFlashmobOrganizerKey = 'flashmob_organizer';
     $bIsFlashmobOrganizerOld = get_user_meta( $iUserID, $strFlashmobOrganizerKey, true ) == '1' ? 1 : 0;
@@ -10633,7 +10878,7 @@ class FLORP {
     $aUserData = array();
     foreach ($aFormData["fields"] as $strKey => $aData) {
       $strFieldKey = $aData['key'];
-      $mixValue    = $aData['value'];
+      $mixValue = $aData['value'];
       if (in_array( $strFieldKey, $this->aUserFields )) {
         $aUserData[$strFieldKey] = $mixValue;
       } elseif (in_array( $strFieldKey, $this->aMetaFields )) {
@@ -10671,8 +10916,8 @@ class FLORP {
         foreach ($this->aOptions['aParticipants'][$iUserID] as $strEmail => $aParticipantData) {
           if (strlen( trim( $this->aOptions['strParticipantRemovedMessage'] ) ) > 0) {
             $strMessageContent = $this->aOptions['strParticipantRemovedMessage'];
-            $strBlogname       = trim( wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES ) );
-            $aHeaders          = array( 'Content-Type: text/html; charset=UTF-8' );
+            $strBlogname = trim( wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES ) );
+            $aHeaders = array( 'Content-Type: text/html; charset=UTF-8' );
             $this->new_user_notification( $strEmail, '', $strEmail, $strBlogname, $strMessageContent, $this->aOptions['strParticipantRemovedSubject'], $aHeaders );
           }
         }
@@ -10698,7 +10943,7 @@ class FLORP {
       if ($bNewsletterSubscribeNew !== $bNewsletterSubscribeOld) {
         if ($bNewsletterSubscribeNew) {
           $strAction = 'subscribe';
-          $aData     = array(
+          $aData = array(
             'email'       => $aUserData['user_email'],
             'name'        => $aUserData['first_name'],
             'surname'     => $aUserData['last_name'],
@@ -10706,15 +10951,15 @@ class FLORP {
           );
         } else {
           $strAction = 'unsubscribe';
-          $aData     = array(
+          $aData = array(
             'email' => $aUserData['user_email'],
           );
         }
         $bResult = $this->execute_newsletter_rest_api_call( $strAction, $aData );
         if ($strAction === 'subscribe' && !$bResult['ok'] && isset( $bResult['issue'] ) && $bResult['issue'] === 'email-exists') {
           $strAction2 = 'subscribers/delete';
-          $aData2     = array( 'email' => $aUserData['user_email'] );
-          $bResult2   = $this->execute_newsletter_rest_api_call( $strAction2, $aData2 );
+          $aData2 = array( 'email' => $aUserData['user_email'] );
+          $bResult2 = $this->execute_newsletter_rest_api_call( $strAction2, $aData2 );
           if ($bResult2['ok']) {
             $bResult = $this->execute_newsletter_rest_api_call( $strAction, $aData );
             if (defined( 'FLORP_DEVEL_REST_API_DEBUG' ) && FLORP_DEVEL_REST_API_DEBUG === true) {
@@ -10762,7 +11007,7 @@ class FLORP {
     }
 
     $strBlogname = wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES );
-    $oUser       = get_user_by( 'id', $iUserID );
+    $oUser = get_user_by( 'id', $iUserID );
     // User approval notification to approved user //
     if (strlen( trim( $this->strUserApprovedMessage ) ) > 0) {
       $strProfilePageUrl = '';
@@ -10770,19 +11015,19 @@ class FLORP {
         $strProfilePageUrl = get_permalink( $this->iProfileFormPageIDMain );
       }
       $strMessageContent = str_replace( '%PROFILE_URL%', $strProfilePageUrl, $this->strUserApprovedMessage );
-      $aHeaders          = array( 'Content-Type: text/html; charset=UTF-8' );
+      $aHeaders = array( 'Content-Type: text/html; charset=UTF-8' );
       $this->new_user_notification( $oUser->user_email, '', $oUser->user_email, $strBlogname, $strMessageContent, $this->aOptions['strUserApprovedSubject'], $aHeaders );
     }
 
     // User approval notification to admins //
-    $message    = sprintf( __( 'A user was approved on your site %s:' ), $strBlogname ) . "\n\n";
-    $message    .= sprintf( __( 'Username: %s' ), $oUser->user_login ) . "\n\n";
-    $message    .= sprintf( __( 'E-mail: %s' ), $oUser->user_email ) . "\n";
+    $message = sprintf( __( 'A user was approved on your site %s:' ), $strBlogname ) . "\n\n";
+    $message .= sprintf( __( 'Username: %s' ), $oUser->user_login ) . "\n\n";
+    $message .= sprintf( __( 'E-mail: %s' ), $oUser->user_email ) . "\n";
     $aAdminArgs = array(
       'blog_id' => get_current_blog_id(),
       'role'    => 'administrator'
     );
-    $aAdmins    = get_users( $aAdminArgs );
+    $aAdmins = get_users( $aAdminArgs );
     if (empty( $aAdmins ) || ( defined( 'FLORP_DEVEL' ) && FLORP_DEVEL === true )) {
       @wp_mail( get_option( 'admin_email' ), sprintf( __( '[%s] User Approval' ), $strBlogname ), $message );
     } else {
@@ -10810,7 +11055,7 @@ class FLORP {
       'textarea_rows' => 4,
       'wpautop'       => false,
     );
-    $aSettings         = array_merge( $aDefaultsSettings, $aSettings );
+    $aSettings = array_merge( $aDefaultsSettings, $aSettings );
 
     ob_start();
     wp_editor( $strContent, $strEditorID, $aSettings );
@@ -10960,16 +11205,16 @@ class FLORP {
     } elseif ( !$this->isFlashmobBlog) {
       return $aPosts;
     } else {
-      $bFound     = true;
+      $bFound = true;
       $bMalformed = false;
 
       if ( !$_REQUEST['id']) {
         $bFound = false;
       } else {
         $strParticipantDefinition = $this->decode( $_REQUEST['id'] );
-        $aParts                   = explode( "|", $strParticipantDefinition );
+        $aParts = explode( "|", $strParticipantDefinition );
         if (count( $aParts ) !== 3) {
-          $bFound     = false;
+          $bFound = false;
           $bMalformed = true;
         } else {
           $aParticipantDefinition = array(
@@ -10985,15 +11230,15 @@ class FLORP {
       }
 
       $aTshirts = $this->get_tshirts( 'all', false, false );
-      $strID    = "participant-" . $aParticipantDefinition['leader_id'] . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $aParticipantDefinition['email'] );
+      $strID = "participant-" . $aParticipantDefinition['leader_id'] . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $aParticipantDefinition['email'] );
 
       $aParticipants = $this->get_flashmob_participants( 0, false, false );
 
       $aParticipantData = false;
       if (isset( $aParticipants[$aParticipantDefinition['leader_id']] ) && isset( $aParticipants[$aParticipantDefinition['leader_id']][$aParticipantDefinition['email']] )) {
-        $aParticipantData                   = $aParticipants[$aParticipantDefinition['leader_id']][$aParticipantDefinition['email']];
+        $aParticipantData = $aParticipants[$aParticipantDefinition['leader_id']][$aParticipantDefinition['email']];
         $aParticipantData['leader_user_id'] = $aParticipantDefinition['leader_id'];
-        $aParticipantData['user_email']     = $aParticipantDefinition['email'];
+        $aParticipantData['user_email'] = $aParticipantDefinition['email'];
       }
 
       $aTshirtData = false;
@@ -11030,16 +11275,16 @@ class FLORP {
     } elseif ( !$this->isIntfBlog) {
       return $aPosts;
     } else {
-      $bFound     = true;
+      $bFound = true;
       $bMalformed = false;
 
       if ( !$_REQUEST['id']) {
         $bFound = false;
       } else {
         $strParticipantDefinition = $this->decode( $_REQUEST['id'] );
-        $aParts                   = explode( "|", $strParticipantDefinition );
+        $aParts = explode( "|", $strParticipantDefinition );
         if (count( $aParts ) !== 2) {
-          $bFound     = false;
+          $bFound = false;
           $bMalformed = true;
         } else {
           $aParticipantDefinition = array(
@@ -11054,7 +11299,7 @@ class FLORP {
       }
 
       $aTshirts = $this->get_tshirts( 'all', false, true );
-      $strID    = "intf-participant-" . $aParticipantDefinition['year'] . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $aParticipantDefinition['email'] );
+      $strID = "intf-participant-" . $aParticipantDefinition['year'] . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $aParticipantDefinition['email'] );
       // $strID = "participant-".$iLeaderID."-".preg_replace('~[^a-zA-Z0-9_-]~', "_", $strEmail);
       // $aParticipants = $this->get_flashmob_participants( 0, false, true );
       // if (!isset($aParticipants[]))
@@ -11063,8 +11308,8 @@ class FLORP {
 
       $aParticipantData = false;
       if (isset( $aParticipants[$aParticipantDefinition['year']] ) && isset( $aParticipants[$aParticipantDefinition['year']][$aParticipantDefinition['email']] )) {
-        $aParticipantData               = $aParticipants[$aParticipantDefinition['year']][$aParticipantDefinition['email']];
-        $aParticipantData['year']       = $aParticipantDefinition['year'];
+        $aParticipantData = $aParticipants[$aParticipantDefinition['year']][$aParticipantDefinition['email']];
+        $aParticipantData['year'] = $aParticipantDefinition['year'];
         $aParticipantData['user_email'] = $aParticipantDefinition['email'];
       }
 
@@ -11107,33 +11352,33 @@ class FLORP {
       $GLOBALS[$sGlobalsKey] = true;
 
       // create a fake virtual page
-      $oPost                 = new stdClass;
-      $oPost->post_author    = 1;
-      $oPost->post_name      = $sUrl;
-      $oPost->guid           = get_bloginfo( 'wpurl' ) . '/' . $sUrl;
-      $oPost->post_title     = $sTitle;
-      $oPost->post_content   = $sContent;
-      $oPost->ID             = -1;
-      $oPost->post_type      = 'page';
-      $oPost->post_status    = 'static';
+      $oPost = new stdClass;
+      $oPost->post_author = 1;
+      $oPost->post_name = $sUrl;
+      $oPost->guid = get_bloginfo( 'wpurl' ) . '/' . $sUrl;
+      $oPost->post_title = $sTitle;
+      $oPost->post_content = $sContent;
+      $oPost->ID = -1;
+      $oPost->post_type = 'page';
+      $oPost->post_status = 'static';
       $oPost->comment_status = 'closed';
-      $oPost->ping_status    = 'open';
-      $oPost->comment_count  = 0;
-      $oPost->post_date      = current_time( 'mysql' );
-      $oPost->post_date_gmt  = current_time( 'mysql', 1 );
-      $aPosts                = null;
-      $aPosts[]              = $oPost;
+      $oPost->ping_status = 'open';
+      $oPost->comment_count = 0;
+      $oPost->post_date = current_time( 'mysql' );
+      $oPost->post_date_gmt = current_time( 'mysql', 1 );
+      $aPosts = null;
+      $aPosts[] = $oPost;
 
       // make wpQuery believe this is a real page too
-      $wp_query->is_page       = true;
-      $wp_query->is_singular   = true;
-      $wp_query->is_home       = false;
-      $wp_query->is_archive    = false;
-      $wp_query->is_category   = false;
+      $wp_query->is_page = true;
+      $wp_query->is_singular = true;
+      $wp_query->is_home = false;
+      $wp_query->is_archive = false;
+      $wp_query->is_category = false;
       $wp_query->is_attachment = false;
       unset( $wp_query->query["error"] );
       $wp_query->query_vars["error"] = "";
-      $wp_query->is_404              = false;
+      $wp_query->is_404 = false;
     }
 
     return $aPosts;
@@ -11176,8 +11421,8 @@ class FLORP {
 
   private function maybe_add_crons() {
     if ($this->isMainBlog) {
-      $iNow            = time();
-      $iTimestamp      = strtotime( 'today 10am' );
+      $iNow = time();
+      $iTimestamp = strtotime( 'today 10am' );
       $iTimeZoneOffset = get_option( 'gmt_offset', 0 );
       if ($iTimestamp < $iNow) {
         $iTimestamp = strtotime( 'tomorrow ' . ( 10 - $iTimeZoneOffset ) . 'am' );
@@ -11222,7 +11467,7 @@ class FLORP {
     }
 
     $aUploadDir = wp_upload_dir();
-    $strQrDir   = $aUploadDir["basedir"] . "/florp-qr-code";
+    $strQrDir = $aUploadDir["basedir"] . "/florp-qr-code";
     if ( !file_exists( $strQrDir )) {
       mkdir( $strQrDir );
     }

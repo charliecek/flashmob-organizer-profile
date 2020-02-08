@@ -229,18 +229,18 @@ jQuery(document).ready(function () {
                                 if (aResponse.message) {
                                     fnFlorpShowMessage(aResponse.message, strMessageId + "-error", "error", 10000, $container, false, undefined, {}, iTableCell)
                                 } else {
-                                    fnFlorpShowMessage("An error occured", strMessageId + "-error", "error", 10000, $container, false, undefined, {}, iTableCell)
+                                    fnFlorpShowMessage("An error occurred", strMessageId + "-error", "error", 10000, $container, false, undefined, {}, iTableCell)
                                 }
                                 console.log(aResponse)
                             }
                         } catch (e) {
                             console.warn(e)
                             console.log(response)
-                            fnFlorpShowMessage("An error occured", "exception-error", "error", 10000)
+                            fnFlorpShowMessage("An error occurred", "exception-error", "error", 10000)
                         }
                     } else {
                         console.warn("No response")
-                        fnFlorpShowMessage("An error occured", "no-response-error", "error", 10000)
+                        fnFlorpShowMessage("An error occurred", "no-response-error", "error", 10000)
                     }
                     $this.data("wait", 0)
                 })
@@ -282,6 +282,193 @@ jQuery(document).ready(function () {
             }, 1000)
         }
     })
+
+    jQuery(".button.pop-in").click(function () {
+        var $this = jQuery(this)
+        if ($this.hasClass("disabled")) {
+            return
+        }
+
+        var data = $this.data()
+        var position = $this.position()
+        var $div = jQuery("#" + data.popInId)
+        if ($div.length === 0) {
+            return
+        }
+
+        var $form = $div.children("form")
+        if ($form.length === 0) {
+            return
+        }
+
+        if ($form.data("wait") === "1") {
+            return
+        }
+
+        var $row = jQuery("tr[data-row-id=" + data.rowId + "]").first()
+        var $button = $row.find("span[data-button-id=" + data.buttonId + "]").first()
+
+        if (!$div.data("buttonId") || $div.data("buttonId") === data.buttonId) {
+            var hiddenBeforeStop = $div.hasClass("hide")
+            $div.stop(true, true)
+            if (hiddenBeforeStop !== $div.hasClass("hide")) {
+                return
+            }
+
+            $div.toggleClass("hide")
+        } else {
+            $div.stop(true, true)
+            $div.removeClass("hide")
+        }
+
+        if ($div.hasClass("hide")) {
+            $button.removeClass("active")
+            return
+        }
+
+        $button.addClass("active")
+        $form.find("p#error,p#success").addClass("hide").text("")
+        $div.data("buttonId", data.buttonId)
+        $div.css({top: position.top, left: position.left + $this.width()})
+
+        $form.find("select").each(function (i, el) {
+            var $el = jQuery(el)
+            if (data.changeAction === "change") {
+                $el.val(data[$el.attr("id")])
+            } else {
+                $el.val("null")
+            }
+        })
+        $form.find("input#data").val(JSON.stringify(data))
+    })
+
+    jQuery("form.florp-pop-in-form").on("submit", function (event) {
+        event.preventDefault()
+
+        var $form = jQuery(event.target), data
+        try {
+            data = JSON.parse($form.find("input#data").val())
+        } catch (e) {
+            console.warn(e)
+            return
+        }
+
+        data = $form.serializeArray().reduce(function (obj, item) {
+            if (item.name !== "data") {
+                obj[item.name] = item.value
+            }
+            return obj
+        }, data)
+
+        if (data.popInId === "florp-admin-tshirt-change") {
+            if (!checkTshirtSubmission($form, data)) {
+                return
+            }
+        }
+
+        $form.find("p#error,p#success").addClass("hide").text("")
+        $form.data("wait", 1)
+
+        var $row = jQuery("tr[data-row-id=" + data.rowId + "]").first()
+        var $button = $row.find("span[data-button-id=" + data.buttonId + "]").first()
+        $button.addClass("disabled")
+
+        jQuery.post(ajaxurl, data, function (response) {
+            if (response) {
+                try {
+                    var aResponse = JSON.parse(response)
+
+                    if (!aResponse.ok) {
+                        $form.find("p#error").removeClass("hide").text(aResponse.message || "An error occurred")
+                        return
+                    }
+
+                    if (aResponse.popInId === "florp-admin-tshirt-change") {
+                        processTshirtChange(aResponse)
+                    }
+
+                    $form.find("p#success").removeClass("hide").text(aResponse.message || "Success!")
+
+                    $form.parent(".florp-pop-in-div").fadeOut(3000, function () {
+                        jQuery(this).addClass("hide").css({opacity: "", display: ""})
+                        $button.removeClass("active")
+                    })
+                } catch (e) {
+                    console.warn(e)
+                    console.log(response)
+                    $form.find("p#error").removeClass("hide").text("An error occurred")
+                } finally {
+                    $button.removeClass("disabled")
+                    $form.data("wait", 0)
+                }
+            } else {
+                console.warn("No response")
+                $form.find("p#error").removeClass("hide").text("An error occurred")
+                $form.data("wait", 0)
+            }
+        })
+    })
+
+    function checkTshirtSubmission($form, data) {
+        var aKeys = ["tshirt_color", "tshirt_gender", "tshirt_size"]
+
+        for (let i = 0; i < aKeys.length; i++) {
+            if (data[aKeys[i]] === "" || data[aKeys[i]] === "null") {
+                $form.find("p#error").removeClass("hide").text("All fields are required!")
+                return false
+            }
+        }
+
+        return true
+    }
+
+    function processTshirtChange(aResponse) {
+        console.log(aResponse)
+
+        var dataFieldPrefix = ""
+        if (aResponse.action === "florp_intf_change_tshirt" || aResponse.action === "florp_change_tshirt") {
+            dataFieldPrefix = "flashmob_participant_"
+        }
+
+        var $row = jQuery("tr[data-row-id=" + aResponse.rowId + "]").first()
+        var $button = $row.find("span[data-button-id=" + aResponse.buttonId + "]").first()
+        var aKeys = ["tshirt_color", "tshirt_gender", "tshirt_size"]
+
+        for (var key in aResponse) {
+            if (aResponse.hasOwnProperty(key)) {
+                $button.data(key, aResponse[key])
+            }
+        }
+
+        if (aResponse.changeAction === "change") {
+            for (let i = 0; i < aKeys.length; i++) {
+                var sKey = aKeys[i]
+                $row.find("span[data-field=" + dataFieldPrefix + sKey + "] span.florp-val").text(aResponse[dataFieldPrefix + sKey] || aResponse[sKey])
+            }
+        } else {
+            $button.text("Zmeniť tričko").data("changeAction", "change")
+
+            var $col = $row.find("td.column-profil")
+            if ($col.length > 0) {
+                if (aResponse.preferences) {
+                    $pref = $col.find("span[data-field=preferences]")
+                    if ($pref.length > 0) {
+                        $pref.find("span.florp-val").text(aResponse.preferences)
+                    } else {
+                        $col.append(jQuery("<span data-field-id='preferences'><strong>Preferences</strong>: <span class='florp-val'>" + aResponse.preferences + "</span></span></br>"))
+                    }
+                }
+
+                for (let i = 0; i < aKeys.length; i++) {
+                    var sKey = aKeys[i]
+                    var fieldKey = dataFieldPrefix + sKey
+                    var fieldLabel = fieldKey.replace(/_/g, " ")
+                    fieldLabel = fieldLabel[0].toUpperCase() + fieldLabel.toLowerCase().slice(1)
+                    $col.append(jQuery("<span data-field-id='" + fieldKey + "'><strong>" + fieldLabel + "</strong>: <span class='florp-val'>" + aResponse[sKey] + "</span></span>" + (i === aKeys.length - 1 ? "" : "</br>")))
+                }
+            }
+        }
+    }
 
     // Filter for admin tables //
     var fnRemoveAccents = function (str) {
@@ -497,7 +684,7 @@ jQuery(document).ready(function () {
         // END: Column toggling //
 
         var buttons = [], notices = [], hideByDefault = {}
-        $table.find("span.button.double-check").each(function () {
+        $table.find("span.button.double-check,span.button.pop-in").each(function () {
             var $this = jQuery(this),
                 text = ("undefined" !== typeof $this.data("text") && null !== $this.data("text")) ? $this.data("text") : $this.data("textDefault")
             if (buttons.indexOf(text) === -1) {
@@ -560,7 +747,7 @@ jQuery(document).ready(function () {
 })
 
 window.florpToggleButtons = function (checkbox, text, tableId) {
-    var elements = jQuery("table.florpFilterTable" + tableId).find("span.button.double-check[data-text='" + text + "'],span.button.double-check[data-text-default='" + text + "'],span.notice[data-text='" + text + "'],span.notice:contains('" + text + "')")
+    var elements = jQuery("table.florpFilterTable" + tableId).find("span.button.double-check[data-text='" + text + "'],span.button.double-check[data-text-default='" + text + "'],span.button.pop-in[data-text='" + text + "'],span.button.pop-in[data-text-default='" + text + "'],span.notice[data-text='" + text + "'],span.notice:contains('" + text + "')")
     if (jQuery(checkbox).is(":checked")) {
         elements.removeClass("hide")
         window.florpSetUnhidden(text, tableId, "buttons")
