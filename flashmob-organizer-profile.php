@@ -4152,7 +4152,8 @@ class FLORP {
     }
 
     // Change t-shirt button //
-    if ($bBackend && current_user_can( 'administrator' )) {
+    $bDelivered = ( isset( $this->aOptions["aTshirts"]["participants"][$strEmail] ) && isset( $this->aOptions["aTshirts"]["participants"][$strEmail]["is_delivered"] ) && $this->aOptions["aTshirts"]["participants"][$strEmail]["is_delivered"] === true );
+    if ($bBackend && current_user_can( 'administrator' ) && !$bDelivered) {
       $bHasTshirt = $this->hasParticipantTshirt( $aParticipantData );
       $strButtonLabel = ( $bHasTshirt ? "Zmeniť" : "Pridať" ) . " tričko";
       $strAction = $bHasTshirt ? "change" : "add";
@@ -4447,7 +4448,8 @@ class FLORP {
     }
 
     // Change t-shirt button //
-    if ($bBackend && current_user_can( 'administrator' )) {
+    $bDelivered = ( isset( $this->aOptions["aTshirtsIntf"][$iYear][$strEmail] ) && isset( $this->aOptions["aTshirtsIntf"][$iYear][$strEmail]["is_delivered"] ) && $this->aOptions["aTshirtsIntf"][$iYear][$strEmail]["is_delivered"] === true );
+    if ($bBackend && current_user_can( 'administrator' ) && !$bDelivered) {
       $bHasTshirt = $this->hasParticipantTshirt( $aParticipantData );
       $strButtonLabel = ( $bHasTshirt ? "Zmeniť" : "Pridať" ) . " tričko";
       $strAction = $bHasTshirt ? "change" : "add";
@@ -4916,11 +4918,16 @@ class FLORP {
         $strTitle = ' title="' . date( $this->strDateFormat, $aTshirtData["paid_timestamp"] ) . '"';
       }
       $strButtons .= '<span data-button-id="' . $strPaidButtonID . '" class="notice notice-success"' . $strTitle . '>' . $strButtonLabelPaid . '</span>';
+
+      if (current_user_can( 'administrator' ) && !$aTshirtData["is_delivered"]) {
+        // Change t-shirt button //
+        $strButtons .= '<span class="button pop-in" data-pop-in-id="florp-admin-tshirt-change" data-change-action="change" data-text-default="' . $strButtonLabelChangeTshirt . '" data-button-id="' . $strChangeTshirtButtonID . '" data-row-id="' . $strRowID . '" ' . $strData . ' data-action="florp' . $sIntfActionPart . '_tshirt_change_tshirt" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" data-hide="1">' . $strButtonLabelChangeTshirt . '</span>';
+      }
     } else {
       // Paid button //
       $strButtons .= '<span class="button double-check" data-text-double-check="' . $strDoubleCheckQuestion . '" data-text-default="' . $strButtonLabelPaid . '" data-button-id="' . $strPaidButtonID . '" data-row-id="' . $strRowID . '" ' . $strData . ' data-action="florp' . $sIntfActionPart . '_tshirt_paid" data-sure="0" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '">' . $strButtonLabelPaid . '</span>';
 
-      if (current_user_can( 'administrator' )) {
+      if (current_user_can( 'administrator' ) && !$aTshirtData["is_delivered"]) {
         // Change t-shirt button //
         $strButtons .= '<span class="button pop-in" data-pop-in-id="florp-admin-tshirt-change" data-change-action="change" data-text-default="' . $strButtonLabelChangeTshirt . '" data-button-id="' . $strChangeTshirtButtonID . '" data-row-id="' . $strRowID . '" ' . $strData . ' data-action="florp' . $sIntfActionPart . '_tshirt_change_tshirt" data-security="' . wp_create_nonce( 'srd-florp-admin-security-string' ) . '" data-hide="1">' . $strButtonLabelChangeTshirt . '</span>';
       }
@@ -7321,6 +7328,7 @@ class FLORP {
 
     $aData = $_POST;
     $strNotFoundErrorMessage = "Could not find participant '{$aData['participantEmail']}'";
+    $strDeliveredErrorMessage = "Cannot change T-shirt order for delivered T-shirt!";
     $strErrorMessage = "Could not change T-shirt order of '{$aData['participantEmail']}'";
     $strOkMessage = "T-shirt order of '{$aData['participantEmail']}' was changed successfully!";
 
@@ -7340,9 +7348,15 @@ class FLORP {
     switch ($aData["action"]) {
       case "florp_change_tshirt":
         $aParticipants = $this->get_flashmob_participants( intval( $aData["leaderId"] ), false, true );
+        $bDelivered = ( isset( $this->aOptions["aTshirts"]["participants"][$aData["participantEmail"]] ) && isset( $this->aOptions["aTshirts"]["participants"][$aData["participantEmail"]]["is_delivered"] ) && $this->aOptions["aTshirts"]["participants"][$aData["participantEmail"]]["is_delivered"] === true );
         if ( !isset( $aParticipants[$aData["leaderId"]], $aParticipants[$aData["leaderId"]][$aData["participantEmail"]] )) {
           $aData["ok"] = false;
           $aData["message"] = $strNotFoundErrorMessage;
+
+          return;
+        } elseif ($bDelivered) {
+          $aData["ok"] = false;
+          $aData["message"] = $strDeliveredErrorMessage;
 
           return;
         }
@@ -7356,9 +7370,15 @@ class FLORP {
 
         break;
       case "florp_intf_change_tshirt":
+        $bDelivered = ( isset( $this->aOptions["aTshirtsIntf"][$aData["year"]][$aData["participantEmail"]] ) && isset( $this->aOptions["aTshirtsIntf"][$aData["year"]][$aData["participantEmail"]]["is_delivered"] ) && $this->aOptions["aTshirtsIntf"][$aData["year"]][$aData["participantEmail"]]["is_delivered"] === true );
         if ( !isset( $this->aOptions['aIntfParticipants'][$aData["year"]], $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]] )) {
           $aData["ok"] = false;
           $aData["message"] = $strNotFoundErrorMessage;
+
+          return;
+        } elseif ($bDelivered) {
+          $aData["ok"] = false;
+          $aData["message"] = $strDeliveredErrorMessage;
 
           return;
         }
@@ -7400,6 +7420,11 @@ class FLORP {
           $aData["message"] = $strNotFoundErrorMessage;
 
           return;
+        } else if ($aTshirts[$strID]["is_delivered"]) {
+          $aData["ok"] = false;
+          $aData["message"] = $strDeliveredErrorMessage;
+
+          return;
         }
 
         $aParticipantData = $aTshirts[$strID];
@@ -7413,6 +7438,11 @@ class FLORP {
         if ( !isset( $aTshirts[$strID] )) {
           $aData["ok"] = false;
           $aData["message"] = $strNotFoundErrorMessage;
+
+          return;
+        } else if ($aTshirts[$strID]["is_delivered"]) {
+          $aData["ok"] = false;
+          $aData["message"] = $strDeliveredErrorMessage;
 
           return;
         }
@@ -7670,6 +7700,10 @@ class FLORP {
       $aData["replaceButton"] = true;
       $strTitle = ' title="' . date( $this->strDateFormat, $iTimestampNow ) . '"';
       $aData["replaceButtonHtml"] = '<span data-button-id="' . $aData['buttonId'] . '" class="notice notice-success"' . $strTitle . '>' . $aData['textDefault'] . '</span>';
+      if ($aData["is_leader"] !== "1" && $aData["is_leader"] !== 1 && $aData["is_leader"] !== true) {
+        $sChangeTshirtButtonID = "florpButton-changeTshirt-participant-" . $aData['leader_id'] . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $aData['participantEmail'] );
+        $aData["hideSelector"] = "tr[data-row-id={$aData['rowId']}] span.button.pop-in[data-button-id={$sChangeTshirtButtonID}]";
+      }
       if (defined( 'FLORP_DEVEL' ) && FLORP_DEVEL === true && defined( 'FLORP_DEVEL_FAKE_ACTIONS' ) && FLORP_DEVEL_FAKE_ACTIONS === true) {
         $aData["message"] = "The tshirt delivery for flashmob participant '{$aData['participantEmail']}' was marked successfully (NOT: FLORP_DEVEL is on!)";
       } else {
@@ -7721,6 +7755,8 @@ class FLORP {
       $aData["replaceButton"] = true;
       $strTitle = ' title="' . date( $this->strDateFormat, $iTimestampNow ) . '"';
       $aData["replaceButtonHtml"] = '<span data-button-id="' . $aData['buttonId'] . '" class="notice notice-success"' . $strTitle . '>' . $aData['textDefault'] . '</span>';
+      $sChangeTshirtButtonID = "florpButton-changeTshirt-intf-participant-" . $iYear . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $aData['participantEmail'] );
+      $aData["hideSelector"] = "tr[data-row-id={$aData['rowId']}] span.button.pop-in[data-button-id={$sChangeTshirtButtonID}]";
       if (defined( 'FLORP_DEVEL' ) && FLORP_DEVEL === true && defined( 'FLORP_DEVEL_FAKE_ACTIONS' ) && FLORP_DEVEL_FAKE_ACTIONS === true) {
         $aData["message"] = "The tshirt delivery for flashmob participant '{$aData['participantEmail']}' was marked successfully (NOT: FLORP_DEVEL is on!)";
       } else {
