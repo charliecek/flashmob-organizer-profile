@@ -67,6 +67,7 @@ function Hilitor( el, id, tag ) {
         input = input.replace( breakRegExp, "|" )
         input = input.replace( /^\||\|$/g, "" )
         if (input) {
+            input = this.removeAccents( input )
             var re = "(" + input + ")"
             if (!this.openLeft) {
                 re = "\\b" + re
@@ -87,6 +88,13 @@ function Hilitor( el, id, tag ) {
         return retval
     }
 
+    this.removeAccents = function( str ) {
+        if ("string" !== typeof str) {
+            return str
+        }
+        return str.normalize( 'NFD' ).replace( /[\u0300-\u036f]/g, "" )
+    }
+
     // recursively apply word highlighting
     this.hiliteWords = function( node ) {
         if (node === undefined || !node) return
@@ -98,13 +106,13 @@ function Hilitor( el, id, tag ) {
                 this.hiliteWords( node.childNodes[i] )
         }
         if (node.nodeType == 3) { // NODE_TEXT
-            if ((nv = node.nodeValue) && (regs = matchRegExp.exec( nv ))) {
+            if ((nv = this.removeAccents( node.nodeValue )) && (regs = matchRegExp.exec( nv ))) {
                 if (!wordColor[regs[0].toLowerCase()]) {
                     wordColor[regs[0].toLowerCase()] = colors[colorIdx++ % colors.length]
                 }
 
                 var match = document.createElement( hiliteTag )
-                match.appendChild( document.createTextNode( regs[0] ) )
+                match.appendChild( document.createTextNode( node.nodeValue.substr( regs.index, regs[0].length ) ) )
                 match.style.backgroundColor = wordColor[regs[0].toLowerCase()]
                 match.style.color = "#000"
 
