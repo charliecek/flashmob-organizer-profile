@@ -330,6 +330,8 @@ jQuery(document).ready(function () {
         if ($div.hasClass("hide")) {
             $button.removeClass("active")
             return
+        } else {
+            jQuery(".button.pop-in.active").filter((i, el) => jQuery(el).data().popInId === data.popInId).removeClass("active")
         }
 
         $button.addClass("active")
