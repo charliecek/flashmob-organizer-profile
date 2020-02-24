@@ -4246,7 +4246,7 @@ class FLORP {
     }
     $strEcho .= '<td class="column column-lider"><a href="' . admin_url( 'admin.php?page=florp-leaders' ) . "#{$iLeaderID}\">{$oLeader->first_name} {$oLeader->last_name}</a>{$strIsPending}</td>";
     $strEcho .= '<td class="column column-profil">';
-    $aTimestamps = array( 'registered', 'tshirt_order_cancelled_timestamp', 'updated_timestamp', 'paid_fee', 'attend_set_timestamp' );
+    $aTimestamps = array( 'registered', 'tshirt_order_cancelled_timestamp', 'updated_timestamp', 'paid_fee', 'attend_set_timestamp', 'tshirt_ordered_timestamp' );
     $bOrderedTshirt = isset( $aParticipantData['preferences'] ) && is_array( $aParticipantData['preferences'] ) && in_array( 'Chcem pamätné Flashmob tričko', $aParticipantData['preferences'] );
     $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city', 'leader_user_id' );
     if ( !isset( $aParticipantData['leader_notified'] )) {
@@ -4528,7 +4528,7 @@ class FLORP {
     $strEcho .= '<td class="column column-meno">' . $aParticipantData['first_name'] . ' ' . $aParticipantData['last_name'] . $strEditSubmission . $strButtons . '</td>' . PHP_EOL;
     $strEcho .= '<td class="column column-email"><a name="' . $aParticipantData['user_email'] . '">' . $aParticipantData['user_email'] . '</a></td>' . PHP_EOL;
     $strEcho .= '<td class="column column-mesto">' . $aParticipantData['flashmob_city'] . '</td>' . PHP_EOL;
-    $aTimestamps = array( 'registered', 'paid_fee', 'attend_set_timestamp', 'updated_timestamp' );
+    $aTimestamps = array( 'registered', 'paid_fee', 'attend_set_timestamp', 'updated_timestamp', 'tshirt_order_cancelled_timestamp', 'tshirt_ordered_timestamp' );
     $aSkip = array( 'first_name', 'last_name', 'user_email', 'flashmob_city' );
     $bOrderedTshirt = isset( $aParticipantData['preferences'] ) && is_array( $aParticipantData['preferences'] ) && in_array( 'Chcem pamätné Flashmob tričko', $aParticipantData['preferences'] );
     $strEcho .= '<td class="column column-profil">' . PHP_EOL;
@@ -7329,65 +7329,46 @@ class FLORP {
     $aData = $_POST;
     $strNotFoundErrorMessage = "Could not find participant '{$aData['participantEmail']}'";
     $strDeliveredErrorMessage = "Cannot change T-shirt order for delivered T-shirt!";
-    $strErrorMessage = "Could not change T-shirt order of '{$aData['participantEmail']}'";
-    $strOkMessage = "T-shirt order of '{$aData['participantEmail']}' was changed successfully!";
-
-    // Actions:
-    // florp_change_tshirt
-    // florp_intf_change_tshirt
-    // florp_tshirt_change_tshirt
-    // florp_intf_tshirt_change_tshirt
+    $strAddingNotAllowedErrorMessage = "Cannot add T-shirt order on this screen!";
+    $strIsLeaderErrorMessage = "Cannot change T-shirt order for leaders!";
+    $strChangedOkMessage = "T-shirt order of '{$aData['participantEmail']}' was changed successfully!";
+    $strAddedOkMessage = "T-shirt order for '{$aData['participantEmail']}' was added successfully!";
 
     $aData["ok"] = true;
-    $aData["message"] = $strOkMessage;
+    $aData["message"] = $strChangedOkMessage;
 
     $aKeys = array( "tshirt_color", "tshirt_gender", "tshirt_size" );
-    $sKeyPrefix = "";
 
     $aParticipantData = array();
     switch ($aData["action"]) {
-      case "florp_change_tshirt":
-        $aParticipants = $this->get_flashmob_participants( intval( $aData["leaderId"] ), false, true );
-        $bDelivered = ( isset( $this->aOptions["aTshirts"]["participants"][$aData["participantEmail"]] ) && isset( $this->aOptions["aTshirts"]["participants"][$aData["participantEmail"]]["is_delivered"] ) && $this->aOptions["aTshirts"]["participants"][$aData["participantEmail"]]["is_delivered"] === true );
-        if ( !isset( $aParticipants[$aData["leaderId"]], $aParticipants[$aData["leaderId"]][$aData["participantEmail"]] )) {
-          $aData["ok"] = false;
-          $aData["message"] = $strNotFoundErrorMessage;
-
-          return;
-        } elseif ($bDelivered) {
-          $aData["ok"] = false;
-          $aData["message"] = $strDeliveredErrorMessage;
-
-          return;
-        }
-
-        $sKeyPrefix = "flashmob_participant_";
-        $aParticipantData = $aParticipants[$aData["leaderId"]][$aData["participantEmail"]];
-
-        foreach ($aKeys as $sKey) {
-          $aParticipantData[$sKeyPrefix . $sKey] = $aData[$sKey];
-        }
-
-        break;
       case "florp_intf_change_tshirt":
+        // Intf participants list
         $bDelivered = ( isset( $this->aOptions["aTshirtsIntf"][$aData["year"]][$aData["participantEmail"]] ) && isset( $this->aOptions["aTshirtsIntf"][$aData["year"]][$aData["participantEmail"]]["is_delivered"] ) && $this->aOptions["aTshirtsIntf"][$aData["year"]][$aData["participantEmail"]]["is_delivered"] === true );
         if ( !isset( $this->aOptions['aIntfParticipants'][$aData["year"]], $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]] )) {
           $aData["ok"] = false;
           $aData["message"] = $strNotFoundErrorMessage;
 
-          return;
+          break;
         } elseif ($bDelivered) {
           $aData["ok"] = false;
           $aData["message"] = $strDeliveredErrorMessage;
 
-          return;
+          break;
         }
 
         // BEGIN: Save option
         $sKeyPrefix = "flashmob_participant_";
 
+        foreach ($aKeys as $sKey) {
+          if (isset( $aData[$sKey] ) && !isset( $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]][$sKeyPrefix . $sKey] )) {
+            $aData["changeAction"] = "add";
+            break;
+          }
+        }
+
         $bChange = false;
         if ($aData["changeAction"] === "add") {
+          $aData["message"] = $strAddedOkMessage;
           if ( !isset( $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]]["preferences"] )) {
             $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]]["preferences"] = array( "flashmob_participant_tshirt" );
           } elseif ( !in_array( "flashmob_participant_tshirt", $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]]["preferences"] )) {
@@ -7398,7 +7379,7 @@ class FLORP {
         }
 
         foreach ($aKeys as $sKey) {
-          if (isset( $aData[$sKey] )) {
+          if (isset( $aData[$sKey] ) && ( !isset( $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]][$sKeyPrefix . $sKey] ) || $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]][$sKeyPrefix . $sKey] !== $aData[$sKey] )) {
             $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]][$sKeyPrefix . $sKey] = $aData[$sKey];
             $bChange = true;
           }
@@ -7412,74 +7393,178 @@ class FLORP {
         $aParticipantData = $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]];
 
         break;
-      case "florp_tshirt_change_tshirt":
-        $aTshirts = $this->get_tshirts( 'all', false, false );
-        $strID = "participant-" . $aData["leaderId"] . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $aData["participantEmail"] );
-        if ( !isset( $aTshirts[$strID] )) {
-          $aData["ok"] = false;
-          $aData["message"] = $strNotFoundErrorMessage;
-
-          return;
-        } else if ($aTshirts[$strID]["is_delivered"]) {
-          $aData["ok"] = false;
-          $aData["message"] = $strDeliveredErrorMessage;
-
-          return;
-        }
-
-        $aParticipantData = $aTshirts[$strID];
-
-        $aData["debug"] = $aTshirts;
-
-        break;
       case "florp_intf_tshirt_change_tshirt":
+        // Intf t-shirts list
         $aTshirts = $this->get_tshirts( 'all', false, true );
         $strID = "intf-participant-" . $aData["year"] . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $aData["participantEmail"] );
         if ( !isset( $aTshirts[$strID] )) {
           $aData["ok"] = false;
           $aData["message"] = $strNotFoundErrorMessage;
 
-          return;
+          break;
         } else if ($aTshirts[$strID]["is_delivered"]) {
           $aData["ok"] = false;
           $aData["message"] = $strDeliveredErrorMessage;
 
-          return;
+          break;
+        } else if ($aData["changeAction"] === "add") {
+          $aData["ok"] = false;
+          $aData["message"] = $strAddingNotAllowedErrorMessage;
+
+          break;
         }
         if ( !isset( $this->aOptions['aIntfParticipants'][$aData["year"]], $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]] )) {
           $aData["ok"] = false;
           $aData["message"] = $strNotFoundErrorMessage;
 
-          return;
+          break;
         }
-
-        $aParticipantData = $aTshirts[$strID];
 
         // BEGIN: Save option
         $sKeyPrefix = "flashmob_participant_";
 
         $bChange = false;
-        if ($aData["changeAction"] === "add") {
-          if ( !isset( $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]]["preferences"] )) {
-            $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]]["preferences"] = array( "flashmob_participant_tshirt" );
-          } elseif ( !in_array( "flashmob_participant_tshirt", $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]]["preferences"] )) {
-            $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]]["preferences"][] = "flashmob_participant_tshirt";
+        foreach ($aKeys as $sKey) {
+          if (isset( $aData[$sKey] )) {
+            if ( !isset( $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]][$sKeyPrefix . $sKey] )) {
+              $aData["ok"] = false;
+              $aData["message"] = $strAddingNotAllowedErrorMessage;
+              $bChange = false;
+
+              break;
+            } elseif ($this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]][$sKeyPrefix . $sKey] !== $aData[$sKey]) {
+              $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]][$sKeyPrefix . $sKey] = $aData[$sKey];
+              $bChange = true;
+            }
           }
-          $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]]["tshirt_ordered_timestamp"] = (int) current_time( 'timestamp' );
+        }
+
+        if ($bChange) {
+          $this->save_options();
+          $aTshirts = $this->get_tshirts( 'all', false, true );
+        }
+        // END: Save option
+
+        $aParticipantData = $aTshirts[$strID];
+
+        break;
+      case "florp_change_tshirt":
+        // SVK participants list
+        $iLeaderId = intval( $aData["leaderId"] );
+        $aParticipants = $this->get_flashmob_participants( $iLeaderId, false, true );
+        $bDelivered = ( isset( $this->aOptions["aTshirts"]["participants"][$aData["participantEmail"]] ) && isset( $this->aOptions["aTshirts"]["participants"][$aData["participantEmail"]]["is_delivered"] ) && $this->aOptions["aTshirts"]["participants"][$aData["participantEmail"]]["is_delivered"] === true );
+        if ( !isset( $aParticipants[$iLeaderId], $aParticipants[$iLeaderId][$aData["participantEmail"]] )) {
+          $aData["ok"] = false;
+          $aData["message"] = $strNotFoundErrorMessage;
+
+          break;
+        } elseif ($bDelivered) {
+          $aData["ok"] = false;
+          $aData["message"] = $strDeliveredErrorMessage;
+
+          break;
+        }
+
+        // BEGIN: Save option
+        $sKeyPrefix = "flashmob_participant_";
+
+        foreach ($aKeys as $sKey) {
+          if (isset( $aData[$sKey] ) && !isset( $this->aOptions['aParticipants'][$iLeaderId][$aData["participantEmail"]][$sKeyPrefix . $sKey] )) {
+            $aData["changeAction"] = "add";
+            break;
+          }
+        }
+
+        $bChange = false;
+        if ($aData["changeAction"] === "add") {
+          $aData["message"] = $strAddedOkMessage;
+          if ( !isset( $this->aOptions['aParticipants'][$iLeaderId][$aData["participantEmail"]]["preferences"] )) {
+            $this->aOptions['aParticipants'][$iLeaderId][$aData["participantEmail"]]["preferences"] = array( "flashmob_participant_tshirt" );
+          } elseif ( !in_array( "flashmob_participant_tshirt", $this->aOptions['aParticipants'][$iLeaderId][$aData["participantEmail"]]["preferences"] )) {
+            $this->aOptions['aParticipants'][$iLeaderId][$aData["participantEmail"]]["preferences"][] = "flashmob_participant_tshirt";
+          }
+          $this->aOptions['aParticipants'][$iLeaderId][$aData["participantEmail"]]["tshirt_ordered_timestamp"] = (int) current_time( 'timestamp' );
           $bChange = true;
         }
 
         foreach ($aKeys as $sKey) {
-          if (isset( $aData[$sKey] )) {
-            $this->aOptions['aIntfParticipants'][$aData["year"]][$aData["participantEmail"]][$sKeyPrefix . $sKey] = $aData[$sKey];
+          if (isset( $aData[$sKey] ) && ( !isset( $this->aOptions['aParticipants'][$iLeaderId][$aData["participantEmail"]][$sKeyPrefix . $sKey] ) || $this->aOptions['aParticipants'][$iLeaderId][$aData["participantEmail"]][$sKeyPrefix . $sKey] !== $aData[$sKey] )) {
+            $this->aOptions['aParticipants'][$iLeaderId][$aData["participantEmail"]][$sKeyPrefix . $sKey] = $aData[$sKey];
             $bChange = true;
           }
         }
 
         if ($bChange) {
           $this->save_options();
+          $aParticipants = $this->get_flashmob_participants( $iLeaderId, false, true );
         }
         // END: Save option
+
+        $aParticipantData = $aParticipants[$iLeaderId][$aData["participantEmail"]];
+
+        break;
+      case "florp_tshirt_change_tshirt":
+        // SVK t-shirts list
+        if ($aData["is_leader"]) {
+          // Check if not a leader
+          $aData["ok"] = false;
+          $aData["message"] = $strIsLeaderErrorMessage;
+
+          break;
+        }
+
+        $iLeaderId = intval( $aData["leader_id"] );
+        $aTshirts = $this->get_tshirts( 'all', false, false );
+        $strID = "participant-" . $iLeaderId . "-" . preg_replace( '~[^a-zA-Z0-9_-]~', "_", $aData["participantEmail"] );
+        if ( !isset( $aTshirts[$strID] )) {
+          $aData["ok"] = false;
+          $aData["message"] = $strNotFoundErrorMessage;
+
+          break;
+        } else if ($aTshirts[$strID]["is_delivered"]) {
+          $aData["ok"] = false;
+          $aData["message"] = $strDeliveredErrorMessage;
+
+          break;
+        } else if ($aData["changeAction"] === "add") {
+          $aData["ok"] = false;
+          $aData["message"] = $strAddingNotAllowedErrorMessage;
+
+          break;
+        }
+        if ( !isset( $this->aOptions['aParticipants'][$iLeaderId], $this->aOptions['aParticipants'][$iLeaderId][$aData["participantEmail"]] )) {
+          $aData["ok"] = false;
+          $aData["message"] = $strNotFoundErrorMessage;
+
+          break;
+        }
+
+        // BEGIN: Save option
+        $sKeyPrefix = "flashmob_participant_";
+
+        $bChange = false;
+        foreach ($aKeys as $sKey) {
+          if (isset( $aData[$sKey] )) {
+            if ( !isset( $this->aOptions['aParticipants'][$iLeaderId][$aData["participantEmail"]][$sKeyPrefix . $sKey] )) {
+              $aData["ok"] = false;
+              $aData["message"] = $strAddingNotAllowedErrorMessage;
+              $bChange = false;
+
+              break;
+            } elseif ($this->aOptions['aParticipants'][$iLeaderId][$aData["participantEmail"]][$sKeyPrefix . $sKey] !== $aData[$sKey]) {
+              $this->aOptions['aParticipants'][$iLeaderId][$aData["participantEmail"]][$sKeyPrefix . $sKey] = $aData[$sKey];
+              $bChange = true;
+            }
+          }
+        }
+
+        if ($bChange) {
+          $this->save_options();
+          $aTshirts = $this->get_tshirts( 'all', false, false );
+        }
+        // END: Save option
+
+        $aParticipantData = $aTshirts[$strID];
 
         break;
       default:
