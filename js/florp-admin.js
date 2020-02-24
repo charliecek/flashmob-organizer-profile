@@ -237,11 +237,17 @@ jQuery(document).ready(function () {
                             console.warn(e)
                             console.log(response)
                             fnFlorpShowMessage("An error occurred", "exception-error", "error", 10000)
+                        } finally {
+                            $this.data("wait", 0)
                         }
                     } else {
                         console.warn("No response")
                         fnFlorpShowMessage("An error occurred", "no-response-error", "error", 10000)
                     }
+                    $this.data("wait", 0)
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    console.warn(textStatus, errorThrown, jqXHR)
+                    fnFlorpShowMessage(errorThrown + ": " + (jqXHR.responseText) + "<br/>" + "Please reload page and try again", "post-fail-error", "error", 10000)
                     $this.data("wait", 0)
                 })
             }
@@ -379,12 +385,15 @@ jQuery(document).ready(function () {
                     var aResponse = JSON.parse(response)
 
                     if (!aResponse.ok) {
+                        console.log(aResponse)
                         $form.find("p#error").removeClass("hide").text(aResponse.message || "An error occurred")
                         return
                     }
 
                     if (aResponse.popInId === "florp-admin-tshirt-change") {
                         processTshirtChange(aResponse)
+                    } else {
+                        console.log(aResponse)
                     }
 
                     $form.find("p#success").removeClass("hide").text(aResponse.message || "Success!")
@@ -406,6 +415,12 @@ jQuery(document).ready(function () {
                 $form.find("p#error").removeClass("hide").text("An error occurred")
                 $form.data("wait", 0)
             }
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            $form.find("p#error").removeClass("hide").html(errorThrown + ": " + (jqXHR.responseText) + "<br/>" + "Please reload page and try again")
+            console.log(textStatus, errorThrown, jqXHR)
+
+            $button.removeClass("disabled")
+            $form.data("wait", 0)
         })
     })
 
