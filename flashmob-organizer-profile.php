@@ -3646,7 +3646,8 @@ class FLORP {
         wp_enqueue_style( 'wp_admin_css' );
       }
 
-      wp_enqueue_script( 'florp_admin_js', plugins_url( 'js/florp-admin.js', __FILE__ ), array( 'jquery' ), $this->strVersion, true );
+      wp_enqueue_script('florp_hilitor_js', plugins_url('js/hilitor.js', __FILE__), array( 'jquery' ), $this->strVersion, true);
+      wp_enqueue_script('florp_admin_js', plugins_url('js/florp-admin.js', __FILE__), array( 'jquery' ), $this->strVersion, true);
 
       wp_register_style( 'florp_admin_css', plugins_url( 'css/florp-admin.css', __FILE__ ), false, $this->strVersion );
       wp_enqueue_style( 'florp_admin_css' );

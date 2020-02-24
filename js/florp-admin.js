@@ -510,6 +510,9 @@ jQuery(document).ready(function () {
             if (val === "") {
                 // Show all rows hidden by this column //
                 jQuery("tr.florpFilterRow.florpFilterTable" + tableId + ".florpFilterHiddenColumn" + columnId).removeClass("florpFilterHiddenColumn" + columnId)
+                jQuery("tr.florpFilterRow.florpFilterTable" + tableId + " .florpFilterColumn" + columnId).each((i, el) => {
+                    new Hilitor(el).setMatchType("open").setColorCount(1).remove()
+                })
             } else {
                 // Hide all //
                 jQuery("tr.florpFilterRow.florpFilterTable" + tableId).addClass("florpFilterHiddenColumn" + columnId)
@@ -523,7 +526,21 @@ jQuery(document).ready(function () {
                     if (!colTxt) {
                         return false
                     }
-                    return fnRemoveAccents(colTxt).toLowerCase().indexOf(val) !== -1
+
+                    var res = fnRemoveAccents(colTxt).toLowerCase().indexOf(val) !== -1
+
+                    var $col = jQuery(this).find("td.florpFilterCell.florpFilterColumn" + columnId)
+                    $col.each((i, el) => {
+                        var h = new Hilitor(el).setMatchType("open").setColorCount(1)
+                        if (res) {
+                            // debugger
+                            h.apply(val)
+                        } else {
+                            h.remove()
+                        }
+                    })
+
+                    return res
                 }).removeClass("florpFilterHiddenColumn" + columnId)
             }
 
@@ -616,6 +633,7 @@ jQuery(document).ready(function () {
                 if (ir !== 0 || !bInsertAfterFirstRow) {
                     $row.addClass("florpFilterRow florpFilterTable" + it)
                 }
+
                 var $cells = $row.find("td")
                 $cells.each(function (ic) {
                     var $cell = jQuery(this)
