@@ -497,8 +497,19 @@ jQuery(document).ready(function () {
 
     var $tables = jQuery("table")
     window["florpFilterColumnInputValues"] = {}
+    window["florpFilterRowsTimeoutId"] = null
     if ($tables.length > 0) {
-        function fnFlorpFilterRows() {
+        function fnFlorpFilterRows( fromTimeout = false ) {
+            if (window["florpFilterRowsTimeoutId"]) {
+                clearTimeout( window["florpFilterRowsTimeoutId"] )
+                window["florpFilterRowsTimeoutId"] = null
+            }
+
+            if (!fromTimeout) {
+                window["florpFilterRowsTimeoutId"] = setTimeout( fnFlorpFilterRows.bind( this ), 500, true )
+                return
+            }
+
             var $this = jQuery(this)
             var val = fnRemoveAccents($this.val().trim()).toLowerCase()
             var tableId = $this.data("florpFilterTableId")
